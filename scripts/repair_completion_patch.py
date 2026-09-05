@@ -10,6 +10,11 @@ text = text.replace(
 )
 pipeline.write_text(text, encoding="utf-8")
 
+document_ir = ROOT / "src/cse_financial_etl/documents/document_ir.py"
+text = document_ir.read_text(encoding="utf-8")
+text = text.replace("import json\nimport math\nimport os\n", "import json\nimport os\n")
+document_ir.write_text(text, encoding="utf-8")
+
 tests = ROOT / "tests/regression/test_structure_benchmark.py"
 text = tests.read_text(encoding="utf-8")
 marker = "\ndef test_cumulative_only_flow_is_never_published_as_quarter"
