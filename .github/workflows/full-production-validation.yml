@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - chatgpt/full-production-validation-20260905
-  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -21,222 +20,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ github.ref_name }}
 
       - name: Apply frozen-contract completion fixes
-        shell: bash
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          import re
-
-          def read(path: str) -> str:
-              return Path(path).read_text(encoding="utf-8")
-
-          def write(path: str, text: str) -> None:
-              Path(path).write_text(text, encoding="utf-8")
-
-          # 1) Strict exact-quarter contract: cumulative/YTD values stay review evidence;
-          # they are never converted into a published three-month flow fact.
-          path = "src/cse_financial_etl/orchestration/pipeline.py"
-          text = read(path)
-          pattern = r"def derive_cumulative_quarters\([\s\S]*?\n\nclass Pipeline:"
-          replacement = '''def derive_cumulative_quarters(\n    extracted_results: list[tuple[DownloadedFiling, list[ExtractedFact]]],\n) -> list[tuple[DownloadedFiling, list[ExtractedFact]]]:\n    \"\"\"Compatibility no-op: frozen contract forbids cumulative-to-quarter derivation.\n\n    Six-, nine- and twelve-month candidates may be retained as review evidence, but\n    only an explicitly reported standalone three-month/current-quarter flow fact can\n    be published.\n    \"\"\"\n\n    return extracted_results\n\n\nclass Pipeline:'''
-          text, count = re.subn(pattern, replacement, text, count=1)
-          if count != 1:
-              raise SystemExit("Could not replace cumulative-quarter derivation")
-          text = text.replace(
-              "fetch_all_financial_metadata(\n            securities,\n            self.data / \"raw\" / \"api\" / \"financials\",\n            workers=api_workers,\n        )",
-              "fetch_all_financial_metadata(\n            securities,\n            self.data / \"raw\" / \"api\" / \"financials\",\n            workers=api_workers,\n            offline=offline,\n        )",
-          )
-          text = text.replace(
-              "max_file_bytes=self.app_config.max_file_bytes,\n                ): filing",
-              "max_file_bytes=self.app_config.max_file_bytes,\n                    offline=offline,\n                ): filing",
-          )
-          write(path, text)
-
-          # 2) No hidden history is needed: ratios are same-quarter and Q4 flows are not derived.
-          write(
-              "src/cse_financial_etl/domain/periods.py",
-              '''from __future__ import annotations\n\nfrom collections.abc import Iterable\nfrom datetime import date\n\n\ndef shift_quarter(period_end: date, quarters_back: int) -> date:\n    total_months = period_end.year * 12 + period_end.month - 1 - quarters_back * 3\n    year, month_index = divmod(total_months, 12)\n    month = month_index + 1\n    day = 31 if month in {3, 12} else 30\n    return date(year, month, day)\n\n\ndef supporting_periods(display_periods: Iterable[date]) -> tuple[date, ...]:\n    \"\"\"Return only requested quarter ends; no TTM or cumulative-delta history is needed.\"\"\"\n\n    return tuple(sorted(set(display_periods)))\n''',
-          )
-
-          # 3) Total liabilities must be explicit source data. Assets - Equity is validation only.
-          path = "src/cse_financial_etl/extraction/statement_extractor.py"
-          text = read(path)
-          pattern = (
-              r"    fact_map = facts_by_code\(facts\)\n"
-              r"    liabilities = fact_map\.get\(\"TOTAL_LIABILITIES\"\)[\s\S]*?"
-              r"    diluted = fact_map\.get\(\"EPS_DILUTED\"\)"
-          )
-          replacement = '''    fact_map = facts_by_code(facts)\n    # TOTAL_LIABILITIES remains source-backed. Assets - Equity is used only by\n    # the reconciliation validator and is never promoted as a financial fact.\n\n    diluted = fact_map.get("EPS_DILUTED")'''
-          text, count = re.subn(pattern, replacement, text, count=1)
-          if count != 1:
-              raise SystemExit("Could not remove derived-liabilities publication")
-          write(path, text)
-
-          # 4) Fresh-online / truly-offline CSE metadata and PDF behavior.
-          path = "src/cse_financial_etl/sources/cse.py"
-          text = read(path)
-          start = text.index("def fetch_all_financial_metadata(")
-          end = text.index("\n\ndef choose_filing", start)
-          replacement = r'''def fetch_all_financial_metadata(
-    securities: Iterable[Security],
-    cache_dir: Path,
-    *,
-    workers: int = 24,
-    offline: bool = False,
-) -> dict[str, list[Filing]]:
-    """Fetch fresh filing metadata online; use cache only as fallback or in offline mode."""
-
-    cache_dir.mkdir(parents=True, exist_ok=True)
-    representatives = issuer_representatives(securities)
-    results: dict[str, list[Filing]] = {}
-
-    def from_payload(payload: dict[str, Any], company_name: str, security: Security) -> list[Filing]:
-        filings: list[Filing] = []
-        for row in payload.get("infoQuarterlyData") or []:
-            title = str(row.get("fileText") or "").strip()
-            period_end = parse_period_end(title)
-            source_path = str(row.get("path") or "").strip()
-            if period_end and source_path.lower().endswith(".pdf"):
-                filings.append(
-                    Filing(
-                        issuer_name=company_name,
-                        symbol=security.symbol,
-                        filing_id=int(row.get("id") or 0),
-                        period_end=period_end,
-                        title=title,
-                        source_path=source_path,
-                        source_url=_cdn_url(source_path),
-                        uploaded_at=_millis_to_datetime(row.get("uploadedDate")),
-                        authorized_at=_millis_to_datetime(row.get("authorizedDate")),
-                    )
-                )
-        return filings
-
-    def fetch_one(item: tuple[str, Security]) -> tuple[str, list[Filing]]:
-        company_name, security = item
-        cache_path = cache_dir / f"{security.security_id}_{security.symbol.replace('.', '_')}.json"
-        if offline:
-            if not cache_path.exists():
-                return company_name, []
-            payload = json.loads(cache_path.read_text(encoding="utf-8"))
-            return company_name, from_payload(payload, company_name, security)
-
-        try:
-            filings, payload = fetch_financials(security.symbol, company_name)
-            cache_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
-            return company_name, filings
-        except Exception:
-            if cache_path.exists():
-                payload = json.loads(cache_path.read_text(encoding="utf-8"))
-                return company_name, from_payload(payload, company_name, security)
-            raise
-
-    with ThreadPoolExecutor(max_workers=workers) as executor:
-        futures = {executor.submit(fetch_one, item): item[0] for item in representatives.items()}
-        for future in as_completed(futures):
-            company_name = futures[future]
-            try:
-                issuer_name, filings = future.result()
-                results[issuer_name] = filings
-            except Exception as exc:
-                results[company_name] = []
-                (cache_dir / f"ERROR_{re.sub(r'[^A-Za-z0-9]+', '_', company_name)}.txt").write_text(
-                    str(exc), encoding="utf-8"
-                )
-    return results'''
-          text = text[:start] + replacement + text[end:]
-          text = text.replace(
-              "    *,\n    max_file_bytes: int = 50 * 1024 * 1024,\n) -> DownloadedFiling:",
-              "    *,\n    max_file_bytes: int = 50 * 1024 * 1024,\n    offline: bool = False,\n) -> DownloadedFiling:",
-          )
-          text = text.replace(
-              "    if not destination.exists() or destination.stat().st_size == 0:\n        request = urllib.request.Request",
-              "    if not destination.exists() or destination.stat().st_size == 0:\n        if offline:\n            raise FileNotFoundError(f\"Offline filing cache not found: {destination}\")\n        request = urllib.request.Request",
-          )
-          write(path, text)
-
-          # 5) Hard gate: no derived flow fact may be published, even if its duration was rewritten to 3M.
-          path = "src/cse_financial_etl/validation/production_gates.py"
-          text = read(path)
-          marker = '''            if (\n                fact.metric_code in FLOW_CODES\n                and fact.comparison_role != "CURRENT"\n            ):'''
-          gate = '''            if fact.metric_code in FLOW_CODES and fact.status == "EXTRACTED_DERIVED":\n                hits.append(\n                    GateHit(\n                        "DERIVED_FLOW_PUBLISHED",\n                        fact.issuer_name,\n                        fact.symbol,\n                        fact.period_end,\n                        fact.metric_code,\n                        f"flow fact published with extraction_method={fact.extraction_method}",\n                    )\n                )\n            if (\n                fact.metric_code in FLOW_CODES\n                and fact.comparison_role != "CURRENT"\n            ):'''
-          if "DERIVED_FLOW_PUBLISHED" not in text:
-              if marker not in text:
-                  raise SystemExit("Could not insert derived-flow production gate")
-              text = text.replace(marker, gate, 1)
-          write(path, text)
-
-          # 6) Operator-facing methodology must match the strict frozen contract.
-          path = "README.md"
-          text = read(path)
-          text = text.replace(
-              "Both basic and diluted EPS remain in audit storage. Flow facts use the explicitly reported standalone three-month/quarter column, including `4Q`. If a filing genuinely supplies cumulative data only, eligible Q4 flow metrics may be derived from compatible normalized FY and prior standalone quarters; EPS is never derived this way and every derived value carries formula lineage.",
-              "Both basic and diluted EPS remain in audit storage. Flow facts use only an explicitly reported standalone three-month/quarter column, including `4Q`. If a filing supplies cumulative data only, the quarter remains unresolved/review-controlled; no flow metric is derived from FY, 6M, 9M, YTD or prior quarters.",
-          )
-          text = text.replace(
-              "| Transformation | `Decimal` arithmetic, deterministic period/entity/unit rules and audited cumulative deltas |",
-              "| Transformation | `Decimal` arithmetic and deterministic exact-quarter/entity/unit rules |",
-          )
-          text = text.replace(
-              "- Exact quarter: flows recognize three-month, quarter and `1Q`-`4Q` headers. Compatible cumulative-only flows can be derived with full evidence; incompatible inputs remain in review.",
-              "- Exact quarter: flows recognize three-month, quarter and `1Q`-`4Q` headers. Cumulative-only 6M/9M/YTD/FY values remain review evidence and are never published as a quarter.",
-          )
-          text = text.replace(
-              "- Liabilities: use the explicit standalone total; if absent but assets and equity are source-backed, derive `Assets - Equity` and record `EXTRACTED_DERIVED` lineage.",
-              "- Liabilities: publish only the explicit standalone Total Liabilities value. `Assets - Equity` is a reconciliation check only and is never published as the source fact.",
-          )
-          write(path, text)
-
-          write(
-              "docs/metric_methodology.md",
-              '''# Metric methodology\n\n## Periods\n\nFlow metrics use only explicitly reported standalone three-month/current-quarter values. Stock metrics use the standalone balance at period end. Q4 requires an explicitly reported standalone three-month/`4Q` value. Annual, 6M, 9M and YTD columns are never copied or differenced into a quarter. Cumulative-only values remain review evidence.\n\nEPS output selects diluted EPS when the exact current quarter reports it, otherwise basic EPS. Both remain in audit storage. Total liabilities must be explicitly extracted from the standalone statement; `Total Assets - Total Equity` is used only as a reconciliation check.\n\n## Ratios\n\n- ROE: same-quarter PAT divided by that quarter's total equity.\n- ROA: same-quarter PAT divided by that quarter's total assets.\n- NPM: same-quarter PAT divided by that quarter's top line.\n- Debt to equity: total liabilities divided by total equity, expressed as a multiple (`x`).\n\nNo ratio is emitted when required inputs are missing, incompatible or have an invalid denominator. There is no TTM logic.\n''',
-          )
-
-          path = "src/cse_financial_etl/reporting/excel.py"
-          text = read(path)
-          text = text.replace(
-              '"Explicit 4Q preferred; compatible cumulative-only flows may use an audited delta; EPS never derived",',
-              '"Only an explicitly reported standalone 3M/4Q flow is publishable; cumulative/FY deltas are never used",',
-          )
-          write(path, text)
-
-          # 7) Update regression/unit expectations so tests enforce, rather than contradict, the contract.
-          path = "tests/unit/test_pipeline_gaps.py"
-          text = read(path)
-          text = text.replace(
-              "def test_supporting_periods_include_prior_quarters_for_q4_delta() -> None:\n    assert shift_quarter(date(2026, 6, 30), 1) == date(2026, 3, 31)\n    periods = supporting_periods([date(2026, 6, 30)])\n    assert date(2025, 9, 30) in periods\n    assert date(2025, 6, 30) not in periods\n    assert date(2026, 6, 30) in periods\n",
-              "def test_supporting_periods_are_exact_requested_window() -> None:\n    assert shift_quarter(date(2026, 6, 30), 1) == date(2026, 3, 31)\n    periods = supporting_periods([date(2026, 6, 30), date(2026, 3, 31)])\n    assert periods == (date(2026, 3, 31), date(2026, 6, 30))\n",
-          )
-          write(path, text)
-
-          path = "tests/unit/test_production_gates.py"
-          text = read(path)
-          if "test_derived_flow_is_a_hard_stop" not in text:
-              anchor = "\ndef test_comparative_published_as_current_is_a_hard_stop"
-              test = '''\ndef test_derived_flow_is_a_hard_stop(tmp_path: Path) -> None:\n    hits = evaluate_production_gates(\n        [(_filing(tmp_path), [_fact(status="EXTRACTED_DERIVED", extraction_method="CUMULATIVE_DELTA")])]\n    )\n    assert [hit.code for hit in hits] == ["DERIVED_FLOW_PUBLISHED"]\n    assert run_status_from_gates(hits, has_errors=False, has_review=False) == "VALIDATION_REQUIRED"\n\n'''
-              if anchor not in text:
-                  raise SystemExit("Could not insert derived-flow gate test")
-              text = text.replace(anchor, test + anchor, 1)
-          write(path, text)
-
-          # Add source-level regression tests for cumulative-only and derived liabilities.
-          path = "tests/regression/test_structure_benchmark.py"
-          text = read(path)
-          if "test_cumulative_only_flow_is_never_published_as_quarter" not in text:
-              text += '''\n\ndef test_cumulative_only_flow_is_never_published_as_quarter(tmp_path: Path) -> None:\n    pdf = _write_pdf(\n        tmp_path / "cumulative_only.pdf",\n        "Statement of profit or loss - Company\\n"\n        "For the six months ended 30 June 2025\\n"\n        "Rs.'000\\n"\n        "Profit for the period 12,500 10,000",\n    )\n    facts = extract_filing(pdf, "Acme PLC", "ACM.N0000", PERIOD)\n    pat = facts_by_code(facts)["PAT"]\n    assert pat.status not in {"EXTRACTED", "EXTRACTED_DERIVED"}\n    assert pat.duration_months != 3 or pat.normalized_value is None\n\n\ndef test_total_liabilities_is_never_assets_minus_equity_fallback(tmp_path: Path) -> None:\n    pdf = _write_pdf(\n        tmp_path / "no_liabilities.pdf",\n        "Statement of financial position - Company\\n"\n        "As at 30 June 2025\\n"\n        "Rs.'000\\n"\n        "Total assets 300 250\\n"\n        "Total equity 100 90",\n    )\n    facts = extract_filing(pdf, "Acme PLC", "ACM.N0000", PERIOD)\n    liabilities = facts_by_code(facts)["TOTAL_LIABILITIES"]\n    assert liabilities.status != "EXTRACTED_DERIVED"\n    assert liabilities.normalized_value is None\n'''
-          write(path, text)
-
-          # Guard against documentation/code regression of the two forbidden publications.
-          frozen = read("docs/CSE_ETL_Final_Frozen_Architecture_NoDB_NoLLM.md")
-          assert "Q4 is calculated as FY minus 9M" in frozen
-          assert "a cumulative 6M/9M/YTD value is used" in frozen
-          PY
+        run: python scripts/apply_completion_fixes.py
 
       - name: Commit completion fixes to validation branch
-        if: github.event_name == 'push'
         shell: bash
         run: |
           if ! git diff --quiet; then
@@ -244,7 +32,7 @@ jobs:
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git add -A
             git commit -m "Enforce strict source-backed quarterly facts [skip ci]"
-            git push origin HEAD:${{ github.ref_name }}
+            git push origin HEAD:chatgpt/full-production-validation-20260905
           fi
 
       - name: Install uv
@@ -252,7 +40,7 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Install system PDF/OCR tools
+      - name: Install system PDF and OCR tools
         run: |
           sudo apt-get update
           sudo apt-get install -y poppler-utils tesseract-ocr ghostscript qpdf
@@ -282,7 +70,6 @@ jobs:
             --project-root .
 
       - name: Evaluate full-universe production gates
-        id: gates
         shell: bash
         run: |
           python - <<'PY'
@@ -293,7 +80,7 @@ jobs:
           if not path.exists():
               raise SystemExit("Run manifest missing")
           manifest = json.loads(path.read_text(encoding="utf-8"))
-          print(json.dumps({
+          summary = {
               "run_status": manifest.get("run_status"),
               "security_count": manifest.get("security_count"),
               "issuer_count": manifest.get("issuer_count"),
@@ -304,10 +91,16 @@ jobs:
               "price_status_counts": manifest.get("price_status_counts"),
               "pipeline_error_count": manifest.get("pipeline_error_count"),
               "production_gates": manifest.get("production_gates"),
-          }, indent=2))
+          }
+          print(json.dumps(summary, indent=2))
           gates = manifest.get("production_gates") or {}
-          failed = manifest.get("run_status") == "VALIDATION_REQUIRED" or int(gates.get("hit_count") or 0) > 0
-          Path("outputs/production_gate_result.txt").write_text("FAIL" if failed else "PASS", encoding="utf-8")
+          failed = (
+              manifest.get("run_status") == "VALIDATION_REQUIRED"
+              or int(gates.get("hit_count") or 0) > 0
+          )
+          Path("outputs/production_gate_result.txt").write_text(
+              "FAIL" if failed else "PASS", encoding="utf-8"
+          )
           PY
 
       - name: Upload full-universe outputs
