@@ -1663,61 +1663,7 @@ def extract_filing(
         )
 
     fact_map = facts_by_code(facts)
-    liabilities = fact_map.get("TOTAL_LIABILITIES")
-    assets = fact_map.get("TOTAL_ASSETS")
-    equity = fact_map.get("TOTAL_EQUITY")
-    if (
-        liabilities
-        and liabilities.status != "EXTRACTED"
-        and assets
-        and equity
-        and assets.status == "EXTRACTED"
-        and equity.status == "EXTRACTED"
-        and assets.normalized_value is not None
-        and equity.normalized_value is not None
-        and assets.currency == equity.currency
-        and assets.normalized_value >= equity.normalized_value
-    ):
-        certainty = min(assets.overall_certainty, equity.overall_certainty) * 0.95
-        facts[facts.index(liabilities)] = ExtractedFact(
-            issuer_name=issuer_name,
-            symbol=symbol,
-            period_end=period_end,
-            metric_code="TOTAL_LIABILITIES",
-            metric_type="MONETARY_ABSOLUTE",
-            raw_text=None,
-            raw_value=None,
-            normalized_value=assets.normalized_value - equity.normalized_value,
-            currency=assets.currency,
-            scale_factor=1,
-            entity_scope=entity,
-            source_page=assets.source_page,
-            source_line="Derived from normalized Total Assets minus Total Equity",
-            unit_source_text="DERIVED: TOTAL_ASSETS - TOTAL_EQUITY",
-            confidence=_certainty_band(certainty),
-            status="EXTRACTED_DERIVED",
-            raw_label="Total liabilities",
-            extraction_method="DETERMINISTIC_DERIVATION",
-            semantic_model="rule",
-            semantic_confidence=1.0,
-            entity_confidence=min(assets.entity_confidence, equity.entity_confidence),
-            period_confidence=min(assets.period_confidence, equity.period_confidence),
-            unit_confidence=min(assets.unit_confidence, equity.unit_confidence),
-            column_confidence=min(assets.column_confidence, equity.column_confidence),
-            validation_confidence=0.98,
-            overall_certainty=round(certainty, 4),
-            certainty_band=_certainty_band(certainty),
-            validation_status="PASSED",
-            review_status="APPROVED",
-            evidence_json=json.dumps(
-                {
-                    "formula": "TOTAL_ASSETS - TOTAL_EQUITY",
-                    "inputs": [assets.metric_code, equity.metric_code],
-                },
-                separators=(",", ":"),
-            ),
-        )
-        fact_map = facts_by_code(facts)
+    # Total Liabilities remains source-backed. Assets - Equity is validation only.
 
     diluted = fact_map.get("EPS_DILUTED")
     basic = fact_map.get("EPS_BASIC")

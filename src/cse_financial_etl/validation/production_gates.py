@@ -77,6 +77,17 @@ def evaluate_production_gates(
         for fact in facts:
             if fact.status not in PUBLISHED:
                 continue
+            if fact.metric_code in FLOW_CODES and fact.status == "EXTRACTED_DERIVED":
+                hits.append(
+                    GateHit(
+                        "DERIVED_FLOW_PUBLISHED",
+                        fact.issuer_name,
+                        fact.symbol,
+                        fact.period_end,
+                        fact.metric_code,
+                        f"flow fact published with extraction_method={fact.extraction_method}",
+                    )
+                )
             if (
                 fact.metric_code in FLOW_CODES
                 and fact.comparison_role != "CURRENT"

@@ -66,6 +66,14 @@ def test_cumulative_published_as_quarter_is_a_hard_stop(tmp_path: Path) -> None:
     assert run_status_from_gates(hits, has_errors=False, has_review=False) == "VALIDATION_REQUIRED"
 
 
+def test_derived_flow_is_a_hard_stop(tmp_path: Path) -> None:
+    hits = evaluate_production_gates(
+        [(_filing(tmp_path), [_fact(status="EXTRACTED_DERIVED", extraction_method="CUMULATIVE_DELTA")])]
+    )
+    assert [hit.code for hit in hits] == ["DERIVED_FLOW_PUBLISHED"]
+    assert run_status_from_gates(hits, has_errors=False, has_review=False) == "VALIDATION_REQUIRED"
+
+
 def test_comparative_published_as_current_is_a_hard_stop(tmp_path: Path) -> None:
     hits = evaluate_production_gates(
         [(_filing(tmp_path), [_fact(comparison_role="COMPARATIVE")])]

@@ -99,12 +99,10 @@ def test_app_config_enables_ocr() -> None:
     assert config.balance_sheet_relative == 0.005
 
 
-def test_supporting_periods_include_prior_quarters_for_q4_delta() -> None:
+def test_supporting_periods_are_exact_requested_window() -> None:
     assert shift_quarter(date(2026, 6, 30), 1) == date(2026, 3, 31)
-    periods = supporting_periods([date(2026, 6, 30)])
-    assert date(2025, 9, 30) in periods
-    assert date(2025, 6, 30) not in periods
-    assert date(2026, 6, 30) in periods
+    periods = supporting_periods([date(2026, 6, 30), date(2026, 3, 31)])
+    assert periods == (date(2026, 3, 31), date(2026, 6, 30))
 
 
 def test_same_quarter_ratios_need_no_history() -> None:

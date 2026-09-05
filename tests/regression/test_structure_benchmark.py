@@ -984,3 +984,38 @@ def test_write_accuracy_dashboard() -> None:
     assert path.exists()
     assert payload["metrics"]["wrong_populated_value_rate"] == 0
     assert MANIFESTS_DIRNAME == "manifests"
+
+
+def test_cumulative_only_flow_is_never_published_as_quarter(tmp_path: Path) -> None:
+    pdf = _write_pdf(
+        tmp_path / "cumulative_only.pdf",
+        "Statement of profit or loss - Company
+"
+        "For the six months ended 30 June 2025
+"
+        "Rs.'000
+"
+        "Profit for the period 12,500 10,000",
+    )
+    facts = extract_filing(pdf, "Acme PLC", "ACM.N0000", PERIOD)
+    pat = facts_by_code(facts)["PAT"]
+    assert pat.status not in {"EXTRACTED", "EXTRACTED_DERIVED"}
+
+
+def test_total_liabilities_is_never_assets_minus_equity_fallback(tmp_path: Path) -> None:
+    pdf = _write_pdf(
+        tmp_path / "no_liabilities.pdf",
+        "Statement of financial position - Company
+"
+        "As at 30 June 2025
+"
+        "Rs.'000
+"
+        "Total assets 300 250
+"
+        "Total equity 100 90",
+    )
+    facts = extract_filing(pdf, "Acme PLC", "ACM.N0000", PERIOD)
+    liabilities = facts_by_code(facts)["TOTAL_LIABILITIES"]
+    assert liabilities.status != "EXTRACTED_DERIVED"
+    assert liabilities.normalized_value is None
