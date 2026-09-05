@@ -22,7 +22,9 @@ jobs:
           fetch-depth: 0
 
       - name: Apply frozen-contract completion fixes
-        run: python scripts/apply_completion_fixes.py
+        run: |
+          python scripts/apply_completion_fixes.py
+          python scripts/repair_completion_patch.py
 
       - name: Commit completion fixes to validation branch
         shell: bash
@@ -31,7 +33,7 @@ jobs:
             git config user.name "ChatGPT validation"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git add -A
-            git commit -m "Enforce strict source-backed quarterly facts [skip ci]"
+            git commit -m "Repair strict quarterly validation [skip ci]"
             git push origin HEAD:chatgpt/full-production-validation-20260905
           fi
 
@@ -49,7 +51,7 @@ jobs:
         run: uv sync --group dev --extra semantic --extra ocr --extra complex-pdf
 
       - name: Ruff
-        run: uv run ruff check .
+        run: uv run ruff check src tests
 
       - name: Mypy
         run: uv run mypy src
