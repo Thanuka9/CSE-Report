@@ -20,7 +20,7 @@ from cse_financial_etl.config import (
     load_metric_catalog,
     load_unit_pattern_config,
 )
-from cse_financial_etl.domain.periods import shift_quarter, supporting_periods
+from cse_financial_etl.domain.periods import supporting_periods
 from cse_financial_etl.extraction.semantic_matcher import apply_metric_catalog, get_semantic_matcher
 from cse_financial_etl.extraction.statement_extractor import (
     ExtractedFact,

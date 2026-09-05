@@ -986,15 +986,14 @@ def test_write_accuracy_dashboard() -> None:
     assert MANIFESTS_DIRNAME == "manifests"
 
 
+
+
 def test_cumulative_only_flow_is_never_published_as_quarter(tmp_path: Path) -> None:
     pdf = _write_pdf(
         tmp_path / "cumulative_only.pdf",
-        "Statement of profit or loss - Company
-"
-        "For the six months ended 30 June 2025
-"
-        "Rs.'000
-"
+        "Statement of profit or loss - Company\n"
+        "For the six months ended 30 June 2025\n"
+        "Rs.'000\n"
         "Profit for the period 12,500 10,000",
     )
     facts = extract_filing(pdf, "Acme PLC", "ACM.N0000", PERIOD)
@@ -1005,14 +1004,10 @@ def test_cumulative_only_flow_is_never_published_as_quarter(tmp_path: Path) -> N
 def test_total_liabilities_is_never_assets_minus_equity_fallback(tmp_path: Path) -> None:
     pdf = _write_pdf(
         tmp_path / "no_liabilities.pdf",
-        "Statement of financial position - Company
-"
-        "As at 30 June 2025
-"
-        "Rs.'000
-"
-        "Total assets 300 250
-"
+        "Statement of financial position - Company\n"
+        "As at 30 June 2025\n"
+        "Rs.'000\n"
+        "Total assets 300 250\n"
         "Total equity 100 90",
     )
     facts = extract_filing(pdf, "Acme PLC", "ACM.N0000", PERIOD)
