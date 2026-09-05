@@ -990,6 +990,8 @@ def test_write_accuracy_dashboard() -> None:
 
 
 
+
+
 def test_cumulative_only_flow_is_never_published_as_quarter(tmp_path: Path) -> None:
     pdf = _write_pdf(
         tmp_path / "cumulative_only.pdf",
