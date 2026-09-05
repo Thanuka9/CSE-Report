@@ -13,8 +13,6 @@ def shift_quarter(period_end: date, quarters_back: int) -> date:
 
 
 def supporting_periods(display_periods: Iterable[date]) -> tuple[date, ...]:
-    """Include the displayed quarter plus up to three predecessors for Q4 deltas."""
+    """Return only requested quarter ends; no TTM or cumulative-delta history is needed."""
 
-    return tuple(
-        sorted({shift_quarter(period, offset) for period in display_periods for offset in range(4)})
-    )
+    return tuple(sorted(set(display_periods)))

@@ -1,0 +1,130 @@
+name: Full production validation
+
+on:
+  push:
+    branches:
+      - chatgpt/full-production-validation-20260905
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    env:
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply frozen-contract completion fixes
+        run: python scripts/apply_completion_fixes.py
+
+      - name: Commit completion fixes to validation branch
+        shell: bash
+        run: |
+          if ! git diff --quiet; then
+            git config user.name "ChatGPT validation"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git commit -m "Enforce strict source-backed quarterly facts [skip ci]"
+            git push origin HEAD:chatgpt/full-production-validation-20260905
+          fi
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Install system PDF and OCR tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y poppler-utils tesseract-ocr ghostscript qpdf
+
+      - name: Sync full validation environment
+        run: uv sync --group dev --extra semantic --extra ocr --extra complex-pdf
+
+      - name: Ruff
+        run: uv run ruff check .
+
+      - name: Mypy
+        run: uv run mypy src
+
+      - name: Unit and regression tests
+        env:
+          CSE_ETL_USE_TRANSFORMER: "0"
+        run: uv run pytest -q
+
+      - name: Live CSE discovery check
+        run: uv run cse-etl discover-securities
+
+      - name: Full CSE universe run
+        run: |
+          uv run cse-etl run \
+            --as-of 2026-09-05 \
+            --periods 2025-12-31,2026-03-31,2026-06-30 \
+            --project-root .
+
+      - name: Evaluate full-universe production gates
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path("outputs/manifests/run_manifest_2026-09-05.json")
+          if not path.exists():
+              raise SystemExit("Run manifest missing")
+          manifest = json.loads(path.read_text(encoding="utf-8"))
+          summary = {
+              "run_status": manifest.get("run_status"),
+              "security_count": manifest.get("security_count"),
+              "issuer_count": manifest.get("issuer_count"),
+              "selected_filing_count": manifest.get("selected_filing_count"),
+              "downloaded_filing_count": manifest.get("downloaded_filing_count"),
+              "extracted_filing_count": manifest.get("extracted_filing_count"),
+              "fact_status_counts": manifest.get("fact_status_counts"),
+              "price_status_counts": manifest.get("price_status_counts"),
+              "pipeline_error_count": manifest.get("pipeline_error_count"),
+              "production_gates": manifest.get("production_gates"),
+          }
+          print(json.dumps(summary, indent=2))
+          gates = manifest.get("production_gates") or {}
+          failed = (
+              manifest.get("run_status") == "VALIDATION_REQUIRED"
+              or int(gates.get("hit_count") or 0) > 0
+          )
+          Path("outputs/production_gate_result.txt").write_text(
+              "FAIL" if failed else "PASS", encoding="utf-8"
+          )
+          PY
+
+      - name: Upload full-universe outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cse-full-production-validation-${{ github.run_id }}
+          path: |
+            outputs/**
+            data/staging/**/manifest.json
+            data/review/**
+            data/gold/**
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Fail closed if production gates fired
+        if: always()
+        shell: bash
+        run: |
+          if [ ! -f outputs/production_gate_result.txt ]; then
+            echo "Production gate result was not produced."
+            exit 1
+          fi
+          if [ "$(cat outputs/production_gate_result.txt)" != "PASS" ]; then
+            echo "Full-universe run requires validation; inspect outputs/manifests and artifact."
+            exit 1
+          fi

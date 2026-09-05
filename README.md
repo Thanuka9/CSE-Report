@@ -33,7 +33,7 @@ Every displayed quarter contains exactly 14 fields:
 13. ROA
 14. NPM
 
-Both basic and diluted EPS remain in audit storage. Flow facts use the explicitly reported standalone three-month/quarter column, including `4Q`. If a filing genuinely supplies cumulative data only, eligible Q4 flow metrics may be derived from compatible normalized FY and prior standalone quarters; EPS is never derived this way and every derived value carries formula lineage.
+Both basic and diluted EPS remain in audit storage. Flow facts use only an explicitly reported standalone three-month/quarter column, including `4Q`. Cumulative 6M/9M/YTD/FY values remain review evidence and are never converted into a quarter.
 
 ## Run in VS Code on Windows
 
@@ -101,7 +101,7 @@ uv run cse-etl run --issuer-limit 4 --project-root .  # safe smoke test
 | Public-source adapter | Python standard-library HTTP with bounded retries; official CSE endpoints and CDN |
 | PDF extraction | PyMuPDF word coordinates, measured pdfplumber coordinate fallback; optional OCRmyPDF/Tesseract for scans |
 | Document understanding | Visual-row reconstruction, numeric-column clustering, RapidFuzz aliases; optional local MiniLM semantic matching |
-| Transformation | `Decimal` arithmetic, deterministic period/entity/unit rules and audited cumulative deltas |
+| Transformation | `Decimal` arithmetic and deterministic exact-quarter/entity/unit rules |
 | File store | Polars + Parquet partitions, JSONL evidence, atomic staging/promotion and CSV interoperability |
 | Reporting | `openpyxl` for the locally generated Excel workbook |
 | CLI | Typer |
@@ -115,8 +115,8 @@ Python is the complete runtime. There is no Node application, local/cloud databa
 - Financial scope: Company for ordinary issuers, Bank for banks; Group/Consolidated is not silently substituted.
 - Units: closest explicit metric/column/table/statement/page/report unit wins. Currency and scale are stored separately.
 - Per-share metrics, counts, percentages, ratios, and ranks never inherit a normal statement scale.
-- Exact quarter: flows recognize three-month, quarter and `1Q`-`4Q` headers. Compatible cumulative-only flows can be derived with full evidence; incompatible inputs remain in review.
-- Liabilities: use the explicit standalone total; if absent but assets and equity are source-backed, derive `Assets - Equity` and record `EXTRACTED_DERIVED` lineage.
+- Exact quarter: flows recognize three-month, quarter and `1Q`-`4Q` headers. Cumulative-only 6M/9M/YTD/FY values remain review evidence and are never published as a quarter.
+- Liabilities: publish only the explicit standalone Total Liabilities value. `Assets - Equity` is a reconciliation check only.
 - Price: exact security class and filing-disclosed quarter-end/last-traded price first. If official history is unavailable, retain `HISTORICAL_PRICE_NOT_AVAILABLE`.
 - ROE, ROA, NPM: same-quarter PAT divided by that quarter's equity, assets, or top line. No prior-period history is required.
 - Balance sheet: validate `Assets ≈ Liabilities + Equity` within tolerance.

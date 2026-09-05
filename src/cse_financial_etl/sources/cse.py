@@ -232,39 +232,53 @@ def fetch_all_financial_metadata(
     cache_dir: Path,
     *,
     workers: int = 24,
+    offline: bool = False,
 ) -> dict[str, list[Filing]]:
+    """Fetch fresh metadata online; use cache only as fallback or in offline mode."""
+
     cache_dir.mkdir(parents=True, exist_ok=True)
     representatives = issuer_representatives(securities)
     results: dict[str, list[Filing]] = {}
 
+    def from_payload(payload: dict[str, Any], company_name: str, security: Security) -> list[Filing]:
+        filings: list[Filing] = []
+        for row in payload.get("infoQuarterlyData") or []:
+            title = str(row.get("fileText") or "").strip()
+            period_end = parse_period_end(title)
+            source_path = str(row.get("path") or "").strip()
+            if period_end and source_path.lower().endswith(".pdf"):
+                filings.append(
+                    Filing(
+                        issuer_name=company_name,
+                        symbol=security.symbol,
+                        filing_id=int(row.get("id") or 0),
+                        period_end=period_end,
+                        title=title,
+                        source_path=source_path,
+                        source_url=_cdn_url(source_path),
+                        uploaded_at=_millis_to_datetime(row.get("uploadedDate")),
+                        authorized_at=_millis_to_datetime(row.get("authorizedDate")),
+                    )
+                )
+        return filings
+
     def fetch_one(item: tuple[str, Security]) -> tuple[str, list[Filing]]:
         company_name, security = item
         cache_path = cache_dir / f"{security.security_id}_{security.symbol.replace('.', '_')}.json"
-        if cache_path.exists():
+        if offline:
+            if not cache_path.exists():
+                return company_name, []
             payload = json.loads(cache_path.read_text(encoding="utf-8"))
-            filings: list[Filing] = []
-            for row in payload.get("infoQuarterlyData") or []:
-                title = str(row.get("fileText") or "").strip()
-                period_end = parse_period_end(title)
-                source_path = str(row.get("path") or "").strip()
-                if period_end and source_path.lower().endswith(".pdf"):
-                    filings.append(
-                        Filing(
-                            issuer_name=company_name,
-                            symbol=security.symbol,
-                            filing_id=int(row.get("id") or 0),
-                            period_end=period_end,
-                            title=title,
-                            source_path=source_path,
-                            source_url=_cdn_url(source_path),
-                            uploaded_at=_millis_to_datetime(row.get("uploadedDate")),
-                            authorized_at=_millis_to_datetime(row.get("authorizedDate")),
-                        )
-                    )
+            return company_name, from_payload(payload, company_name, security)
+        try:
+            filings, payload = fetch_financials(security.symbol, company_name)
+            cache_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
             return company_name, filings
-        filings, payload = fetch_financials(security.symbol, company_name)
-        cache_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
-        return company_name, filings
+        except Exception:
+            if cache_path.exists():
+                payload = json.loads(cache_path.read_text(encoding="utf-8"))
+                return company_name, from_payload(payload, company_name, security)
+            raise
 
     with ThreadPoolExecutor(max_workers=workers) as executor:
         futures = {executor.submit(fetch_one, item): item[0] for item in representatives.items()}
@@ -273,13 +287,12 @@ def fetch_all_financial_metadata(
             try:
                 issuer_name, filings = future.result()
                 results[issuer_name] = filings
-            except Exception as exc:  # retained in a deterministic error record by the caller
+            except Exception as exc:
                 results[company_name] = []
                 (cache_dir / f"ERROR_{re.sub(r'[^A-Za-z0-9]+', '_', company_name)}.txt").write_text(
                     str(exc), encoding="utf-8"
                 )
     return results
-
 
 def choose_filing(filings: Iterable[Filing], period_end: date) -> Filing | None:
     matches = [filing for filing in filings if filing.period_end == period_end]
@@ -305,12 +318,15 @@ def download_filing(
     timeout: int = 180,
     *,
     max_file_bytes: int = 50 * 1024 * 1024,
+    offline: bool = False,
 ) -> DownloadedFiling:
     issuer_dir = destination_root / safe_slug(filing.issuer_name)
     issuer_dir.mkdir(parents=True, exist_ok=True)
     filename = f"{filing.period_end.isoformat()}_{Path(filing.source_path).name}"
     destination = issuer_dir / filename
     if not destination.exists() or destination.stat().st_size == 0:
+        if offline:
+            raise FileNotFoundError(f"Offline filing cache not found: {destination}")
         request = urllib.request.Request(filing.source_url, headers={"User-Agent": USER_AGENT})
         last_error: Exception | None = None
         for attempt in range(4):

@@ -65,110 +65,9 @@ DEFAULT_PERIODS = (date(2025, 12, 31), date(2026, 3, 31), date(2026, 6, 30))
 def derive_cumulative_quarters(
     extracted_results: list[tuple[DownloadedFiling, list[ExtractedFact]]],
 ) -> list[tuple[DownloadedFiling, list[ExtractedFact]]]:
-    """Derive an exact quarter from cumulative flow minus prior exact quarters."""
+    """Compatibility no-op: cumulative/YTD values are never published as quarters."""
 
-    accepted = {"EXTRACTED", "EXTRACTED_DERIVED"}
-    eligible = {"TOP_LINE", "OPERATING_PROFIT", "PBT", "PAT"}
-    fact_index = {
-        (fact.issuer_name, fact.period_end, fact.metric_code): fact
-        for _item, facts in extracted_results
-        for fact in facts
-    }
-    derived_results: list[tuple[DownloadedFiling, list[ExtractedFact]]] = []
-    for item, facts in extracted_results:
-        updated: list[ExtractedFact] = []
-        for fact in facts:
-            if (
-                fact.status != "CUMULATIVE_ONLY"
-                or fact.metric_code not in eligible
-                or fact.duration_months not in {6, 9, 12}
-                or fact.normalized_value is None
-            ):
-                updated.append(fact)
-                continue
-            prior_count = fact.duration_months // 3 - 1
-            prior_facts = [
-                fact_index.get(
-                    (
-                        fact.issuer_name,
-                        shift_quarter(fact.period_end, offset),
-                        fact.metric_code,
-                    )
-                )
-                for offset in range(1, prior_count + 1)
-            ]
-            compatible = all(
-                prior is not None
-                and prior.status in accepted
-                and prior.duration_months == 3
-                and prior.normalized_value is not None
-                and prior.currency == fact.currency
-                and prior.entity_scope == fact.entity_scope
-                for prior in prior_facts
-            )
-            if not compatible:
-                updated.append(fact)
-                continue
-            typed_priors = [prior for prior in prior_facts if prior is not None]
-            normalized = fact.normalized_value - sum(
-                (
-                    prior.normalized_value
-                    for prior in typed_priors
-                    if prior.normalized_value is not None
-                ),
-                Decimal(0),
-            )
-            certainty = (
-                min([fact.overall_certainty, *(prior.overall_certainty for prior in typed_priors)])
-                * 0.92
-            )
-            updated.append(
-                replace(
-                    fact,
-                    raw_text=None,
-                    raw_value=None,
-                    normalized_value=normalized,
-                    scale_factor=1,
-                    source_line=(
-                        f"Derived exact quarter: {fact.duration_months}M cumulative minus "
-                        f"{prior_count} preceding standalone quarter(s)"
-                    ),
-                    unit_source_text="DERIVED_FROM_COMPATIBLE_NORMALIZED_LKR_INPUTS",
-                    confidence=(
-                        "HIGH" if certainty >= 0.9 else "MEDIUM" if certainty >= 0.75 else "LOW"
-                    ),
-                    status="EXTRACTED_DERIVED",
-                    extraction_method="CUMULATIVE_DELTA",
-                    validation_confidence=0.96,
-                    overall_certainty=round(certainty, 4),
-                    certainty_band=(
-                        "HIGH" if certainty >= 0.9 else "MEDIUM" if certainty >= 0.75 else "LOW"
-                    ),
-                    duration_months=3,
-                    validation_status="PASSED",
-                    review_status="APPROVED",
-                    evidence_json=json.dumps(
-                        {
-                            "formula": "CUMULATIVE_MINUS_PRECEDING_STANDALONE_QUARTERS",
-                            "cumulative_period": fact.period_end.isoformat(),
-                            "cumulative_duration_months": fact.duration_months,
-                            "cumulative_value": str(fact.normalized_value),
-                            "prior_quarters": [
-                                {
-                                    "period_end": prior.period_end.isoformat(),
-                                    "value": str(prior.normalized_value),
-                                    "status": prior.status,
-                                }
-                                for prior in typed_priors
-                            ],
-                            "derived_value": str(normalized),
-                        },
-                        separators=(",", ":"),
-                    ),
-                )
-            )
-        derived_results.append((item, updated))
-    return derived_results
+    return extracted_results
 
 
 class Pipeline:
@@ -254,6 +153,7 @@ class Pipeline:
             securities,
             self.data / "raw" / "api" / "financials",
             workers=api_workers,
+            offline=offline,
         )
 
         selected: list[Filing] = []
@@ -282,6 +182,7 @@ class Pipeline:
                     filing,
                     self.data / "raw" / "filings",
                     max_file_bytes=self.app_config.max_file_bytes,
+                    offline=offline,
                 ): filing
                 for filing in selected
             }

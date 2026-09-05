@@ -276,7 +276,7 @@ def generate_excel(
         ),
         (
             "Q4 rule",
-            "Explicit 4Q preferred; compatible cumulative-only flows may use an audited delta; EPS never derived",
+            "Only an explicitly reported standalone 3M/4Q flow is publishable; cumulative/FY deltas are never used",
         ),
         (
             "EPS rule",
