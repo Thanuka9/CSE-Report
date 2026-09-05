@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "CSE ETL: Debug Full Run",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "cse_financial_etl",
+      "args": ["run", "--project-root", "."],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    }
+  ]
+}

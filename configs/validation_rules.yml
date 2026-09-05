@@ -1,0 +1,18 @@
+tolerances:
+  market_cap_lkr_absolute: 1.00
+  balance_sheet_relative: 0.005
+  market_cap_share_sum_absolute: 0.0001
+thresholds:
+  auto_approve: 0.95
+  manual_review: 0.80
+blocking_codes:
+  - UNIT_NOT_DETECTED
+  - UNIT_CONFLICT
+  - ENTITY_SCOPE_AMBIGUOUS
+  - PERIOD_AMBIGUOUS
+  - CONSOLIDATED_ONLY
+  - EXACT_QUARTER_NOT_REPORTED
+  - HISTORICAL_PRICE_NOT_AVAILABLE
+  - BALANCE_SHEET_RECONCILIATION_FAILED
+  - DUPLICATE_APPROVED_FACT
+  - NORMALIZATION_MISMATCH

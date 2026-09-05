@@ -1,0 +1,74 @@
+[
+  {
+    "issuer_name": "CIC HOLDINGS PLC",
+    "symbol": "CIC.N0000",
+    "period_end": "2025-12-31",
+    "pdf": "data/raw/filings/C_I_C_HOLDINGS_PLC/2025-12-31_493_1770119995452.pdf",
+    "facts": {
+      "TOP_LINE": "5816610000.00",
+      "OPERATING_PROFIT": "861020000.00",
+      "PBT": "430310000.00",
+      "PAT": "300790000.00",
+      "EPS_BASIC": "0.16",
+      "TOTAL_ASSETS": "39402800000.00",
+      "TOTAL_EQUITY": "12484250000.00",
+      "TOTAL_LIABILITIES": "26918550000.00",
+      "NAVPS": "6.59"
+    },
+    "prices": {"CIC.N0000": "34.80", "CIC.X0000": "26.10"}
+  },
+  {
+    "issuer_name": "DIGITAL MOBILITY SOLUTIONS LANKA PLC",
+    "symbol": "PKME.N0000",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/DIGITAL_MOBILITY_SOLUTIONS_LANKA_PLC/2026-06-30_3218_1785237350161.pdf",
+    "facts": {
+      "TOP_LINE": "2512225000",
+      "OPERATING_PROFIT": "833824000",
+      "PBT": "907340000",
+      "PAT": "631414000",
+      "EPS_BASIC": "1.89",
+      "TOTAL_ASSETS": "6890750000",
+      "TOTAL_EQUITY": "4469543000",
+      "TOTAL_LIABILITIES": "2421207000",
+      "NAVPS": "13.41"
+    },
+    "prices": {"PKME.N0000": "173.75"}
+  },
+  {
+    "issuer_name": "JOHN KEELLS HOLDINGS PLC",
+    "symbol": "JKH.N0000",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/JOHN_KEELLS_HOLDINGS_PLC/2026-06-30_508_1785229278745.pdf",
+    "facts": {
+      "TOP_LINE": "1003467000",
+      "OPERATING_PROFIT": "5628938000",
+      "PBT": "5657502000",
+      "PAT": "5378093000",
+      "TOTAL_ASSETS": "366834520000",
+      "TOTAL_EQUITY": "251552116000",
+      "TOTAL_LIABILITIES": "115282404000",
+      "NAVPS": "14.18"
+    },
+    "prices": {"JKH.N0000": "20.20"}
+  },
+  {
+    "issuer_name": "NATIONAL DEVELOPMENT BANK PLC",
+    "symbol": "NDB.N0000",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/NATIONAL_DEVELOPMENT_BANK_PLC/2026-06-30_386_1784717094209.pdf",
+    "facts": {
+      "TOP_LINE": "27323450000",
+      "OPERATING_PROFIT": "5904845000",
+      "PBT": "4538081000",
+      "PAT": "3012694000",
+      "EPS_BASIC": "6.97",
+      "EPS_DILUTED": "6.97",
+      "TOTAL_ASSETS": "949019633000",
+      "TOTAL_EQUITY": "80048931000",
+      "TOTAL_LIABILITIES": "868970702000",
+      "NAVPS": "185.21"
+    },
+    "prices": {"NDB.N0000": "112.50"}
+  }
+]

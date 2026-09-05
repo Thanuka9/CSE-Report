@@ -1,0 +1,146 @@
+metrics:
+  TOP_LINE:
+    display_name: Revenue / Gross Income
+    metric_type: MONETARY_ABSOLUTE
+    period_behavior: FLOW
+    q4_derivable: true
+    aliases:
+      GENERAL:
+        - Revenue
+        - Revenue from contracts with customers
+        - Total revenue
+        - Net sales
+      BANK:
+        - Gross income
+        - Total operating income
+      FINANCE_COMPANY:
+        - Total income
+        - Net operating income
+      INSURANCE:
+        - Insurance revenue
+        - Gross written premium
+        - Net earned premium
+  OPERATING_PROFIT:
+    display_name: Operating Profit
+    metric_type: MONETARY_ABSOLUTE
+    period_behavior: FLOW
+    q4_derivable: true
+    prohibited_aliases:
+      - EBITDA
+    aliases:
+      GENERAL:
+        - Operating profit
+        - Results from operating activities
+        - Profit from operations
+      BANK:
+        - Operating profit before taxes on financial services
+  PBT:
+    display_name: Profit Before Tax
+    metric_type: MONETARY_ABSOLUTE
+    period_behavior: FLOW
+    q4_derivable: true
+    aliases:
+      DEFAULT:
+        - Profit before tax
+        - Profit before income tax
+  PAT:
+    display_name: Profit After Tax
+    metric_type: MONETARY_ABSOLUTE
+    period_behavior: FLOW
+    q4_derivable: true
+    aliases:
+      DEFAULT:
+        - Profit for the period
+        - Profit after tax
+        - Net profit for the period
+  EPS_BASIC:
+    display_name: Basic EPS
+    metric_type: MONETARY_PER_SHARE
+    period_behavior: FLOW
+    q4_derivable: false
+    aliases:
+      DEFAULT:
+        - Basic earnings per ordinary share
+        - Basic earnings per share
+        - Earnings per share
+        - Earnings / (Loss) per Ordinary Share
+  EPS_DILUTED:
+    display_name: Diluted EPS
+    metric_type: MONETARY_PER_SHARE
+    period_behavior: FLOW
+    q4_derivable: false
+    aliases:
+      DEFAULT:
+        - Diluted earnings per ordinary share
+        - Diluted earnings per share
+  EPS_SELECTED:
+    display_name: EPS (Diluted Preferred)
+    metric_type: MONETARY_PER_SHARE
+    period_behavior: FLOW
+    q4_derivable: false
+    derived_from:
+      - EPS_DILUTED
+      - EPS_BASIC
+  NAVPS:
+    display_name: Net Assets Per Share
+    metric_type: MONETARY_PER_SHARE
+    period_behavior: AS_AT
+    q4_derivable: false
+    aliases:
+      DEFAULT:
+        - Net assets per share
+        - Net asset value per ordinary share
+        - Net asset value per share
+  TOTAL_EQUITY:
+    display_name: Total Equity
+    metric_type: MONETARY_ABSOLUTE
+    period_behavior: AS_AT
+    q4_derivable: false
+    aliases:
+      DEFAULT:
+        - Total equity
+        - Equity attributable to equity holders
+  TOTAL_ASSETS:
+    display_name: Total Assets
+    metric_type: MONETARY_ABSOLUTE
+    period_behavior: AS_AT
+    q4_derivable: false
+    aliases:
+      DEFAULT:
+        - Total assets
+  TOTAL_LIABILITIES:
+    display_name: Total Liabilities
+    metric_type: MONETARY_ABSOLUTE
+    period_behavior: AS_AT
+    q4_derivable: false
+    aliases:
+      DEFAULT:
+        - Total liabilities
+    derived_fallback: TOTAL_ASSETS_MINUS_TOTAL_EQUITY
+  MARKET_PRICE_QUARTER_END:
+    display_name: Market Price at Quarter End
+    metric_type: MONETARY_PER_SHARE
+    period_behavior: AS_AT
+    q4_derivable: false
+    grain: SECURITY_SYMBOL
+  ROE:
+    display_name: ROE
+    metric_type: RATIO
+    period_behavior: FLOW
+    derived_from:
+      - PAT
+      - TOTAL_EQUITY
+  ROA:
+    display_name: ROA
+    metric_type: RATIO
+    period_behavior: FLOW
+    derived_from:
+      - PAT
+      - TOTAL_ASSETS
+  NPM:
+    display_name: NPM
+    metric_type: RATIO
+    period_behavior: FLOW
+    derived_from:
+      - PAT
+      - TOP_LINE

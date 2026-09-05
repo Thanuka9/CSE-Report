@@ -1,0 +1,18 @@
+issuers:
+  JAT:
+    legal_name: JAT Holdings PLC
+    issuer_type: GENERAL
+    standalone_scope_label: COMPANY
+  DIALOG:
+    legal_name: Dialog Axiata PLC
+    issuer_type: GENERAL
+    standalone_scope_label: COMPANY
+  COMBANK:
+    legal_name: Commercial Bank of Ceylon PLC
+    issuer_type: BANK
+    standalone_scope_label: BANK
+  JKH:
+    legal_name: John Keells Holdings PLC
+    issuer_type: GENERAL
+    standalone_scope_label: COMPANY
+

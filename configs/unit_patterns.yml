@@ -1,0 +1,43 @@
+patterns:
+  - id: lkr_billion
+    regex: '(?i)\b(?:lkr|rs\.?|sri\s+lanka\s+rupees?)\s*(?:in\s+)?(?:bn|billions?)\b'
+    currency: LKR
+    scale_factor: 1000000000
+  - id: lkr_million
+    regex: '(?i)\b(?:lkr|rs\.?|sri\s+lanka\s+rupees?)\s*(?:in\s+)?(?:mn|millions?)\b'
+    currency: LKR
+    scale_factor: 1000000
+  - id: lkr_thousand
+    regex: "(?i)\\b(?:lkr|rs\\.?|sri\\s+lanka\\s+rupees?)\\s*(?:in\\s+)?(?:['’]?0{3}s?|thousands?)\\b"
+    currency: LKR
+    scale_factor: 1000
+  - id: lkr_thousand_inverse
+    regex: '(?i)\b(?:in\s+)?thousands?\s+of\s+(?:sri\s+lank(?:a|an)\s+)?rupees?\b'
+    currency: LKR
+    scale_factor: 1000
+  - id: lkr_million_inverse
+    regex: '(?i)\b(?:in\s+)?millions?\s+of\s+(?:sri\s+lank(?:a|an)\s+)?rupees?\b'
+    currency: LKR
+    scale_factor: 1000000
+  - id: lkr_unit
+    regex: '(?i)(?:\blkr\b|\brs\.?(?=\s|$)|\bsri\s+lanka\s+rupees?\b)'
+    currency: LKR
+    scale_factor: 1
+  - id: usd_thousand
+    regex: "(?i)(?:\\busd\\b|us\\$)\\s*(?:['’]?0{3}s?|thousands?)\\b"
+    currency: USD
+    scale_factor: 1000
+  - id: usd_unit
+    regex: '(?i)(?:\busd\b|us\$)'
+    currency: USD
+    scale_factor: 1
+
+scope_priority:
+  METRIC: 0
+  ROW: 0
+  CELL: 0
+  COLUMN: 1
+  TABLE: 2
+  STATEMENT: 3
+  PAGE: 4
+  REPORT: 5

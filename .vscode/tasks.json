@@ -1,0 +1,32 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "CSE ETL: Setup",
+      "type": "shell",
+      "command": "uv sync",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "CSE ETL: Test",
+      "type": "shell",
+      "command": "uv run pytest && uv run ruff check src tests",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "CSE ETL: Full Run",
+      "type": "shell",
+      "command": "uv run cse-etl run --project-root .",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "CSE ETL: Smoke Run (4 issuers)",
+      "type": "shell",
+      "command": "uv run cse-etl run --issuer-limit 4 --project-root .",
+      "problemMatcher": []
+    }
+  ]
+}
