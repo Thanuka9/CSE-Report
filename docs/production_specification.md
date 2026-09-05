@@ -557,14 +557,11 @@ The first release is intentionally database-free. Polars writes compressed Parqu
 
 ### 15.1 Workbook sheets
 
-1. `README`
-2. One `Snapshot_YYYY-MM-DD` sheet per market snapshot
-3. `Checks`
-4. `Accuracy_Certainty`
-5. `Audit_Lineage`
-6. `Price_Lineage`
-7. `Review_Queue`
-8. `Metric_Definitions`
+The published workbook contains exactly one sheet:
+
+1. `Snapshot_YYYY-MM-DD`
+
+Run identity is in the snapshot header. Coverage, review queue, fact lineage, prices, gold validation and metric definitions are written to `outputs/runs/<date>_<run-id>/dashboard.html` for that run. Do not add extra workbook sheets.
 
 ### 15.2 Snapshot grain
 

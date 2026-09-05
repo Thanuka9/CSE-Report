@@ -2,6 +2,7 @@
   {
     "issuer_name": "CIC HOLDINGS PLC",
     "symbol": "CIC.N0000",
+    "entity_scope": "COMPANY",
     "period_end": "2025-12-31",
     "pdf": "data/raw/filings/C_I_C_HOLDINGS_PLC/2025-12-31_493_1770119995452.pdf",
     "facts": {
@@ -20,6 +21,7 @@
   {
     "issuer_name": "DIGITAL MOBILITY SOLUTIONS LANKA PLC",
     "symbol": "PKME.N0000",
+    "entity_scope": "COMPANY",
     "period_end": "2026-06-30",
     "pdf": "data/raw/filings/DIGITAL_MOBILITY_SOLUTIONS_LANKA_PLC/2026-06-30_3218_1785237350161.pdf",
     "facts": {
@@ -30,7 +32,6 @@
       "EPS_BASIC": "1.89",
       "TOTAL_ASSETS": "6890750000",
       "TOTAL_EQUITY": "4469543000",
-      "TOTAL_LIABILITIES": "2421207000",
       "NAVPS": "13.41"
     },
     "prices": {"PKME.N0000": "173.75"}
@@ -38,6 +39,7 @@
   {
     "issuer_name": "JOHN KEELLS HOLDINGS PLC",
     "symbol": "JKH.N0000",
+    "entity_scope": "COMPANY",
     "period_end": "2026-06-30",
     "pdf": "data/raw/filings/JOHN_KEELLS_HOLDINGS_PLC/2026-06-30_508_1785229278745.pdf",
     "facts": {
@@ -47,7 +49,6 @@
       "PAT": "5378093000",
       "TOTAL_ASSETS": "366834520000",
       "TOTAL_EQUITY": "251552116000",
-      "TOTAL_LIABILITIES": "115282404000",
       "NAVPS": "14.18"
     },
     "prices": {"JKH.N0000": "20.20"}
@@ -55,6 +56,7 @@
   {
     "issuer_name": "NATIONAL DEVELOPMENT BANK PLC",
     "symbol": "NDB.N0000",
+    "entity_scope": "BANK",
     "period_end": "2026-06-30",
     "pdf": "data/raw/filings/NATIONAL_DEVELOPMENT_BANK_PLC/2026-06-30_386_1784717094209.pdf",
     "facts": {

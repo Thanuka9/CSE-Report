@@ -22,6 +22,13 @@ FLOW_CODES = {
 ABSOLUTE = "MONETARY_ABSOLUTE"
 STANDALONE = {"COMPANY", "BANK"}
 PUBLISHED = {"EXTRACTED", "EXTRACTED_DERIVED"}
+DEFAULT_MIN_GOLD_SAMPLE = 39
+
+
+def _published_count(status_counts: dict[str, int] | None) -> int:
+    if not status_counts:
+        return 0
+    return int(status_counts.get("EXTRACTED") or 0) + int(status_counts.get("EXTRACTED_DERIVED") or 0)
 
 
 @dataclass(frozen=True, slots=True)
@@ -43,16 +50,32 @@ def _price_date(price: QuarterPrice) -> date | None:
     return date.fromisoformat(match.group(1))
 
 
+def _parent_header_kind(evidence: dict[str, Any]) -> str | None:
+    kind = evidence.get("entity_parent_kind")
+    if kind:
+        return str(kind)
+    graph = evidence.get("graph")
+    if not isinstance(graph, dict):
+        return None
+    for node in graph.get("nodes", []):
+        if node.get("type") == "PARENT_HEADER" and node.get("kind"):
+            return str(node["kind"])
+    return None
+
+
 def evaluate_production_gates(
     extracted_results: Iterable[tuple[DownloadedFiling, list[ExtractedFact]]],
     prices: Iterable[QuarterPrice] = (),
     *,
     golden_validation: dict[str, Any] | None = None,
     required_scope: dict[str, str] | None = None,
+    previous_status_counts: dict[str, int] | None = None,
+    coverage_baseline: dict[str, Any] | None = None,
 ) -> list[GateHit]:
     """Hard stops for a universe run. Any hit means VALIDATION_REQUIRED, not gold promotion."""
 
     hits: list[GateHit] = []
+    published = 0
     if golden_validation:
         failed = [
             row
@@ -70,6 +93,32 @@ def evaluate_production_gates(
                     f"expected {row.get('expected')} actual {row.get('actual')}",
                 )
             )
+        sample = int(golden_validation.get("sample_size") or 0)
+        passed = int(golden_validation.get("passed") or 0)
+        if coverage_baseline:
+            min_gold = int(coverage_baseline.get("min_gold_sample") or DEFAULT_MIN_GOLD_SAMPLE)
+            if sample < min_gold:
+                hits.append(
+                    GateHit(
+                        "GOLD_SAMPLE_INCOMPLETE",
+                        "",
+                        "",
+                        None,
+                        None,
+                        f"gold sample_size={sample} below required {min_gold}",
+                    )
+                )
+        if sample and passed < sample and not failed:
+            hits.append(
+                GateHit(
+                    "GOLD_WRONG_POPULATED",
+                    "",
+                    "",
+                    None,
+                    None,
+                    f"gold passed={passed} of sample_size={sample}",
+                )
+            )
 
     scopes = required_scope or {}
     for downloaded, facts in extracted_results:
@@ -77,6 +126,7 @@ def evaluate_production_gates(
         for fact in facts:
             if fact.status not in PUBLISHED:
                 continue
+            published += 1
             if fact.metric_code in FLOW_CODES and fact.status == "EXTRACTED_DERIVED":
                 hits.append(
                     GateHit(
@@ -174,6 +224,39 @@ def evaluate_production_gates(
                         "unresolved candidate marked EXTRACTED",
                     )
                 )
+            parent_kind = _parent_header_kind(evidence)
+            if (
+                expected_scope in STANDALONE
+                and fact.entity_scope in STANDALONE
+                and parent_kind in {"GROUP", "CONSOLIDATED"}
+            ):
+                hits.append(
+                    GateHit(
+                        "GROUP_WHERE_STANDALONE_REQUIRED",
+                        fact.issuer_name,
+                        fact.symbol,
+                        fact.period_end,
+                        fact.metric_code,
+                        f"entity_scope={fact.entity_scope} parent_header_kind={parent_kind}",
+                    )
+                )
+
+    min_published = 0
+    if coverage_baseline and coverage_baseline.get("min_extracted_plus_derived") is not None:
+        min_published = int(coverage_baseline["min_extracted_plus_derived"])
+    previous_published = _published_count(previous_status_counts)
+    floor = max(min_published, previous_published)
+    if floor and published < floor:
+        hits.append(
+            GateHit(
+                "COVERAGE_REGRESSION",
+                "",
+                "",
+                None,
+                None,
+                f"EXTRACTED+DERIVED={published} below floor {floor}",
+            )
+        )
 
     for price in prices:
         if price.status != "EXTRACTED" or price.value is None:

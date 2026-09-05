@@ -1,1 +1,1 @@
-"""Snapshot and Excel workbook generation."""
+"""Snapshot workbook and per-run HTML dashboard."""

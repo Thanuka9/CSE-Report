@@ -82,5 +82,8 @@ module = [
   "sklearn.*",
   "yaml",
   "ocrmypdf",
+  "docling",
+  "docling.document_converter",
+  "docling.*",
 ]
 ignore_missing_imports = true

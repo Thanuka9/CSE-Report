@@ -22,16 +22,21 @@ CANONICAL_LABELS: dict[str, tuple[str, ...]] = {
         "net sales",
         "total revenue",
         "turnover",
+        "interest income",
+        "net interest income",
     ),
     "OPERATING_PROFIT": (
         "operating profit",
         "results from operating activities",
         "profit from operations",
+        "profit from operation",
         "profit loss from operations",
         "operating profit before tax on financial services",
         "operating profit before taxes on financial services",
         "results of operating activities",
         "profit from operating activities",
+        "results from operations",
+        "result from operating activities",
         "ebit",
         "earnings before interest and tax",
     ),
@@ -46,6 +51,7 @@ CANONICAL_LABELS: dict[str, tuple[str, ...]] = {
         "profit for the period",
         "profit for the quarter",
         "profit after tax",
+        "profit after taxation",
         "net profit after tax",
         "loss for the period",
         "net loss for the period",
@@ -75,8 +81,9 @@ CANONICAL_LABELS: dict[str, tuple[str, ...]] = {
         "equity attributable to equity holders",
         "shareholders funds",
         "total shareholders funds",
+        "equity attributable to owners",
     ),
-    "TOTAL_LIABILITIES": ("total liabilities", "liabilities total"),
+    "TOTAL_LIABILITIES": ("total liabilities", "liabilities total", "total liability"),
     "NAVPS": (
         "net assets per share",
         "net asset per share",
@@ -101,57 +108,18 @@ class SemanticMatch:
 
 
 class SemanticMatcher:
-    """Hybrid RapidFuzz NLP + optional MiniLM embeddings. Vectors stay in RAM only."""
+    """Regex aliases plus RapidFuzz token-set matching. No MiniLM or LLM."""
 
     def __init__(self, *, use_transformer: bool | None = None) -> None:
-        self._model: Any | None = None
-        self._canonical_vectors: Any | None = None
-        self._canonical_pairs = [
-            (metric, label) for metric, labels in CANONICAL_LABELS.items() for label in labels
-        ]
+        del use_transformer
         self.model_name = "rapidfuzz-token-set"
-        if use_transformer is None:
-            use_transformer = os.environ.get("CSE_ETL_USE_TRANSFORMER", "1") != "0"
-        if use_transformer:
-            self._load_transformer()
-
-    def _load_transformer(self) -> None:
-        try:
-            from sentence_transformers import SentenceTransformer
-
-            configured = os.environ.get("CSE_ETL_SEMANTIC_MODEL") or os.environ.get(
-                "CSE_ETL_TRANSFORMER_MODEL", "sentence-transformers/all-MiniLM-L6-v2"
-            )
-            self._model = SentenceTransformer(configured)
-            self._canonical_vectors = self._model.encode(
-                [label for _, label in self._canonical_pairs], normalize_embeddings=True
-            )
-            self.model_name = configured
-        except Exception:
-            self._model = None
-            self._canonical_vectors = None
-            self.model_name = "rapidfuzz-token-set:fallback"
 
     def match(self, label: str, metric_code: str) -> SemanticMatch:
         normalized = normalize_label(label)
         labels = CANONICAL_LABELS[metric_code]
         best_label = max(labels, key=lambda item: fuzz.token_set_ratio(normalized, item))
         fuzzy_score = fuzz.token_set_ratio(normalized, best_label) / 100
-        if fuzzy_score >= 0.84 or self._model is None or self._canonical_vectors is None:
-            return SemanticMatch(metric_code, fuzzy_score, best_label, self.model_name)
-
-        vector = self._model.encode([normalized], normalize_embeddings=True)[0]
-        best_score = -1.0
-        transformer_label = best_label
-        for index, (candidate_metric, candidate_label) in enumerate(self._canonical_pairs):
-            if candidate_metric != metric_code:
-                continue
-            similarity = float(vector @ self._canonical_vectors[index])
-            if similarity > best_score:
-                best_score = similarity
-                transformer_label = candidate_label
-        blended = max(fuzzy_score, max(0.0, min(1.0, (fuzzy_score * 0.45) + (best_score * 0.55))))
-        return SemanticMatch(metric_code, blended, transformer_label, self.model_name)
+        return SemanticMatch(metric_code, fuzzy_score, best_label, self.model_name)
 
 
 def apply_metric_catalog(catalog: dict[str, Any]) -> None:
@@ -178,4 +146,5 @@ def apply_metric_catalog(catalog: dict[str, Any]) -> None:
 
 @lru_cache(maxsize=1)
 def get_semantic_matcher() -> SemanticMatcher:
-    return SemanticMatcher()
+    os.environ.setdefault("CSE_ETL_USE_TRANSFORMER", "0")
+    return SemanticMatcher(use_transformer=False)

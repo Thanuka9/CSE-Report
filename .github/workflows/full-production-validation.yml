@@ -82,6 +82,9 @@ jobs:
           if not path.exists():
               raise SystemExit("Run manifest missing")
           manifest = json.loads(path.read_text(encoding="utf-8"))
+          counts = manifest.get("fact_status_counts") or {}
+          published = int(counts.get("EXTRACTED") or 0) + int(counts.get("EXTRACTED_DERIVED") or 0)
+          gold = manifest.get("golden_validation_sample_size")
           summary = {
               "run_status": manifest.get("run_status"),
               "security_count": manifest.get("security_count"),
@@ -89,16 +92,24 @@ jobs:
               "selected_filing_count": manifest.get("selected_filing_count"),
               "downloaded_filing_count": manifest.get("downloaded_filing_count"),
               "extracted_filing_count": manifest.get("extracted_filing_count"),
-              "fact_status_counts": manifest.get("fact_status_counts"),
+              "fact_status_counts": counts,
+              "extracted_plus_derived": published,
               "price_status_counts": manifest.get("price_status_counts"),
               "pipeline_error_count": manifest.get("pipeline_error_count"),
+              "golden_validation_sample_size": gold,
+              "golden_validation_accuracy": manifest.get("golden_validation_accuracy"),
               "production_gates": manifest.get("production_gates"),
+              "use_transformer": manifest.get("use_transformer"),
+              "semantic_model": manifest.get("semantic_model"),
           }
           print(json.dumps(summary, indent=2))
           gates = manifest.get("production_gates") or {}
           failed = (
               manifest.get("run_status") == "VALIDATION_REQUIRED"
               or int(gates.get("hit_count") or 0) > 0
+              or int(manifest.get("pipeline_error_count") or 0) > 0
+              or int(gold or 0) < 39
+              or float(manifest.get("golden_validation_accuracy") or 0) < 1.0
           )
           Path("outputs/production_gate_result.txt").write_text(
               "FAIL" if failed else "PASS", encoding="utf-8"

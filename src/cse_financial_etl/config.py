@@ -15,8 +15,8 @@ class AppConfig:
     auto_approve_threshold: float = 0.95
     manual_review_threshold: float = 0.80
     ocr_enabled: bool = True
-    use_transformer: bool = True
-    semantic_model: str = "sentence-transformers/all-MiniLM-L6-v2"
+    use_transformer: bool = False
+    semantic_model: str = "rapidfuzz-token-set"
     max_file_bytes: int = 50 * 1024 * 1024
     http_timeout_seconds: int = 30
     http_max_retries: int = 3
@@ -54,10 +54,8 @@ def load_app_config(project_root: Path) -> AppConfig:
             thresholds.get("manual_review", extraction.get("manual_review_threshold", 0.80))
         ),
         ocr_enabled=bool(extraction.get("ocr_enabled", True)),
-        use_transformer=bool(extraction.get("use_transformer", True)),
-        semantic_model=str(
-            extraction.get("semantic_model", "sentence-transformers/all-MiniLM-L6-v2")
-        ),
+        use_transformer=bool(extraction.get("use_transformer", False)),
+        semantic_model=str(extraction.get("semantic_model", "rapidfuzz-token-set")),
         max_file_bytes=int(http.get("max_file_bytes", 50 * 1024 * 1024)),
         http_timeout_seconds=int(http.get("timeout_seconds", 30)),
         http_max_retries=int(http.get("max_retries", 3)),
@@ -72,6 +70,10 @@ def load_metric_catalog(project_root: Path) -> dict[str, Any]:
 
 def load_unit_pattern_config(project_root: Path) -> dict[str, Any]:
     return load_yaml(project_root / "configs" / "unit_patterns.yml")
+
+
+def load_coverage_baseline(project_root: Path) -> dict[str, Any]:
+    return load_yaml(project_root / "configs" / "coverage_baseline.yml")
 
 
 def load_issuers(project_root: Path) -> dict[str, IssuerProfile]:

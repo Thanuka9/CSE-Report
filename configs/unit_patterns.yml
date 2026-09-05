@@ -7,8 +7,20 @@ patterns:
     regex: '(?i)\b(?:lkr|rs\.?|sri\s+lanka\s+rupees?)\s*(?:in\s+)?(?:mn|millions?)\b'
     currency: LKR
     scale_factor: 1000000
+  - id: lkr_paren_million
+    regex: '(?i)\(\s*(?:rs\.?|lkr)\s*mn\s*\)'
+    currency: LKR
+    scale_factor: 1000000
+  - id: lkr_rs_space_thousand
+    regex: '(?i)\b(?:rs\.?|lkr)\s+0{3}s?\b'
+    currency: LKR
+    scale_factor: 1000
+  - id: lkr_in_rs_thousands
+    regex: '(?i)\bin\s+(?:rs\.?|lkr)\s*thousands?\b'
+    currency: LKR
+    scale_factor: 1000
   - id: lkr_thousand
-    regex: "(?i)\\b(?:lkr|rs\\.?|sri\\s+lanka\\s+rupees?)\\s*(?:in\\s+)?(?:['’]?0{3}s?|thousands?)\\b"
+    regex: "(?i)\\b(?:lkr|rs\\.?|sri\\s+lank(?:a|an)\\s+rupees?)\\s*(?:in\\s+)?(?:['’]\\s*0{3}s?|thousands?)\\b"
     currency: LKR
     scale_factor: 1000
   - id: lkr_thousand_inverse
@@ -20,11 +32,11 @@ patterns:
     currency: LKR
     scale_factor: 1000000
   - id: lkr_unit
-    regex: '(?i)(?:\blkr\b|\brs\.?(?=\s|$)|\bsri\s+lanka\s+rupees?\b)'
+    regex: '(?i)(?:\blkr\b|\brs\.?(?=\s|$)|\bsri\s+lank(?:a|an)\s+rupees?\b)'
     currency: LKR
     scale_factor: 1
   - id: usd_thousand
-    regex: "(?i)(?:\\busd\\b|us\\$)\\s*(?:['’]?0{3}s?|thousands?)\\b"
+    regex: "(?i)(?:\\busd\\b|us\\$)\\s*(?:['’]\\s*0{3}s?|thousands?)\\b"
     currency: USD
     scale_factor: 1000
   - id: usd_unit

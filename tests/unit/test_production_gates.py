@@ -1,3 +1,4 @@
+import json
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -89,6 +90,27 @@ def test_group_where_standalone_required_is_a_hard_stop(tmp_path: Path) -> None:
     assert [hit.code for hit in hits] == ["GROUP_WHERE_STANDALONE_REQUIRED"]
 
 
+def test_group_parent_header_on_company_fact_is_a_hard_stop(tmp_path: Path) -> None:
+    evidence = {
+        "entity_parent_kind": "GROUP",
+        "graph": {
+            "nodes": [
+                {"id": "parent_header", "type": "PARENT_HEADER", "text": "Group", "kind": "GROUP"}
+            ]
+        },
+    }
+    hits = evaluate_production_gates(
+        [
+            (
+                _filing(tmp_path),
+                [_fact(entity_scope="COMPANY", evidence_json=json.dumps(evidence))],
+            )
+        ],
+        required_scope={"Acme PLC": "COMPANY"},
+    )
+    assert [hit.code for hit in hits] == ["GROUP_WHERE_STANDALONE_REQUIRED"]
+
+
 def test_unit_assumed_without_evidence_is_a_hard_stop(tmp_path: Path) -> None:
     hits = evaluate_production_gates(
         [(_filing(tmp_path), [_fact(unit_source_text="")])]
@@ -136,6 +158,24 @@ def test_gold_mismatch_is_wrong_populated() -> None:
         },
     )
     assert [hit.code for hit in hits] == ["GOLD_WRONG_POPULATED"]
+
+
+def test_gold_sample_below_baseline_is_a_hard_stop() -> None:
+    hits = evaluate_production_gates(
+        [],
+        golden_validation={"sample_size": 20, "passed": 20, "results": []},
+        coverage_baseline={"min_gold_sample": 39, "min_extracted_plus_derived": 0},
+    )
+    assert [hit.code for hit in hits] == ["GOLD_SAMPLE_INCOMPLETE"]
+
+
+def test_coverage_regression_is_a_hard_stop(tmp_path: Path) -> None:
+    hits = evaluate_production_gates(
+        [(_filing(tmp_path), [_fact()])],
+        previous_status_counts={"EXTRACTED": 5, "EXTRACTED_DERIVED": 0},
+    )
+    assert [hit.code for hit in hits] == ["COVERAGE_REGRESSION"]
+    assert "below floor 5" in hits[0].detail
 
 
 def test_validation_required_does_not_promote_gold(tmp_path: Path) -> None:

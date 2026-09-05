@@ -16,6 +16,7 @@ from cse_financial_etl.config import (
     code_version,
     config_hash,
     load_app_config,
+    load_coverage_baseline,
     load_issuers,
     load_metric_catalog,
     load_unit_pattern_config,
@@ -30,6 +31,7 @@ from cse_financial_etl.extraction.statement_extractor import (
     facts_by_code,
 )
 from cse_financial_etl.extraction.unit_detector import configure_unit_patterns
+from cse_financial_etl.reporting.dashboard import generate_run_dashboard
 from cse_financial_etl.reporting.excel import generate_excel
 from cse_financial_etl.sources.cse import (
     DownloadedFiling,
@@ -49,6 +51,8 @@ from cse_financial_etl.storage.repository import Repository
 from cse_financial_etl.storage.run_archive import (
     MANIFESTS_DIRNAME,
     archive_pipeline_artifacts,
+    preserve_current_run_folder,
+    run_output_dir,
     utc_stamp,
 )
 from cse_financial_etl.transformation.ratios import derive_ratio_facts
@@ -68,6 +72,22 @@ def derive_cumulative_quarters(
     """Compatibility no-op: cumulative/YTD values are never published as quarters."""
 
     return extracted_results
+
+
+def _previous_fact_status_counts(preserved: Path | None) -> dict[str, int] | None:
+    if preserved is None:
+        return None
+    manifest = preserved / "run_manifest.json"
+    if not manifest.exists():
+        return None
+    try:
+        payload = json.loads(manifest.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return None
+    counts = payload.get("fact_status_counts")
+    if not isinstance(counts, dict):
+        return None
+    return {str(key): int(value) for key, value in counts.items() if str(value).isdigit() or isinstance(value, int)}
 
 
 class Pipeline:
@@ -111,8 +131,11 @@ class Pipeline:
         errors: list[dict[str, str]] = []
         archive_stamp = utc_stamp()
         archived = archive_pipeline_artifacts(self.root, as_of_date.isoformat(), archive_stamp)
+        preserved = preserve_current_run_folder(self.root, as_of_date.isoformat())
         if archived:
             self.progress(f"      archived {len(archived)} prior-run files under history/archive")
+        if preserved is not None:
+            self.progress(f"      preserved prior run folder {preserved.name}")
 
         self.progress("[1/7] Fetching live CSE market-capitalization universe")
         market_path = self.data / "raw" / "api" / f"market_cap_{as_of_date.isoformat()}.json"
@@ -436,6 +459,8 @@ class Pipeline:
 
         self.progress("[7/7] Exporting normalized facts, prices, review queue, and manifest")
         self.outputs.mkdir(parents=True, exist_ok=True)
+        run_dir = run_output_dir(self.root, as_of_date.isoformat(), run_id)
+        run_dir.mkdir(parents=True, exist_ok=True)
         facts_csv = self.outputs / f"normalized_facts_{as_of_date.isoformat()}.csv"
         review_csv = self.outputs / f"review_queue_{as_of_date.isoformat()}.csv"
         prices_csv = self.outputs / f"quarter_end_prices_{as_of_date.isoformat()}.csv"
@@ -444,6 +469,10 @@ class Pipeline:
         self.repository.export_review_csv(review_csv, run_id)
         error_path = self.outputs / f"pipeline_errors_{as_of_date.isoformat()}.json"
         error_path.write_text(json.dumps(errors, indent=2), encoding="utf-8")
+        shutil.copy2(facts_csv, run_dir / "normalized_facts.csv")
+        shutil.copy2(review_csv, run_dir / "review_queue.csv")
+        shutil.copy2(prices_csv, run_dir / "quarter_end_prices.csv")
+        shutil.copy2(error_path, run_dir / "pipeline_errors.json")
         golden_validation = validate_golden(self.root, as_of_date)
         gate_hits = evaluate_production_gates(
             extracted_results,
@@ -452,6 +481,8 @@ class Pipeline:
             required_scope={
                 name: profile.standalone_scope_label for name, profile in self.issuers.items()
             },
+            previous_status_counts=_previous_fact_status_counts(preserved),
+            coverage_baseline=load_coverage_baseline(self.root),
         )
         for hit in gate_hits:
             self.repository.add_review(
@@ -503,6 +534,7 @@ class Pipeline:
             "facts_csv": str(facts_csv),
             "review_csv": str(review_csv),
             "prices_csv": str(prices_csv),
+            "run_dir": str(run_dir),
             "storage": "Parquet + JSONL",
             "code_version": code_version(),
             "config_hash": config_hash(self.root),
@@ -517,6 +549,10 @@ class Pipeline:
         if not skip_excel:
             workbook_path = generate_excel(self.root, as_of_date, target_periods, run_id)
             statistics["workbook"] = str(workbook_path)
+        dashboard_path = generate_run_dashboard(
+            self.root, as_of_date, target_periods, run_id, run_dir, statistics
+        )
+        statistics["dashboard"] = str(dashboard_path)
         manifests_dir = self.outputs / MANIFESTS_DIRNAME
         manifests_dir.mkdir(parents=True, exist_ok=True)
         manifest_path = manifests_dir / f"run_manifest_{as_of_date.isoformat()}.json"
@@ -526,6 +562,12 @@ class Pipeline:
         payload = json.dumps(statistics, indent=2)
         manifest_path.write_text(payload, encoding="utf-8")
         dated_manifest.write_text(payload, encoding="utf-8")
+        shutil.copy2(manifest_path, run_dir / "run_manifest.json")
+        golden_path = self.outputs / f"golden_validation_{as_of_date.isoformat()}.json"
+        if golden_path.exists():
+            shutil.copy2(golden_path, run_dir / "golden_validation.json")
+        if workbook_path is not None:
+            shutil.copy2(workbook_path, run_dir / "CSE_Financial_Snapshot.xlsx")
         self.repository.finish_run(run_id, run_status, statistics)
         return statistics
 

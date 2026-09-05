@@ -29,12 +29,12 @@ uv run cse-etl run `
 ## What to check after every run
 
 1. Open `outputs/manifests/run_manifest_<date>.json` and confirm `pipeline_error_count` is zero.
-2. Open the workbook's `Accuracy_Certainty` and `Checks` sheets.
+2. Open `outputs/runs/<date>_<run-id>/dashboard.html` for coverage, review queue, fact lineage, prices and gold.
 3. Confirm golden-fixture accuracy is 100% and `UNIT_NOT_DETECTED` has not regressed.
-4. Review `Review_Queue`; filter blocking reasons first.
-5. Confirm high-value issuers in `Audit_Lineage`, especially entity scope, period, page, unit and normalized value.
-6. Review `Price_Lineage` for voting/non-voting class selection.
-7. Archive the workbook, manifest and review queue together.
+4. In the dashboard Review queue, filter blocking reasons first.
+5. Spot-check high-value issuers in Facts: entity scope, period, page, unit and normalized value.
+6. Check Prices for voting/non-voting class selection.
+7. Archive the snapshot workbook, `dashboard.html`, manifest and review queue together.
 
 `REVIEW` is expected only when the filing genuinely does not expose an approved standalone Company/Bank value, a compatible exact/derivable quarter, or a filing-disclosed class-specific quarter-end price. It is not permission to guess a number.
 
@@ -64,7 +64,8 @@ Do not delete `data/raw/filings`; it avoids repeating the network download.
 
 | File | Purpose |
 |---|---|
-| `CSE_Financial_Snapshot_<date>.xlsx` | User-facing 14-field rolling-quarter report |
+| `CSE_Financial_Snapshot_<date>.xlsx` | Clean snapshot workbook (one sheet, 14-field rolling-quarter report) |
+| `outputs/runs/<date>_<run-id>/dashboard.html` | Per-run audit, coverage, review, prices, gold and definitions |
 | `normalized_facts_<date>.csv` | Long-form issuer facts and audit fields |
 | `quarter_end_prices_<date>.csv` | Symbol-specific filing prices and evidence |
 | `review_queue_<date>.csv` | Typed unresolved and validation states |
