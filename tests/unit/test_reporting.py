@@ -175,6 +175,8 @@ def test_workbook_contains_only_snapshot_sheet(tmp_path: Path) -> None:
     assert workbook.sheetnames == [f"Snapshot_{AS_OF.isoformat()}"]
     assert RUN_ID in str(workbook.active["A2"].value)
     assert "dashboard.html" in str(workbook.active["G2"].value)
+    # Header rows stay frozen; identity columns must scroll freely.
+    assert workbook.active.freeze_panes == "A5"
 
 
 def test_run_dashboard_is_self_contained(tmp_path: Path) -> None:

@@ -70,6 +70,61 @@ def test_annual_only_page_is_not_an_exact_quarter() -> None:
     assert _is_exact_quarter_page(quarter)
 
 
+def test_second_quarter_pack_with_six_months_is_not_exact_quarter() -> None:
+    """Dialog-style: pack title says Second Quarter but the P&L is six months."""
+
+    page = PdfPage(
+        1,
+        "Second Quarter Interim Financial Statements\n"
+        "Statement of profit or loss - Company\n"
+        "For the six months ended 30 June 2026\n"
+        "Revenue 73,252 37,231\n",
+    )
+    assert not _is_exact_quarter_page(page)
+
+
+def test_page_number_does_not_fake_three_month_duration() -> None:
+    """'Page 3' plus 'six months ended' must not become an exact-quarter cue."""
+
+    from cse_financial_etl.extraction.statement_extractor import (
+        _head_duration_cue,
+        _page_covers_period,
+    )
+
+    lines = (
+        _line(4, 10, [_token("Page", 10, 10, 30), _token("3", 45, 10, 10)]),
+        _line(
+            4,
+            30,
+            [
+                _token("Statement", 10, 30, 60),
+                _token("of", 75, 30, 20),
+                _token("comprehensive", 100, 30, 80),
+                _token("income", 185, 30, 40),
+            ],
+        ),
+        _line(
+            4,
+            50,
+            [
+                _token("For", 10, 50, 20),
+                _token("the", 35, 50, 20),
+                _token("six", 60, 50, 20),
+                _token("months", 85, 50, 40),
+                _token("ended", 130, 50, 35),
+                _token("30", 170, 50, 15),
+                _token("June", 190, 50, 30),
+                _token("2026", 225, 50, 30),
+                _token("2025", 260, 50, 30),
+            ],
+        ),
+    )
+    text = "\n".join(line.text for line in lines)
+    page = PageIR(number=4, width=600, height=800, lines=lines, text=text)
+    assert _head_duration_cue(page) == "YTD"
+    assert _page_covers_period(page, date(2026, 6, 30))
+
+
 def test_generic_earnings_per_share_maps_to_basic() -> None:
     page = PdfPage(
         1,

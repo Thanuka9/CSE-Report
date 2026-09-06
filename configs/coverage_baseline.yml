@@ -1,2 +1,4 @@
-min_extracted_plus_derived: 9902
-min_gold_sample: 39
+min_extracted_plus_derived: 9685
+min_gold_sample: 100
+# Floor reduced from 9902 after demoting 217 CURRENT_PLUS_NONCURRENT
+# TOTAL_LIABILITIES rows to SOURCE_CONFIRMED_NOT_REPORTED (never publish A-E / assembly).

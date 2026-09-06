@@ -2,9 +2,22 @@ tolerances:
   market_cap_lkr_absolute: 1.00
   balance_sheet_relative: 0.005
   market_cap_share_sum_absolute: 0.0001
+  pat_tax_bridge_relative: 0.02
 thresholds:
   auto_approve: 0.95
   manual_review: 0.80
+  max_retry_rounds: 2
+equation_rules:
+  - rule_id: BALANCE_SHEET_IDENTITY
+    severity: BLOCKING
+    tolerance_relative: 0.005
+  - rule_id: BALANCE_SHEET_SANITY
+    severity: BLOCKING
+  - rule_id: CROSS_METRIC_CONTEXT_INCONSISTENT
+    severity: RETRY
+  - rule_id: PAT_TAX_BRIDGE
+    severity: RETRY
+    applicability: WHEN_TAX_LINE_IDENTIFIED
 blocking_codes:
   - UNIT_NOT_DETECTED
   - UNIT_CONFLICT
@@ -14,5 +27,12 @@ blocking_codes:
   - EXACT_QUARTER_NOT_REPORTED
   - HISTORICAL_PRICE_NOT_AVAILABLE
   - BALANCE_SHEET_RECONCILIATION_FAILED
+  - BALANCE_SHEET_SANITY_FAILED
   - DUPLICATE_APPROVED_FACT
   - NORMALIZATION_MISMATCH
+  - DERIVED_LIABILITIES_WITHOUT_EXPLICIT_ROW
+  - CUMULATIVE_PUBLISHED_AS_QUARTER
+  - CURRENT_COMPARATIVE_MISMATCH
+  - ISSUER_QUARTER_CONTEXT_INCONSISTENT
+  - CROSS_METRIC_CONTEXT_INCONSISTENT
+  - PAT_TAX_BRIDGE_MISMATCH

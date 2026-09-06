@@ -36,7 +36,7 @@ DEFINITIONS: tuple[tuple[str, str, str, str], ...] = (
     ("Total Equity / Total Assets", "STOCK", "Standalone Company/Bank balance at period end from the statement of financial position.",
      "Detected currency and scale"),
     ("Total Liabilities", "STOCK",
-     "Printed Company/Bank total, or Company current plus non-current totals assembled from the same SOFP. Never Assets minus Equity, never Group copied onto Company.",
+     "Printed Company/Bank total liabilities row only. Never Assets minus Equity, never Group copied onto Company, never silent current+non-current assembly on the publish path.",
      "Normalized LKR"),
     ("Quarter-end Price", "PER_SHARE",
      "Exact security class; filing first, then official CSE history, then last trade on or before quarter end. Never a later live snapshot.",
@@ -166,11 +166,40 @@ def generate_run_dashboard(
         manifest = run_dir / "run_manifest.json"
         if manifest.exists():
             stats = json.loads(manifest.read_text(encoding="utf-8"))
+    # Prefer live gold validation file; fall back to manifest only if file missing.
+    if not gold and stats.get("golden_validation_sample_size"):
+        gold = {
+            "passed": stats.get("golden_validation_passed")
+            or int(
+                round(
+                    float(stats.get("golden_validation_accuracy") or 0)
+                    * float(stats.get("golden_validation_sample_size") or 0)
+                )
+            ),
+            "sample_size": stats.get("golden_validation_sample_size"),
+            "accuracy": stats.get("golden_validation_accuracy"),
+        }
+    fixture_summary = gold.get("field_accuracy") or {}
+    if not fixture_summary.get("issuer_count"):
+        try:
+            from cse_financial_etl.reporting.accuracy import summarize_gold_fixture
+
+            fixture_summary = {
+                **summarize_gold_fixture(
+                    project_root / "tests" / "fixtures" / "golden_financial_facts.json"
+                ),
+                **fixture_summary,
+            }
+        except Exception:
+            pass
     fact_status_counts = stats.get("fact_status_counts") or dict(
         Counter(row.get("status") or "UNKNOWN" for row in facts)
     )
     price_status_counts = stats.get("price_status_counts") or dict(
         Counter(row.get("status") or "UNKNOWN" for row in prices)
+    )
+    published = int(fact_status_counts.get("EXTRACTED") or 0) + int(
+        fact_status_counts.get("EXTRACTED_DERIVED") or 0
     )
     payload = {
         "run_id": run_id,
@@ -186,12 +215,25 @@ def generate_run_dashboard(
         },
         "errors": stats.get("pipeline_error_count", 0),
         "gates": (stats.get("production_gates") or {}).get("hit_count", 0),
+        "published_facts": published,
         "gold": {
             "passed": gold.get("passed", 0),
             "sample": gold.get("sample_size", 0),
             "accuracy": gold.get("accuracy"),
+            "issuer_count": gold.get("issuer_count")
+            or fixture_summary.get("issuer_count")
+            or 0,
+            "manual_issuers": fixture_summary.get("manual_issuers", 0),
+            "seeded_issuers": fixture_summary.get("seeded_issuers", 0),
             "by_metric": gold.get("by_metric", {}),
+            "field_accuracy": gold.get("field_accuracy") or fixture_summary,
         },
+        "code_version": stats.get("code_version", ""),
+        "git_commit_sha": stats.get("git_commit_sha", ""),
+        "git_branch": stats.get("git_branch", ""),
+        "working_tree_dirty": stats.get("working_tree_dirty"),
+        "equation_validation": stats.get("equation_validation", {}),
+        "retry_summary": stats.get("retry_summary", {}),
         "fact_status_counts": fact_status_counts,
         "price_status_counts": price_status_counts,
         "miss_buckets": _miss_buckets(fact_status_counts, price_status_counts),
@@ -244,12 +286,21 @@ def _render_html(payload: dict[str, Any]) -> str:
       background: var(--bg);
     }}
     header {{
-      background: var(--navy);
+      background: linear-gradient(135deg, #0f2e59 0%, #1b4f72 100%);
       color: #fff;
-      padding: 20px 28px 16px;
+      padding: 22px 28px 18px;
     }}
-    header h1 {{ margin: 0 0 6px; font-size: 22px; font-weight: 650; }}
-    header p {{ margin: 0; color: #cfe0f2; font-size: 13px; }}
+    header h1 {{ margin: 0 0 8px; font-size: 22px; font-weight: 650; letter-spacing: -0.02em; }}
+    header p {{ margin: 0; color: #cfe0f2; font-size: 13px; line-height: 1.45; }}
+    header .meta {{ margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; }}
+    header .chip {{
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.18);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      color: #e8f1fa;
+    }}
     nav {{
       display: flex;
       gap: 6px;
@@ -313,6 +364,7 @@ def _render_html(payload: dict[str, Any]) -> str:
   <header>
     <h1>CSE ETL run dashboard</h1>
     <p id="subtitle"></p>
+    <div class="meta" id="header-meta"></div>
   </header>
   <nav id="tabs"></nav>
   <main id="root"></main>
@@ -357,27 +409,59 @@ def _render_html(payload: dict[str, Any]) -> str:
       </div>`;
     }}
     function renderOverview() {{
-      const gold = DATA.gold.sample ? `${{DATA.gold.passed}}/${{DATA.gold.sample}}` : "n/a";
-      const facts = DATA.fact_status_counts || {{}};
+      const goldSample = Number(DATA.gold.sample || 0);
+      const goldPassed = Number(DATA.gold.passed || 0);
+      const goldAcc = DATA.gold.accuracy == null ? "n/a" : `${{(Number(DATA.gold.accuracy) * 100).toFixed(1)}}%`;
+      const goldLabel = goldSample
+        ? `${{goldPassed.toLocaleString()}} / ${{goldSample.toLocaleString()}}`
+        : "n/a";
       const buckets = DATA.miss_buckets || {{ honest: {{}}, parser: {{}}, honest_total: 0, parser_total: 0 }};
       const reviews = Object.values(DATA.review_reasons || {{}}).reduce((n, v) => n + v, 0);
-      const cards = [
-        ["Status", DATA.status || "n/a"],
-        ["Gold fixture", gold],
-        ["Production gates", DATA.gates],
-        ["Pipeline errors", DATA.errors],
-        ["Securities", DATA.security_count],
-        ["Issuers", DATA.issuer_count],
-        ["Filings extracted", DATA.filings.extracted],
-        ["Review items", reviews],
-        ["Honest misses", buckets.honest_total || 0],
-        ["Parser gaps", buckets.parser_total || 0],
-      ].map(([label, value]) => `<div class="card"><div class="label">${{esc(label)}}</div><div class="value">${{esc(value)}}</div></div>`).join("");
+      const eq = DATA.equation_validation || {{}};
+      const retry = DATA.retry_summary || {{}};
+      const meta = document.getElementById("header-meta");
+      if (meta) {{
+        meta.innerHTML = [
+          `Run ${{esc((DATA.run_id || "").slice(0, 8))}}`,
+          `As of ${{esc(DATA.as_of)}}`,
+          `Git ${{esc((DATA.git_commit_sha || "").slice(0, 12) || "n/a")}}`,
+          `Branch ${{esc(DATA.git_branch || "n/a")}}`,
+          DATA.working_tree_dirty ? "Working tree dirty" : "Clean tree",
+        ].map((text) => `<span class="chip">${{text}}</span>`).join("");
+      }}
+      const published = Number(DATA.published_facts || 0).toLocaleString();
+      const hero = `<div class="grid">
+          <div class="card"><div class="label">Run status</div><div class="value">${{pill(DATA.status || "n/a")}}</div></div>
+          <div class="card"><div class="label">Gold checks</div><div class="value">${{esc(goldLabel)}}</div>
+            <p class="note">${{esc(DATA.gold.issuer_count || 0)}} issuers · accuracy ${{esc(goldAcc)}}</p></div>
+          <div class="card"><div class="label">Published facts (E+D)</div><div class="value">${{esc(published)}}</div></div>
+          <div class="card"><div class="label">Production gates</div><div class="value">${{esc(DATA.gates)}}</div></div>
+        </div>
+        <div class="grid">
+          <div class="card"><div class="label">Manual gold issuers</div><div class="value">${{esc(DATA.gold.manual_issuers || 0)}}</div></div>
+          <div class="card"><div class="label">Seeded gold issuers</div><div class="value">${{esc(DATA.gold.seeded_issuers || 0)}}</div>
+            <p class="note">Seeded rows are regression anchors, not independent PDF truth.</p></div>
+          <div class="card"><div class="label">Equation FAIL</div><div class="value">${{esc(eq.FAIL || 0)}}</div>
+            <p class="note">PASS ${{esc(eq.PASS || 0)}} · WARN ${{esc(eq.WARN || 0)}}</p></div>
+          <div class="card"><div class="label">Retry recovered</div><div class="value">${{esc(retry.recovered || 0)}}</div>
+            <p class="note">${{esc(retry.filings || 0)}} filings · ${{esc(retry.attempts || 0)}} attempts</p></div>
+        </div>
+        <div class="grid">
+          <div class="card"><div class="label">Securities</div><div class="value">${{esc(DATA.security_count)}}</div></div>
+          <div class="card"><div class="label">Issuers</div><div class="value">${{esc(DATA.issuer_count)}}</div></div>
+          <div class="card"><div class="label">Filings extracted</div><div class="value">${{esc(DATA.filings.extracted)}}</div></div>
+          <div class="card"><div class="label">Review items</div><div class="value">${{esc(reviews)}}</div></div>
+          <div class="card"><div class="label">Honest misses</div><div class="value">${{esc(buckets.honest_total || 0)}}</div></div>
+          <div class="card"><div class="label">Parser gaps</div><div class="value">${{esc(buckets.parser_total || 0)}}</div></div>
+          <div class="card"><div class="label">Pipeline errors</div><div class="value">${{esc(DATA.errors)}}</div></div>
+          <div class="card"><div class="label">Code version</div><div class="value">${{esc(DATA.code_version || "n/a")}}</div></div>
+        </div>`;
+      const facts = DATA.fact_status_counts || {{}};
       const statusRows = Object.entries(facts).map(([k, v]) => `<tr><td>${{esc(k)}}</td><td>${{esc(v)}}</td></tr>`).join("");
       const reasonRows = Object.entries(DATA.review_reasons || {{}}).map(([k, v]) => `<tr><td>${{esc(k)}}</td><td>${{esc(v)}}</td></tr>`).join("");
       const honestRows = Object.entries(buckets.honest || {{}}).map(([k, v]) => `<tr><td>${{esc(k)}}</td><td>${{esc(v)}}</td></tr>`).join("");
       const parserRows = Object.entries(buckets.parser || {{}}).map(([k, v]) => `<tr><td>${{esc(k)}}</td><td>${{esc(v)}}</td></tr>`).join("");
-      return `<div class="grid">${{cards}}</div>
+      return hero + `
         <div class="grid">
           <div class="card"><h2>Fact statuses</h2><table><thead><tr><th>Status</th><th>Count</th></tr></thead><tbody>${{statusRows}}</tbody></table></div>
           <div class="card"><h2>Review reasons</h2><table><thead><tr><th>Reason</th><th>Count</th></tr></thead><tbody>${{reasonRows}}</tbody></table></div>
@@ -443,9 +527,16 @@ def _render_html(payload: dict[str, Any]) -> str:
     }}
     function renderGold() {{
       const metrics = Object.entries(DATA.gold.by_metric || {{}}).map(([metric, row]) => ({{ metric, ...row }}));
+      const field = (DATA.gold.field_accuracy && DATA.gold.field_accuracy.field_accuracy)
+        ? DATA.gold.field_accuracy.field_accuracy
+        : (DATA.gold.field_accuracy || {{}});
+      const pct = (value) => value == null ? "n/a" : `${{(Number(value) * 100).toFixed(1)}}%`;
       return `<div class="grid">
-          <div class="card"><div class="label">Accuracy</div><div class="value">${{DATA.gold.accuracy == null ? "n/a" : (DATA.gold.accuracy * 100).toFixed(1) + "%"}}</div></div>
-          <div class="card"><div class="label">Passed</div><div class="value">${{esc(DATA.gold.passed)}} / ${{esc(DATA.gold.sample)}}</div></div>
+          <div class="card"><div class="label">Numeric accuracy</div><div class="value">${{DATA.gold.accuracy == null ? "n/a" : (DATA.gold.accuracy * 100).toFixed(1) + "%"}}</div></div>
+          <div class="card"><div class="label">Passed / sample</div><div class="value">${{esc(DATA.gold.passed)}} / ${{esc(DATA.gold.sample)}}</div>
+            <p class="note">${{esc(DATA.gold.issuer_count || 0)}} issuers (manual ${{esc(DATA.gold.manual_issuers || 0)}} · seeded ${{esc(DATA.gold.seeded_issuers || 0)}})</p></div>
+          <div class="card"><div class="label">Wrong-populated rate</div><div class="value">${{esc(pct(field.wrong_populated_value_rate))}}</div></div>
+          <div class="card"><div class="label">False-missing rate</div><div class="value">${{esc(pct(field.false_missing_rate))}}</div></div>
         </div>` + table(
         ["Metric", "Sample", "Passed", "Failed", "Accuracy"],
         metrics,

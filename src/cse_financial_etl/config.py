@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -8,6 +9,22 @@ from typing import Any
 import yaml
 
 from cse_financial_etl import __version__
+
+
+@dataclass(frozen=True, slots=True)
+class GitIdentity:
+    commit_sha: str | None
+    branch: str | None
+    working_tree_dirty: bool | None
+    describe: str | None = None
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "git_commit_sha": self.commit_sha,
+            "git_branch": self.branch,
+            "working_tree_dirty": self.working_tree_dirty,
+            "git_describe": self.describe,
+        }
 
 
 @dataclass(frozen=True, slots=True)
@@ -103,6 +120,40 @@ def config_hash(project_root: Path) -> str:
 
 def code_version() -> str:
     return __version__
+
+
+def _git_output(project_root: Path, *args: str) -> str | None:
+    try:
+        completed = subprocess.run(
+            ["git", *args],
+            cwd=project_root,
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if completed.returncode != 0:
+        return None
+    text = (completed.stdout or "").strip()
+    return text or None
+
+
+def git_identity(project_root: Path) -> GitIdentity:
+    """Record exact Git SHA / branch / dirty flag for run reproducibility (§53)."""
+
+    sha = _git_output(project_root, "rev-parse", "HEAD")
+    branch = _git_output(project_root, "rev-parse", "--abbrev-ref", "HEAD")
+    porcelain = _git_output(project_root, "status", "--porcelain")
+    describe = _git_output(project_root, "describe", "--tags", "--always", "--dirty")
+    dirty = None if porcelain is None else bool(porcelain)
+    return GitIdentity(
+        commit_sha=sha,
+        branch=branch,
+        working_tree_dirty=dirty,
+        describe=describe,
+    )
 
 
 def infer_issuer_type(issuer_name: str) -> str:

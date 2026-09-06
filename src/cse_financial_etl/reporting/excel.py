@@ -18,7 +18,7 @@ from cse_financial_etl.sources.historical_prices import resolve_quarter_end_pric
 VISIBLE_METRICS: tuple[tuple[str, str], ...] = (
     ("PAT", "PAT"),
     ("PBT", "PBT"),
-    ("EPS_SELECTED", "EPS (Diluted Preferred)"),
+    ("EPS_SELECTED", "EPS"),
     ("NAVPS", "NAVPS"),
     ("OPERATING_PROFIT", "Operating Profit"),
     ("TOTAL_EQUITY", "Total Equity"),
@@ -27,11 +27,11 @@ VISIBLE_METRICS: tuple[tuple[str, str], ...] = (
     ("TOP_LINE", "Revenue / Gross Income"),
 )
 DERIVED_HEADERS = (
-    "Market Price at Quarter End",
-    "Debt to Equity (x)",
-    "ROE (Quarter)",
-    "ROA (Quarter)",
-    "NPM (Quarter)",
+    "Qtr-End Price",
+    "Debt / Equity",
+    "ROE (Qtr)",
+    "ROA (Qtr)",
+    "NPM (Qtr)",
 )
 ACCEPTED_STATUSES = {"EXTRACTED", "EXTRACTED_DERIVED"}
 BALANCE_SHEET_CODES = {
@@ -235,23 +235,26 @@ def generate_excel(
     wb.remove(wb.active)
     snapshot = wb.create_sheet(f"Snapshot_{as_of_date.isoformat()}")
 
-    navy, blue, mid_blue, green = "17365D", "1F4E78", "5B9BD5", "548235"
-    light_blue, amber, white = "D9EAF7", "FFF2CC", "FFFFFF"
-    thin = Side(style="thin", color="D9E2F3")
+    navy, blue, mid_blue, green = "0F2E59", "1B4F72", "2A6F74", "1E6B45"
+    light, light_teal, amber, white = "F4F7FA", "E8F4F4", "FBE9D0", "FFFFFF"
+    ink = "1A2332"
+    thin = Side(style="thin", color="C5D0DC")
+    hair = Side(style="hair", color="D8DEE6")
 
     def title(ws: Any, cell_range: str, text: str) -> None:
         ws.merge_cells(cell_range)
         cell = ws[cell_range.split(":")[0]]
         cell.value = text
         cell.fill = PatternFill("solid", fgColor=navy)
-        cell.font = Font(color=white, bold=True, size=16)
+        cell.font = Font(color=white, bold=True, size=15, name="Calibri")
+        cell.alignment = Alignment(horizontal="left", vertical="center")
 
     def style_header(cells: Any, fill: str = blue) -> None:
         for cell in cells:
             cell.fill = PatternFill("solid", fgColor=fill)
-            cell.font = Font(color=white, bold=True, size=9)
+            cell.font = Font(color=white, bold=True, size=9, name="Calibri")
             cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-            cell.border = Border(bottom=thin)
+            cell.border = Border(bottom=Side(style="medium", color=navy), left=thin, right=thin)
 
     columns_per_period = 14
     total_columns = 10 + len(periods) * columns_per_period
@@ -260,6 +263,7 @@ def generate_excel(
         f"A1:{get_column_letter(total_columns)}1",
         "CSE Market Capitalization and Standalone Financial Snapshot",
     )
+    snapshot.row_dimensions[1].height = 28
     snapshot.merge_cells(start_row=2, start_column=1, end_row=2, end_column=6)
     snapshot.cell(2, 1, f"Market as of: {as_of_date.isoformat()}  |  Run {run_id}")
     snapshot.merge_cells(start_row=2, start_column=7, end_row=2, end_column=total_columns)
@@ -269,14 +273,16 @@ def generate_excel(
         "Standalone Company/Bank values in LKR. Open dashboard.html in the run folder for audit, coverage and review.",
     )
     for cell in snapshot[2]:
-        cell.fill = PatternFill("solid", fgColor=light_blue)
-        cell.font = Font(color=navy, bold=True)
+        cell.fill = PatternFill("solid", fgColor=light_teal)
+        cell.font = Font(color=navy, bold=True, size=9, name="Calibri")
+        cell.alignment = Alignment(vertical="center", wrap_text=True)
 
     snapshot.merge_cells(start_row=3, start_column=1, end_row=3, end_column=10)
     snapshot.cell(3, 1, "Ranking and Market Data")
     for column in range(1, 11):
         snapshot.cell(3, column).fill = PatternFill("solid", fgColor=navy)
-        snapshot.cell(3, column).font = Font(color=white, bold=True)
+        snapshot.cell(3, column).font = Font(color=white, bold=True, size=10, name="Calibri")
+        snapshot.cell(3, column).alignment = Alignment(horizontal="center", vertical="center")
     fills = (blue, mid_blue, green)
     for index, period in enumerate(periods):
         start = 11 + index * columns_per_period
@@ -286,7 +292,8 @@ def generate_excel(
         snapshot.cell(3, start, f"Financial period ended {period.isoformat()}")
         for column in range(start, start + columns_per_period):
             snapshot.cell(3, column).fill = PatternFill("solid", fgColor=fills[index % len(fills)])
-            snapshot.cell(3, column).font = Font(color=white, bold=True)
+            snapshot.cell(3, column).font = Font(color=white, bold=True, size=10, name="Calibri")
+            snapshot.cell(3, column).alignment = Alignment(horizontal="center", vertical="center")
 
     base_headers = (
         "Previous Rank",
@@ -307,6 +314,20 @@ def generate_excel(
     for column, header in enumerate(headers, start=1):
         snapshot.cell(4, column, header)
     style_header(snapshot[4])
+    # Metric block headers use period band colours so columns stay visually grouped.
+    for index, _period in enumerate(periods):
+        start = 11 + index * columns_per_period
+        band = fills[index % len(fills)]
+        for column in range(start, start + columns_per_period):
+            cell = snapshot.cell(4, column)
+            cell.fill = PatternFill("solid", fgColor=band)
+            cell.font = Font(color=white, bold=True, size=8, name="Calibri")
+            cell.alignment = Alignment(
+                horizontal="center", vertical="center", wrap_text=True, shrink_to_fit=False
+            )
+    snapshot.row_dimensions[2].height = 22
+    snapshot.row_dimensions[3].height = 24
+    snapshot.row_dimensions[4].height = 56
 
     for row_index, security in enumerate(ranked, start=5):
         market_cap = security.get("market_capitalization")
@@ -393,19 +414,38 @@ def generate_excel(
             )
 
         for cell in snapshot[row_index]:
-            cell.border = Border(bottom=Side(style="hair", color="D9E2F3"))
-            cell.font = Font(size=9)
+            cell.border = Border(bottom=hair, left=thin, right=thin)
+            cell.font = Font(size=9, color=ink, name="Calibri")
+            if row_index % 2 == 1:
+                cell.fill = PatternFill("solid", fgColor=light)
 
     last_row = 4 + len(ranked)
-    snapshot.freeze_panes = "F5"
-    snapshot.auto_filter.ref = f"A4:{get_column_letter(total_columns)}{last_row}"
-    snapshot.sheet_view.showGridLines = False
-    widths = {1: 14, 2: 13, 3: 13, 4: 35, 5: 15, 6: 14, 7: 17, 8: 23, 9: 15, 10: 18}
+    widths = {1: 12, 2: 12, 3: 11, 4: 34, 5: 13, 6: 13, 7: 15, 8: 20, 9: 13, 10: 15}
     for column, width in widths.items():
         snapshot.column_dimensions[get_column_letter(column)].width = width
+    metric_widths = {
+        0: 14,  # PAT
+        1: 14,  # PBT
+        2: 11,  # EPS
+        3: 11,  # NAVPS
+        4: 15,  # OP
+        5: 14,  # Equity
+        6: 14,  # Assets
+        7: 15,  # Liabilities
+        8: 16,  # Top line
+        9: 12,  # Price
+        10: 12,  # D/E
+        11: 11,  # ROE
+        12: 11,  # ROA
+        13: 11,  # NPM
+    }
     for column in range(11, total_columns + 1):
-        snapshot.column_dimensions[get_column_letter(column)].width = 18
-    snapshot.row_dimensions[4].height = 52
+        offset = (column - 11) % columns_per_period
+        snapshot.column_dimensions[get_column_letter(column)].width = metric_widths.get(offset, 13)
+    # Freeze header rows only — do not lock the first five identity columns.
+    snapshot.freeze_panes = "A5"
+    snapshot.auto_filter.ref = f"A4:{get_column_letter(total_columns)}{last_row}"
+    snapshot.sheet_view.showGridLines = False
     for row in range(5, last_row + 1):
         snapshot.cell(row, 6).number_format = "#,##0.00;[Red](#,##0.00);-"
         snapshot.cell(row, 7).number_format = "#,##0;[Red](#,##0);-"

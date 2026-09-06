@@ -16,7 +16,12 @@
       "TOTAL_LIABILITIES": "26918550000.00",
       "NAVPS": "6.59"
     },
-    "prices": {"CIC.N0000": "34.80", "CIC.X0000": "26.10"}
+    "prices": {
+      "CIC.N0000": "34.80",
+      "CIC.X0000": "26.10"
+    },
+    "issuer_type": "HOLDING",
+    "verification_status": "MANUAL_OR_PRIOR"
   },
   {
     "issuer_name": "DIGITAL MOBILITY SOLUTIONS LANKA PLC",
@@ -34,7 +39,11 @@
       "TOTAL_EQUITY": "4469543000",
       "NAVPS": "13.41"
     },
-    "prices": {"PKME.N0000": "173.75"}
+    "prices": {
+      "PKME.N0000": "173.75"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "MANUAL_OR_PRIOR"
   },
   {
     "issuer_name": "JOHN KEELLS HOLDINGS PLC",
@@ -51,7 +60,11 @@
       "TOTAL_EQUITY": "251552116000",
       "NAVPS": "14.18"
     },
-    "prices": {"JKH.N0000": "20.20"}
+    "prices": {
+      "JKH.N0000": "20.20"
+    },
+    "issuer_type": "HOLDING",
+    "verification_status": "MANUAL_QA"
   },
   {
     "issuer_name": "NATIONAL DEVELOPMENT BANK PLC",
@@ -71,6 +84,2227 @@
       "TOTAL_LIABILITIES": "868970702000",
       "NAVPS": "185.21"
     },
-    "prices": {"NDB.N0000": "112.50"}
+    "prices": {
+      "NDB.N0000": "112.50"
+    },
+    "issuer_type": "BANK",
+    "verification_status": "MANUAL_OR_PRIOR"
+  },
+  {
+    "issuer_name": "COMMERCIAL BANK OF CEYLON PLC",
+    "symbol": "COMB.N0000",
+    "entity_scope": "BANK",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/COMMERCIAL_BANK_OF_CEYLON_PLC/2026-06-30_369_1786618965674.pdf",
+    "facts": {
+      "PAT": "16621006000",
+      "PBT": "24210049000",
+      "EPS_DILUTED": "10.02",
+      "NAVPS": "210.38",
+      "OPERATING_PROFIT": "29495553000",
+      "TOTAL_EQUITY": "347873696000",
+      "TOTAL_ASSETS": "3592606230000",
+      "TOTAL_LIABILITIES": "3244732534000",
+      "TOP_LINE": "106625116000"
+    },
+    "prices": {
+      "COMB.N0000": "208.75"
+    },
+    "issuer_type": "BANK",
+    "verification_status": "MANUAL_QA"
+  },
+  {
+    "issuer_name": "DIALOG AXIATA PLC",
+    "symbol": "DIAL.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/DIALOG_AXIATA_PLC/2026-06-30_389_1786711190916.pdf",
+    "facts": {
+      "PAT": "8187022000",
+      "PBT": "9129161000",
+      "EPS_BASIC": "0.89",
+      "EPS_DILUTED": "0.89",
+      "NAVPS": "7.59",
+      "OPERATING_PROFIT": "10628121000",
+      "TOTAL_EQUITY": "69854340000",
+      "TOTAL_ASSETS": "242361103000",
+      "TOTAL_LIABILITIES": "172506763000",
+      "TOP_LINE": "37231246000"
+    },
+    "prices": {
+      "DIAL.N0000": "46.10"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "MANUAL_QA"
+  },
+  {
+    "issuer_name": "JAT HOLDINGS PLC",
+    "symbol": "JAT.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/JAT_HOLDINGS_PLC/2026-06-30_2353_1786011152811.27_Q1_SIGNED.pdf",
+    "facts": {
+      "EPS_BASIC": "0.21",
+      "NAVPS": "21.34",
+      "OPERATING_PROFIT": "116795005",
+      "PAT": "108959808",
+      "PBT": "114959808",
+      "TOP_LINE": "1781288156",
+      "TOTAL_ASSETS": "14143745104",
+      "TOTAL_EQUITY": "11146318056"
+    },
+    "prices": {
+      "JAT.N0000": "39.80"
+    },
+    "issuer_type": "HOLDING",
+    "verification_status": "MANUAL_QA"
+  },
+  {
+    "issuer_name": "AMANA BANK PLC",
+    "symbol": "ABL.N0000",
+    "entity_scope": "BANK",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/AMANA_BANK_PLC/2026-06-30_1303_1786627989885.pdf",
+    "facts": {
+      "EPS_BASIC": "1.13",
+      "EPS_DILUTED": "1.13",
+      "NAVPS": "47.30",
+      "OPERATING_PROFIT": "1366289000",
+      "PAT": "622661000",
+      "PBT": "1032548000",
+      "TOP_LINE": "2842517000",
+      "TOTAL_ASSETS": "215230243000",
+      "TOTAL_EQUITY": "26072372000",
+      "TOTAL_LIABILITIES": "189157871000"
+    },
+    "prices": {
+      "ABL.N0000": "26.80"
+    },
+    "issuer_type": "BANK",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "CARGILLS BANK PLC",
+    "symbol": "CBNK.N0000",
+    "entity_scope": "BANK",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/CARGILLS_BANK_PLC/2026-06-30_3118_1786612056865.pdf",
+    "facts": {
+      "EPS_BASIC": "0.06",
+      "EPS_DILUTED": "0.06",
+      "NAVPS": "11.81",
+      "OPERATING_PROFIT": "338396000",
+      "PAT": "75819000",
+      "PBT": "176977000",
+      "TOP_LINE": "1165845000",
+      "TOTAL_ASSETS": "104707432000",
+      "TOTAL_EQUITY": "14642063000",
+      "TOTAL_LIABILITIES": "90065369000"
+    },
+    "prices": {
+      "CBNK.N0000": "8.00"
+    },
+    "issuer_type": "BANK",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "DFCC BANK PLC",
+    "symbol": "DFCC.N0000",
+    "entity_scope": "BANK",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/DFCC_BANK_PLC/2026-06-30_371_1786617016139.pdf",
+    "facts": {
+      "EPS_BASIC": "4.91",
+      "EPS_DILUTED": "4.91",
+      "NAVPS": "240.73",
+      "OPERATING_PROFIT": "4178919000",
+      "PAT": "2188790000",
+      "PBT": "3040871000",
+      "TOP_LINE": "26631373000",
+      "TOTAL_ASSETS": "919423278000",
+      "TOTAL_EQUITY": "108501804000",
+      "TOTAL_LIABILITIES": "810921474000"
+    },
+    "prices": {
+      "DFCC.N0000": "0"
+    },
+    "issuer_type": "BANK",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "HATTON NATIONAL BANK PLC",
+    "symbol": "HNB.N0000",
+    "entity_scope": "BANK",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/HATTON_NATIONAL_BANK_PLC/2026-06-30_373_1786545582269.pdf",
+    "facts": {
+      "EPS_BASIC": "22.85",
+      "EPS_DILUTED": "22.85",
+      "NAVPS": "486.88",
+      "OPERATING_PROFIT": "26022261000",
+      "PAT": "13192754000",
+      "PBT": "20591298000",
+      "TOP_LINE": "73320179000",
+      "TOTAL_ASSETS": "2559116167000",
+      "TOTAL_EQUITY": "281085275000",
+      "TOTAL_LIABILITIES": "2278030892000"
+    },
+    "prices": {
+      "HNB.N0000": "403.75"
+    },
+    "issuer_type": "BANK",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "SAMPATH BANK PLC",
+    "symbol": "SAMP.N0000",
+    "entity_scope": "BANK",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/SAMPATH_BANK_PLC/2026-06-30_431_1786590688111.06.2026.pdf",
+    "facts": {
+      "EPS_BASIC": "8.91",
+      "EPS_DILUTED": "8.91",
+      "NAVPS": "153.04",
+      "OPERATING_PROFIT": "20736592000",
+      "PAT": "10451502000",
+      "PBT": "16203474000",
+      "TOP_LINE": "65063347000",
+      "TOTAL_ASSETS": "2127571753000",
+      "TOTAL_EQUITY": "179464685000",
+      "TOTAL_LIABILITIES": "1948107068000"
+    },
+    "prices": {
+      "SAMP.N0000": "143.25"
+    },
+    "issuer_type": "BANK",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "SANASA DEVELOPMENT BANK PLC",
+    "symbol": "SDB.N0000",
+    "entity_scope": "BANK",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/SANASA_DEVELOPMENT_BANK_PLC/2026-06-30_1182_1786702166298.pdf",
+    "facts": {
+      "EPS_BASIC": "0.28",
+      "EPS_DILUTED": "0.28",
+      "NAVPS": "90.83",
+      "OPERATING_PROFIT": "119342000",
+      "PAT": "46731000",
+      "PBT": "119342000",
+      "TOP_LINE": "2065105000",
+      "TOTAL_ASSETS": "149760364000",
+      "TOTAL_EQUITY": "14911222000",
+      "TOTAL_LIABILITIES": "134849142000"
+    },
+    "prices": {
+      "SDB.N0000": "55.30"
+    },
+    "issuer_type": "BANK",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "SEYLAN BANK PLC",
+    "symbol": "SEYB.N0000",
+    "entity_scope": "BANK",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/SEYLAN_BANK_PLC/2026-06-30_443_1785411925853.pdf",
+    "facts": {
+      "EPS_BASIC": "4.99",
+      "EPS_DILUTED": "4.99",
+      "NAVPS": "132.87",
+      "OPERATING_PROFIT": "6382144000",
+      "PAT": "3174532000",
+      "PBT": "4749412000",
+      "TOP_LINE": "24145415000",
+      "TOTAL_ASSETS": "975992032000",
+      "TOTAL_EQUITY": "84461574000",
+      "TOTAL_LIABILITIES": "891530458000"
+    },
+    "prices": {
+      "SEYB.N0000": "100.00"
+    },
+    "issuer_type": "BANK",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "HOUSING DEVELOPMENT FINANCE CORPORATION BANK OF SL",
+    "symbol": "HDFC.N0000",
+    "entity_scope": "BANK",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/HOUSING_DEVELOPMENT_FINANCE_CORPORATION_BANK_OF_SL/2026-06-30_376_1786614164242.06.2026.pdf",
+    "facts": {
+      "EPS_BASIC": "0.53",
+      "NAVPS": "118.33",
+      "OPERATING_PROFIT": "31000000",
+      "PAT": "-4000000",
+      "PBT": "31000000",
+      "TOP_LINE": "1785000000",
+      "TOTAL_ASSETS": "63187000000",
+      "TOTAL_EQUITY": "7657000000",
+      "TOTAL_LIABILITIES": "55233000000"
+    },
+    "prices": {},
+    "issuer_type": "BANK",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "NATIONS TRUST BANK PLC",
+    "symbol": "NTB.N0000",
+    "entity_scope": "BANK",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/NATIONS_TRUST_BANK_PLC/2026-06-30_387_1786611868010.pdf",
+    "facts": {
+      "EPS_BASIC": "38.07",
+      "EPS_DILUTED": "38.07",
+      "OPERATING_PROFIT": "9128508000",
+      "PAT": "12692298000",
+      "PBT": "9128508000",
+      "TOP_LINE": "29685566000",
+      "TOTAL_ASSETS": "923175159000",
+      "TOTAL_EQUITY": "103928679000",
+      "TOTAL_LIABILITIES": "819246480000"
+    },
+    "prices": {
+      "NTB.N0000": "317.50"
+    },
+    "issuer_type": "BANK",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "PAN ASIA BANKING CORPORATION PLC",
+    "symbol": "PABC.N0000",
+    "entity_scope": "BANK",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/PAN_ASIA_BANKING_CORPORATION_PLC/2026-06-30_388_1786615791129.pdf",
+    "facts": {
+      "EPS_BASIC": "3.28",
+      "NAVPS": "72.09",
+      "OPERATING_PROFIT": "1741678",
+      "PAT": "1451876",
+      "PBT": "1283785",
+      "TOP_LINE": "10116813",
+      "TOTAL_ASSETS": "354034099",
+      "TOTAL_EQUITY": "31905299",
+      "TOTAL_LIABILITIES": "322128801"
+    },
+    "prices": {
+      "PABC.N0000": "54.90"
+    },
+    "issuer_type": "BANK",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "UNION BANK OF COLOMBO PLC",
+    "symbol": "UBC.N0000",
+    "entity_scope": "BANK",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/UNION_BANK_OF_COLOMBO_PLC/2026-06-30_1047_1785488568538.06.2026.pdf",
+    "facts": {
+      "EPS_BASIC": "0.23",
+      "NAVPS": "18.8",
+      "OPERATING_PROFIT": "607075000",
+      "PAT": "253250000",
+      "PBT": "416371000",
+      "TOP_LINE": "5142562000",
+      "TOTAL_ASSETS": "199283081000",
+      "TOTAL_EQUITY": "20557701000",
+      "TOTAL_LIABILITIES": "178725380000"
+    },
+    "prices": {
+      "UBC.N0000": "12.50"
+    },
+    "issuer_type": "BANK",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "ASIA ASSET FINANCE PLC",
+    "symbol": "AAF.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/ASIA_ASSET_FINANCE_PLC/2026-06-30_1108_1785236157796.pdf",
+    "facts": {
+      "EPS_BASIC": "3.46",
+      "EPS_DILUTED": "2.42",
+      "NAVPS": "41.89",
+      "OPERATING_PROFIT": "1158873536",
+      "PAT": "429411257",
+      "PBT": "877873536",
+      "TOP_LINE": "3400029872",
+      "TOTAL_ASSETS": "60415894032",
+      "TOTAL_EQUITY": "5202839932",
+      "TOTAL_LIABILITIES": "55213054100"
+    },
+    "prices": {
+      "AAF.N0000": "59.90"
+    },
+    "issuer_type": "FINANCE",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "CITIZENS DEVELOPMENT BUSINESS FINANCE PLC",
+    "symbol": "CDB.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/CITIZENS_DEVELOPMENT_BUSINESS_FINANCE_PLC/2026-06-30_981_1785924600634.pdf",
+    "facts": {
+      "EPS_BASIC": "1.40",
+      "EPS_DILUTED": "1.38",
+      "NAVPS": "40.60",
+      "OPERATING_PROFIT": "2064156000",
+      "PAT": "1001720000",
+      "PBT": "1430204000",
+      "TOP_LINE": "8857102000",
+      "TOTAL_ASSETS": "227385542000",
+      "TOTAL_EQUITY": "29123311000",
+      "TOTAL_LIABILITIES": "198262231000"
+    },
+    "prices": {
+      "CDB.N0000": "392.50"
+    },
+    "issuer_type": "FINANCE",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "LANKA CREDIT AND BUSINESS FINANCE PLC",
+    "symbol": "LCBF.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/LANKA_CREDIT_AND_BUSINESS_FINANCE_PLC/2026-06-30_2512_1785493631763.06.2026 V2 - SGD.pdf",
+    "facts": {
+      "EPS_BASIC": "0.09",
+      "EPS_DILUTED": "0.09",
+      "NAVPS": "4.37",
+      "OPERATING_PROFIT": "137483766",
+      "PAT": "72633766",
+      "PBT": "98633766",
+      "TOP_LINE": "548029354",
+      "TOTAL_ASSETS": "12396271646",
+      "TOTAL_EQUITY": "3451359928",
+      "TOTAL_LIABILITIES": "8944911718"
+    },
+    "prices": {
+      "LCBF.N0000": "6.90"
+    },
+    "issuer_type": "FINANCE",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "MERCANTILE INVESTMENTS AND FINANCE PLC",
+    "symbol": "MERC.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/MERCANTILE_INVESTMENTS_AND_FINANCE_PLC/2026-06-30_1064_1786356283470.pdf",
+    "facts": {
+      "EPS_BASIC": "0.64",
+      "EPS_DILUTED": "0.64",
+      "NAVPS": "28.20",
+      "OPERATING_PROFIT": "979926000",
+      "PAT": "394427000",
+      "PBT": "713557000",
+      "TOP_LINE": "5415938000",
+      "TOTAL_ASSETS": "130915080000",
+      "TOTAL_EQUITY": "17376721000",
+      "TOTAL_LIABILITIES": "113538359000"
+    },
+    "prices": {
+      "MERC.N0000": "26.50"
+    },
+    "issuer_type": "FINANCE",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "PEOPLE'S LEASING & FINANCE PLC",
+    "symbol": "PLC.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/PEOPLE_S_LEASING_FINANCE_PLC/2026-06-30_1103_1786413386791.pdf",
+    "facts": {
+      "EPS_BASIC": "0.55",
+      "EPS_DILUTED": "0.55",
+      "NAVPS": "21.96",
+      "OPERATING_PROFIT": "2860000000",
+      "PAT": "1219000000",
+      "PBT": "2069000000",
+      "TOP_LINE": "13249000000",
+      "TOTAL_ASSETS": "332661000000",
+      "TOTAL_EQUITY": "48521000000",
+      "TOTAL_LIABILITIES": "284140000000"
+    },
+    "prices": {
+      "PLC.N0000": "21.90"
+    },
+    "issuer_type": "FINANCE",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "SENKADAGALA FINANCE COMPANY PLC",
+    "symbol": "SFCL.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/SENKADAGALA_FINANCE_COMPANY_PLC/2026-06-30_441_1786618720410.pdf",
+    "facts": {
+      "EPS_BASIC": "5.25",
+      "EPS_DILUTED": "5.25",
+      "NAVPS": "143.98",
+      "OPERATING_PROFIT": "856823841",
+      "PAT": "472628213",
+      "PBT": "640721361",
+      "TOP_LINE": "2991347001",
+      "TOTAL_ASSETS": "55965964236",
+      "TOTAL_EQUITY": "13044091069",
+      "TOTAL_LIABILITIES": "42921873167"
+    },
+    "prices": {
+      "SFCL.N0000": "403.75"
+    },
+    "issuer_type": "FINANCE",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "DIALOG FINANCE PLC",
+    "symbol": "CALF.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/DIALOG_FINANCE_PLC/2026-06-30_1101_1786093873886.pdf",
+    "facts": {
+      "EPS_BASIC": "0.71",
+      "NAVPS": "24.79",
+      "OPERATING_PROFIT": "173828000",
+      "PAT": "83629000",
+      "PBT": "114986000",
+      "TOP_LINE": "648924000",
+      "TOTAL_ASSETS": "13705012000",
+      "TOTAL_EQUITY": "2909759000",
+      "TOTAL_LIABILITIES": "10795253000"
+    },
+    "prices": {
+      "CALF.N0000": "134.50"
+    },
+    "issuer_type": "FINANCE",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "HNB FINANCE PLC",
+    "symbol": "HNBF.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/HNB_FINANCE_PLC/2026-06-30_1992_1786717837836.pdf",
+    "facts": {
+      "EPS_BASIC": "0.21",
+      "NAVPS": "4.66",
+      "OPERATING_PROFIT": "1163123834",
+      "PAT": "430042270",
+      "PBT": "792224279",
+      "TOP_LINE": "5558790185",
+      "TOTAL_ASSETS": "99890943126",
+      "TOTAL_EQUITY": "9686276905",
+      "TOTAL_LIABILITIES": "90204666221"
+    },
+    "prices": {
+      "HNBF.N0000": "9.60"
+    },
+    "issuer_type": "FINANCE",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "JANASHAKTHI FINANCE PLC",
+    "symbol": "BFN.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/JANASHAKTHI_FINANCE_PLC/2026-06-30_1072_1786698231742.pdf",
+    "facts": {
+      "EPS_BASIC": "0.43",
+      "NAVPS": "19.41",
+      "OPERATING_PROFIT": "212696000",
+      "PAT": "90413000",
+      "PBT": "138211000",
+      "TOP_LINE": "1832133000",
+      "TOTAL_ASSETS": "39942566000",
+      "TOTAL_EQUITY": "4097636000",
+      "TOTAL_LIABILITIES": "35844930000"
+    },
+    "prices": {
+      "BFN.N0000": "36.10"
+    },
+    "issuer_type": "FINANCE",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "LB FINANCE PLC",
+    "symbol": "LFIN.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/LB_FINANCE_PLC/2026-06-30_379_1784195933058.06.2026.pdf",
+    "facts": {
+      "EPS_BASIC": "6.38",
+      "NAVPS": "111.69",
+      "OPERATING_PROFIT": "7168197000",
+      "PAT": "3537553000",
+      "PBT": "5698625000",
+      "TOP_LINE": "16957101000",
+      "TOTAL_ASSETS": "433953090000",
+      "TOTAL_EQUITY": "61883316000",
+      "TOTAL_LIABILITIES": "372069774000"
+    },
+    "prices": {
+      "LFIN.N0000": "173.00"
+    },
+    "issuer_type": "FINANCE",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "SINGER FINANCE LANKA PLC",
+    "symbol": "SFIN.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/SINGER_FINANCE_LANKA_PLC/2026-06-30_1041_1784631418371.pdf",
+    "facts": {
+      "EPS_BASIC": "1.68",
+      "NAVPS": "35.36",
+      "OPERATING_PROFIT": "1086978000",
+      "PAT": "465679000",
+      "PBT": "786724000",
+      "TOP_LINE": "4973327000",
+      "TOTAL_ASSETS": "101116165000",
+      "TOTAL_EQUITY": "9825861000",
+      "TOTAL_LIABILITIES": "91290304000"
+    },
+    "prices": {
+      "SFIN.N0000": "51.70"
+    },
+    "issuer_type": "FINANCE",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "SMB FINANCE PLC",
+    "symbol": "SEMB.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/SMB_FINANCE_PLC/2026-06-30_445_1786699835531.pdf",
+    "facts": {
+      "EPS_BASIC": "-0.001",
+      "NAVPS": "0.38",
+      "OPERATING_PROFIT": "16057000",
+      "PAT": "-5920000",
+      "PBT": "-9847000",
+      "TOP_LINE": "168841000",
+      "TOTAL_ASSETS": "7050161000",
+      "TOTAL_EQUITY": "3884779000",
+      "TOTAL_LIABILITIES": "3165382000"
+    },
+    "prices": {
+      "SEMB.N0000": "1.00"
+    },
+    "issuer_type": "FINANCE",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "SOFTLOGIC FINANCE PLC",
+    "symbol": "CRL.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/SOFTLOGIC_FINANCE_PLC/2026-06-30_863_1786010214601.pdf",
+    "facts": {
+      "EPS_BASIC": "-0.34",
+      "NAVPS": "3.12",
+      "OPERATING_PROFIT": "-70782241",
+      "PAT": "-80787298",
+      "PBT": "-80787298",
+      "TOP_LINE": "249320792",
+      "TOTAL_ASSETS": "7597070510",
+      "TOTAL_EQUITY": "2999666969",
+      "TOTAL_LIABILITIES": "7597070510"
+    },
+    "prices": {
+      "CRL.N0000": "6.30"
+    },
+    "issuer_type": "FINANCE",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "UB FINANCE PLC",
+    "symbol": "UBF.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/UB_FINANCE_PLC/2026-06-30_2998_1785488565526.06.2026.pdf",
+    "facts": {
+      "EPS_BASIC": "0.008",
+      "NAVPS": "1.02",
+      "OPERATING_PROFIT": "89501266",
+      "PAT": "26857544",
+      "PBT": "48227500",
+      "TOP_LINE": "771508396",
+      "TOTAL_ASSETS": "19320983085",
+      "TOTAL_EQUITY": "3245776337",
+      "TOTAL_LIABILITIES": "16075206748"
+    },
+    "prices": {
+      "UBF.N0000": "2.50"
+    },
+    "issuer_type": "FINANCE",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "VALLIBEL FINANCE PLC",
+    "symbol": "VFIN.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/VALLIBEL_FINANCE_PLC/2026-06-30_949_1786527104139.06.2026.pdf",
+    "facts": {
+      "EPS_BASIC": "16.41",
+      "NAVPS": "80.15",
+      "OPERATING_PROFIT": "2297286",
+      "PAT": "1077186",
+      "PBT": "1768178",
+      "TOP_LINE": "8566197",
+      "TOTAL_ASSETS": "194554894",
+      "TOTAL_EQUITY": "21230498",
+      "TOTAL_LIABILITIES": "173324396"
+    },
+    "prices": {
+      "VFIN.N0000": "93.80"
+    },
+    "issuer_type": "FINANCE",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "AMANA TAKAFUL LIFE PLC",
+    "symbol": "ATLL.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/AMANA_TAKAFUL_LIFE_PLC/2026-06-30_1484_1786622361189.pdf",
+    "facts": {
+      "EPS_BASIC": "0.08",
+      "EPS_DILUTED": "0.08",
+      "NAVPS": "13.13",
+      "OPERATING_PROFIT": "8493706",
+      "PAT": "3884285",
+      "PBT": "6229741",
+      "TOP_LINE": "581063548",
+      "TOTAL_ASSETS": "6186861824",
+      "TOTAL_EQUITY": "656417280",
+      "TOTAL_LIABILITIES": "5530444539"
+    },
+    "prices": {
+      "ATLL.N0000": "23.70"
+    },
+    "issuer_type": "INSURANCE",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "AMANA TAKAFUL PLC",
+    "symbol": "ATL.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/AMANA_TAKAFUL_PLC/2026-06-30_361_1786698848189.pdf",
+    "facts": {
+      "EPS_BASIC": "1.63",
+      "EPS_DILUTED": "0.46",
+      "NAVPS": "22.59",
+      "OPERATING_PROFIT": "128516987",
+      "PAT": "112679100",
+      "PBT": "112679100",
+      "TOP_LINE": "246420372",
+      "TOTAL_ASSETS": "11703484751",
+      "TOTAL_EQUITY": "6765977528",
+      "TOTAL_LIABILITIES": "4937507223"
+    },
+    "prices": {
+      "ATL.N0000": "21.20"
+    },
+    "issuer_type": "INSURANCE",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "UNION ASSURANCE PLC",
+    "symbol": "UAL.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/UNION_ASSURANCE_PLC/2026-06-30_450_1786698498893.pdf",
+    "facts": {
+      "EPS_BASIC": "0.40",
+      "EPS_DILUTED": "0.40",
+      "NAVPS": "32.40",
+      "OPERATING_PROFIT": "723879",
+      "PAT": "504239",
+      "PBT": "723879",
+      "TOP_LINE": "13389768",
+      "TOTAL_ASSETS": "131523135",
+      "TOTAL_EQUITY": "19090376",
+      "TOTAL_LIABILITIES": "112432759"
+    },
+    "prices": {
+      "UAL.N0000": "74.50"
+    },
+    "issuer_type": "INSURANCE",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "ARPICO INSURANCE PLC",
+    "symbol": "AINS.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/ARPICO_INSURANCE_PLC/2026-06-30_1405_1786702427086.pdf",
+    "facts": {
+      "EPS_BASIC": "0.26",
+      "EPS_DILUTED": "0.26",
+      "NAVPS": "17.1",
+      "PAT": "17317450",
+      "PBT": "15472846",
+      "TOP_LINE": "319585620",
+      "TOTAL_ASSETS": "5236973018",
+      "TOTAL_EQUITY": "1710872122",
+      "TOTAL_LIABILITIES": "3526100896"
+    },
+    "prices": {
+      "AINS.N0000": "17.2"
+    },
+    "issuer_type": "INSURANCE",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "LOLC GENERAL INSURANCE PLC",
+    "symbol": "LGIL.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/LOLC_GENERAL_INSURANCE_PLC/2026-06-30_2693_1786537566905.pdf",
+    "facts": {
+      "EPS_BASIC": "-0.08",
+      "NAVPS": "5.58",
+      "PAT": "-98636000",
+      "PBT": "-150289000",
+      "TOP_LINE": "3466113000",
+      "TOTAL_ASSETS": "31080231000",
+      "TOTAL_EQUITY": "6695539000",
+      "TOTAL_LIABILITIES": "24384692000"
+    },
+    "prices": {
+      "LGIL.N0000": "6.10"
+    },
+    "issuer_type": "INSURANCE",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "SOFTLOGIC LIFE INSURANCE PLC",
+    "symbol": "AAIC.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/SOFTLOGIC_LIFE_INSURANCE_PLC/2026-06-30_364_1786443015903. Interim Financial Statements - For the_Period ended 30 June 2026-CSE.pdf",
+    "facts": {
+      "EPS_BASIC": "2.46",
+      "EPS_DILUTED": "2.46",
+      "NAVPS": "46.14",
+      "PAT": "779660000",
+      "PBT": "988492000",
+      "TOP_LINE": "12192913000",
+      "TOTAL_ASSETS": "71887918000",
+      "TOTAL_EQUITY": "14600266000",
+      "TOTAL_LIABILITIES": "57287652000"
+    },
+    "prices": {
+      "AAIC.N0000": "93.70"
+    },
+    "issuer_type": "INSURANCE",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "JANASHAKTHI INSURANCE PLC",
+    "symbol": "JINS.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/JANASHAKTHI_INSURANCE_PLC/2026-06-30_841_1786704588262.pdf",
+    "facts": {
+      "EPS_BASIC": "0.19",
+      "NAVPS": "20.1",
+      "PAT": "15926000",
+      "PBT": "89806000",
+      "TOP_LINE": "2514939000",
+      "TOTAL_ASSETS": "41144096000",
+      "TOTAL_EQUITY": "16770544000",
+      "TOTAL_LIABILITIES": "24373552000"
+    },
+    "prices": {
+      "JINS.N0000": "20.2"
+    },
+    "issuer_type": "INSURANCE",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "PEOPLE'S INSURANCE PLC",
+    "symbol": "PINS.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/PEOPLE_S_INSURANCE_PLC/2026-06-30_1465_1786614115368.pdf",
+    "facts": {
+      "EPS_BASIC": "0.99",
+      "NAVPS": "31.08",
+      "PAT": "200876511",
+      "PBT": "295060299",
+      "TOP_LINE": "1949119589",
+      "TOTAL_ASSETS": "15698635075",
+      "TOTAL_EQUITY": "6328773912",
+      "TOTAL_LIABILITIES": "9369861163"
+    },
+    "prices": {
+      "PINS.N0000": "28.50"
+    },
+    "issuer_type": "INSURANCE",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "INSUREME INSURANCE BROKERS PLC",
+    "symbol": "INME.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/INSUREME_INSURANCE_BROKERS_PLC/2026-06-30_3421_1785753621580.pdf",
+    "facts": {
+      "EPS_BASIC": "9.27",
+      "NAVPS": "9.4",
+      "PAT": "19045566",
+      "TOP_LINE": "131874373",
+      "TOTAL_ASSETS": "428553834",
+      "TOTAL_EQUITY": "241896256"
+    },
+    "prices": {
+      "INME.N0000": "1807.50"
+    },
+    "issuer_type": "INSURANCE",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "AMBEON HOLDINGS PLC",
+    "symbol": "GREG.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/AMBEON_HOLDINGS_PLC/2026-06-30_782_1786930433403.06.2026.pdf",
+    "facts": {
+      "EPS_BASIC": "-0.16",
+      "EPS_DILUTED": "-0.16",
+      "NAVPS": "8.05",
+      "OPERATING_PROFIT": "-172743000",
+      "PAT": "-234370000",
+      "PBT": "-234370000",
+      "TOP_LINE": "174300000",
+      "TOTAL_ASSETS": "14360918000",
+      "TOTAL_EQUITY": "11486249000"
+    },
+    "prices": {
+      "GREG.N0000": "3"
+    },
+    "issuer_type": "HOLDING",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "KAPRUKA HOLDINGS PLC",
+    "symbol": "KPHL.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/KAPRUKA_HOLDINGS_PLC/2026-06-30_2714_1786700376627.pdf",
+    "facts": {
+      "EPS_BASIC": "0.01",
+      "EPS_DILUTED": "0.10",
+      "NAVPS": "7.79",
+      "OPERATING_PROFIT": "8174624",
+      "PAT": "972750",
+      "PBT": "2948860",
+      "TOP_LINE": "52538355",
+      "TOTAL_ASSETS": "1600921947",
+      "TOTAL_EQUITY": "1278017209"
+    },
+    "prices": {
+      "KPHL.N0000": "21.90"
+    },
+    "issuer_type": "HOLDING",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "YORK ARCADE HOLDINGS PLC",
+    "symbol": "YORK.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/YORK_ARCADE_HOLDINGS_PLC/2026-06-30_641_1786101193519.06.2026.pdf",
+    "facts": {
+      "EPS_BASIC": "0.00",
+      "EPS_DILUTED": "0.00",
+      "NAVPS": "1.50",
+      "OPERATING_PROFIT": "-25459000",
+      "PAT": "2026",
+      "PBT": "-706000",
+      "TOP_LINE": "-1679000",
+      "TOTAL_ASSETS": "228344000",
+      "TOTAL_EQUITY": "225290000",
+      "TOTAL_LIABILITIES": "3054000"
+    },
+    "prices": {
+      "YORK.N0000": "15.50"
+    },
+    "issuer_type": "HOLDING",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "AITKEN SPENCE HOTEL HOLDINGS PLC",
+    "symbol": "AHUN.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/AITKEN_SPENCE_HOTEL_HOLDINGS_PLC/2026-06-30_521_1786698820226.pdf",
+    "facts": {
+      "EPS_BASIC": "-0.18",
+      "NAVPS": "31.36",
+      "OPERATING_PROFIT": "-36771000",
+      "PAT": "-84437000",
+      "PBT": "-73064000",
+      "TOP_LINE": "245276000",
+      "TOTAL_ASSETS": "14610321000",
+      "TOTAL_EQUITY": "10710267000",
+      "TOTAL_LIABILITIES": "3900054000"
+    },
+    "prices": {
+      "AHUN.N0000": "93.90"
+    },
+    "issuer_type": "HOLDING",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "B P P L HOLDINGS PLC",
+    "symbol": "BPPL.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/B_P_P_L_HOLDINGS_PLC/2026-06-30_1524_1786957511832.pdf",
+    "facts": {
+      "EPS_BASIC": "0.08",
+      "NAVPS": "4.15",
+      "OPERATING_PROFIT": "35075000",
+      "PAT": "24566000",
+      "PBT": "35123000",
+      "TOP_LINE": "1017419000",
+      "TOTAL_ASSETS": "1802093000",
+      "TOTAL_EQUITY": "1272369000",
+      "TOTAL_LIABILITIES": "529724000"
+    },
+    "prices": {
+      "BPPL.N0000": "19.20"
+    },
+    "issuer_type": "HOLDING",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "C M HOLDINGS PLC",
+    "symbol": "COLO.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/C_M_HOLDINGS_PLC/2026-06-30_693_1786109223030.06.2026.pdf",
+    "facts": {
+      "EPS_BASIC": "0.08",
+      "NAVPS": "19",
+      "OPERATING_PROFIT": "12125000",
+      "PAT": "-4057000",
+      "PBT": "16107000",
+      "TOP_LINE": "30703000",
+      "TOTAL_ASSETS": "2993508000",
+      "TOTAL_EQUITY": "2916134000"
+    },
+    "prices": {
+      "COLO.N0000": "39.90"
+    },
+    "issuer_type": "HOLDING",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "CEYLINCO HOLDINGS PLC",
+    "symbol": "CINS.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/CEYLINCO_HOLDINGS_PLC/2026-06-30_367_1786675938303.pdf",
+    "facts": {
+      "EPS_BASIC": "33.78",
+      "NAVPS": "712.20",
+      "OPERATING_PROFIT": "894082000",
+      "PAT": "892246000",
+      "PBT": "894900000",
+      "TOP_LINE": "995225000",
+      "TOTAL_ASSETS": "19644231000",
+      "TOTAL_EQUITY": "18812475000",
+      "TOTAL_LIABILITIES": "831756000"
+    },
+    "prices": {
+      "CINS.N0000": "3546.75"
+    },
+    "issuer_type": "HOLDING",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "ACL CABLES PLC",
+    "symbol": "ACL.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/ACL_CABLES_PLC/2026-06-30_644_1786700245863.06.2026 1.pdf",
+    "facts": {
+      "EPS_BASIC": "1.25",
+      "EPS_DILUTED": "1.25",
+      "NAVPS": "24.86",
+      "OPERATING_PROFIT": "1005992000",
+      "PAT": "899804000",
+      "PBT": "1176739000",
+      "TOP_LINE": "5634180000",
+      "TOTAL_ASSETS": "24610019000",
+      "TOTAL_EQUITY": "17866697000",
+      "TOTAL_LIABILITIES": "6743322000"
+    },
+    "prices": {
+      "ACL.N0000": "100.00"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "AITKEN SPENCE PLC",
+    "symbol": "SPEN.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/AITKEN_SPENCE_PLC/2026-06-30_501_1786698547448.pdf",
+    "facts": {
+      "EPS_BASIC": "2.48",
+      "EPS_DILUTED": "2.48",
+      "NAVPS": "61.83",
+      "OPERATING_PROFIT": "1126886000",
+      "PAT": "1008880000",
+      "PBT": "1013355000",
+      "TOP_LINE": "394424000",
+      "TOTAL_ASSETS": "58809086000",
+      "TOTAL_EQUITY": "25101240000"
+    },
+    "prices": {
+      "SPEN.N0000": "153.75"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "ASIAN HOTELS AND PROPERTIES PLC",
+    "symbol": "AHPL.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/ASIAN_HOTELS_AND_PROPERTIES_PLC/2026-06-30_690_1785229453374.pdf",
+    "facts": {
+      "EPS_BASIC": "-0.61",
+      "EPS_DILUTED": "-0.61",
+      "NAVPS": "63.90",
+      "OPERATING_PROFIT": "-204620000",
+      "PAT": "-268426000",
+      "PBT": "-240730000",
+      "TOP_LINE": "1322250000",
+      "TOTAL_ASSETS": "41580644000",
+      "TOTAL_EQUITY": "28294622000",
+      "TOTAL_LIABILITIES": "13286022000"
+    },
+    "prices": {
+      "AHPL.N0000": "50.00"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "BROWNS INVESTMENTS PLC",
+    "symbol": "BIL.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/BROWNS_INVESTMENTS_PLC/2026-06-30_1077_1786706606278.pdf",
+    "facts": {
+      "EPS_BASIC": "-0.34",
+      "EPS_DILUTED": "-0.34",
+      "NAVPS": "12.77",
+      "OPERATING_PROFIT": "174250000",
+      "PAT": "-4909529000",
+      "PBT": "-4909529000",
+      "TOP_LINE": "33196000",
+      "TOTAL_ASSETS": "316004655000",
+      "TOTAL_EQUITY": "183528086000"
+    },
+    "prices": {
+      "BIL.N0000": "3"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "CENTRAL INDUSTRIES PLC",
+    "symbol": "CIND.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/CENTRAL_INDUSTRIES_PLC/2026-06-30_665_1786441930423.pdf",
+    "facts": {
+      "EPS_BASIC": "7.62",
+      "EPS_DILUTED": "7.62",
+      "NAVPS": "203.85",
+      "OPERATING_PROFIT": "240341000",
+      "PAT": "184287000",
+      "PBT": "264878000",
+      "TOP_LINE": "1772282000",
+      "TOTAL_ASSETS": "6034585000",
+      "TOTAL_EQUITY": "4932234000",
+      "TOTAL_LIABILITIES": "1102352000"
+    },
+    "prices": {
+      "CIND.N0000": "205.00"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "CEYLON HOSPITALS PLC",
+    "symbol": "CHL.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/CEYLON_HOSPITALS_PLC/2026-06-30_514_1786616285443.pdf",
+    "facts": {
+      "EPS_BASIC": "1.65",
+      "EPS_DILUTED": "33",
+      "NAVPS": "47.13",
+      "OPERATING_PROFIT": "226322000",
+      "PAT": "276015000",
+      "PBT": "339760000",
+      "TOP_LINE": "2139158000",
+      "TOTAL_ASSETS": "13098023000",
+      "TOTAL_EQUITY": "7899001000"
+    },
+    "prices": {
+      "CHL.N0000": "9.4"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "HAYCARB PLC",
+    "symbol": "HAYC.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/HAYCARB_PLC/2026-06-30_494_1786449855350..pdf",
+    "facts": {
+      "EPS_BASIC": "3.70",
+      "EPS_DILUTED": "3.70",
+      "NAVPS": "66.12",
+      "OPERATING_PROFIT": "2278057000",
+      "PAT": "1238704000",
+      "PBT": "1636984000",
+      "TOP_LINE": "19796092000",
+      "TOTAL_ASSETS": "39068868000",
+      "TOTAL_EQUITY": "19645666000",
+      "TOTAL_LIABILITIES": "19423202000"
+    },
+    "prices": {
+      "HAYC.N0000": "161.25"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "HAYLEYS PLC",
+    "symbol": "HAYL.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/HAYLEYS_PLC/2026-06-30_505_1786534657894.27 CSE.pdf",
+    "facts": {
+      "EPS_BASIC": "1.00",
+      "EPS_DILUTED": "1.00",
+      "NAVPS": "148.27",
+      "OPERATING_PROFIT": "700296000",
+      "PAT": "-1435851000",
+      "PBT": "-1583805000",
+      "TOP_LINE": "677647000",
+      "TOTAL_ASSETS": "68498749000",
+      "TOTAL_EQUITY": "14118147000",
+      "TOTAL_LIABILITIES": "54380602000"
+    },
+    "prices": {
+      "HAYL.N0000": "238.00"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "HORANA PLANTATIONS PLC",
+    "symbol": "HOPL.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/HORANA_PLANTATIONS_PLC/2026-06-30_709_1785750237485.pdf",
+    "facts": {
+      "EPS_BASIC": "5.50",
+      "EPS_DILUTED": "5.50",
+      "NAVPS": "40.13",
+      "OPERATING_PROFIT": "378782000",
+      "PAT": "137403000",
+      "PBT": "216310000",
+      "TOP_LINE": "3950039000",
+      "TOTAL_ASSETS": "5471571000",
+      "TOTAL_EQUITY": "1003169000",
+      "TOTAL_LIABILITIES": "4468402000"
+    },
+    "prices": {
+      "HOPL.N0000": "46.90"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "HVA FOODS PLC",
+    "symbol": "HVA.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/HVA_FOODS_PLC/2026-06-30_1046_1785503009792.pdf",
+    "facts": {
+      "EPS_BASIC": "-0.13",
+      "EPS_DILUTED": "-0.13",
+      "NAVPS": "-0.39",
+      "OPERATING_PROFIT": "-4488085",
+      "PAT": "-32511891",
+      "PBT": "-32511891",
+      "TOP_LINE": "311670851",
+      "TOTAL_ASSETS": "1105764876",
+      "TOTAL_EQUITY": "-96205266",
+      "TOTAL_LIABILITIES": "1201970142"
+    },
+    "prices": {
+      "HVA.N0000": "6.00"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "INDUSTRIAL ASPHALTS (CEYLON) PLC",
+    "symbol": "ASPH.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/INDUSTRIAL_ASPHALTS_CEYLON_PLC/2026-06-30_495_1786964612003.pdf",
+    "facts": {
+      "EPS_BASIC": "0.001",
+      "EPS_DILUTED": "0.001",
+      "NAVPS": "0.47",
+      "OPERATING_PROFIT": "8596000",
+      "PAT": "3824000",
+      "PBT": "5497000",
+      "TOP_LINE": "13858000",
+      "TOTAL_ASSETS": "1619789000",
+      "TOTAL_EQUITY": "1481930000",
+      "TOTAL_LIABILITIES": "137858000"
+    },
+    "prices": {
+      "ASPH.N0000": "0.50"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "KELANI VALLEY PLANTATIONS PLC",
+    "symbol": "KVAL.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/KELANI_VALLEY_PLANTATIONS_PLC/2026-06-30_712_1785933529511.pdf",
+    "facts": {
+      "EPS_BASIC": "1.00",
+      "EPS_DILUTED": "1.00",
+      "NAVPS": "138.43",
+      "OPERATING_PROFIT": "88649000",
+      "PAT": "67744000",
+      "PBT": "90694000",
+      "TOP_LINE": "1892264000",
+      "TOTAL_ASSETS": "12751672000",
+      "TOTAL_EQUITY": "6381737000",
+      "TOTAL_LIABILITIES": "6369935000"
+    },
+    "prices": {},
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "LAUGFS GAS PLC",
+    "symbol": "LGL.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/LAUGFS_GAS_PLC/2026-06-30_1020_1786614363829.pdf",
+    "facts": {
+      "EPS_BASIC": "-0.60",
+      "EPS_DILUTED": "-0.60",
+      "NAVPS": "53.66",
+      "OPERATING_PROFIT": "124484000",
+      "PAT": "-233598000",
+      "PBT": "-214822000",
+      "TOP_LINE": "6012880000",
+      "TOTAL_ASSETS": "44046099000",
+      "TOTAL_EQUITY": "20765772000"
+    },
+    "prices": {
+      "LGL.N0000": "51.00"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "RENUKA FOODS PLC",
+    "symbol": "COCO.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/RENUKA_FOODS_PLC/2026-06-30_461_1786701901029.pdf",
+    "facts": {
+      "EPS_BASIC": "0.03",
+      "EPS_DILUTED": "0.06",
+      "NAVPS": "15.24",
+      "OPERATING_PROFIT": "-694000",
+      "PAT": "12110000",
+      "PBT": "17597000",
+      "TOP_LINE": "3798",
+      "TOTAL_ASSETS": "5723821000",
+      "TOTAL_EQUITY": "5708339000",
+      "TOTAL_LIABILITIES": "15482000"
+    },
+    "prices": {
+      "COCO.N0000": "25.90"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "RICHARD PIERIS AND COMPANY PLC",
+    "symbol": "RICH.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/RICHARD_PIERIS_AND_COMPANY_PLC/2026-06-30_509_1786618793157.pdf",
+    "facts": {
+      "EPS_BASIC": "0.63",
+      "EPS_DILUTED": "0.63",
+      "NAVPS": "2.19",
+      "OPERATING_PROFIT": "1625453000",
+      "PAT": "1283512000",
+      "PBT": "1283512000",
+      "TOP_LINE": "1786450000",
+      "TOTAL_ASSETS": "21123081000",
+      "TOTAL_EQUITY": "4463287000",
+      "TOTAL_LIABILITIES": "16659794000"
+    },
+    "prices": {
+      "RICH.N0000": "30.70"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "SIERRA CABLES PLC",
+    "symbol": "SIRA.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/SIERRA_CABLES_PLC/2026-06-30_685_1786443251848.pdf",
+    "facts": {
+      "EPS_BASIC": "1.22",
+      "EPS_DILUTED": "1.22",
+      "NAVPS": "17.34",
+      "OPERATING_PROFIT": "926268514",
+      "PAT": "655066983",
+      "PBT": "886042918",
+      "TOP_LINE": "5617362796",
+      "TOTAL_ASSETS": "25440775305",
+      "TOTAL_EQUITY": "9321193047",
+      "TOTAL_LIABILITIES": "16119582258"
+    },
+    "prices": {
+      "SIRA.N0000": "28.70"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "SINGER (SRI LANKA) PLC",
+    "symbol": "SINS.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/SINGER_SRI_LANKA_PLC/2026-06-30_772_1786356207071.pdf",
+    "facts": {
+      "EPS_BASIC": "1.64",
+      "EPS_DILUTED": "1.64",
+      "NAVPS": "17.07",
+      "OPERATING_PROFIT": "3882389000",
+      "PAT": "1915089000",
+      "PBT": "2771552000",
+      "TOP_LINE": "33913773000",
+      "TOTAL_ASSETS": "181794406000",
+      "TOTAL_EQUITY": "19929956000",
+      "TOTAL_LIABILITIES": "159930050000"
+    },
+    "prices": {
+      "SINS.N0000": "76.00"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "TALAWAKELLE TEA ESTATES PLC",
+    "symbol": "TPL.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/TALAWAKELLE_TEA_ESTATES_PLC/2026-06-30_726_1785759096702.pdf",
+    "facts": {
+      "EPS_BASIC": "4.14",
+      "EPS_DILUTED": "4.14",
+      "NAVPS": "161.72",
+      "OPERATING_PROFIT": "168273000",
+      "PAT": "196587000",
+      "PBT": "271143000",
+      "TOP_LINE": "1867617000",
+      "TOTAL_ASSETS": "11478718000",
+      "TOTAL_EQUITY": "7681688000",
+      "TOTAL_LIABILITIES": "3797030000"
+    },
+    "prices": {
+      "TPL.N0000": "152.00"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "UNITED MOTORS LANKA PLC",
+    "symbol": "UML.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/UNITED_MOTORS_LANKA_PLC/2026-06-30_697_1786440145924.pdf",
+    "facts": {
+      "EPS_BASIC": "0.34",
+      "EPS_DILUTED": "0.34",
+      "NAVPS": "17.34",
+      "OPERATING_PROFIT": "484277",
+      "PAT": "347423",
+      "PBT": "484116",
+      "TOP_LINE": "6121356",
+      "TOTAL_ASSETS": "22277541",
+      "TOTAL_EQUITY": "17501035",
+      "TOTAL_LIABILITIES": "4776506"
+    },
+    "prices": {
+      "UML.N0000": "29.20"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "ABANS ELECTRICALS PLC",
+    "symbol": "ABAN.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/ABANS_ELECTRICALS_PLC/2026-06-30_642_1786615449693.06.2026.pdf",
+    "facts": {
+      "EPS_BASIC": "33.35",
+      "NAVPS": "689.26",
+      "OPERATING_PROFIT": "224607907",
+      "PAT": "224607907",
+      "PBT": "245239413",
+      "TOP_LINE": "2092950851",
+      "TOTAL_ASSETS": "6447065005",
+      "TOTAL_EQUITY": "3522518976",
+      "TOTAL_LIABILITIES": "2924546029"
+    },
+    "prices": {
+      "ABAN.N0000": "1150.00"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "ACCESS ENGINEERING PLC",
+    "symbol": "AEL.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/ACCESS_ENGINEERING_PLC/2026-06-30_1141_1786533585205.pdf",
+    "facts": {
+      "EPS_BASIC": "0.40",
+      "NAVPS": "28.54",
+      "OPERATING_PROFIT": "1197372063",
+      "PAT": "403669920",
+      "PBT": "524794507",
+      "TOP_LINE": "5139001561",
+      "TOTAL_ASSETS": "65258553975",
+      "TOTAL_EQUITY": "28542817550",
+      "TOTAL_LIABILITIES": "36715736425"
+    },
+    "prices": {
+      "AEL.N0000": "77.20"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "ACL PLASTICS PLC",
+    "symbol": "APLA.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/ACL_PLASTICS_PLC/2026-06-30_643_1786699006375.pdf",
+    "facts": {
+      "EPS_BASIC": "6.63",
+      "NAVPS": "108.64",
+      "OPERATING_PROFIT": "226775000",
+      "PAT": "279339000",
+      "PBT": "362947000",
+      "TOP_LINE": "738546000",
+      "TOTAL_ASSETS": "5036004000",
+      "TOTAL_EQUITY": "4576463000",
+      "TOTAL_LIABILITIES": "459541000"
+    },
+    "prices": {
+      "APLA.N0000": "151.50"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "ACME PRINTING & PACKAGING PLC",
+    "symbol": "ACME.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/ACME_PRINTING_PACKAGING_PLC/2026-06-30_661_1786617805817.pdf",
+    "facts": {
+      "EPS_BASIC": "-0.04",
+      "NAVPS": "1.24",
+      "OPERATING_PROFIT": "-69000",
+      "PAT": "-26015000",
+      "PBT": "-14054000",
+      "TOP_LINE": "183895000",
+      "TOTAL_ASSETS": "1892062000",
+      "TOTAL_EQUITY": "826047000",
+      "TOTAL_LIABILITIES": "1066015000"
+    },
+    "prices": {
+      "ACME.N0000": "5.10"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "AGSTAR PLC",
+    "symbol": "AGST.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/AGSTAR_PLC/2026-06-30_1121_1786626236244.pdf",
+    "facts": {
+      "EPS_BASIC": "0.44",
+      "NAVPS": "15.78",
+      "OPERATING_PROFIT": "331.82",
+      "PAT": "213.85",
+      "PBT": "290.04",
+      "TOP_LINE": "4440.75",
+      "TOTAL_ASSETS": "15449.32",
+      "TOTAL_EQUITY": "7693.89",
+      "TOTAL_LIABILITIES": "7755.43"
+    },
+    "prices": {},
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "ALPHA FIRE SERVICES PLC",
+    "symbol": "AFS.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/ALPHA_FIRE_SERVICES_PLC/2026-06-30_2774_1786618602975.06.2026_CSE FORMAT_V1 FINAL.pdf",
+    "facts": {
+      "EPS_BASIC": "-0.06",
+      "NAVPS": "9",
+      "OPERATING_PROFIT": "-683915",
+      "PAT": "-2285733",
+      "PBT": "-2285733",
+      "TOP_LINE": "100405102",
+      "TOTAL_ASSETS": "412326620",
+      "TOTAL_EQUITY": "221489144",
+      "TOTAL_LIABILITIES": "190837476"
+    },
+    "prices": {
+      "AFS.N0000": "31.30"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "ALUMEX PLC",
+    "symbol": "ALUM.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/ALUMEX_PLC/2026-06-30_1323_1784802624825.27 Q01 (CSE) Sgd (Final) (002).pdf",
+    "facts": {
+      "EPS_BASIC": "0.25",
+      "NAVPS": "8.99",
+      "OPERATING_PROFIT": "270219000",
+      "PAT": "149938000",
+      "PBT": "131754000",
+      "TOP_LINE": "3575607000",
+      "TOTAL_ASSETS": "17529398000",
+      "TOTAL_EQUITY": "5229902000",
+      "TOTAL_LIABILITIES": "12299496000"
+    },
+    "prices": {
+      "ALUM.N0000": "17.90"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "AMBEON CAPITAL PLC",
+    "symbol": "TAP.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/AMBEON_CAPITAL_PLC/2026-06-30_1181_1786931840868.pdf",
+    "facts": {
+      "EPS_BASIC": "-0.02",
+      "EPS_DILUTED": "-0.02",
+      "NAVPS": "9.28",
+      "PAT": "-25003000",
+      "PBT": "-25003000",
+      "TOP_LINE": "10656000",
+      "TOTAL_ASSETS": "16863296000",
+      "TOTAL_EQUITY": "9484887000"
+    },
+    "prices": {
+      "TAP.N0000": "3"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "BERUWALA RESORTS PLC",
+    "symbol": "BERU.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/BERUWALA_RESORTS_PLC/2026-06-30_1201_1786527928384.06.2026 Final.pdf",
+    "facts": {
+      "EPS_BASIC": "-0.1318",
+      "NAVPS": "0.54",
+      "OPERATING_PROFIT": "-64932000",
+      "PAT": "-92361000",
+      "PBT": "-92361000",
+      "TOP_LINE": "43392000",
+      "TOTAL_ASSETS": "1376866000",
+      "TOTAL_EQUITY": "374843000"
+    },
+    "prices": {
+      "BERU.N0000": "3.10"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "BOGALA GRAPHITE LANKA PLC",
+    "symbol": "BOGA.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/BOGALA_GRAPHITE_LANKA_PLC/2026-06-30_664_1786448088740.pdf",
+    "facts": {
+      "EPS_BASIC": "0.93",
+      "NAVPS": "16.19",
+      "OPERATING_PROFIT": "165706000",
+      "PAT": "88091000",
+      "PBT": "168372000",
+      "TOP_LINE": "519982000",
+      "TOTAL_ASSETS": "1897834",
+      "TOTAL_EQUITY": "1531947",
+      "TOTAL_LIABILITIES": "365887"
+    },
+    "prices": {
+      "BOGA.N0000": "141.75"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "BUKIT DARAH PLC",
+    "symbol": "BUKI.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/BUKIT_DARAH_PLC/2026-06-30_456_1786703596800.pdf",
+    "facts": {
+      "EPS_BASIC": "0.06",
+      "NAVPS": "90.59",
+      "OPERATING_PROFIT": "6511000",
+      "PAT": "6345000",
+      "PBT": "704255000",
+      "TOP_LINE": "27333000",
+      "TOTAL_ASSETS": "9470515000",
+      "TOTAL_EQUITY": "9280852000",
+      "TOTAL_LIABILITIES": "189663000"
+    },
+    "prices": {
+      "BUKI.N0000": "877.50"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "C. W. MACKIE PLC",
+    "symbol": "CWM.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/C_W_MACKIE_PLC/2026-06-30_765_1786677688956.W.Mackie PLC Interim Report as of 30.06.2026.pdf",
+    "facts": {
+      "EPS_BASIC": "0.92",
+      "NAVPS": "21.36",
+      "OPERATING_PROFIT": "314564000",
+      "PAT": "166390000",
+      "PBT": "241690000",
+      "TOP_LINE": "4905671000",
+      "TOTAL_ASSETS": "10892066000",
+      "TOTAL_EQUITY": "3843504000",
+      "TOTAL_LIABILITIES": "7048562000"
+    },
+    "prices": {
+      "CWM.N0000": "42.70"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "CABLE SOLUTIONS PLC",
+    "symbol": "CSLK.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/CABLE_SOLUTIONS_PLC/2026-06-30_3198_1786698481905.06.2026-CSE.pdf",
+    "facts": {
+      "EPS_BASIC": "0.2318",
+      "NAVPS": "5.75",
+      "OPERATING_PROFIT": "137101459",
+      "PAT": "109107979",
+      "PBT": "130686694",
+      "TOP_LINE": "987090852",
+      "TOTAL_ASSETS": "3751357794",
+      "TOTAL_EQUITY": "2708171862",
+      "TOTAL_LIABILITIES": "1043185932"
+    },
+    "prices": {
+      "CSLK.N0000": "12.20"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "CAPITAL ALLIANCE PLC",
+    "symbol": "CALT.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/CAPITAL_ALLIANCE_PLC/2026-06-30_2647_1786703367877.pdf",
+    "facts": {
+      "EPS_BASIC": "-8.53",
+      "EPS_DILUTED": "-8.53",
+      "NAVPS": "33.76",
+      "PAT": "-2809621335",
+      "PBT": "-2809621335",
+      "TOP_LINE": "330218321",
+      "TOTAL_ASSETS": "69244885034",
+      "TOTAL_EQUITY": "8312805137",
+      "TOTAL_LIABILITIES": "60932079897"
+    },
+    "prices": {
+      "CALT.N0000": "11.3"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "CARSON CUMBERBATCH PLC",
+    "symbol": "CARS.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/CARSON_CUMBERBATCH_PLC/2026-06-30_502_1786702657991.pdf",
+    "facts": {
+      "EPS_BASIC": "5.75",
+      "NAVPS": "124.13",
+      "OPERATING_PROFIT": "1179783000",
+      "PAT": "1128304000",
+      "PBT": "1129472000",
+      "TOP_LINE": "1246970000",
+      "TOTAL_ASSETS": "28572903000",
+      "TOTAL_EQUITY": "24377750000",
+      "TOTAL_LIABILITIES": "4195153000"
+    },
+    "prices": {
+      "CARS.N0000": "751.00"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "CEYLON GRAIN ELEVATORS PLC",
+    "symbol": "GRAN.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/CEYLON_GRAIN_ELEVATORS_PLC/2026-06-30_671_1785489157209.pdf",
+    "facts": {
+      "EPS_BASIC": "8.37",
+      "NAVPS": "165.24",
+      "OPERATING_PROFIT": "690866000",
+      "PAT": "502036000",
+      "PBT": "719338000",
+      "TOP_LINE": "7075977000",
+      "TOTAL_ASSETS": "14855484000",
+      "TOTAL_EQUITY": "9914392000",
+      "TOTAL_LIABILITIES": "4941092000"
+    },
+    "prices": {
+      "GRAN.N0000": "-1"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "CEYLON INVESTMENT PLC",
+    "symbol": "CINV.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/CEYLON_INVESTMENT_PLC/2026-06-30_608_1786699059250.pdf",
+    "facts": {
+      "EPS_BASIC": "2.57",
+      "NAVPS": "205.57",
+      "OPERATING_PROFIT": "204494000",
+      "PAT": "250225000",
+      "PBT": "271824000",
+      "TOP_LINE": "140540000",
+      "TOTAL_ASSETS": "20826835000",
+      "TOTAL_EQUITY": "19981561000",
+      "TOTAL_LIABILITIES": "845274000"
+    },
+    "prices": {
+      "CINV.N0000": "105.25"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "CEYLON LAND & EQUITY PLC",
+    "symbol": "KZOO.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/CEYLON_LAND_EQUITY_PLC/2026-06-30_732_1785147999165.pdf",
+    "facts": {
+      "EPS_BASIC": "0.05",
+      "EPS_DILUTED": "0.05",
+      "NAVPS": "10.16",
+      "OPERATING_PROFIT": "44352000",
+      "PAT": "44352000",
+      "PBT": "44352000",
+      "TOTAL_ASSETS": "9649712000",
+      "TOTAL_EQUITY": "9355858000"
+    },
+    "prices": {
+      "KZOO.N0000": "9.60"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "CEYLON TOBACCO COMPANY PLC",
+    "symbol": "CTC.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/CEYLON_TOBACCO_COMPANY_PLC/2026-06-30_460_1786619524644.pdf",
+    "facts": {
+      "EPS_BASIC": "41.07",
+      "EPS_DILUTED": "41.07",
+      "NAVPS": "57.72",
+      "PAT": "7694000000",
+      "PBT": "13624000000",
+      "TOP_LINE": "16565000000",
+      "TOTAL_ASSETS": "45045000000",
+      "TOTAL_EQUITY": "10812000000",
+      "TOTAL_LIABILITIES": "34233000000"
+    },
+    "prices": {
+      "CTC.N0000": "1803.25"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "CHEMANEX PLC",
+    "symbol": "CHMX.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/CHEMANEX_PLC/2026-06-30_492_1784886642958.06.26.pdf",
+    "facts": {
+      "EPS_BASIC": "4.45",
+      "EPS_DILUTED": "4.45",
+      "NAVPS": "278.17",
+      "PAT": "71838000",
+      "PBT": "87352000",
+      "TOP_LINE": "273239000",
+      "TOTAL_ASSETS": "4987000000",
+      "TOTAL_EQUITY": "4492944000",
+      "TOTAL_LIABILITIES": "494056000"
+    },
+    "prices": {
+      "CHMX.N0000": "161.25"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "CHRISSWORLD PLC",
+    "symbol": "CWL.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/CHRISSWORLD_PLC/2026-06-30_2236_1786618536850.06.30.pdf",
+    "facts": {
+      "EPS_BASIC": "0.30",
+      "NAVPS": "6.40",
+      "OPERATING_PROFIT": "14848610",
+      "PAT": "9098728",
+      "PBT": "12998182",
+      "TOP_LINE": "248693076",
+      "TOTAL_ASSETS": "535385734",
+      "TOTAL_EQUITY": "191921138",
+      "TOTAL_LIABILITIES": "343464597"
+    },
+    "prices": {
+      "CWL.N0000": "19.00"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "COLOMBO FORT INVESTMENTS PLC",
+    "symbol": "CFI.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/COLOMBO_FORT_INVESTMENTS_PLC/2026-06-30_609_1786011697427.06.2026 - CSE UPLOAD.pdf",
+    "facts": {
+      "EPS_BASIC": "7.79",
+      "NAVPS": "541.25",
+      "OPERATING_PROFIT": "71777000",
+      "PAT": "69664000",
+      "PBT": "69664000",
+      "TOP_LINE": "29560000",
+      "TOTAL_ASSETS": "4909565000",
+      "TOTAL_EQUITY": "4838599000",
+      "TOTAL_LIABILITIES": "70966000"
+    },
+    "prices": {
+      "CFI.N0000": "390.00"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "COLOMBO INVESTMENT TRUST PLC",
+    "symbol": "CIT.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/COLOMBO_INVESTMENT_TRUST_PLC/2026-06-30_610_1786011861143.06.2026.pdf",
+    "facts": {
+      "EPS_BASIC": "7.74",
+      "NAVPS": "683.86",
+      "OPERATING_PROFIT": "57191000",
+      "PAT": "55809000",
+      "PBT": "55809000",
+      "TOP_LINE": "24866000",
+      "TOTAL_ASSETS": "4979583000",
+      "TOTAL_EQUITY": "4931178000",
+      "TOTAL_LIABILITIES": "48405000"
+    },
+    "prices": {
+      "CIT.N0000": "406.50"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "COMMERCIAL DEVELOPMENT COMPANY PLC",
+    "symbol": "COMD.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/COMMERCIAL_DEVELOPMENT_COMPANY_PLC/2026-06-30_619_1785229895765.06.2026-sgd.pdf",
+    "facts": {
+      "EPS_BASIC": "3.97",
+      "NAVPS": "375.31",
+      "OPERATING_PROFIT": "49223000",
+      "PAT": "47670000",
+      "PBT": "68971000",
+      "TOP_LINE": "227574000",
+      "TOTAL_ASSETS": "5372620000",
+      "TOTAL_EQUITY": "4503669000"
+    },
+    "prices": {},
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "DIESEL & MOTOR ENGINEERING PLC",
+    "symbol": "DIMO.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/DIESEL_MOTOR_ENGINEERING_PLC/2026-06-30_694_1786620097859.pdf",
+    "facts": {
+      "EPS_BASIC": "49.70",
+      "OPERATING_PROFIT": "1461535000",
+      "PAT": "458822000",
+      "PBT": "711251000",
+      "TOP_LINE": "23391153000",
+      "TOTAL_ASSETS": "67593142000",
+      "TOTAL_EQUITY": "15741618000",
+      "TOTAL_LIABILITIES": "51851524000"
+    },
+    "prices": {
+      "DIMO.N0000": "1549.50"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "DISTILLERIES COMPANY OF SRI LANKA PLC",
+    "symbol": "DIST.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/DISTILLERIES_COMPANY_OF_SRI_LANKA_PLC/2026-06-30_463_1786620025048.pdf",
+    "facts": {
+      "EPS_BASIC": "0.84",
+      "NAVPS": "5.57",
+      "OPERATING_PROFIT": "6960974000",
+      "PAT": "3846230000",
+      "PBT": "7056612000",
+      "TOP_LINE": "15815755000",
+      "TOTAL_ASSETS": "48132031000",
+      "TOTAL_EQUITY": "25635353000"
+    },
+    "prices": {
+      "DIST.N0000": "57.50"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "DOLPHIN HOTELS PLC",
+    "symbol": "STAF.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/DOLPHIN_HOTELS_PLC/2026-06-30_603_1786711074290.pdf",
+    "facts": {
+      "EPS_BASIC": "0.38",
+      "NAVPS": "74.07",
+      "OPERATING_PROFIT": "-14109000",
+      "PAT": "24094000",
+      "PBT": "34420000",
+      "TOP_LINE": "250458000",
+      "TOTAL_ASSETS": "6513098000",
+      "TOTAL_EQUITY": "4684460000"
+    },
+    "prices": {
+      "STAF.N0000": "44.30"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "E - CHANNELLING PLC",
+    "symbol": "ECL.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/E_CHANNELLING_PLC/2026-06-30_374_1786701666452.pdf",
+    "facts": {
+      "EPS_BASIC": "0.09",
+      "NAVPS": "4.51",
+      "OPERATING_PROFIT": "7872697",
+      "PAT": "11432902",
+      "PBT": "16263972",
+      "TOP_LINE": "84848647",
+      "TOTAL_ASSETS": "789451516",
+      "TOTAL_EQUITY": "551326283",
+      "TOTAL_LIABILITIES": "238125232"
+    },
+    "prices": {
+      "ECL.N0000": "15.10"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "E B CREASY & COMPANY PLC",
+    "symbol": "EBCR.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/E_B_CREASY_COMPANY_PLC/2026-06-30_745_1785929418695.pdf",
+    "facts": {
+      "EPS_BASIC": "0.04",
+      "NAVPS": "29.32",
+      "OPERATING_PROFIT": "139865000",
+      "PAT": "10859000",
+      "PBT": "78418000",
+      "TOP_LINE": "2791522000",
+      "TOTAL_ASSETS": "15775142000",
+      "TOTAL_EQUITY": "8176783000",
+      "TOTAL_LIABILITIES": "7598359000"
+    },
+    "prices": {
+      "EBCR.N0000": "42.90"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "EDEN HOTEL LANKA PLC",
+    "symbol": "EDEN.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/EDEN_HOTEL_LANKA_PLC/2026-06-30_533_1786710942880.06..2026-Sgd.pdf",
+    "facts": {
+      "EPS_BASIC": "-0.10",
+      "NAVPS": "6.88",
+      "OPERATING_PROFIT": "-15527000",
+      "PAT": "-156132000",
+      "PBT": "-156132000",
+      "TOP_LINE": "218176000",
+      "TOTAL_ASSETS": "14825670000",
+      "TOTAL_EQUITY": "10900369000"
+    },
+    "prices": {
+      "EDEN.N0000": "10.60"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "FIRST CAPITAL HOLDINGS PLC",
+    "symbol": "CFVF.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/FIRST_CAPITAL_HOLDINGS_PLC/2026-06-30_698_1786622764951.pdf",
+    "facts": {
+      "EPS_BASIC": "-1.60",
+      "NAVPS": "17.80",
+      "OPERATING_PROFIT": "-257138000",
+      "PAT": "-647289000",
+      "PBT": "-722077000",
+      "TOP_LINE": "480927000",
+      "TOTAL_ASSETS": "24787389000",
+      "TOTAL_EQUITY": "7210959000",
+      "TOTAL_LIABILITIES": "17576430000"
+    },
+    "prices": {
+      "CFVF.N0000": "52.80"
+    },
+    "issuer_type": "HOLDING",
+    "verification_status": "PIPELINE_SEEDED"
+  },
+  {
+    "issuer_name": "GALADARI HOTELS (LANKA) PLC",
+    "symbol": "GHLL.N0000",
+    "entity_scope": "COMPANY",
+    "period_end": "2026-06-30",
+    "pdf": "data/raw/filings/GALADARI_HOTELS_LANKA_PLC/2026-06-30_541_1786702326114.pdf",
+    "facts": {
+      "EPS_BASIC": "-0.94",
+      "NAVPS": "10.76",
+      "OPERATING_PROFIT": "-233007190",
+      "PAT": "-468642219",
+      "PBT": "-468642219",
+      "TOP_LINE": "42668201",
+      "TOTAL_ASSETS": "18818717603",
+      "TOTAL_EQUITY": "5386948093",
+      "TOTAL_LIABILITIES": "13431769510"
+    },
+    "prices": {
+      "GHLL.N0000": "15.50"
+    },
+    "issuer_type": "GENERAL",
+    "verification_status": "PIPELINE_SEEDED"
   }
 ]

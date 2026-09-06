@@ -303,11 +303,23 @@ def _page_search_text(page: PdfPage | PageIR) -> str:
 
 def _is_exact_quarter_text(text: str) -> bool:
     normalized = re.sub(r"\s+", " ", text.upper())
+    # Pack titles like "Second Quarter Interim Financial Statements" often wrap a
+    # six/nine-month P&L. Prefer explicit cumulative duration over bare QUARTER.
+    if re.search(
+        r"\b(?:SIX|0?6|NINE|0?9|TWELVE|12)\s+MONTHS?\b|\bYEAR\s+ENDED\b",
+        normalized,
+    ) and not re.search(
+        r"\b(?:THREE|03)\s+MONTHS?\b|\b3\s+MONTHS?\b|\bQUARTER\s+(?:ENDED|TO)\b|"
+        r"\bFOR\s+THE\s+(?:THREE|03|3)\s+MONTHS?\b",
+        normalized,
+    ):
+        return False
     patterns = (
         r"\bQUARTER\s+(?:ENDED|TO)\b",
-        r"\b(?:THREE|0?3)\s+MONTHS?\s+(?:ENDED|TO)\b",
-        r"\bFOR\s+THE\s+(?:THREE|0?3)\s+MONTHS?\b",
-        r"\b(?:THREE|0?3)[- ]MONTH\s+PERIOD\s+(?:ENDED|TO)\b",
+        r"\b(?:THREE|03)\s+MONTHS?\s+(?:ENDED|TO)\b",
+        r"\b3\s+MONTHS?\s+(?:ENDED|TO)\b",
+        r"\bFOR\s+THE\s+(?:THREE|03|3)\s+MONTHS?\b",
+        r"\b(?:THREE|03|3)[- ]MONTH\s+PERIOD\s+(?:ENDED|TO)\b",
         r"\bFIRST\s+QUARTER\b",
         r"\bSECOND\s+QUARTER\b",
         r"\bTHIRD\s+QUARTER\b",
@@ -323,13 +335,12 @@ def _is_exact_quarter_text(text: str) -> bool:
     if any(re.search(pattern, normalized) for pattern in patterns):
         return True
     # Multi-column PDF headers often emit "Three" and "months to" as
-    # separate visual lines. Likewise, bank statements commonly use a bare
-    # "Quarter" column beside "Period" columns.
+    # separate visual lines. Combined Three+Nine pages still have a quarter block.
     has_split_three_months = bool(
-        re.search(r"\b(?:THREE|0?3)\b", normalized)
+        re.search(r"\bTHREE\b", normalized)
         and re.search(r"\bMONTHS?\s+(?:ENDED|TO)\b", normalized)
     )
-    return has_split_three_months or bool(re.search(r"\bQUARTER\b", normalized))
+    return has_split_three_months
 
 
 def _is_exact_quarter_page(page: PdfPage) -> bool:
@@ -655,22 +666,34 @@ def _is_interim_pack_title(text: str) -> bool:
     return bool(re.search(r"\bINTERIM\b", upper) and re.search(r"\bQUARTER\b", upper))
 
 
+def _is_page_number_line(text: str) -> bool:
+    return bool(re.match(r"^\s*Page\s+\d+\s*$", text, re.I))
+
+
 def _joined_statement_head(page: PageIR, line_count: int = 12) -> str:
     return " ".join(
-        line.text for line in page.lines[:line_count] if not _is_interim_pack_title(line.text)
+        line.text
+        for line in page.lines[:line_count]
+        if not _is_interim_pack_title(line.text) and not _is_page_number_line(line.text)
     ).upper()
 
 
 def _head_has_split_three_months(page: PageIR, line_count: int = 12) -> bool:
+    """True when 'Three' and 'months ended/to' are split across nearby header lines.
+
+    Never treat a bare page index ('Page 3') as a three-month duration cue.
+    Combined Three+Nine column headers still count as having a quarter block.
+    """
+
     joined = _joined_statement_head(page, line_count)
     return bool(
-        re.search(r"\b(?:THREE|0?3)\b", joined)
+        re.search(r"\bTHREE\b", joined)
         and re.search(r"\bMONTHS?\s+(?:ENDED|TO)\b", joined)
     )
 
 
 def _head_duration_cue(page: PageIR) -> str | None:
-    """Statement-heading duration. A 3M cue beats a 9M cue on combined pages.
+    """Statement-heading duration. Explicit 6M/9M/12M beats a false quarter cue.
 
     ``PERIOD`` is ambiguous: Q1 packs use it for the three-month quarter, while
     Q2/Q3 packs use it for the cumulative page beside a Quarter Ended P&L.
@@ -681,16 +704,19 @@ def _head_duration_cue(page: PageIR) -> str | None:
     saw_period = False
     for line in page.lines[:12]:
         text = line.text.upper()
-        if _is_interim_pack_title(text):
+        if _is_interim_pack_title(text) or _is_page_number_line(text):
             continue
-        if re.search(r"FOR THE QUARTER|(?:THREE|0?3)\s+MONTHS", text):
-            saw_quarter = True
-        elif re.search(r"(?:NINE|SIX|TWELVE)\s+MONTHS|YEAR ENDED", text):
+        # Combined CSE layouts put both cues on one line:
+        # "For the six months ended For the quarter ended".
+        if re.search(r"(?:NINE|SIX|TWELVE|0?9|0?6|12)\s+MONTHS|YEAR ENDED", text):
             saw_ytd = True
+        if re.search(r"FOR THE QUARTER|(?:THREE|03)\s+MONTHS|\b3\s+MONTHS", text):
+            saw_quarter = True
         elif re.search(r"FOR THE PERIOD ENDED", text):
             saw_period = True
     if _head_has_split_three_months(page):
         saw_quarter = True
+    # Mixed 6M+quarter pages must remain eligible for exact-quarter selection.
     if saw_quarter:
         return "QUARTER"
     if saw_ytd:
@@ -705,9 +731,9 @@ def _page_has_statement_quarter_heading(page: PageIR) -> bool:
         return True
     for line in page.lines[:20]:
         text = line.text.upper()
-        if _is_interim_pack_title(text):
+        if _is_interim_pack_title(text) or _is_page_number_line(text):
             continue
-        if re.search(r"FOR THE QUARTER|(?:THREE|0?3)\s+MONTHS|\bQUARTER\b", text):
+        if re.search(r"FOR THE QUARTER|(?:THREE|03)\s+MONTHS|\b3\s+MONTHS", text):
             return True
     return False
 
@@ -839,7 +865,14 @@ def _nearby_text(page: PageIR, line: LineIR, radius: int = 4) -> str:
     try:
         index = lines.index(line)
     except ValueError:
-        return line.text
+        # Logical-row rebuilds can synthesize LineIR objects that are not identical
+        # to page.lines members. Fall back to nearest vertical neighbour.
+        if not lines:
+            return line.text
+        index = min(
+            range(len(lines)),
+            key=lambda i: abs(lines[i].bbox.y0 - line.bbox.y0),
+        )
     start = max(0, index - radius)
     end = min(len(lines), index + radius + 1)
     return " ".join(item.text for item in lines[start:end])
@@ -855,6 +888,69 @@ def _header_points(page: PageIR, line: LineIR, pattern: str) -> list[float]:
             if regex.fullmatch(token.text.strip("():")):
                 points.append(token.bbox.center_x)
     return points
+
+
+def _period_header_points(page: PageIR, line: LineIR, period_end: date) -> tuple[list[float], list[float]]:
+    """Return (target date/year points, prior-year points), including phrase dates."""
+
+    months = (
+        "january",
+        "february",
+        "march",
+        "april",
+        "may",
+        "june",
+        "july",
+        "august",
+        "september",
+        "october",
+        "november",
+        "december",
+    )
+    month_name = months[period_end.month - 1]
+    month_abbr = month_name[:3]
+    prior = period_end.year - 1
+    target_phrases = (
+        f"{period_end.day} {month_name} {period_end.year}",
+        f"{period_end.day:02d} {month_name} {period_end.year}",
+        f"{period_end.day} {month_abbr} {period_end.year}",
+        f"{period_end.day:02d} {month_abbr} {period_end.year}",
+        f"{period_end.day:02d}.{period_end.month:02d}.{period_end.year}",
+        f"{period_end.day}.{period_end.month}.{period_end.year}",
+        f"{period_end.day:02d}/{period_end.month:02d}/{period_end.year}",
+    )
+    prior_phrases = (
+        f"31 december {prior}",
+        f"31 dec {prior}",
+        f"31.12.{prior}",
+        f"31/12/{prior}",
+        f"{period_end.day} {month_name} {prior}",
+        f"{period_end.day:02d} {month_name} {prior}",
+        f"{period_end.day} {month_abbr} {prior}",
+        f"{period_end.day:02d} {month_abbr} {prior}",
+        f"{period_end.day:02d}.{period_end.month:02d}.{prior}",
+        f"{period_end.day}.{period_end.month}.{prior}",
+        f"{period_end.day:02d}/{period_end.month:02d}/{prior}",
+        f"{period_end.day:02d}-{period_end.month:02d}-{prior}",
+    )
+    target_points: list[float] = []
+    prior_points: list[float] = []
+    for header_line in page.lines:
+        if header_line.bbox.y0 >= line.bbox.y0:
+            break
+        for phrase in target_phrases:
+            for _x0, _x1, center in _phrase_occurrences(header_line, phrase):
+                target_points.append(center)
+        for phrase in prior_phrases:
+            for _x0, _x1, center in _phrase_occurrences(header_line, phrase):
+                prior_points.append(center)
+        for token in header_line.tokens:
+            stripped = token.text.strip("():")
+            if stripped == str(period_end.year):
+                target_points.append(token.bbox.center_x)
+            elif stripped == str(prior):
+                prior_points.append(token.bbox.center_x)
+    return target_points, prior_points
 
 
 def _phrase_occurrences(header_line: LineIR, phrase: str) -> list[tuple[float, float, float]]:
@@ -886,6 +982,8 @@ class _HeaderSpan(NamedTuple):
 
 _DURATION_PHRASES: tuple[tuple[str, str], ...] = (
     ("three months", "QUARTER"),
+    ("for the quarter", "QUARTER"),
+    ("quarter ended", "QUARTER"),
     ("six months", "YTD"),
     ("nine months", "YTD"),
     ("twelve months", "YTD"),
@@ -909,6 +1007,72 @@ def _owned_header_regions(spans: list[_HeaderSpan], page_width: float) -> list[_
     return owned
 
 
+_DATE_TOKEN = re.compile(
+    r"^(?P<d>\d{1,2})[./-](?P<m>\d{1,2})[./-](?P<y>20\d{2})$"
+)
+
+
+def _dated_header_centers(page: PageIR, line: LineIR) -> list[float]:
+    """X-centers of dd.mm.yyyy / dd/mm/yyyy header dates above a value row."""
+
+    centers: list[float] = []
+    for header_line in page.lines:
+        if header_line.bbox.y0 >= line.bbox.y0:
+            break
+        for token in header_line.tokens:
+            if _DATE_TOKEN.match(token.text.strip("()")):
+                centers.append(token.bbox.center_x)
+    return centers
+
+
+def _split_regions_by_date_midpoint(
+    regions: list[_HeaderSpan],
+    date_centers: list[float],
+    page_width: float,
+) -> list[_HeaderSpan]:
+    """When dual headers sit above paired date columns, split at the date midpoint.
+
+    Phrase centers for 'Group'/'Bank' or 'six months'/'quarter' are often shifted
+    relative to the numeric columns; the date row is the authoritative partition.
+    Only applies to a simple left/right dual header, not repeating Group/Company
+    duration blocks (Six|Three|Six|Three).
+    """
+
+    if len(regions) != 2 or len(date_centers) < 4:
+        return regions
+    kinds = {span.kind for span in regions}
+    dual_duration = kinds == {"YTD", "QUARTER"}
+    dual_entity = "GROUP" in kinds and bool(kinds & {"COMPANY", "BANK"})
+    if not dual_duration and not dual_entity:
+        return regions
+    ordered_dates = sorted(date_centers)
+    mid = (ordered_dates[len(ordered_dates) // 2 - 1] + ordered_dates[len(ordered_dates) // 2]) / 2
+    ordered = sorted(regions, key=lambda span: span.center)
+    left, right = ordered[0], ordered[1]
+    return [
+        _HeaderSpan(left.kind, 0.0, mid, left.center, left.phrase),
+        _HeaderSpan(right.kind, mid, page_width, right.center, right.phrase),
+    ]
+
+
+def _collapse_nearby_alias_spans(
+    spans: list[_HeaderSpan], *, max_gap: float = 90.0
+) -> list[_HeaderSpan]:
+    """Merge overlapping aliases of the same kind; keep distinct column groups."""
+
+    ordered = sorted(spans, key=lambda span: span.center)
+    collapsed: list[_HeaderSpan] = []
+    for span in ordered:
+        if (
+            collapsed
+            and collapsed[-1].kind == span.kind
+            and span.center - collapsed[-1].center <= max_gap
+        ):
+            continue
+        collapsed.append(span)
+    return collapsed
+
+
 def _duration_parent_regions(page: PageIR, line: LineIR) -> list[_HeaderSpan]:
     """Parent duration spans from the lowest header row that has both 3M and YTD labels.
 
@@ -927,8 +1091,14 @@ def _duration_parent_regions(page: PageIR, line: LineIR) -> list[_HeaderSpan]:
         ]
         kinds = {span.kind for span in spans}
         if "QUARTER" in kinds and "YTD" in kinds and len(spans) >= 2:
-            parent_row = _owned_header_regions(spans, page.width)
-    return parent_row or []
+            parent_row = _owned_header_regions(
+                _collapse_nearby_alias_spans(spans), page.width
+            )
+    if not parent_row:
+        return []
+    return _split_regions_by_date_midpoint(
+        parent_row, _dated_header_centers(page, line), page.width
+    )
 
 
 _ENTITY_PHRASES: tuple[tuple[str, str], ...] = (
@@ -985,7 +1155,11 @@ def _entity_parent_regions(page: PageIR, line: LineIR) -> list[_HeaderSpan]:
         kinds = {span.kind for span in spans}
         if "GROUP" in kinds and kinds & {"COMPANY", "BANK"} and len(spans) >= 2:
             parent_row = _owned_header_regions(spans, page.width)
-    return parent_row or []
+    if not parent_row:
+        return []
+    return _split_regions_by_date_midpoint(
+        parent_row, _dated_header_centers(page, line), page.width
+    )
 
 
 def _column_entity_header_kinds(page: PageIR) -> set[str]:
@@ -1049,19 +1223,47 @@ def _is_notes_heading(page: PageIR) -> bool:
 
 _PERIOD_YEAR = re.compile(
     r"(?:months?\s+ended|quarter\s+ended|period\s+ended|year\s+ended|as\s+at|as\s+of)"
-    r"[^\n]{0,48}\b(20\d{2})\b",
+    r"[^\n]{0,48}?\b(20\d{2})\b",
     re.I,
 )
 
 
 def _page_covers_period(page: PageIR, period_end: date) -> bool:
-    """Reject a page whose stated period years cannot be this quarter."""
+    """Reject a page whose stated period years cannot be this quarter.
+
+    Comparative-only pages that mention only the prior year must not enter the
+    candidate pool for the current target quarter.
+    """
 
     head = "\n".join(page.text.splitlines()[:18])
+    # Non-greedy duration-year capture plus all bare years in the head. Dual
+    # Group/Company headers list current and comparative years on one line;
+    # a greedy capture previously kept only the final comparative year.
     years = {int(year) for year in _PERIOD_YEAR.findall(head)}
+    years |= {int(year) for year in re.findall(r"\b(20\d{2})\b", head)}
     if not years:
         return True
-    return period_end.year in years or (period_end.year - 1) in years
+    return period_end.year in years
+
+
+def _comparison_from_layout(
+    page: PageIR,
+    line: LineIR,
+    token: TokenIR,
+    period_end: date,
+) -> tuple[str, int]:
+    """Infer comparison_role and source header year from spatial year/date headers."""
+
+    target_points, prior_points = _period_header_points(page, line, period_end)
+    x = token.bbox.center_x
+    if target_points or prior_points:
+        target_near = _closeness(x, target_points, page.width) if target_points else 0.0
+        prior_near = _closeness(x, prior_points, page.width) if prior_points else 0.0
+        if prior_points and prior_near > target_near:
+            return "COMPARATIVE", period_end.year - 1
+        if target_points and target_near >= prior_near:
+            return "CURRENT", period_end.year
+    return "CURRENT", period_end.year
 
 
 def _is_related_party_page(page: PageIR) -> bool:
@@ -1197,6 +1399,39 @@ def _logical_rows(page: PageIR) -> tuple[LineIR, ...]:
                 merged.append(_merge_lines(current, following))
                 index += 2
                 continue
+            # Windforce-style: "Earning share" / "Basic earnings per share" then a
+            # detached "Rs." unit line then the numeric figures on the next row.
+            if (
+                close
+                and current_has_label
+                and not current_has_money
+                and re.search(
+                    r"\b(?:earning(?:s)?\s+share|earnings?\s+per\s+share|eps)\b",
+                    current.text,
+                    re.I,
+                )
+                and index + 2 < len(lines)
+            ):
+                unit_line = lines[index + 1]
+                value_line = lines[index + 2]
+                unit_gap = value_line.bbox.y0 - unit_line.bbox.y1
+                unit_only = bool(
+                    re.fullmatch(r"\s*(?:rs\.?|lkr|usd)\s*(?:'?\s*000|mn|m)?\s*", unit_line.text, re.I)
+                    or (
+                        not _has_money_tokens(unit_line)
+                        and re.search(r"\b(?:rs\.?|lkr)\b", unit_line.text, re.I)
+                        and len(unit_line.text.split()) <= 3
+                    )
+                )
+                if (
+                    unit_only
+                    and _has_money_tokens(value_line)
+                    and not re.search(r"[A-Za-z]{3,}", _metric_label(value_line) or value_line.text)
+                    and -max_gap <= unit_gap <= max_gap * 1.5
+                ):
+                    merged.append(_merge_lines(current, value_line))
+                    index += 3
+                    continue
             if (
                 close
                 and current_has_label
@@ -1383,12 +1618,15 @@ def _select_layout_value(
         # whole page; its x-position is not a numeric-column header.
         expected_points = []
         other_points = []
-    target_year_points = _header_points(page, line, str(period_end.year))
+    target_year_points, prior_year_points = _period_header_points(page, line, period_end)
     target_date_pattern = (
         rf"(?:{period_end.day:02d}[./-]{period_end.month:02d}[./-]{period_end.year}|"
         rf"{period_end.day}[./-]{period_end.month}[./-]{period_end.year})"
     )
     target_date_points = _header_points(page, line, target_date_pattern)
+    target_date_points.extend(
+        point for point in target_year_points if point not in target_date_points
+    )
     quarter_points = _header_points(page, line, r"QUARTER|\b[1-4]\s*Q\b")
     quarter_points.extend(_line_points(page, line, "three months"))
     change_points = _header_points(page, line, r"%|CHANGE|VARIANCE")
@@ -1438,11 +1676,10 @@ def _select_layout_value(
         change_penalty = _closeness(x, change_points, page.width, 0.055)
         left_bias = max(0.0, 1.0 - index / max(len(candidates), 1))
         cluster_component = _closeness(x, list(cluster_centers), page.width)
-        prior_year_points = _header_points(page, line, str(period_end.year - 1))
         parent = _parent_kind_at(x, duration_regions)
+        # Reject prior-year / comparative columns for FLOW and STOCK.
         if (
-            rule.statement == "FLOW"
-            and target_year_points
+            target_year_points
             and prior_year_points
             and _closeness(x, prior_year_points, page.width)
             > _closeness(x, target_year_points, page.width)
@@ -1632,18 +1869,43 @@ def _coalesce_spaced_thousands(tokens: tuple[TokenIR, ...]) -> tuple[TokenIR, ..
 
 
 def _unit_for_layout(
-    document: DocumentIR, page: PageIR, line: LineIR, metric_type: str
+    document: DocumentIR,
+    page: PageIR,
+    line: LineIR,
+    metric_type: str,
+    *,
+    force_rescan: bool = False,
 ) -> tuple[str | None, int | None, str | None, float]:
     if metric_type == "MONETARY_PER_SHARE":
         row_candidates = detect_candidates(line.text, scope=UnitScope.ROW, page=page.number)
+        if force_rescan and not row_candidates:
+            # Look at immediate neighbors for detached "Rs." unit lines.
+            page_lines = list(page.lines)
+            for index, candidate in enumerate(page_lines):
+                if candidate is line or abs(candidate.bbox.center_y - line.bbox.center_y) > 24:
+                    continue
+                row_candidates = detect_candidates(
+                    candidate.text, scope=UnitScope.ROW, page=page.number
+                )
+                if row_candidates:
+                    break
+                if index + 1 < len(page_lines):
+                    composed = compose_unit_text(candidate.text, page_lines[index + 1].text)
+                    row_candidates = detect_candidates(
+                        composed, scope=UnitScope.ROW, page=page.number
+                    )
+                    if row_candidates:
+                        break
         currency = row_candidates[0].currency if row_candidates else "LKR"
         source = row_candidates[0].source_text if row_candidates else "Per-share amount"
-        return currency, 1, source, 0.98 if row_candidates else 0.85
+        return currency, 1, source, 0.98 if row_candidates else (0.9 if force_rescan else 0.85)
 
     collected: list[UnitCandidate] = []
     ranked: list[tuple[float, str, int, str]] = []
     for candidate_page in document.pages:
         page_gap = abs(candidate_page.number - page.number)
+        if force_rescan and page_gap > 1:
+            continue
         page_lines = list(candidate_page.lines)
         for line_index, candidate_line in enumerate(page_lines):
             neighbor = ""
@@ -1684,6 +1946,8 @@ def _unit_for_layout(
                     specificity = 0.15 if unit.scale_factor > 1 else 0.0
                     same_page = 0.7 if candidate_page.number == page.number else 0.25
                     distance_score = max(0.0, 0.25 - unit.distance * 0.15)
+                    if force_rescan and unit.scale_factor > 1:
+                        specificity += 0.1
                     ranked.append(
                         (
                             same_page + distance_score + specificity,
@@ -1807,16 +2071,12 @@ def _layout_candidates(
     mapping = statement_map if statement_map is not None else _page_statement_map(document)
     last_entity_by_statement: dict[str, float] = {}
     identity_by_page: dict[int, bool] = {}
-    document_quarter_context = any(
-        _is_exact_quarter_text(page.text)
-        or re.search(
-            r"\b(?:FIRST|SECOND|THIRD|FOURTH)\s+QUARTER\b|\b[1-4]Q\b|\bQ[1-4]\b",
-            page.text,
-            re.I,
-        )
-        for page in document.pages
-    )
     document_has_quarter_heading = _document_has_quarter_flow_heading(document)
+    document_quarter_context = document_has_quarter_heading or any(
+        _page_is_exact_quarter(page, document_has_quarter_heading=False)
+        for page in document.pages
+        if _classify_page_statement(page) == "FLOW" or _is_statement_page(page, "FLOW")
+    )
     for page in document.pages:
         if rule.statement == "FLOW" and re.search(
             r"STATEMENT(?:S)?\s+OF\s+CASH\s+FLOWS?",
@@ -1858,12 +2118,17 @@ def _layout_candidates(
         cumulative_only_page = _page_is_cumulative_only(
             page, document_has_quarter_heading=document_has_quarter_heading
         )
+        page_duration = _page_flow_duration(
+            page, document_has_quarter_heading=document_has_quarter_heading
+        )
         exact_quarter = (not cumulative_only_page) and (
             _page_is_exact_quarter(
                 page, document_has_quarter_heading=document_has_quarter_heading
             )
             or bool(
                 document_quarter_context
+                and page_duration not in {6, 9, 12}
+                and not cumulative_only_page
                 and (
                     inherited_statement == "FLOW"
                     or rule.code in {"EPS_BASIC", "EPS_DILUTED", "NAVPS"}
@@ -1959,7 +2224,7 @@ def _layout_candidates(
                         r"earnings?\s*/?\s*\(?\s*loss\s*\)?\s+per\s+(?:ordinary\s+)?share|"
                         r"loss\s+per\s+(?:ordinary\s+)?share|\beps\b",
                         nearby,
-                    ):
+                    ) and not _page_has_eps(page):
                         continue
             if rule.code == "NAVPS" and not semantic_model.startswith("regex"):
                 continue
@@ -2167,6 +2432,73 @@ def _selected_eps_fact(
     )
 
 
+def _missing_status_after_search(
+    *,
+    rule: MetricRule,
+    document: DocumentIR,
+    entity: str,
+    outside_quarter: bool,
+    wrong_scope: bool,
+    label_unresolved: bool,
+    explicit_flow: bool,
+    standalone_statement: bool,
+) -> str:
+    """Map an empty candidate set to a precise missing taxonomy code.
+
+    ``SOURCE_CONFIRMED_NOT_REPORTED`` requires proof of absence: correct statement
+    type located for the standalone entity, target period searched (layout + text
+    fallback already attempted by the caller), and no publishable metric row.
+    """
+
+    if outside_quarter:
+        return "EXACT_QUARTER_NOT_REPORTED"
+    if label_unresolved:
+        return "VALUE_CONTEXT_UNRESOLVED"
+    if wrong_scope and not standalone_statement:
+        return "CONSOLIDATED_ONLY"
+
+    statement_pages = [
+        page for page in document.pages if _is_statement_page(page, rule.statement)
+    ]
+    if not statement_pages:
+        return "NOT_FOUND_BY_PARSER"
+
+    standalone_pages = [
+        page
+        for page in statement_pages
+        if _page_title_entity(page) in {entity, "DUAL", None}
+        and _page_title_entity(page) != "GROUP"
+    ]
+    if not standalone_pages and wrong_scope:
+        return "CONSOLIDATED_ONLY"
+    if not standalone_pages:
+        return "ENTITY_NOT_RESOLVED"
+
+    if rule.statement == "FLOW":
+        exact_quarter_standalone = any(
+            _page_is_exact_quarter(page) and _page_title_entity(page) != "GROUP"
+            for page in standalone_pages
+        )
+        if exact_quarter_standalone and explicit_flow:
+            return "SOURCE_CONFIRMED_NOT_REPORTED"
+        if explicit_flow and not exact_quarter_standalone:
+            return "EXACT_QUARTER_NOT_REPORTED"
+        return "NOT_FOUND_BY_PARSER"
+
+    # Stock metrics: only claim source-confirmed absence when an eligible SOFP-like
+    # standalone page was searched and the metric aliases were not merely unresolved.
+    sofp_like = [
+        page
+        for page in standalone_pages
+        if _is_statement_page(page, "STOCK") or _classify_page_statement(page) == "STOCK"
+    ]
+    if not sofp_like:
+        return "NOT_FOUND_BY_PARSER"
+    if label_unresolved:
+        return "VALUE_CONTEXT_UNRESOLVED"
+    return "SOURCE_CONFIRMED_NOT_REPORTED"
+
+
 def _cross_metric_inconsistency(facts: list[ExtractedFact]) -> str | None:
     """Flag flow metrics that did not resolve through the same current 3M standalone path."""
 
@@ -2204,6 +2536,12 @@ def _write_diagnostics(
         json.dumps(document.evidence_dict(), indent=2),
         encoding="utf-8",
     )
+    try:
+        from cse_financial_etl.documents.document_context import write_document_context
+
+        write_document_context(diagnostics_dir, document)
+    except Exception:
+        pass
     review = [fact for fact in facts if fact.status not in {"EXTRACTED", "EXTRACTED_DERIVED"}]
     if not review:
         return
@@ -2473,7 +2811,16 @@ def extract_filing(
     diagnostics_dir: Path | None = None,
     auto_approve_threshold: float = 0.95,
     manual_review_threshold: float = 0.80,
+    force_unit_rescan: bool = False,
+    prefer_exact_quarter: bool = True,
+    prefer_standalone_sofp: bool = False,
 ) -> list[ExtractedFact]:
+    """Extract facts from one filing.
+
+    Retry flags (Phase One retry controller) may change layout/unit interpretation
+    but never relax Company/Bank, exact-quarter, or non-zero blank rules.
+    """
+
     document = extract_document_ir(
         pdf_path,
         ocr_dir=text_cache_dir,
@@ -2482,11 +2829,37 @@ def extract_filing(
     entity = entity_scope_for_issuer(issuer_name, issuers)
     facts: list[ExtractedFact] = []
     statement_map = _page_statement_map(document)
+    require_exact_quarter = prefer_exact_quarter
 
     for rule in METRIC_RULES:
-        candidates, outside_quarter, wrong_scope, label_unresolved = _layout_candidates(
-            document, rule, entity, period_end, statement_map=statement_map
-        )
+        if prefer_standalone_sofp and rule.statement == "STOCK":
+            # First pass: only pages whose title is the standalone entity (not DUAL/Group).
+            candidates, outside_quarter, wrong_scope, label_unresolved = _layout_candidates(
+                document,
+                rule,
+                entity,
+                period_end,
+                statement_map=statement_map,
+                require_exact_quarter=require_exact_quarter,
+            )
+            standalone_only = [
+                candidate
+                for candidate in candidates
+                if _page_title_entity(candidate.page) in {entity, None}
+                and _page_title_entity(candidate.page) != "GROUP"
+            ]
+            if standalone_only:
+                candidates = standalone_only
+            # else keep all candidates — do not invent a miss when dual pages exist
+        else:
+            candidates, outside_quarter, wrong_scope, label_unresolved = _layout_candidates(
+                document,
+                rule,
+                entity,
+                period_end,
+                statement_map=statement_map,
+                require_exact_quarter=require_exact_quarter,
+            )
         cumulative_only = False
         if not candidates and rule.code in {"TOP_LINE", "OPERATING_PROFIT", "PBT", "PAT"}:
             cumulative_candidates, _outside, cumulative_wrong_scope, cumulative_unresolved = (
@@ -2561,6 +2934,11 @@ def extract_filing(
                 overall = 0.82 if publishable and status == "EXTRACTED" else 0.72
                 if status == "EXTRACTED" and overall < manual_review_threshold:
                     status = "LOW_CERTAINTY"
+                text_duration = (
+                    _duration_months(page.text) if rule.statement == "FLOW" else None
+                )
+                if rule.statement == "FLOW" and text_duration in {6, 9, 12}:
+                    status = "CUMULATIVE_ONLY"
                 facts.append(
                     ExtractedFact(
                         issuer_name=issuer_name,
@@ -2590,7 +2968,11 @@ def extract_filing(
                         validation_confidence=0.8,
                         overall_certainty=overall,
                         certainty_band=_certainty_band(overall),
-                        duration_months=3 if rule.statement == "FLOW" else None,
+                        duration_months=(
+                            text_duration
+                            if rule.statement == "FLOW" and text_duration is not None
+                            else (3 if rule.statement == "FLOW" else None)
+                        ),
                         validation_status="PASSED" if status == "EXTRACTED" else "REVIEW",
                         review_status="REVIEW",
                     )
@@ -2608,16 +2990,15 @@ def extract_filing(
                 )
                 for page in document.pages
             )
-            status = (
-                "EXACT_QUARTER_NOT_REPORTED"
-                if outside_quarter
-                else "VALUE_CONTEXT_UNRESOLVED"
-                if label_unresolved
-                else "CONSOLIDATED_ONLY"
-                if wrong_scope and not standalone_statement
-                else "SOURCE_CONFIRMED_NOT_REPORTED"
-                if rule.statement == "FLOW" and explicit_flow
-                else "NOT_FOUND_BY_PARSER"
+            status = _missing_status_after_search(
+                rule=rule,
+                document=document,
+                entity=entity,
+                outside_quarter=outside_quarter,
+                wrong_scope=wrong_scope,
+                label_unresolved=label_unresolved,
+                explicit_flow=explicit_flow,
+                standalone_statement=standalone_statement,
             )
             facts.append(_missing_fact(issuer_name, symbol, period_end, rule, entity, status))
             continue
@@ -2627,7 +3008,11 @@ def extract_filing(
         )
         selected = candidates[0]
         currency, scale, unit_text, unit_confidence = _unit_for_layout(
-            document, selected.page, selected.line, rule.metric_type
+            document,
+            selected.page,
+            selected.line,
+            rule.metric_type,
+            force_rescan=force_unit_rescan,
         )
         if rule.metric_type == "MONETARY_PER_SHARE":
             normalized = selected.raw_value
@@ -2674,15 +3059,19 @@ def extract_filing(
             if status == "EXTRACTED" and review_status == "APPROVED"
             else selected.graph
         )
+        comparison_role, header_year = _comparison_from_layout(
+            selected.page, selected.line, selected.token, period_end
+        )
         evidence = {
             "selected_line": compact_line(selected.line),
             "graph": stored_graph,
-            "source_header_year": period_end.year,
-            "comparison_role": "CURRENT",
+            "source_header_year": header_year,
+            "comparison_role": comparison_role,
             "duration_months": (
-                _duration_months(selected.page.text)
-                if cumulative_only
-                else 3
+                _page_flow_duration(
+                    selected.page,
+                    document_has_quarter_heading=_document_has_quarter_flow_heading(document),
+                )
                 if rule.statement == "FLOW"
                 else None
             ),
@@ -2715,6 +3104,31 @@ def extract_filing(
             },
             "entity_parent_kind": _graph_parent_kind(selected.graph),
         }
+        flow_duration = (
+            _page_flow_duration(
+                selected.page,
+                document_has_quarter_heading=_document_has_quarter_flow_heading(document),
+            )
+            if rule.statement == "FLOW"
+            else None
+        )
+        if cumulative_only and rule.statement == "FLOW":
+            flow_duration = flow_duration if flow_duration in {6, 9, 12} else (
+                _duration_months(selected.page.text) or 6
+            )
+            evidence["duration_months"] = flow_duration
+        elif rule.statement == "FLOW":
+            # Never hardcode 3 when the selected page is cumulative-only.
+            if flow_duration in {6, 9, 12}:
+                status = "CUMULATIVE_ONLY"
+                review_status = "REVIEW"
+                flow_duration = flow_duration
+            elif flow_duration is None:
+                flow_duration = 3 if not cumulative_only else 6
+            evidence["duration_months"] = flow_duration
+        if status == "EXTRACTED" and comparison_role != "CURRENT":
+            status = "VALUE_CONTEXT_UNRESOLVED"
+            review_status = "REVIEW"
         facts.append(
             ExtractedFact(
                 issuer_name=issuer_name,
@@ -2747,39 +3161,17 @@ def extract_filing(
                 validation_confidence=validation_confidence,
                 overall_certainty=round(overall, 4),
                 certainty_band=band,
-                duration_months=(
-                    _duration_months(selected.page.text)
-                    if cumulative_only
-                    else 3
-                    if rule.statement == "FLOW"
-                    else None
-                ),
+                comparison_role=comparison_role,
+                duration_months=flow_duration if rule.statement == "FLOW" else None,
                 validation_status="PASSED" if status == "EXTRACTED" else "REVIEW",
                 review_status=review_status,
                 evidence_json=json.dumps(evidence, separators=(",", ":")),
             )
         )
 
-    fact_map = facts_by_code(facts)
-    liabilities = fact_map.get("TOTAL_LIABILITIES")
-    if (
-        entity in {"COMPANY", "BANK"}
-        and liabilities is not None
-        and liabilities.status not in {"EXTRACTED", "LOW_CERTAINTY"}
-    ):
-        assembled = _assemble_standalone_liabilities(
-            document,
-            entity,
-            period_end,
-            statement_map,
-            issuer_name,
-            symbol,
-        )
-        if assembled is not None:
-            facts = [fact for fact in facts if fact.metric_code != "TOTAL_LIABILITIES"]
-            facts.append(assembled)
-            fact_map = facts_by_code(facts)
-
+    # Contract: do not publish Assets-Equity or assembled current+non-current
+    # liabilities without an explicit Total Liabilities source row.
+    # `_assemble_standalone_liabilities` remains available for diagnostics only.
     facts = _drop_unreconciled_overlay_equity(facts, entity)
     fact_map = facts_by_code(facts)
 
@@ -2862,6 +3254,14 @@ def extract_quarter_prices(
                 )
             ):
                 continue
+            # Section titles ("8.5 ... Highest, Lowest and Last Traded ... given below")
+            # are not value rows.
+            if re.search(r"\bgiven below\b|\bshown below\b|\bas follows\b", lowered):
+                continue
+            if re.match(r"^\s*\d+(?:\.\d+)?\s+\S+", lowered) and re.search(
+                r"\bhighest\b.+\blowest\b.+\blast\s+traded\b", lowered
+            ):
+                continue
             numeric: list[tuple[TokenIR, Decimal]] = []
             has_month = bool(
                 re.search(
@@ -2893,7 +3293,15 @@ def extract_quarter_prices(
                 if len(numeric) >= 2:
                     class_values.setdefault("X", (page, line, numeric[1][1], numeric[1][0]))
                 continue
-            token, value = numeric[0]
+            # Single row with Highest / Lowest / Last traded: take last-traded (3rd).
+            # Pure "Last traded current comparative" rows: take current (1st).
+            if (
+                re.search(r"\bhighest\b.+\blowest\b.+\blast\s+traded\b", lowered)
+                and len(numeric) >= 3
+            ):
+                token, value = numeric[-1]
+            else:
+                token, value = numeric[0]
             if re.match(r"^\s*non[- ]?voting\b", lowered):
                 class_values.setdefault("X", (page, line, value, token))
             elif re.match(r"^\s*voting\b", lowered):
@@ -2902,6 +3310,8 @@ def extract_quarter_prices(
                 score = 0.78
                 if "last traded" in lowered:
                     score += 0.15
+                if "highest" in lowered and "lowest" in lowered:
+                    score += 0.05
                 if period_end.isoformat() in context or str(period_end.year) in context:
                     score += 0.05
                 generic.append((min(score, 0.99), page, line, value, token))

@@ -153,6 +153,7 @@ def test_gold_mismatch_is_wrong_populated() -> None:
                     "metric_code": "PAT",
                     "expected": "100",
                     "actual": "90",
+                    "verification_status": "MANUAL_QA",
                 }
             ]
         },
@@ -160,13 +161,69 @@ def test_gold_mismatch_is_wrong_populated() -> None:
     assert [hit.code for hit in hits] == ["GOLD_WRONG_POPULATED"]
 
 
+def test_pipeline_seeded_gold_mismatch_is_not_a_hard_stop() -> None:
+    hits = evaluate_production_gates(
+        [],
+        golden_validation={
+            "sample_size": 100,
+            "passed": 99,
+            "results": [
+                {
+                    "status": "FAIL",
+                    "issuer_name": "Seeded PLC",
+                    "period_end": "2025-06-30",
+                    "metric_code": "PAT",
+                    "expected": "100",
+                    "actual": "90",
+                    "verification_status": "PIPELINE_SEEDED",
+                }
+            ]
+        },
+        coverage_baseline={"min_gold_sample": 100, "min_extracted_plus_derived": 0},
+    )
+    assert hits == []
+
+
 def test_gold_sample_below_baseline_is_a_hard_stop() -> None:
     hits = evaluate_production_gates(
         [],
         golden_validation={"sample_size": 20, "passed": 20, "results": []},
-        coverage_baseline={"min_gold_sample": 39, "min_extracted_plus_derived": 0},
+        coverage_baseline={"min_gold_sample": 100, "min_extracted_plus_derived": 0},
     )
     assert [hit.code for hit in hits] == ["GOLD_SAMPLE_INCOMPLETE"]
+
+
+def test_derived_liabilities_without_explicit_row_is_a_hard_stop(tmp_path: Path) -> None:
+    hits = evaluate_production_gates(
+        [
+            (
+                _filing(tmp_path),
+                [
+                    _fact(
+                        metric_code="TOTAL_LIABILITIES",
+                        status="EXTRACTED_DERIVED",
+                        extraction_method="CURRENT_PLUS_NONCURRENT",
+                    )
+                ],
+            )
+        ]
+    )
+    assert any(hit.code == "DERIVED_LIABILITIES_WITHOUT_EXPLICIT_ROW" for hit in hits)
+
+
+def test_issuer_quarter_coherence_gate(tmp_path: Path) -> None:
+    hits = evaluate_production_gates(
+        [
+            (
+                _filing(tmp_path),
+                [
+                    _fact(metric_code="PAT", duration_months=3, comparison_role="CURRENT"),
+                    _fact(metric_code="PBT", duration_months=6, comparison_role="CURRENT"),
+                ],
+            )
+        ]
+    )
+    assert any(hit.code == "ISSUER_QUARTER_CONTEXT_INCONSISTENT" for hit in hits)
 
 
 def test_coverage_regression_is_a_hard_stop(tmp_path: Path) -> None:
