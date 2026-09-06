@@ -158,6 +158,19 @@ def git_identity(project_root: Path) -> GitIdentity:
 
 def infer_issuer_type(issuer_name: str) -> str:
     upper = issuer_name.upper()
+    # Merchant banks / bank-finance hybrids publish Company statements, not Bank.
+    finance_hybrid = any(
+        token in upper
+        for token in (
+            "MERCHANT BANK",
+            "BANK OF SRI LANKA FINANCE",
+            "FINANCE PLC",
+            "FINANCE LIMITED",
+            "FINANCE LTD",
+        )
+    ) and "COMMERCIAL BANK" not in upper and "NATIONAL DEVELOPMENT BANK" not in upper
+    if finance_hybrid and any(token in upper for token in ("FINANCE", "LEASING", "MERCHANT")):
+        return "FINANCE_COMPANY"
     if re_search_bank(upper):
         return "BANK"
     if any(token in upper for token in ("INSURANCE", "LIFE ASSURANCE", "ASSURANCE PLC", "TAKAFUL")):
@@ -176,4 +189,12 @@ def infer_entity_scope(issuer_name: str, issuers: dict[str, IssuerProfile] | Non
 
 
 def re_search_bank(upper_name: str) -> bool:
-    return "BANK" in upper_name and "FOOD" not in upper_name
+    """Licensed commercial/development banks only — not merchant-bank finance cos."""
+
+    if "FOOD" in upper_name:
+        return False
+    if "MERCHANT BANK" in upper_name:
+        return False
+    if "FINANCE" in upper_name and "BANK" in upper_name:
+        return False
+    return "BANK" in upper_name

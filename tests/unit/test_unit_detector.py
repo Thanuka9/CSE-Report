@@ -41,6 +41,19 @@ class UnitDetectorTests(unittest.TestCase):
         ]
         self.assertEqual(resolve_unit(candidates).scale_factor, 1_000)
 
+    def test_same_page_scaled_outranks_bare_across_scopes(self) -> None:
+        """Bare LKR on STATEMENT must not defeat Rs.'000 detected as REPORT on same page."""
+
+        from cse_financial_etl.extraction.unit_detector import prefer_explicit_scale
+
+        candidates = [
+            UnitCandidate("LKR", "LKR", 1, UnitScope.STATEMENT, page=3, distance=0.01),
+            UnitCandidate("Rs.'000", "LKR", 1_000, UnitScope.REPORT, page=3, distance=0.5),
+        ]
+        kept = prefer_explicit_scale(candidates)
+        self.assertTrue(all(unit.scale_factor > 1 for unit in kept))
+        self.assertEqual(resolve_unit(candidates).scale_factor, 1_000)
+
     def test_composed_split_rs_and_thousands(self) -> None:
         text = compose_unit_text("Rs.", "'000")
         unit = resolve_unit(detect_candidates(text, scope=UnitScope.STATEMENT))

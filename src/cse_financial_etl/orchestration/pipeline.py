@@ -48,7 +48,7 @@ from cse_financial_etl.sources.cse import (
     serialize_security,
 )
 from cse_financial_etl.sources.historical_prices import resolve_quarter_end_price
-from cse_financial_etl.storage.repository import Repository
+from cse_financial_etl.storage.repository import DERIVED_METRIC_CODES, Repository
 from cse_financial_etl.storage.run_archive import (
     MANIFESTS_DIRNAME,
     archive_pipeline_artifacts,
@@ -437,7 +437,7 @@ class Pipeline:
                     retry_summary["recovered"] += 1
                 if outcome.attempts and outcome.facts is not facts:
                     facts = outcome.facts
-                    self.repository.save_filing_and_facts(item, facts)
+                    self.repository.replace_filing_facts(item, facts)
                 results = outcome.final_results
             for result in results:
                 if result.outcome != ValidationOutcome.FAIL:
@@ -516,6 +516,16 @@ class Pipeline:
             facts = stamped
             refreshed_results.append((item, facts))
         extracted_results = refreshed_results
+        # Rebuild ratios from stamped validation so FAILED inputs are not published.
+        stripped: list[tuple[DownloadedFiling, list[ExtractedFact]]] = [
+            (
+                item,
+                [fact for fact in facts if fact.metric_code not in DERIVED_METRIC_CODES],
+            )
+            for item, facts in extracted_results
+        ]
+        extracted_results = derive_ratio_facts(stripped, display_periods=target_periods)
+        self.repository.apply_stamped_facts(extracted_results)
         status_counts = Counter(
             fact.status for _item, facts in extracted_results for fact in facts
         )

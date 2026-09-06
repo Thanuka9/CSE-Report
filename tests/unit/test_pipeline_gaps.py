@@ -99,6 +99,9 @@ def test_bank_and_config_entity_scope() -> None:
     issuers = load_issuers(project_root)
     assert infer_entity_scope("John Keells Holdings PLC", issuers) == "COMPANY"
     assert infer_entity_scope("Commercial Bank of Ceylon PLC", issuers) == "BANK"
+    assert infer_issuer_type("MERCHANT BANK OF SRI LANKA FINANCE PLC") == "FINANCE_COMPANY"
+    assert infer_entity_scope("MERCHANT BANK OF SRI LANKA FINANCE PLC") == "COMPANY"
+    assert infer_issuer_type("COMMERCIAL BANK OF CEYLON PLC") == "BANK"
 
 
 def test_app_config_enables_ocr() -> None:

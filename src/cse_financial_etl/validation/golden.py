@@ -24,6 +24,7 @@ def validate_golden(project_root: Path, as_of_date: date) -> dict[str, Any]:
     results: list[dict[str, Any]] = []
     by_metric: dict[str, Counter[str]] = defaultdict(Counter)
     overall: Counter[str] = Counter()
+    by_verification: dict[str, Counter[str]] = defaultdict(Counter)
 
     for fixture in fixtures:
         pdf_path = project_root / fixture["pdf"]
@@ -43,9 +44,25 @@ def validate_golden(project_root: Path, as_of_date: date) -> dict[str, Any]:
         for metric_code, expected in fixture["facts"].items():
             fact = facts.get(metric_code)
             passed = bool(fact and _same_value(fact.normalized_value, expected))
+            # Manual truth also requires accepted publish status + quarter duration for flows.
+            if (
+                passed
+                and verification == "MANUAL_OR_PRIOR"
+                and fact is not None
+                and metric_code
+                in {"TOP_LINE", "OPERATING_PROFIT", "PBT", "PAT", "EPS_BASIC", "EPS_DILUTED"}
+            ):
+                if fact.status not in {"EXTRACTED", "EXTRACTED_DERIVED"}:
+                    passed = False
+                if fact.duration_months not in {None, 3}:
+                    passed = False
+                expected_scope = fixture.get("entity_scope")
+                if expected_scope and fact.entity_scope != expected_scope:
+                    passed = False
             status = "PASS" if passed else "FAIL"
             by_metric[metric_code][status] += 1
             overall[status] += 1
+            by_verification[verification][status] += 1
             results.append(
                 {
                     "pdf": fixture["pdf"],
@@ -58,6 +75,9 @@ def validate_golden(project_root: Path, as_of_date: date) -> dict[str, Any]:
                         if fact and fact.normalized_value is not None
                         else None
                     ),
+                    "actual_status": fact.status if fact else None,
+                    "actual_duration_months": fact.duration_months if fact else None,
+                    "actual_entity_scope": fact.entity_scope if fact else None,
                     "source_page": fact.source_page if fact else None,
                     "status": status,
                     "verification_status": verification,
@@ -101,6 +121,23 @@ def validate_golden(project_root: Path, as_of_date: date) -> dict[str, Any]:
         "passed": overall["PASS"],
         "failed": overall["FAIL"],
         "accuracy": overall["PASS"] / sample_size if sample_size else None,
+        "accuracy_disclaimer": (
+            "Fixture-level scores only. PIPELINE_SEEDED and MANUAL_OR_PRIOR are reported "
+            "separately under by_verification_status; this is not population accuracy."
+        ),
+        "by_verification_status": {
+            key: {
+                "sample_size": counts["PASS"] + counts["FAIL"],
+                "passed": counts["PASS"],
+                "failed": counts["FAIL"],
+                "accuracy": (
+                    counts["PASS"] / (counts["PASS"] + counts["FAIL"])
+                    if counts["PASS"] + counts["FAIL"]
+                    else None
+                ),
+            }
+            for key, counts in sorted(by_verification.items())
+        },
         "by_metric": {
             metric: {
                 "sample_size": counts["PASS"] + counts["FAIL"],

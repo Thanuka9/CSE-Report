@@ -7,6 +7,7 @@ from datetime import date
 from decimal import Decimal
 
 from cse_financial_etl.extraction.statement_extractor import ExtractedFact
+from cse_financial_etl.validation.acceptance import is_publishable_fact
 
 ACCEPTED = {"EXTRACTED", "EXTRACTED_DERIVED"}
 
@@ -22,7 +23,7 @@ def _index_facts(
 
 
 def _accepted(fact: ExtractedFact | None) -> ExtractedFact | None:
-    if fact is None or fact.status not in ACCEPTED or fact.normalized_value is None:
+    if fact is None or not is_publishable_fact(fact):
         return None
     return fact
 

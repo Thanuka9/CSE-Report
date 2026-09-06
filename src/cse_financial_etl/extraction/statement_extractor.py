@@ -146,6 +146,7 @@ METRIC_RULES: tuple[MetricRule, ...] = (
             r"^\s*gross\s+income\b",
             r"^\s*total\s+operating\s+income\b",
             r"^\s*total\s+income\b",
+            r"^\s*income\b(?!\s+tax)(?!\s+and)(?!\s+from)",
             r"^\s*net\s+operating\s+income\b",
             r"^\s*insurance\s+revenue\b",
             r"^\s*gross\s+written\s+premium\b",
@@ -697,25 +698,42 @@ def _head_duration_cue(page: PageIR) -> str | None:
 
     ``PERIOD`` is ambiguous: Q1 packs use it for the three-month quarter, while
     Q2/Q3 packs use it for the cumulative page beside a Quarter Ended P&L.
+
+    Mixed Year Ended + Period Ended (or Quarter + Six months) pages return
+    ``QUARTER`` so column-level binding can still select the three-month block.
     """
 
     saw_quarter = False
     saw_ytd = False
     saw_period = False
+    saw_year_ended = False
+    saw_period_ended_col = False
     for line in page.lines[:12]:
         text = line.text.upper()
         if _is_interim_pack_title(text) or _is_page_number_line(text):
             continue
         # Combined CSE layouts put both cues on one line:
-        # "For the six months ended For the quarter ended".
-        if re.search(r"(?:NINE|SIX|TWELVE|0?9|0?6|12)\s+MONTHS|YEAR ENDED", text):
+        # "Quarter ended Six months ended" / "Year Ended ... Period Ended".
+        if re.search(r"\bYEAR\s+ENDED\b", text):
+            saw_year_ended = True
             saw_ytd = True
-        if re.search(r"FOR THE QUARTER|(?:THREE|03)\s+MONTHS|\b3\s+MONTHS", text):
+        if re.search(r"(?:NINE|SIX|TWELVE|0?9|0?6|12)\s+MONTHS", text):
+            saw_ytd = True
+        if re.search(
+            r"FOR THE QUARTER|QUARTER\s+ENDED|(?:THREE|03)\s+MONTHS|\b3\s+MONTHS",
+            text,
+        ):
             saw_quarter = True
+        if re.search(r"\bPERIOD\s+ENDED\b", text):
+            saw_period_ended_col = True
+            saw_period = True
         elif re.search(r"FOR THE PERIOD ENDED", text):
             saw_period = True
     if _head_has_split_three_months(page):
         saw_quarter = True
+    # Hayleys-style: Year Ended + Period Ended on one P&L → column binding.
+    if saw_year_ended and saw_period_ended_col:
+        return "QUARTER"
     # Mixed 6M+quarter pages must remain eligible for exact-quarter selection.
     if saw_quarter:
         return "QUARTER"
@@ -733,7 +751,11 @@ def _page_has_statement_quarter_heading(page: PageIR) -> bool:
         text = line.text.upper()
         if _is_interim_pack_title(text) or _is_page_number_line(text):
             continue
-        if re.search(r"FOR THE QUARTER|(?:THREE|03)\s+MONTHS|\b3\s+MONTHS", text):
+        if re.search(
+            r"FOR THE QUARTER|QUARTER\s+ENDED|(?:THREE|03)\s+MONTHS|\b3\s+MONTHS|"
+            r"\bPERIOD\s+ENDED\b",
+            text,
+        ):
             return True
     return False
 
@@ -984,10 +1006,12 @@ _DURATION_PHRASES: tuple[tuple[str, str], ...] = (
     ("three months", "QUARTER"),
     ("for the quarter", "QUARTER"),
     ("quarter ended", "QUARTER"),
+    ("period ended", "QUARTER"),
     ("six months", "YTD"),
     ("nine months", "YTD"),
     ("twelve months", "YTD"),
     ("year to date", "YTD"),
+    ("year ended", "YTD"),
 )
 
 
@@ -1275,6 +1299,85 @@ def _is_related_party_page(page: PageIR) -> bool:
             re.I,
         )
     )
+
+
+def _is_group_segment_page(page: PageIR) -> bool:
+    """Group operating-segment note pages must never feed standalone P&L facts."""
+
+    head = " ".join(line.text for line in page.lines[:12])
+    return bool(
+        re.search(
+            r"operating\s+segments?|"
+            r"income,?\s+profit\s+and\s+asset\s+information|"
+            r"segmental?\s+(?:information|analysis|results)|"
+            r"group'?s?\s+operating\s+segments?",
+            head,
+            re.I,
+        )
+    )
+
+
+def _column_duration_months(
+    page: PageIR,
+    line: LineIR,
+    token: TokenIR,
+    period_end: date,
+    *,
+    document_has_quarter_heading: bool = False,
+) -> int | None:
+    """Duration for the selected value's column — never override with page FY cues."""
+
+    x = token.bbox.center_x
+    parent = _parent_kind_at(x, _duration_parent_regions(page, line))
+    if parent is not None:
+        if parent.kind == "QUARTER":
+            return 3
+        if parent.kind == "YTD":
+            phrase = parent.phrase.lower()
+            if "six" in phrase:
+                return 6
+            if "nine" in phrase:
+                return 9
+            if "twelve" in phrase or "year ended" in phrase or "year to date" in phrase:
+                return 12
+            return _page_flow_duration(
+                page, document_has_quarter_heading=document_has_quarter_heading
+            )
+    # Date-header proximity: Period Ended 30.06.2026 under target date → quarter.
+    target_points, prior_points = _period_header_points(page, line, period_end)
+    year_ended_points: list[float] = []
+    period_ended_points: list[float] = []
+    for header_line in page.lines:
+        if header_line.bbox.y0 >= line.bbox.y0:
+            break
+        for phrase, kind in (
+            ("year ended", "YTD"),
+            ("period ended", "QUARTER"),
+            ("quarter ended", "QUARTER"),
+        ):
+            for _x0, _x1, center in _phrase_occurrences(header_line, phrase):
+                if kind == "YTD":
+                    year_ended_points.append(center)
+                else:
+                    period_ended_points.append(center)
+    if period_ended_points or year_ended_points:
+        period_near = _closeness(x, period_ended_points, page.width) if period_ended_points else 0.0
+        year_near = _closeness(x, year_ended_points, page.width) if year_ended_points else 0.0
+        if period_near > year_near:
+            return 3
+        if year_near > period_near:
+            return 12
+    if (
+        target_points
+        and (
+            not prior_points
+            or _closeness(x, target_points, page.width) >= _closeness(x, prior_points, page.width)
+        )
+        and (period_ended_points or _page_has_statement_quarter_heading(page))
+    ):
+        # Under the current quarter-end date with mixed headers → prefer 3M.
+        return 3
+    return _page_flow_duration(page, document_has_quarter_heading=document_has_quarter_heading)
 
 
 def _is_sofp_eligible(page: PageIR, document: DocumentIR, mapping: dict[int, str | None]) -> bool:
@@ -1922,6 +2025,21 @@ def _unit_for_layout(
                 and _CURRENCY_FRAGMENT.search(page_lines[line_index - 1].text)
             ):
                 probe_texts.append(composed)
+            # Join bare LKR/Rs. with a nearby scale fragment within ±2 header lines
+            # (MBSL-style layouts split currency and '000 across non-adjacent rows).
+            if (
+                candidate_page.number == page.number
+                and _CURRENCY_FRAGMENT.search(candidate_line.text)
+                and not _SCALE_FRAGMENT.search(candidate_line.text)
+            ):
+                for offset in (1, 2, -1, -2):
+                    other_index = line_index + offset
+                    if other_index < 0 or other_index >= len(page_lines):
+                        continue
+                    other_text = page_lines[other_index].text
+                    if _SCALE_FRAGMENT.search(other_text):
+                        probe_texts.append(compose_unit_text(candidate_line.text, other_text))
+                        break
             if not any(_unit_declaration(text) or _SCALE_FRAGMENT.search(text) for text in probe_texts):
                 continue
             if "per share" in candidate_line.text.lower():
@@ -2104,6 +2222,15 @@ def _layout_candidates(
             "OPERATING_PROFIT",
             "PBT",
             "PAT",
+        }:
+            continue
+        if _is_group_segment_page(page) and rule.code in {
+            "TOP_LINE",
+            "OPERATING_PROFIT",
+            "PBT",
+            "PAT",
+            "EPS_BASIC",
+            "EPS_DILUTED",
         }:
             continue
         if rule.code in STOCK_CORE and not _is_sofp_eligible(page, document, mapping):
@@ -2406,29 +2533,78 @@ def _selected_eps_fact(
                 separators=(",", ":"),
             ),
         )
-    statuses = [fact.status for fact in (diluted, basic) if fact is not None]
-    preferred = (
-        "CONSOLIDATED_ONLY",
-        "EXACT_QUARTER_NOT_REPORTED",
+    # Prefer "value found but unusable" over pure absence so basic CUMULATIVE_ONLY
+    # is not hidden by diluted EXACT_QUARTER_NOT_REPORTED.
+    evidence_statuses = (
         "CUMULATIVE_ONLY",
+        "UNIT_NOT_RESOLVED",
+        "VALUE_CONTEXT_UNRESOLVED",
+        "CONSOLIDATED_ONLY",
+        "LOW_CERTAINTY",
+    )
+    absence_statuses = (
+        "EXACT_QUARTER_NOT_REPORTED",
         "SOURCE_CONFIRMED_NOT_REPORTED",
         "NOT_FOUND_BY_PARSER",
-        "UNIT_NOT_RESOLVED",
+        "ENTITY_NOT_RESOLVED",
+        "NOT_REPORTED",
     )
-    missing_status = next((status for status in preferred if status in statuses), None)
-    if missing_status is None:
-        missing_status = next(
-            (status for status in statuses if status not in {"NOT_REPORTED", "EXTRACTED"}),
-            "NOT_FOUND_BY_PARSER",
-        )
+    preferred = (*evidence_statuses, *absence_statuses)
+
+    def _status_rank(status: str) -> int:
+        try:
+            return preferred.index(status)
+        except ValueError:
+            return len(preferred)
+
+    # Prefer basic when it carries evidence of a found value; keep diluted otherwise.
+    candidates = [fact for fact in (basic, diluted) if fact is not None]
+    if not candidates:
+        missing_status = "NOT_FOUND_BY_PARSER"
+        selection_source = None
+    else:
+        evidenced = [
+            fact
+            for fact in candidates
+            if fact.status in evidence_statuses
+            or (fact.raw_value is not None and fact.status not in absence_statuses)
+        ]
+        pool = evidenced or candidates
+        # Within the pool, pick the best (lowest) preferred rank; ties prefer basic.
+        selection_source = min(pool, key=lambda fact: (_status_rank(fact.status), 0 if fact is basic else 1))
+        missing_status = selection_source.status
+        if missing_status in {"EXTRACTED", "EXTRACTED_DERIVED", "NOT_REPORTED"}:
+            missing_status = next(
+                (status for status in preferred if status in {f.status for f in candidates}),
+                "NOT_FOUND_BY_PARSER",
+            )
     selected_rule = MetricRule("EPS_SELECTED", (), "FLOW", "MONETARY_PER_SHARE")
-    return _missing_fact(
+    missing = _missing_fact(
         issuer_name,
         symbol,
         period_end,
         selected_rule,
         entity,
         missing_status,
+        source_line=(
+            f"basic={basic.status if basic else None}; diluted={diluted.status if diluted else None}"
+        ),
+    )
+    return replace(
+        missing,
+        evidence_json=json.dumps(
+            {
+                "selection_policy": "prefer_evidence_over_absence",
+                "selected_status_source": (
+                    selection_source.metric_code if selection_source is not None else None
+                ),
+                "basic_status": basic.status if basic is not None else None,
+                "diluted_status": diluted.status if diluted is not None else None,
+                "basic_duration_months": basic.duration_months if basic is not None else None,
+                "diluted_duration_months": diluted.duration_months if diluted is not None else None,
+            },
+            separators=(",", ":"),
+        ),
     )
 
 
@@ -2448,12 +2624,16 @@ def _missing_status_after_search(
     ``SOURCE_CONFIRMED_NOT_REPORTED`` requires proof of absence: correct statement
     type located for the standalone entity, target period searched (layout + text
     fallback already attempted by the caller), and no publishable metric row.
+
+    Label/column context failure must not be reported as exact-quarter absence:
+    ``outside_quarter`` only wins when the label was resolved and values were
+    found outside the target quarter duration.
     """
 
-    if outside_quarter:
-        return "EXACT_QUARTER_NOT_REPORTED"
     if label_unresolved:
         return "VALUE_CONTEXT_UNRESOLVED"
+    if outside_quarter:
+        return "EXACT_QUARTER_NOT_REPORTED"
     if wrong_scope and not standalone_statement:
         return "CONSOLIDATED_ONLY"
 
@@ -3003,9 +3183,17 @@ def extract_filing(
             facts.append(_missing_fact(issuer_name, symbol, period_end, rule, entity, status))
             continue
 
-        candidates.sort(
-            key=lambda candidate: (candidate.candidate_score, -candidate.page.number), reverse=True
-        )
+        def _top_line_rank(
+            candidate: _LayoutCandidate, *, _code: str = rule.code
+        ) -> tuple[float, int]:
+            label = (candidate.raw_label or "").strip().lower()
+            exact_boost = 0.0
+            if _code == "TOP_LINE" and label == "income":
+                # Finance packs often print gross "Income" above Net interest income.
+                exact_boost = 0.12
+            return (candidate.candidate_score + exact_boost, -candidate.page.number)
+
+        candidates.sort(key=_top_line_rank, reverse=True)
         selected = candidates[0]
         currency, scale, unit_text, unit_confidence = _unit_for_layout(
             document,
@@ -3062,19 +3250,23 @@ def extract_filing(
         comparison_role, header_year = _comparison_from_layout(
             selected.page, selected.line, selected.token, period_end
         )
+        column_duration = (
+            _column_duration_months(
+                selected.page,
+                selected.line,
+                selected.token,
+                period_end,
+                document_has_quarter_heading=_document_has_quarter_flow_heading(document),
+            )
+            if rule.statement == "FLOW"
+            else None
+        )
         evidence = {
             "selected_line": compact_line(selected.line),
             "graph": stored_graph,
             "source_header_year": header_year,
             "comparison_role": comparison_role,
-            "duration_months": (
-                _page_flow_duration(
-                    selected.page,
-                    document_has_quarter_heading=_document_has_quarter_flow_heading(document),
-                )
-                if rule.statement == "FLOW"
-                else None
-            ),
+            "duration_months": column_duration,
             "candidate_count": len(candidates),
             "candidate_scores": [
                 {
@@ -3104,28 +3296,34 @@ def extract_filing(
             },
             "entity_parent_kind": _graph_parent_kind(selected.graph),
         }
-        flow_duration = (
-            _page_flow_duration(
-                selected.page,
-                document_has_quarter_heading=_document_has_quarter_flow_heading(document),
-            )
-            if rule.statement == "FLOW"
-            else None
-        )
+        flow_duration = column_duration
         if cumulative_only and rule.statement == "FLOW":
-            flow_duration = flow_duration if flow_duration in {6, 9, 12} else (
-                _duration_months(selected.page.text) or 6
-            )
+            # Cumulative-only path: keep real duration, never pretend it is 3M.
+            if flow_duration not in {6, 9, 12}:
+                flow_duration = (
+                    _page_flow_duration(
+                        selected.page,
+                        document_has_quarter_heading=_document_has_quarter_flow_heading(
+                            document
+                        ),
+                    )
+                    or _duration_months(selected.page.text)
+                    or 6
+                )
             evidence["duration_months"] = flow_duration
         elif rule.statement == "FLOW":
-            # Never hardcode 3 when the selected page is cumulative-only.
-            if flow_duration in {6, 9, 12}:
+            # Column binding wins over page-level FY cues (Hayleys Fibre).
+            if flow_duration == 3:
+                evidence["duration_months"] = 3
+            elif flow_duration in {6, 9, 12}:
                 status = "CUMULATIVE_ONLY"
                 review_status = "REVIEW"
-                flow_duration = flow_duration
+                evidence["duration_months"] = flow_duration
             elif flow_duration is None:
                 flow_duration = 3 if not cumulative_only else 6
-            evidence["duration_months"] = flow_duration
+                evidence["duration_months"] = flow_duration
+            else:
+                evidence["duration_months"] = flow_duration
         if status == "EXTRACTED" and comparison_role != "CURRENT":
             status = "VALUE_CONTEXT_UNRESOLVED"
             review_status = "REVIEW"

@@ -15,4 +15,12 @@ issuers:
     legal_name: John Keells Holdings PLC
     issuer_type: GENERAL
     standalone_scope_label: COMPANY
+  MBSL:
+    legal_name: Merchant Bank of Sri Lanka Finance PLC
+    issuer_type: FINANCE_COMPANY
+    standalone_scope_label: COMPANY
+  HAYLEYS_FIBRE:
+    legal_name: Hayleys Fibre PLC
+    issuer_type: GENERAL
+    standalone_scope_label: COMPANY
 

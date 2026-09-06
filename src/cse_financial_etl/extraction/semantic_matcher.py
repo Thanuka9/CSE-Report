@@ -22,6 +22,7 @@ CANONICAL_LABELS: dict[str, tuple[str, ...]] = {
         "net sales",
         "total revenue",
         "turnover",
+        "income",
         "interest income",
         "net interest income",
     ),

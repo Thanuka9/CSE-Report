@@ -269,6 +269,45 @@ class Repository:
                     }
                 )
 
+    def replace_filing_facts(
+        self, downloaded: DownloadedFiling, facts: Iterable[ExtractedFact]
+    ) -> None:
+        """Replace facts/evidence for a filing with the final stamped set (no duplicates)."""
+
+        sha = downloaded.sha256
+        filing_id = downloaded.filing.filing_id
+        self.fact_rows = [
+            row
+            for row in self.fact_rows
+            if not (
+                str(row.get("filing_sha256")) == sha or str(row.get("filing_id")) == filing_id
+            )
+        ]
+        self.evidence_rows = [
+            row
+            for row in self.evidence_rows
+            if not (
+                str(row.get("filing_sha256")) == sha or str(row.get("filing_id")) == filing_id
+            )
+        ]
+        # Avoid duplicate filing metadata rows when re-persisting after validation.
+        self.filing_rows = [
+            row
+            for row in self.filing_rows
+            if not (
+                str(row.get("sha256")) == sha or str(row.get("filing_id")) == filing_id
+            )
+        ]
+        self.save_filing_and_facts(downloaded, facts)
+
+    def apply_stamped_facts(
+        self, extracted_results: Iterable[tuple[DownloadedFiling, list[ExtractedFact]]]
+    ) -> None:
+        """Persist post-validation fact state before CSV / Excel / gates."""
+
+        for downloaded, facts in extracted_results:
+            self.replace_filing_facts(downloaded, facts)
+
     def save_quarter_prices(
         self, downloaded: DownloadedFiling, prices: Iterable[QuarterPrice]
     ) -> None:
@@ -400,16 +439,10 @@ class Repository:
             key = name.casefold()
             if key in seen:
                 continue
-            upper = name.upper()
-            issuer_type = "GENERAL"
-            scope = "COMPANY"
-            if "BANK" in upper and "FOOD" not in upper:
-                issuer_type = "BANK"
-                scope = "BANK"
-            elif any(token in upper for token in ("INSURANCE", "ASSURANCE", "TAKAFUL")):
-                issuer_type = "INSURANCE"
-            elif any(token in upper for token in ("FINANCE", "LEASING", "MICROFINANCE")):
-                issuer_type = "FINANCE_COMPANY"
+            from cse_financial_etl.config import infer_entity_scope, infer_issuer_type
+
+            issuer_type = infer_issuer_type(name)
+            scope = infer_entity_scope(name)
             seen[key] = {
                 "issuer_id": name,
                 "legal_name": name,

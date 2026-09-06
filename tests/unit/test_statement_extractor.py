@@ -1,3 +1,4 @@
+import json
 from datetime import date
 from decimal import Decimal
 
@@ -19,6 +20,7 @@ from cse_financial_etl.extraction.statement_extractor import (
     _is_exact_quarter_page,
     _layout_candidates,
     _looks_like_share_count,
+    _missing_status_after_search,
     _numbers,
     _page_entity_confidence,
     _page_statement_map,
@@ -482,6 +484,53 @@ def test_eps_selected_missing_uses_parser_absence_code() -> None:
     assert selected.metric_code == "EPS_SELECTED"
     assert selected.normalized_value is None
     assert selected.status == "NOT_FOUND_BY_PARSER"
+
+
+def test_eps_selected_prefers_cumulative_basic_over_diluted_absence() -> None:
+    """QA: basic CUMULATIVE_ONLY must not be hidden by diluted EXACT_QUARTER miss."""
+
+    selected = _selected_eps_fact(
+        "Acme PLC",
+        "ACME.N0000",
+        date(2026, 6, 30),
+        "COMPANY",
+        diluted=_eps_fact("EPS_DILUTED", "1.40", "EXACT_QUARTER_NOT_REPORTED"),
+        basic=_eps_fact("EPS_BASIC", "1.50", "CUMULATIVE_ONLY"),
+    )
+    assert selected.metric_code == "EPS_SELECTED"
+    assert selected.normalized_value is None
+    assert selected.status == "CUMULATIVE_ONLY"
+    assert "basic=CUMULATIVE_ONLY" in (selected.source_line or "")
+    assert "diluted=EXACT_QUARTER_NOT_REPORTED" in (selected.source_line or "")
+    evidence = json.loads(selected.evidence_json or "{}")
+    assert evidence["basic_status"] == "CUMULATIVE_ONLY"
+    assert evidence["diluted_status"] == "EXACT_QUARTER_NOT_REPORTED"
+    assert evidence["selected_status_source"] == "EPS_BASIC"
+
+
+def test_missing_status_prefers_label_unresolved_over_outside_quarter() -> None:
+    rule = next(rule for rule in METRIC_RULES if rule.code == "PAT")
+    document = _document(
+        [
+            _page(
+                1,
+                [_line(1, 20, [_token("Statement", 40, 20, 70), _token("Company", 120, 20, 60)])],
+            )
+        ]
+    )
+    assert (
+        _missing_status_after_search(
+            rule=rule,
+            document=document,
+            entity="COMPANY",
+            outside_quarter=True,
+            wrong_scope=False,
+            label_unresolved=True,
+            explicit_flow=True,
+            standalone_statement=True,
+        )
+        == "VALUE_CONTEXT_UNRESOLVED"
+    )
 
 
 def test_share_count_is_not_usable_eps() -> None:

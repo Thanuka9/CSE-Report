@@ -14,6 +14,7 @@ from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
 from cse_financial_etl.sources.historical_prices import resolve_quarter_end_price
+from cse_financial_etl.validation.acceptance import PUBLISHABLE_STATUSES, is_publishable_fact
 
 VISIBLE_METRICS: tuple[tuple[str, str], ...] = (
     ("PAT", "PAT"),
@@ -33,7 +34,7 @@ DERIVED_HEADERS = (
     "ROA (Qtr)",
     "NPM (Qtr)",
 )
-ACCEPTED_STATUSES = {"EXTRACTED", "EXTRACTED_DERIVED"}
+ACCEPTED_STATUSES = set(PUBLISHABLE_STATUSES)
 BALANCE_SHEET_CODES = {
     "TOTAL_ASSETS",
     "TOTAL_EQUITY",
@@ -166,12 +167,19 @@ def generate_excel(
 
     fact_map = {(row["issuer_name"], row["period_end"], row["metric_code"]): row for row in facts}
     price_map = {(row["symbol"], row["period_end"]): row for row in prices}
-    period_reason: dict[tuple[str, str], str] = {}
+    # Key review reasons by issuer+period+metric so one metric's miss cannot
+    # blank every peer cell in the same quarter (QA report P0).
+    metric_reason: dict[tuple[str, str, str], str] = {}
+    period_fallback: dict[tuple[str, str], str] = {}
     for row in reviews:
-        period_reason.setdefault(
-            (row.get("issuer_name", ""), row.get("period_end", "")),
-            row.get("reason") or "REVIEW_REQUIRED",
-        )
+        issuer = row.get("issuer_name", "")
+        period = row.get("period_end", "")
+        reason = row.get("reason") or "REVIEW_REQUIRED"
+        metric = (row.get("metric_code") or "").strip()
+        if metric:
+            metric_reason.setdefault((issuer, period, metric), reason)
+        else:
+            period_fallback.setdefault((issuer, period), reason)
     balance_sheet_failed = {
         (row.get("issuer_name", ""), row.get("period_end", ""))
         for row in reviews
@@ -190,12 +198,14 @@ def generate_excel(
         ):
             return "BALANCE_SHEET_REVIEW"
         row = fact_map.get((issuer, period.isoformat(), code))
-        value = _number(row.get("normalized_value")) if row else None
-        if row and row.get("status") in ACCEPTED_STATUSES and value is not None:
-            return value
+        if row and is_publishable_fact(row):
+            value = _number(row.get("normalized_value"))
+            if value is not None:
+                return value
         return (
             (row.get("status") if row else None)
-            or period_reason.get((issuer, period.isoformat()))
+            or metric_reason.get((issuer, period.isoformat(), code))
+            or period_fallback.get((issuer, period.isoformat()))
             or "NOT_REPORTED"
         )
 

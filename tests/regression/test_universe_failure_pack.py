@@ -267,6 +267,49 @@ def test_windforce_latest_eps_reads_earning_share() -> None:
         assert eps.duration_months == 3
 
 
+def test_hayleys_fibre_period_ended_not_year_ended_duration() -> None:
+    """Verified QA: Hayleys Fibre Company Period Ended June must stay EXTRACTED 3M."""
+
+    facts = _facts(
+        "data/raw/filings/HAYLEYS_FIBRE_PLC/2026-06-30_768_1785840975698.06.2026.pdf",
+        "HAYLEYS FIBRE PLC",
+        "HEXP.N0000",
+        date(2026, 6, 30),
+    )
+    assert facts["PAT"].status == "EXTRACTED"
+    assert facts["PAT"].duration_months == 3
+    assert facts["PAT"].normalized_value == Decimal("73146000")
+    assert facts["TOP_LINE"].status == "EXTRACTED"
+    assert facts["TOP_LINE"].duration_months == 3
+    assert facts["TOP_LINE"].normalized_value == Decimal("1462532000")
+
+
+def test_mbsl_company_quarter_not_group_segment() -> None:
+    """Verified QA: MBSL Company page 3 (Rs'000), never Group operating segments page 11."""
+
+    from cse_financial_etl.config import infer_entity_scope, infer_issuer_type
+
+    assert infer_issuer_type("MERCHANT BANK OF SRI LANKA FINANCE PLC") == "FINANCE_COMPANY"
+    assert infer_entity_scope("MERCHANT BANK OF SRI LANKA FINANCE PLC") == "COMPANY"
+    facts = _facts(
+        "data/raw/filings/MERCHANT_BANK_OF_SRI_LANKA_FINANCE_PLC/"
+        "2026-06-30_380_1786934627322.06.2026 (1).pdf",
+        "MERCHANT BANK OF SRI LANKA FINANCE PLC",
+        "MBSL.N0000",
+        date(2026, 6, 30),
+    )
+    assert facts["PAT"].entity_scope == "COMPANY"
+    assert facts["PAT"].status == "EXTRACTED"
+    assert facts["PAT"].source_page == 3
+    assert facts["PAT"].scale_factor == 1000
+    assert facts["PAT"].normalized_value == Decimal("-82863000")
+    assert facts["PAT"].raw_value != Decimal("-82250")
+    assert facts["PBT"].normalized_value == Decimal("-99061000")
+    assert facts["OPERATING_PROFIT"].normalized_value == Decimal("-47735000")
+    assert facts["TOP_LINE"].normalized_value == Decimal("2025601000")
+    assert facts["EPS_BASIC"].normalized_value == Decimal("-0.16")
+
+
 def test_dialog_uses_quarter_company_not_six_month() -> None:
     """Manual QA: Dialog 6M Company values must never publish as the quarter."""
 

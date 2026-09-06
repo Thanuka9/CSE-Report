@@ -8,7 +8,8 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-from cse_financial_etl.reporting.excel import ACCEPTED_STATUSES, VISIBLE_METRICS
+from cse_financial_etl.reporting.excel import VISIBLE_METRICS
+from cse_financial_etl.validation.acceptance import is_publishable_fact
 
 HONEST_MISS_STATUSES = frozenset(
     {
@@ -128,7 +129,7 @@ def _coverage(facts: list[dict[str, str]]) -> list[dict[str, Any]]:
     codes = ["ALL", *[code for code, _label in VISIBLE_METRICS]]
     for metric in codes:
         subset = facts if metric == "ALL" else [row for row in facts if row.get("metric_code") == metric]
-        extracted = [row for row in subset if row.get("status") in ACCEPTED_STATUSES]
+        extracted = [row for row in subset if is_publishable_fact(row)]
         bands = Counter(row.get("certainty_band") or "NONE" for row in subset)
         rows.append(
             {
@@ -170,11 +171,9 @@ def generate_run_dashboard(
     if not gold and stats.get("golden_validation_sample_size"):
         gold = {
             "passed": stats.get("golden_validation_passed")
-            or int(
-                round(
-                    float(stats.get("golden_validation_accuracy") or 0)
-                    * float(stats.get("golden_validation_sample_size") or 0)
-                )
+            or round(
+                float(stats.get("golden_validation_accuracy") or 0)
+                * float(stats.get("golden_validation_sample_size") or 0)
             ),
             "sample_size": stats.get("golden_validation_sample_size"),
             "accuracy": stats.get("golden_validation_accuracy"),

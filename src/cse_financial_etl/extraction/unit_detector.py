@@ -195,13 +195,25 @@ def compose_unit_text(*parts: str) -> str:
 
 
 def prefer_explicit_scale(candidates: list[UnitCandidate]) -> list[UnitCandidate]:
-    """Within the same page and scope, currency+scale outranks a bare currency."""
+    """Bare currency must not defeat a same-page thousands/millions declaration.
+
+    Weak scopes (statement/page/report/table) drop bare currency when any same-page
+    scaled peer exists. Tight scopes (row/cell/metric) still keep bare currency so a
+    local ``Rs.`` annotation can override a statement thousands header.
+    """
 
     if not candidates:
         return candidates
+    weak_scopes = {
+        UnitScope.COLUMN,
+        UnitScope.TABLE,
+        UnitScope.STATEMENT,
+        UnitScope.PAGE,
+        UnitScope.REPORT,
+    }
     kept: list[UnitCandidate] = []
     for candidate in candidates:
-        scaled_peers = [
+        same_scope_scaled = [
             other
             for other in candidates
             if other.page == candidate.page
@@ -209,7 +221,16 @@ def prefer_explicit_scale(candidates: list[UnitCandidate]) -> list[UnitCandidate
             and other.currency == candidate.currency
             and other.scale_factor > 1
         ]
-        if candidate.scale_factor == 1 and scaled_peers:
+        same_page_scaled = [
+            other
+            for other in candidates
+            if other.page == candidate.page
+            and other.currency == candidate.currency
+            and other.scale_factor > 1
+        ]
+        if candidate.scale_factor == 1 and same_scope_scaled:
+            continue
+        if candidate.scale_factor == 1 and candidate.scope in weak_scopes and same_page_scaled:
             continue
         kept.append(candidate)
     return kept or candidates
