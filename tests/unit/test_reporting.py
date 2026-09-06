@@ -29,6 +29,7 @@ def _seed_outputs(root: Path) -> Path:
                 "symbol",
                 "period_end",
                 "metric_code",
+                "metric_type",
                 "normalized_value",
                 "status",
                 "entity_scope",
@@ -36,6 +37,9 @@ def _seed_outputs(root: Path) -> Path:
                 "extraction_method",
                 "certainty_band",
                 "source_line",
+                "duration_months",
+                "validation_status",
+                "review_status",
             ],
         )
         writer.writeheader()
@@ -45,6 +49,7 @@ def _seed_outputs(root: Path) -> Path:
                 "symbol": "ACM.N0000",
                 "period_end": PERIOD.isoformat(),
                 "metric_code": "PAT",
+                "metric_type": "MONETARY_ABSOLUTE",
                 "normalized_value": "1000",
                 "status": "EXTRACTED",
                 "entity_scope": "COMPANY",
@@ -52,6 +57,9 @@ def _seed_outputs(root: Path) -> Path:
                 "extraction_method": "LAYOUT_TEXT",
                 "certainty_band": "HIGH",
                 "source_line": "Profit for the period 1,000",
+                "duration_months": "3",
+                "validation_status": "PASSED",
+                "review_status": "APPROVED",
             }
         )
         writer.writerow(
@@ -60,6 +68,7 @@ def _seed_outputs(root: Path) -> Path:
                 "symbol": "ACM.N0000",
                 "period_end": PERIOD.isoformat(),
                 "metric_code": "OPERATING_PROFIT",
+                "metric_type": "MONETARY_ABSOLUTE",
                 "normalized_value": "",
                 "status": "SOURCE_CONFIRMED_NOT_REPORTED",
                 "entity_scope": "COMPANY",
@@ -67,6 +76,9 @@ def _seed_outputs(root: Path) -> Path:
                 "extraction_method": "",
                 "certainty_band": "NONE",
                 "source_line": "",
+                "duration_months": "",
+                "validation_status": "",
+                "review_status": "",
             }
         )
         writer.writerow(
@@ -75,6 +87,7 @@ def _seed_outputs(root: Path) -> Path:
                 "symbol": "ACM.N0000",
                 "period_end": PERIOD.isoformat(),
                 "metric_code": "TOTAL_LIABILITIES",
+                "metric_type": "MONETARY_ABSOLUTE",
                 "normalized_value": "",
                 "status": "NOT_FOUND_BY_PARSER",
                 "entity_scope": "COMPANY",
@@ -82,6 +95,28 @@ def _seed_outputs(root: Path) -> Path:
                 "extraction_method": "",
                 "certainty_band": "NONE",
                 "source_line": "",
+                "duration_months": "",
+                "validation_status": "",
+                "review_status": "",
+            }
+        )
+        writer.writerow(
+            {
+                "issuer_name": "Acme PLC",
+                "symbol": "ACM.N0000",
+                "period_end": PERIOD.isoformat(),
+                "metric_code": "PBT",
+                "metric_type": "MONETARY_ABSOLUTE",
+                "normalized_value": "999",
+                "status": "EXTRACTED",
+                "entity_scope": "COMPANY",
+                "source_page": "2",
+                "extraction_method": "LAYOUT_TEXT",
+                "certainty_band": "HIGH",
+                "source_line": "Profit before tax 999",
+                "duration_months": "3",
+                "validation_status": "FAILED",
+                "review_status": "REVIEW",
             }
         )
     prices_path = outputs / f"quarter_end_prices_{AS_OF.isoformat()}.csv"
@@ -177,6 +212,14 @@ def test_workbook_contains_only_snapshot_sheet(tmp_path: Path) -> None:
     assert "dashboard.html" in str(workbook.active["G2"].value)
     # Header rows stay frozen; identity columns must scroll freely.
     assert workbook.active.freeze_panes == "A5"
+    # Failed validation must not display the extraction status as the cell value.
+    pbt_header = None
+    for cell in workbook.active[4]:
+        if cell.value == "PBT":
+            pbt_header = cell.column
+            break
+    assert pbt_header is not None
+    assert workbook.active.cell(row=5, column=pbt_header).value == "VALIDATION_FAILED"
 
 
 def test_run_dashboard_is_self_contained(tmp_path: Path) -> None:

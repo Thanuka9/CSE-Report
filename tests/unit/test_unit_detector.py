@@ -41,6 +41,16 @@ class UnitDetectorTests(unittest.TestCase):
         ]
         self.assertEqual(resolve_unit(candidates).scale_factor, 1_000)
 
+    def test_column_unit_not_discarded_for_table_scale(self) -> None:
+        """Nearby COLUMN LKR x1 must beat a farther same-page TABLE '000."""
+
+        candidates = [
+            UnitCandidate("LKR", "LKR", 1, UnitScope.COLUMN, page=2, distance=0.05),
+            UnitCandidate("LKR '000", "LKR", 1_000, UnitScope.TABLE, page=2, distance=0.45),
+        ]
+        self.assertEqual(resolve_unit(candidates).scale_factor, 1)
+        self.assertEqual(resolve_unit(candidates).scope, UnitScope.COLUMN)
+
     def test_same_page_scaled_outranks_bare_across_scopes(self) -> None:
         """Bare LKR on STATEMENT must not defeat Rs.'000 detected as REPORT on same page."""
 

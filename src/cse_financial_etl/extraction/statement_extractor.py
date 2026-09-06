@@ -350,15 +350,21 @@ def _is_exact_quarter_page(page: PdfPage) -> bool:
 
 def _duration_months(text: str) -> int | None:
     normalized = re.sub(r"\s+", " ", text.upper())
+    # Prefer explicit N-month / quarter phrases over a bare Year Ended label.
     duration_patterns = (
-        (12, r"\b(?:TWELVE|12)\s+MONTHS?\b|\bYEAR\s+ENDED\b"),
         (9, r"\b(?:NINE|0?9)\s+MONTHS?\b"),
         (6, r"\b(?:SIX|0?6)\s+MONTHS?\b"),
         (3, r"\b(?:THREE|0?3)\s+MONTHS?\b|\bQUARTER\b"),
+        (12, r"\b(?:TWELVE|12)\s+MONTHS?\b"),
     )
     for duration, pattern in duration_patterns:
         if re.search(pattern, normalized):
             return duration
+    # Year Ended alone is annual; mixed Year Ended + Period Ended is unresolved here.
+    if re.search(r"\bYEAR\s+ENDED\b", normalized) and not re.search(
+        r"\bPERIOD\s+ENDED\b", normalized
+    ):
+        return 12
     return None
 
 
@@ -699,8 +705,8 @@ def _head_duration_cue(page: PageIR) -> str | None:
     ``PERIOD`` is ambiguous: Q1 packs use it for the three-month quarter, while
     Q2/Q3 packs use it for the cumulative page beside a Quarter Ended P&L.
 
-    Mixed Year Ended + Period Ended (or Quarter + Six months) pages return
-    ``QUARTER`` so column-level binding can still select the three-month block.
+    Mixed Year Ended + Period Ended pages return ``MIXED_YEAR_PERIOD`` so duration
+    must come from explicit months or fiscal year-end/period-end date evidence.
     """
 
     saw_quarter = False
@@ -708,6 +714,7 @@ def _head_duration_cue(page: PageIR) -> str | None:
     saw_period = False
     saw_year_ended = False
     saw_period_ended_col = False
+    saw_explicit_interim = False
     for line in page.lines[:12]:
         text = line.text.upper()
         if _is_interim_pack_title(text) or _is_page_number_line(text):
@@ -718,6 +725,7 @@ def _head_duration_cue(page: PageIR) -> str | None:
             saw_year_ended = True
             saw_ytd = True
         if re.search(r"(?:NINE|SIX|TWELVE|0?9|0?6|12)\s+MONTHS", text):
+            saw_explicit_interim = True
             saw_ytd = True
         if re.search(
             r"FOR THE QUARTER|QUARTER\s+ENDED|(?:THREE|03)\s+MONTHS|\b3\s+MONTHS",
@@ -731,9 +739,13 @@ def _head_duration_cue(page: PageIR) -> str | None:
             saw_period = True
     if _head_has_split_three_months(page):
         saw_quarter = True
-    # Hayleys-style: Year Ended + Period Ended on one P&L → column binding.
+    # Mixed annual + period columns: never assume three months from labels alone.
     if saw_year_ended and saw_period_ended_col:
-        return "QUARTER"
+        if saw_quarter:
+            return "QUARTER"
+        if saw_explicit_interim:
+            return "YTD"
+        return "MIXED_YEAR_PERIOD"
     # Mixed 6M+quarter pages must remain eligible for exact-quarter selection.
     if saw_quarter:
         return "QUARTER"
@@ -752,8 +764,7 @@ def _page_has_statement_quarter_heading(page: PageIR) -> bool:
         if _is_interim_pack_title(text) or _is_page_number_line(text):
             continue
         if re.search(
-            r"FOR THE QUARTER|QUARTER\s+ENDED|(?:THREE|03)\s+MONTHS|\b3\s+MONTHS|"
-            r"\bPERIOD\s+ENDED\b",
+            r"FOR THE QUARTER|QUARTER\s+ENDED|(?:THREE|03)\s+MONTHS|\b3\s+MONTHS",
             text,
         ):
             return True
@@ -766,6 +777,8 @@ def _page_is_cumulative_only(
     if _page_has_statement_quarter_heading(page):
         return False
     cue = _head_duration_cue(page)
+    if cue == "MIXED_YEAR_PERIOD":
+        return _page_fiscal_period_duration(page) in {6, 9, 12}
     if cue == "YTD":
         return True
     return cue == "PERIOD" and document_has_quarter_heading
@@ -779,37 +792,120 @@ def _page_is_exact_quarter(page: PageIR, *, document_has_quarter_heading: bool =
     cue = _head_duration_cue(page)
     if cue == "QUARTER" or _page_has_statement_quarter_heading(page):
         return True
+    if cue == "MIXED_YEAR_PERIOD":
+        return _page_fiscal_period_duration(page) == 3
     if cue == "PERIOD":
+        # Bare Period Ended stays eligible for Q1 packs, but duration stays unresolved
+        # until column/fiscal evidence establishes three months.
         return not document_has_quarter_heading
     return _is_exact_quarter_text(page.text)
 
 
 def _document_has_quarter_flow_heading(document: DocumentIR) -> bool:
     return any(
-        _head_duration_cue(page) == "QUARTER"
+        (
+            _head_duration_cue(page) == "QUARTER"
+            or (
+                _head_duration_cue(page) == "MIXED_YEAR_PERIOD"
+                and _page_fiscal_period_duration(page) == 3
+            )
+        )
         and (_classify_page_statement(page) == "FLOW" or _is_statement_page(page, "FLOW"))
         for page in document.pages
     )
+
+
+def _fiscal_months_between(year_end: date, period_end: date) -> int | None:
+    """Months from fiscal year-end to period-end; only 3/6/9/12 are accepted."""
+
+    if period_end < year_end:
+        return None
+    months = (period_end.year - year_end.year) * 12 + (period_end.month - year_end.month)
+    if period_end == year_end:
+        return 12
+    return months if months in {3, 6, 9, 12} else None
+
+
+def _parse_header_date_token(text: str) -> date | None:
+    match = _DATE_TOKEN.match(text.strip("()"))
+    if not match:
+        return None
+    try:
+        return date(int(match["y"]), int(match["m"]), int(match["d"]))
+    except ValueError:
+        return None
+
+
+def _header_dates_by_kind(page: PageIR, line: LineIR) -> list[tuple[str, date, float]]:
+    """Associate dd.mm.yyyy header dates with Year Ended / Period Ended labels."""
+
+    label_points: list[tuple[str, float]] = []
+    for header_line in page.lines:
+        if header_line.bbox.y0 >= line.bbox.y0:
+            break
+        for phrase, kind in (("year ended", "YEAR"), ("period ended", "PERIOD")):
+            for _x0, _x1, center in _phrase_occurrences(header_line, phrase):
+                label_points.append((kind, center))
+    if not label_points:
+        return []
+    dated: list[tuple[str, date, float]] = []
+    for header_line in page.lines:
+        if header_line.bbox.y0 >= line.bbox.y0:
+            break
+        for token in header_line.tokens:
+            parsed = _parse_header_date_token(token.text)
+            if parsed is None:
+                continue
+            kind, _ = min(label_points, key=lambda item: abs(item[1] - token.bbox.center_x))
+            dated.append((kind, parsed, token.bbox.center_x))
+    return dated
+
+
+def _page_fiscal_period_duration(page: PageIR) -> int | None:
+    """Infer duration from Year Ended + Period Ended date pairs on the page."""
+
+    if not page.lines:
+        return None
+    anchor = page.lines[min(8, len(page.lines) - 1)]
+    dated = _header_dates_by_kind(page, anchor)
+    year_dates = [item[1] for item in dated if item[0] == "YEAR"]
+    period_dates = [item[1] for item in dated if item[0] == "PERIOD"]
+    if not year_dates or not period_dates:
+        return None
+    year_end = max(year_dates)
+    durations = {
+        months
+        for period in period_dates
+        if (months := _fiscal_months_between(year_end, period)) is not None
+        and period != year_end
+    }
+    if len(durations) == 1:
+        return next(iter(durations))
+    return None
 
 
 def _page_flow_duration(
     page: PageIR, *, document_has_quarter_heading: bool = False
 ) -> int | None:
     cue = _head_duration_cue(page)
-    if cue == "QUARTER":
-        return 3
     head = _page_head_text(page)
     head_duration = _duration_months(head)
     if head_duration is not None:
+        # Explicit months always win over Year/Period label shortcuts.
         return head_duration
+    if cue == "QUARTER":
+        return 3
+    if cue == "MIXED_YEAR_PERIOD":
+        return _page_fiscal_period_duration(page)
     if cue == "YTD":
         body_duration = _duration_months(page.text)
         return body_duration if body_duration in {6, 9, 12} else None
     if cue == "PERIOD":
         if document_has_quarter_heading:
             body_duration = _duration_months(page.text)
-            return body_duration if body_duration in {6, 9, 12} else 9
-        return 3
+            return body_duration if body_duration in {6, 9, 12} else None
+        # Bare "Period ended" is unresolved without explicit or fiscal evidence.
+        return _page_fiscal_period_duration(page)
     return _duration_months(page.text)
 
 
@@ -1006,7 +1102,7 @@ _DURATION_PHRASES: tuple[tuple[str, str], ...] = (
     ("three months", "QUARTER"),
     ("for the quarter", "QUARTER"),
     ("quarter ended", "QUARTER"),
-    ("period ended", "QUARTER"),
+    # Bare "period ended" is not a three-month cue; column fiscal dates resolve it.
     ("six months", "YTD"),
     ("nine months", "YTD"),
     ("twelve months", "YTD"),
@@ -1340,10 +1436,13 @@ def _column_duration_months(
                 return 9
             if "twelve" in phrase or "year ended" in phrase or "year to date" in phrase:
                 return 12
+            explicit = _duration_months(phrase) or _duration_months(_page_head_text(page))
+            if explicit in {6, 9, 12}:
+                return explicit
             return _page_flow_duration(
                 page, document_has_quarter_heading=document_has_quarter_heading
             )
-    # Date-header proximity: Period Ended 30.06.2026 under target date → quarter.
+    # Date-header proximity: Period Ended under target date needs fiscal evidence.
     target_points, prior_points = _period_header_points(page, line, period_end)
     year_ended_points: list[float] = []
     period_ended_points: list[float] = []
@@ -1360,11 +1459,23 @@ def _column_duration_months(
                     year_ended_points.append(center)
                 else:
                     period_ended_points.append(center)
+    dated = _header_dates_by_kind(page, line)
     if period_ended_points or year_ended_points:
         period_near = _closeness(x, period_ended_points, page.width) if period_ended_points else 0.0
         year_near = _closeness(x, year_ended_points, page.width) if year_ended_points else 0.0
         if period_near > year_near:
-            return 3
+            period_dates = [(d, c) for kind, d, c in dated if kind == "PERIOD"]
+            year_dates = [d for kind, d, _c in dated if kind == "YEAR"]
+            if period_dates and year_dates:
+                period_date = min(period_dates, key=lambda item: abs(item[1] - x))[0]
+                year_date = min(year_dates, key=lambda item: abs((item - period_date).days))
+                fiscal = _fiscal_months_between(year_date, period_date)
+                if fiscal is not None:
+                    return fiscal
+            explicit = _duration_months(_page_head_text(page))
+            if explicit in {3, 6, 9, 12}:
+                return explicit
+            return None
         if year_near > period_near:
             return 12
     if (
@@ -1375,8 +1486,17 @@ def _column_duration_months(
         )
         and (period_ended_points or _page_has_statement_quarter_heading(page))
     ):
-        # Under the current quarter-end date with mixed headers → prefer 3M.
-        return 3
+        period_dates = [(d, c) for kind, d, c in dated if kind == "PERIOD"]
+        year_dates = [d for kind, d, _c in dated if kind == "YEAR"]
+        if period_dates and year_dates:
+            period_date = min(period_dates, key=lambda item: abs(item[1] - x))[0]
+            year_date = min(year_dates, key=lambda item: abs((item - period_date).days))
+            fiscal = _fiscal_months_between(year_date, period_date)
+            if fiscal is not None:
+                return fiscal
+        if _page_has_statement_quarter_heading(page):
+            return 3
+        return None
     return _page_flow_duration(page, document_has_quarter_heading=document_has_quarter_heading)
 
 

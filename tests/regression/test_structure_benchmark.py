@@ -21,8 +21,6 @@ from cse_financial_etl.documents.pdf_text import PdfPage
 from cse_financial_etl.extraction.statement_extractor import (
     METRIC_RULES,
     ExtractedFact,
-    _assemble_standalone_liabilities,
-    _coalesce_spaced_thousands,
     _layout_candidates,
     _numbers,
     _select_current,

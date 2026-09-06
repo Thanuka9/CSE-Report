@@ -2,7 +2,10 @@ from datetime import date
 from decimal import Decimal
 
 from cse_financial_etl.extraction.statement_extractor import ExtractedFact
-from cse_financial_etl.validation.acceptance import is_publishable_fact
+from cse_financial_etl.validation.acceptance import (
+    is_publishable_fact,
+    publishability_decision,
+)
 
 
 def _fact(**overrides: object) -> ExtractedFact:
@@ -37,10 +40,32 @@ def test_extracted_passed_is_publishable() -> None:
 
 def test_failed_validation_is_not_publishable() -> None:
     assert not is_publishable_fact(_fact(validation_status="FAILED"))
+    assert publishability_decision(_fact(validation_status="FAILED"))[1] == "VALIDATION_FAILED"
 
 
 def test_rejected_review_is_not_publishable() -> None:
     assert not is_publishable_fact(_fact(review_status="REJECTED"))
+
+
+def test_not_validated_review_is_not_publishable() -> None:
+    assert not is_publishable_fact(
+        _fact(validation_status="NOT_VALIDATED", review_status="REVIEW")
+    )
+
+
+def test_six_month_flow_is_not_publishable_by_default() -> None:
+    assert not is_publishable_fact(_fact(duration_months=6))
+    row = {
+        "status": "EXTRACTED",
+        "normalized_value": "100",
+        "review_status": "APPROVED",
+        "validation_status": "PASSED",
+        "duration_months": "6",
+        "metric_type": "MONETARY_ABSOLUTE",
+        "metric_code": "PAT",
+    }
+    assert not is_publishable_fact(row, require_quarter_flow=True)
+    assert publishability_decision(row)[1] == "NON_QUARTER_DURATION"
 
 
 def test_mapping_rows_use_same_predicate() -> None:
@@ -51,5 +76,6 @@ def test_mapping_rows_use_same_predicate() -> None:
         "validation_status": "FAILED",
         "duration_months": 3,
         "metric_type": "MONETARY_ABSOLUTE",
+        "metric_code": "PAT",
     }
     assert not is_publishable_fact(row)

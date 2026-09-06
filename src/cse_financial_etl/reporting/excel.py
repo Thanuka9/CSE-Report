@@ -14,7 +14,10 @@ from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
 from cse_financial_etl.sources.historical_prices import resolve_quarter_end_price
-from cse_financial_etl.validation.acceptance import PUBLISHABLE_STATUSES, is_publishable_fact
+from cse_financial_etl.validation.acceptance import (
+    PUBLISHABLE_STATUSES,
+    publishability_decision,
+)
 
 VISIBLE_METRICS: tuple[tuple[str, str], ...] = (
     ("PAT", "PAT"),
@@ -198,13 +201,21 @@ def generate_excel(
         ):
             return "BALANCE_SHEET_REVIEW"
         row = fact_map.get((issuer, period.isoformat(), code))
-        if row and is_publishable_fact(row):
-            value = _number(row.get("normalized_value"))
-            if value is not None:
-                return value
+        if row:
+            ok, reason = publishability_decision(row)
+            if ok:
+                value = _number(row.get("normalized_value"))
+                if value is not None:
+                    return value
+            if reason and reason not in PUBLISHABLE_STATUSES:
+                return (
+                    reason
+                    or metric_reason.get((issuer, period.isoformat(), code))
+                    or period_fallback.get((issuer, period.isoformat()))
+                    or "NOT_REPORTED"
+                )
         return (
-            (row.get("status") if row else None)
-            or metric_reason.get((issuer, period.isoformat(), code))
+            metric_reason.get((issuer, period.isoformat(), code))
             or period_fallback.get((issuer, period.isoformat()))
             or "NOT_REPORTED"
         )

@@ -1,4 +1,4 @@
-"""Field-level gold accuracy reporting (Phase One §40–41)."""
+"""Field-level gold accuracy reporting (Phase One section 40-41)."""
 
 from __future__ import annotations
 

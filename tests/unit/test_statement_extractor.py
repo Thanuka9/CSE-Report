@@ -602,3 +602,145 @@ def test_reconciling_equity_is_kept() -> None:
     equity = next(item for item in updated if item.metric_code == "TOTAL_EQUITY")
     assert equity.status == "EXTRACTED"
     assert equity.raw_value == Decimal("22308415009")
+
+
+def test_year_and_period_ended_with_six_month_heading_is_not_forced_quarter() -> None:
+    """P0 regression: explicit six-month evidence must outrank Year/Period labels."""
+
+    from cse_financial_etl.extraction.statement_extractor import (
+        _head_duration_cue,
+        _page_flow_duration,
+    )
+
+    lines = [
+        _line(1, 10, [_token("Statement", 10, 10, 60), _token("of", 75, 10, 20), _token("profit", 100, 10, 40)]),
+        _line(
+            1,
+            30,
+            [
+                _token("For", 10, 30, 20),
+                _token("the", 35, 30, 20),
+                _token("six", 60, 30, 20),
+                _token("months", 85, 30, 40),
+                _token("ended", 130, 30, 35),
+                _token("30", 170, 30, 15),
+                _token("June", 190, 30, 30),
+                _token("2026", 225, 30, 30),
+            ],
+        ),
+        _line(
+            1,
+            50,
+            [
+                _token("Year", 10, 50, 30),
+                _token("Ended", 45, 50, 35),
+                _token("Period", 200, 50, 40),
+                _token("Ended", 245, 50, 35),
+            ],
+        ),
+        _line(
+            1,
+            70,
+            [
+                _token("31.03.2026", 10, 70, 55),
+                _token("30.06.2026", 200, 70, 55),
+            ],
+        ),
+    ]
+    page = _page(1, lines)
+    assert _head_duration_cue(page) == "YTD"
+    assert _page_flow_duration(page) == 6
+
+
+def test_year_and_period_ended_uses_fiscal_dates_for_quarter() -> None:
+    """Hayleys-style Year Ended 31.03 + Period Ended 30.06 → three months via fiscal math."""
+
+    from cse_financial_etl.extraction.statement_extractor import (
+        _column_duration_months,
+        _head_duration_cue,
+        _page_flow_duration,
+    )
+
+    lines = [
+        _line(1, 10, [_token("STATEMENT", 10, 10, 70), _token("OF", 85, 10, 20), _token("PROFIT", 110, 10, 40)]),
+        _line(
+            1,
+            30,
+            [
+                _token("Year", 10, 30, 30),
+                _token("Ended", 45, 30, 35),
+                _token("Period", 220, 30, 40),
+                _token("Ended", 265, 30, 35),
+            ],
+        ),
+        _line(
+            1,
+            50,
+            [
+                _token("31.03.2026", 10, 50, 55),
+                _token("30.06.2026", 220, 50, 55),
+            ],
+        ),
+        _line(
+            1,
+            90,
+            [
+                _token("Profit", 10, 90, 40),
+                _token("100", 30, 90, 30),
+                _token("73,146", 230, 90, 40),
+            ],
+        ),
+    ]
+    page = _page(1, lines)
+    assert _head_duration_cue(page) == "MIXED_YEAR_PERIOD"
+    assert _page_flow_duration(page) == 3
+    value_token = lines[-1].tokens[-1]
+    assert (
+        _column_duration_months(page, lines[-1], value_token, date(2026, 6, 30)) == 3
+    )
+
+
+def test_year_and_period_ended_six_month_fiscal_span() -> None:
+    from cse_financial_etl.extraction.statement_extractor import (
+        _column_duration_months,
+        _head_duration_cue,
+        _page_flow_duration,
+    )
+
+    lines = [
+        _line(1, 10, [_token("STATEMENT", 10, 10, 70), _token("OF", 85, 10, 20), _token("PROFIT", 110, 10, 40)]),
+        _line(
+            1,
+            30,
+            [
+                _token("Year", 10, 30, 30),
+                _token("Ended", 45, 30, 35),
+                _token("Period", 220, 30, 40),
+                _token("Ended", 265, 30, 35),
+            ],
+        ),
+        _line(
+            1,
+            50,
+            [
+                _token("31.03.2026", 10, 50, 55),
+                _token("30.09.2026", 220, 50, 55),
+            ],
+        ),
+        _line(
+            1,
+            90,
+            [
+                _token("Profit", 10, 90, 40),
+                _token("100", 30, 90, 30),
+                _token("200", 230, 90, 30),
+            ],
+        ),
+    ]
+    page = _page(1, lines)
+    assert _head_duration_cue(page) == "MIXED_YEAR_PERIOD"
+    assert _page_flow_duration(page) == 6
+    value_token = lines[-1].tokens[-1]
+    assert (
+        _column_duration_months(page, lines[-1], value_token, date(2026, 9, 30)) == 6
+    )

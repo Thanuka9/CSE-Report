@@ -12,6 +12,7 @@ from cse_financial_etl.extraction.statement_extractor import (
     extract_quarter_prices,
     facts_by_code,
 )
+from cse_financial_etl.validation.acceptance import is_publishable_fact
 
 
 def _same_value(actual: Decimal | None, expected: str) -> bool:
@@ -45,19 +46,32 @@ def validate_golden(project_root: Path, as_of_date: date) -> dict[str, Any]:
             fact = facts.get(metric_code)
             passed = bool(fact and _same_value(fact.normalized_value, expected))
             # Manual truth also requires accepted publish status + quarter duration for flows.
+            verification_manual = verification in {"MANUAL_OR_PRIOR", "MANUAL_QA"}
             if (
                 passed
-                and verification == "MANUAL_OR_PRIOR"
+                and verification_manual
                 and fact is not None
                 and metric_code
                 in {"TOP_LINE", "OPERATING_PROFIT", "PBT", "PAT", "EPS_BASIC", "EPS_DILUTED"}
             ):
                 if fact.status not in {"EXTRACTED", "EXTRACTED_DERIVED"}:
                     passed = False
-                if fact.duration_months not in {None, 3}:
+                if fact.duration_months != 3:
                     passed = False
                 expected_scope = fixture.get("entity_scope")
                 if expected_scope and fact.entity_scope != expected_scope:
+                    passed = False
+                if not is_publishable_fact(
+                    {
+                        "status": fact.status,
+                        "normalized_value": fact.normalized_value,
+                        "review_status": fact.review_status,
+                        "validation_status": fact.validation_status or "PASSED",
+                        "duration_months": fact.duration_months,
+                        "metric_type": fact.metric_type,
+                        "metric_code": metric_code,
+                    }
+                ):
                     passed = False
             status = "PASS" if passed else "FAIL"
             by_metric[metric_code][status] += 1
