@@ -20,6 +20,7 @@ class ValidationOutcome(StrEnum):
     FAIL = "FAIL"
     NOT_APPLICABLE = "NOT_APPLICABLE"
     INSUFFICIENT_EVIDENCE = "INSUFFICIENT_EVIDENCE"
+    UNTESTED = "UNTESTED"
 
 
 @dataclass(frozen=True, slots=True)

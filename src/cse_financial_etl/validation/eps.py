@@ -16,12 +16,25 @@ from cse_financial_etl.validation.equation_engine import (
 
 EPS_RECONCILIATION = ValidationRule(
     rule_id="EPS_RECONCILIATION",
-    inputs=("PAT", "EPS_BASIC", "EPS_DILUTED", "EPS_SELECTED"),
-    applicability="WHEN_PAT_AND_EPS_AND_IMPLIED_SHARES",
+    inputs=("PAT", "EPS_BASIC", "EPS_DILUTED", "EPS_SELECTED", "WEIGHTED_AVG_SHARES"),
+    applicability="WHEN_PAT_AND_EPS_AND_INDEPENDENT_SHARES",
     severity="RETRY",
     tolerance_relative=0.05,
-    description="When PAT and EPS exist, implied share count should be plausible.",
+    description=(
+        "When PAT, EPS and an independently sourced share count exist, "
+        "recompute EPS from attributable earnings / shares."
+    ),
 )
+
+_SHARE_METRIC_CODES = ("WEIGHTED_AVG_SHARES", "ORDINARY_SHARES", "SHARE_COUNT")
+
+
+def _independent_shares(facts: Mapping[str, ExtractedFact]) -> Decimal | None:
+    for code in _SHARE_METRIC_CODES:
+        shares = published_value(facts.get(code))
+        if shares is not None and shares != 0:
+            return abs(shares)
+    return None
 
 
 def evaluate_eps_reconciliation(
@@ -40,35 +53,54 @@ def evaluate_eps_reconciliation(
             ValidationOutcome.NOT_APPLICABLE,
             "Need published PAT and EPS",
         )
-    implied_shares = abs(pat / eps)
-    # CSE quarterly EPS is usually for millions of shares; reject absurd scales.
-    if implied_shares < Decimal("1000") or implied_shares > Decimal("1e12"):
+
+    shares = _independent_shares(facts)
+    if shares is None:
+        # Circular PAT/EPS implied-share checks are not independent reconciliation.
+        implied = abs(pat / eps)
+        if implied < Decimal("1000") or implied > Decimal("1e12"):
+            return ValidationResult(
+                rule.rule_id,
+                ValidationOutcome.FAIL,
+                f"Implied shares {implied} outside plausible band (no independent denominator)",
+                evidence={"pat": str(pat), "eps": str(eps), "implied_shares": str(implied)},
+            )
         return ValidationResult(
             rule.rule_id,
-            ValidationOutcome.FAIL,
-            f"Implied shares {implied_shares} outside plausible band",
-            evidence={"pat": str(pat), "eps": str(eps), "implied_shares": str(implied_shares)},
+            ValidationOutcome.UNTESTED,
+            "Independent EPS reconciliation untested: no extracted share-count denominator",
+            evidence={
+                "pat": str(pat),
+                "eps": str(eps),
+                "implied_shares": str(implied),
+                "independent_shares": None,
+            },
         )
-    # Soft check: recomputed EPS from implied shares should match closely by construction;
-    # use relative band around published EPS for rounding.
-    recomputed = pat / implied_shares
+
+    recomputed = pat / shares
     difference, tolerance, ok = relative_difference(
         abs(eps), abs(recomputed), relative=rule.tolerance_relative, floor=Decimal("0.0001")
     )
+    evidence = {
+        "pat": str(pat),
+        "eps": str(eps),
+        "independent_shares": str(shares),
+        "recomputed_eps": str(recomputed),
+    }
     if ok:
         return ValidationResult(
             rule.rule_id,
             ValidationOutcome.PASS,
-            "EPS and PAT imply a plausible share count",
+            "EPS reconciles to PAT / independently sourced shares",
             difference=difference,
             tolerance=tolerance,
-            evidence={"pat": str(pat), "eps": str(eps), "implied_shares": str(implied_shares)},
+            evidence=evidence,
         )
     return ValidationResult(
         rule.rule_id,
-        ValidationOutcome.WARN,
-        "EPS/PAT relationship outside tolerance",
+        ValidationOutcome.FAIL,
+        "EPS does not reconcile to PAT / independently sourced shares",
         difference=difference,
         tolerance=tolerance,
-        evidence={"pat": str(pat), "eps": str(eps), "implied_shares": str(implied_shares)},
+        evidence=evidence,
     )

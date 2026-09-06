@@ -142,6 +142,82 @@ def test_retry_controller_recovers_on_second_extract(tmp_path: Path) -> None:
     )
 
 
+def test_retry_triggers_on_incomplete_extraction(tmp_path: Path) -> None:
+    from cse_financial_etl.validation.retry_controller import extraction_gap_triggers
+
+    incomplete = [
+        _fact("PAT", "10", status="NOT_FOUND_BY_PARSER", normalized_value=None, raw_value=None),
+        _fact("TOTAL_ASSETS", "1000"),
+        _fact("TOTAL_LIABILITIES", "400"),
+        _fact("TOTAL_EQUITY", "600"),
+    ]
+    recovered = [
+        _fact("PAT", "10"),
+        _fact("TOTAL_ASSETS", "1000"),
+        _fact("TOTAL_LIABILITIES", "400"),
+        _fact("TOTAL_EQUITY", "600"),
+    ]
+    calls = {"n": 0}
+
+    def extract(*_args, **_kwargs):  # type: ignore[no-untyped-def]
+        calls["n"] += 1
+        assert _kwargs.get("prefer_exact_quarter") is True
+        return recovered
+
+    def validate(facts):  # type: ignore[no-untyped-def]
+        mapped = {fact.metric_code: fact for fact in facts}
+        return [evaluate_balance_sheet_identity(mapped)]
+
+    gaps = extraction_gap_triggers(incomplete)
+    assert gaps and gaps[0].rule_id == "METRIC_NOT_FOUND"
+    controller = RetryController(max_rounds=1)
+    outcome = controller.run(
+        incomplete,
+        pdf_path=tmp_path / "x.pdf",
+        issuer_name="Acme PLC",
+        symbol="ACM.N0000",
+        period_end=date(2026, 6, 30),
+        validate=validate,
+        extract=extract,
+        extra_failures=gaps,
+        lineage_dir=tmp_path,
+    )
+    assert calls["n"] == 1
+    assert outcome.facts[0].status == "EXTRACTED"
+    assert outcome.recovered is True
+
+
+def test_eps_and_navps_are_untested_without_independent_shares() -> None:
+    from cse_financial_etl.validation.eps import evaluate_eps_reconciliation
+    from cse_financial_etl.validation.navps import evaluate_navps_reconciliation
+
+    facts = {
+        "PAT": _fact("PAT", "1000000"),
+        "EPS_BASIC": _fact("EPS_BASIC", "1.0", metric_type="MONETARY_PER_SHARE"),
+        "TOTAL_EQUITY": _fact("TOTAL_EQUITY", "5000000"),
+        "NAVPS": _fact("NAVPS", "5.0", metric_type="MONETARY_PER_SHARE"),
+    }
+    eps = evaluate_eps_reconciliation(facts)
+    navps = evaluate_navps_reconciliation(facts)
+    assert eps.outcome == ValidationOutcome.UNTESTED
+    assert navps.outcome == ValidationOutcome.UNTESTED
+    assert "independent" in eps.detail.lower()
+
+
+def test_eps_reconciles_with_independent_shares() -> None:
+    from cse_financial_etl.validation.eps import evaluate_eps_reconciliation
+
+    facts = {
+        "PAT": _fact("PAT", "1000000"),
+        "EPS_BASIC": _fact("EPS_BASIC", "1.0", metric_type="MONETARY_PER_SHARE"),
+        "WEIGHTED_AVG_SHARES": _fact(
+            "WEIGHTED_AVG_SHARES", "1000000", metric_type="COUNT"
+        ),
+    }
+    result = evaluate_eps_reconciliation(facts)
+    assert result.outcome == ValidationOutcome.PASS
+
+
 def test_git_identity_and_code_version(tmp_path: Path) -> None:
     assert code_version()
     identity = git_identity(Path(__file__).resolve().parents[2])

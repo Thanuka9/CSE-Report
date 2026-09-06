@@ -16,12 +16,25 @@ from cse_financial_etl.validation.equation_engine import (
 
 NAVPS_RECONCILIATION = ValidationRule(
     rule_id="NAVPS_RECONCILIATION",
-    inputs=("TOTAL_EQUITY", "NAVPS"),
-    applicability="WHEN_EQUITY_AND_NAVPS",
+    inputs=("TOTAL_EQUITY", "NAVPS", "WEIGHTED_AVG_SHARES"),
+    applicability="WHEN_EQUITY_AND_NAVPS_AND_INDEPENDENT_SHARES",
     severity="RETRY",
     tolerance_relative=0.05,
-    description="When Equity and NAVPS exist, implied shares should be plausible.",
+    description=(
+        "When Equity, NAVPS and an independently sourced share count exist, "
+        "recompute NAVPS from equity / shares."
+    ),
 )
+
+_SHARE_METRIC_CODES = ("WEIGHTED_AVG_SHARES", "ORDINARY_SHARES", "SHARE_COUNT")
+
+
+def _independent_shares(facts: Mapping[str, ExtractedFact]) -> Decimal | None:
+    for code in _SHARE_METRIC_CODES:
+        shares = published_value(facts.get(code))
+        if shares is not None and shares != 0:
+            return abs(shares)
+    return None
 
 
 def evaluate_navps_reconciliation(
@@ -36,34 +49,52 @@ def evaluate_navps_reconciliation(
             ValidationOutcome.NOT_APPLICABLE,
             "Need published Equity and NAVPS",
         )
-    implied_shares = abs(equity / navps)
-    if implied_shares < Decimal("1000") or implied_shares > Decimal("1e12"):
+
+    shares = _independent_shares(facts)
+    if shares is None:
+        implied = abs(equity / navps)
+        if implied < Decimal("1000") or implied > Decimal("1e12"):
+            return ValidationResult(
+                rule.rule_id,
+                ValidationOutcome.FAIL,
+                f"Implied shares from NAVPS {implied} outside plausible band "
+                "(no independent denominator)",
+                evidence={
+                    "equity": str(equity),
+                    "navps": str(navps),
+                    "implied_shares": str(implied),
+                },
+            )
         return ValidationResult(
             rule.rule_id,
-            ValidationOutcome.FAIL,
-            f"Implied shares from NAVPS {implied_shares} outside plausible band",
+            ValidationOutcome.UNTESTED,
+            "Independent NAVPS reconciliation untested: no extracted share-count denominator",
             evidence={
                 "equity": str(equity),
                 "navps": str(navps),
-                "implied_shares": str(implied_shares),
+                "implied_shares": str(implied),
+                "independent_shares": None,
             },
         )
-    recomputed = equity / implied_shares
+
+    recomputed = equity / shares
     difference, tolerance, ok = relative_difference(
         abs(navps), abs(recomputed), relative=rule.tolerance_relative, floor=Decimal("0.0001")
     )
-    outcome = ValidationOutcome.PASS if ok else ValidationOutcome.WARN
+    evidence = {
+        "equity": str(equity),
+        "navps": str(navps),
+        "independent_shares": str(shares),
+        "recomputed_navps": str(recomputed),
+    }
+    outcome = ValidationOutcome.PASS if ok else ValidationOutcome.FAIL
     return ValidationResult(
         rule.rule_id,
         outcome,
-        "NAVPS and Equity imply a plausible share count"
+        "NAVPS reconciles to Equity / independently sourced shares"
         if ok
-        else "NAVPS/Equity relationship outside tolerance",
+        else "NAVPS does not reconcile to Equity / independently sourced shares",
         difference=difference,
         tolerance=tolerance,
-        evidence={
-            "equity": str(equity),
-            "navps": str(navps),
-            "implied_shares": str(implied_shares),
-        },
+        evidence=evidence,
     )

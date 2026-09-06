@@ -65,7 +65,10 @@ from cse_financial_etl.validation.production_gates import (
     run_status_from_gates,
 )
 from cse_financial_etl.validation.registry import build_default_equation_engine
-from cse_financial_etl.validation.retry_controller import RetryController
+from cse_financial_etl.validation.retry_controller import (
+    RetryController,
+    extraction_gap_triggers,
+)
 
 DEFAULT_PERIODS = (date(2025, 12, 31), date(2026, 3, 31), date(2026, 6, 30))
 
@@ -398,6 +401,35 @@ class Pipeline:
 
         refreshed_results: list[tuple[DownloadedFiling, list[ExtractedFact]]] = []
         for item, facts in extracted_results:
+            results = _validate_fact_list(facts)
+            failures = [
+                result for result in results if result.outcome == ValidationOutcome.FAIL
+            ]
+            gap_triggers = extraction_gap_triggers(facts)
+            if failures or gap_triggers:
+                lineage_dir = self.data / "tmp" / run_id / item.sha256[:16]
+                outcome = retry_controller.run(
+                    facts,
+                    pdf_path=item.local_path,
+                    issuer_name=item.filing.issuer_name,
+                    symbol=item.filing.symbol,
+                    period_end=item.filing.period_end,
+                    validate=_validate_fact_list,
+                    extract=extract_filing,
+                    lineage_dir=lineage_dir,
+                    extra_failures=gap_triggers,
+                )
+                retry_summary["filings"] += 1
+                retry_summary["attempts"] += len(outcome.attempts)
+                if outcome.recovered:
+                    retry_summary["recovered"] += 1
+                if outcome.attempts and outcome.facts is not facts:
+                    facts = outcome.facts
+                    self.repository.replace_filing_facts(item, facts)
+                results = outcome.final_results
+            for result in results:
+                equation_summary[result.outcome.value] += 1
+            # Review unresolved metrics after retry so recovered rows are not left obsolete.
             for fact in facts:
                 if fact.status not in {"EXTRACTED", "EXTRACTED_DERIVED"}:
                     diagnostic_path = (
@@ -413,32 +445,6 @@ class Pipeline:
                         detail=fact.source_line,
                         diagnostic_path=str(diagnostic_path) if diagnostic_path.exists() else None,
                     )
-            results = _validate_fact_list(facts)
-            for result in results:
-                equation_summary[result.outcome.value] += 1
-            failures = [
-                result for result in results if result.outcome == ValidationOutcome.FAIL
-            ]
-            if failures:
-                lineage_dir = self.data / "tmp" / run_id / item.sha256[:16]
-                outcome = retry_controller.run(
-                    facts,
-                    pdf_path=item.local_path,
-                    issuer_name=item.filing.issuer_name,
-                    symbol=item.filing.symbol,
-                    period_end=item.filing.period_end,
-                    validate=_validate_fact_list,
-                    extract=extract_filing,
-                    lineage_dir=lineage_dir,
-                )
-                retry_summary["filings"] += 1
-                retry_summary["attempts"] += len(outcome.attempts)
-                if outcome.recovered:
-                    retry_summary["recovered"] += 1
-                if outcome.attempts and outcome.facts is not facts:
-                    facts = outcome.facts
-                    self.repository.replace_filing_facts(item, facts)
-                results = outcome.final_results
             for result in results:
                 if result.outcome != ValidationOutcome.FAIL:
                     continue

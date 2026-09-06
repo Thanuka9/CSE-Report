@@ -7,7 +7,7 @@ Retries may change parser/layout interpretation. They never relax business rules
 from __future__ import annotations
 
 import json
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -29,6 +29,58 @@ STRATEGY_BY_FAILURE: dict[str, str] = {
     "UNIT_CONFLICT": "RESEARCH_UNIT_SCOPE",
     "UNIT_NOT_RESOLVED": "RESEARCH_UNIT_SCOPE",
     "METRIC_NOT_FOUND": "EXPAND_SEMANTIC_SEARCH",
+    "VALUE_CONTEXT_UNRESOLVED": "EXPAND_SEMANTIC_SEARCH",
+    "WRONG_STATEMENT_REGION": "RESELECT_STATEMENT_REGION",
+    "COLUMN_AMBIGUOUS": "RESELECT_PNL_CONTEXT",
+    "CUMULATIVE_ONLY": "REBUILD_DURATION_SPANS",
+    "LOW_CERTAINTY": "EXPAND_SEMANTIC_SEARCH",
+    "INCOMPLETE_EXTRACTION": "EXPAND_SEMANTIC_SEARCH",
+}
+
+# Core publish metrics where an incomplete extraction is worth a bounded retry.
+CORE_RETRY_METRICS = frozenset(
+    {
+        "PAT",
+        "PBT",
+        "TOP_LINE",
+        "OPERATING_PROFIT",
+        "TOTAL_ASSETS",
+        "TOTAL_EQUITY",
+        "TOTAL_LIABILITIES",
+        "EPS_BASIC",
+        "EPS_DILUTED",
+        "EPS_SELECTED",
+        "NAVPS",
+    }
+)
+
+# Statuses that may recover under an alternate layout/unit/entity pass.
+ACTIONABLE_EXTRACTION_STATUSES = frozenset(
+    {
+        "NOT_FOUND_BY_PARSER",
+        "VALUE_CONTEXT_UNRESOLVED",
+        "UNIT_NOT_RESOLVED",
+        "PERIOD_NOT_RESOLVED",
+        "ENTITY_NOT_RESOLVED",
+        "WRONG_STATEMENT_REGION",
+        "COLUMN_AMBIGUOUS",
+        "CUMULATIVE_ONLY",
+        "LOW_CERTAINTY",
+        "UNIT_CONFLICT",
+    }
+)
+
+_STATUS_TO_RULE: dict[str, str] = {
+    "UNIT_NOT_RESOLVED": "UNIT_NOT_RESOLVED",
+    "UNIT_CONFLICT": "UNIT_CONFLICT",
+    "CUMULATIVE_ONLY": "PERIOD_MISMATCH",
+    "PERIOD_NOT_RESOLVED": "PERIOD_MISMATCH",
+    "ENTITY_NOT_RESOLVED": "ENTITY_MISMATCH",
+    "WRONG_STATEMENT_REGION": "WRONG_STATEMENT_REGION",
+    "COLUMN_AMBIGUOUS": "COLUMN_AMBIGUOUS",
+    "VALUE_CONTEXT_UNRESOLVED": "VALUE_CONTEXT_UNRESOLVED",
+    "LOW_CERTAINTY": "LOW_CERTAINTY",
+    "NOT_FOUND_BY_PARSER": "METRIC_NOT_FOUND",
 }
 
 
@@ -73,6 +125,33 @@ ExtractFn = Callable[..., list[ExtractedFact]]
 ValidateFn = Callable[[list[ExtractedFact]], list[ValidationResult]]
 
 
+def extraction_gap_triggers(
+    facts: Iterable[ExtractedFact],
+) -> list[ValidationResult]:
+    """Synthesize retry triggers for actionable incomplete core-metric extractions."""
+
+    triggers: list[ValidationResult] = []
+    for fact in facts:
+        if fact.metric_code not in CORE_RETRY_METRICS:
+            continue
+        if fact.status not in ACTIONABLE_EXTRACTION_STATUSES:
+            continue
+        rule_id = _STATUS_TO_RULE.get(fact.status, "INCOMPLETE_EXTRACTION")
+        triggers.append(
+            ValidationResult(
+                rule_id,
+                ValidationOutcome.FAIL,
+                f"Incomplete extraction for {fact.metric_code}: {fact.status}",
+                evidence={
+                    "metrics": [fact.metric_code],
+                    "status": fact.status,
+                    "metric_code": fact.metric_code,
+                },
+            )
+        )
+    return triggers
+
+
 def _failures(results: list[ValidationResult]) -> list[ValidationResult]:
     return [
         result
@@ -108,6 +187,8 @@ class RetryController:
         validate: ValidateFn | None = None,
         extract: ExtractFn | None = None,
         lineage_dir: Path | None = None,
+        extra_failures: list[ValidationResult] | None = None,
+        extract_kwargs: dict[str, Any] | None = None,
     ) -> RetryOutcome:
         validate_fn = validate or self.validate_fn
         extract_fn = extract or self.extract_fn
@@ -118,9 +199,15 @@ class RetryController:
         attempts: list[RetryAttempt] = []
         results = validate_fn(facts)
         pending = _failures(results)
+        if extra_failures:
+            pending = list(pending) + list(extra_failures)
+        if not pending:
+            gap_triggers = extraction_gap_triggers(facts)
+            pending = list(gap_triggers)
         if not pending or extract_fn is None:
             return RetryOutcome(facts, attempts, results, recovered=False)
 
+        base_kwargs = dict(extract_kwargs or {})
         for round_number in range(1, self.max_rounds + 1):
             if not pending:
                 break
@@ -135,12 +222,20 @@ class RetryController:
                 metrics_touched=list(focus.evidence.get("metrics") or focus.evidence.keys()),
             )
             # Controlled re-extract: same business rules, alternate layout pass.
-            kwargs: dict[str, Any] = {}
+            kwargs: dict[str, Any] = dict(base_kwargs)
             if strategy == "RESEARCH_UNIT_SCOPE":
                 kwargs["force_unit_rescan"] = True
-            if strategy in {"RESELECT_PNL_CONTEXT", "REBUILD_DURATION_SPANS"}:
+            if strategy in {
+                "RESELECT_PNL_CONTEXT",
+                "REBUILD_DURATION_SPANS",
+                "EXPAND_SEMANTIC_SEARCH",
+            }:
                 kwargs["prefer_exact_quarter"] = True
-            if strategy in {"RESELECT_SOFP_CANDIDATES", "REBUILD_ENTITY_SPANS"}:
+            if strategy in {
+                "RESELECT_SOFP_CANDIDATES",
+                "REBUILD_ENTITY_SPANS",
+                "RESELECT_STATEMENT_REGION",
+            }:
                 kwargs["prefer_standalone_sofp"] = True
             try:
                 refreshed = extract_fn(
@@ -155,15 +250,42 @@ class RetryController:
                 refreshed = extract_fn(pdf_path, issuer_name, symbol, period_end)
             facts = list(refreshed)
             results = validate_fn(facts)
-            pending = _failures(results)
+            pending = _failures(results) + extraction_gap_triggers(facts)
             after = next(
                 (item for item in results if item.rule_id == focus.rule_id),
                 None,
             )
-            attempt.validation_after = after.outcome.value if after else None
+            if after is None and focus.rule_id in STRATEGY_BY_FAILURE:
+                # Extraction-gap triggers are not equation results; treat recovery by status.
+                metric = None
+                metrics = focus.evidence.get("metrics")
+                if isinstance(metrics, list) and metrics:
+                    metric = metrics[0]
+                elif isinstance(focus.evidence.get("metric_code"), str):
+                    metric = focus.evidence["metric_code"]
+                if metric:
+                    recovered_fact = next(
+                        (fact for fact in facts if fact.metric_code == metric),
+                        None,
+                    )
+                    if recovered_fact and recovered_fact.status in {
+                        "EXTRACTED",
+                        "EXTRACTED_DERIVED",
+                    }:
+                        attempt.validation_after = ValidationOutcome.PASS.value
+                    else:
+                        attempt.validation_after = (
+                            recovered_fact.status if recovered_fact else None
+                        )
+                else:
+                    attempt.validation_after = None
+            else:
+                attempt.validation_after = after.outcome.value if after else None
             attempts.append(attempt)
 
-        recovered = bool(attempts) and not _failures(results)
+        recovered = bool(attempts) and not (
+            _failures(results) or extraction_gap_triggers(facts)
+        )
         outcome = RetryOutcome(facts, attempts, results, recovered=recovered)
         if lineage_dir is not None:
             lineage_dir.mkdir(parents=True, exist_ok=True)
