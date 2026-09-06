@@ -13,15 +13,18 @@ from cse_financial_etl.documents.pdf_text import PdfPage
 from cse_financial_etl.extraction.statement_extractor import (
     METRIC_RULES,
     ExtractedFact,
+    _drop_unreconciled_overlay_equity,
     _find_metric,
     _is_dual_entity,
     _is_exact_quarter_page,
     _layout_candidates,
+    _looks_like_share_count,
     _numbers,
     _page_entity_confidence,
     _page_statement_map,
     _select_current,
     _selected_eps_fact,
+    _usable_eps,
 )
 
 
@@ -65,6 +68,61 @@ def test_annual_only_page_is_not_an_exact_quarter() -> None:
     )
     assert not _is_exact_quarter_page(annual)
     assert _is_exact_quarter_page(quarter)
+
+
+def test_second_quarter_pack_with_six_months_is_not_exact_quarter() -> None:
+    """Dialog-style: pack title says Second Quarter but the P&L is six months."""
+
+    page = PdfPage(
+        1,
+        "Second Quarter Interim Financial Statements\n"
+        "Statement of profit or loss - Company\n"
+        "For the six months ended 30 June 2026\n"
+        "Revenue 73,252 37,231\n",
+    )
+    assert not _is_exact_quarter_page(page)
+
+
+def test_page_number_does_not_fake_three_month_duration() -> None:
+    """'Page 3' plus 'six months ended' must not become an exact-quarter cue."""
+
+    from cse_financial_etl.extraction.statement_extractor import (
+        _head_duration_cue,
+        _page_covers_period,
+    )
+
+    lines = (
+        _line(4, 10, [_token("Page", 10, 10, 30), _token("3", 45, 10, 10)]),
+        _line(
+            4,
+            30,
+            [
+                _token("Statement", 10, 30, 60),
+                _token("of", 75, 30, 20),
+                _token("comprehensive", 100, 30, 80),
+                _token("income", 185, 30, 40),
+            ],
+        ),
+        _line(
+            4,
+            50,
+            [
+                _token("For", 10, 50, 20),
+                _token("the", 35, 50, 20),
+                _token("six", 60, 50, 20),
+                _token("months", 85, 50, 40),
+                _token("ended", 130, 50, 35),
+                _token("30", 170, 50, 15),
+                _token("June", 190, 50, 30),
+                _token("2026", 225, 50, 30),
+                _token("2025", 260, 50, 30),
+            ],
+        ),
+    )
+    text = "\n".join(line.text for line in lines)
+    page = PageIR(number=4, width=600, height=800, lines=lines, text=text)
+    assert _head_duration_cue(page) == "YTD"
+    assert _page_covers_period(page, date(2026, 6, 30))
 
 
 def test_generic_earnings_per_share_maps_to_basic() -> None:
@@ -197,7 +255,7 @@ def test_dual_entity_headers_below_title_band_are_still_company() -> None:
     assert _is_dual_entity(page)
     assert _page_entity_confidence(page, "COMPANY") > 0
     pat_rule = next(rule for rule in METRIC_RULES if rule.code == "PAT")
-    candidates, _outside, wrong_scope = _layout_candidates(
+    candidates, _outside, wrong_scope, _unresolved = _layout_candidates(
         _document([page]), pat_rule, "COMPANY", date(2026, 6, 30)
     )
     assert not wrong_scope
@@ -255,7 +313,7 @@ def test_untitled_continuation_page_keeps_profit_or_loss_context() -> None:
     document = _document([titled, continuation])
     assert _page_statement_map(document)[2] == "FLOW"
     top_line = next(rule for rule in METRIC_RULES if rule.code == "TOP_LINE")
-    candidates, _outside, _wrong = _layout_candidates(
+    candidates, _outside, _wrong, _unresolved = _layout_candidates(
         document, top_line, "COMPANY", date(2026, 6, 30)
     )
     assert candidates
@@ -347,8 +405,10 @@ def test_eps_notes_page_prefers_diluted_company_column() -> None:
     period = date(2026, 6, 30)
     basic_rule = next(rule for rule in METRIC_RULES if rule.code == "EPS_BASIC")
     diluted_rule = next(rule for rule in METRIC_RULES if rule.code == "EPS_DILUTED")
-    basic, _outside, wrong_basic = _layout_candidates(document, basic_rule, "COMPANY", period)
-    diluted, _outside_d, wrong_diluted = _layout_candidates(
+    basic, _outside, wrong_basic, _unresolved_b = _layout_candidates(
+        document, basic_rule, "COMPANY", period
+    )
+    diluted, _outside_d, wrong_diluted, _unresolved_d = _layout_candidates(
         document, diluted_rule, "COMPANY", period
     )
     assert not wrong_basic
@@ -422,3 +482,74 @@ def test_eps_selected_missing_uses_parser_absence_code() -> None:
     assert selected.metric_code == "EPS_SELECTED"
     assert selected.normalized_value is None
     assert selected.status == "NOT_FOUND_BY_PARSER"
+
+
+def test_share_count_is_not_usable_eps() -> None:
+    assert _looks_like_share_count(Decimal("3845157"))
+    assert _looks_like_share_count(Decimal("1705987"))
+    assert not _looks_like_share_count(Decimal("12.50"))
+    assert not _looks_like_share_count(Decimal("-0.84"))
+    share_count = _eps_fact("EPS_BASIC", "3845157", "EXTRACTED")
+    navps = _eps_fact("NAVPS", "10.50", "EXTRACTED")
+    assert not _usable_eps(share_count, navps=navps)
+    selected = _selected_eps_fact(
+        "Ambeon Holdings PLC",
+        "GREG.N0000",
+        date(2026, 6, 30),
+        "COMPANY",
+        diluted=None,
+        basic=share_count,
+        navps=navps,
+    )
+    assert selected.normalized_value is None
+    assert selected.status != "EXTRACTED"
+
+
+def _stock_fact(code: str, value: str, *, page: int = 1) -> ExtractedFact:
+    amount = Decimal(value)
+    return ExtractedFact(
+        issuer_name="Windforce PLC",
+        symbol="WIND.N0000",
+        period_end=date(2025, 6, 30),
+        metric_code=code,
+        metric_type="MONETARY_ABSOLUTE",
+        raw_text=value,
+        raw_value=amount,
+        normalized_value=amount,
+        currency="LKR",
+        scale_factor=1,
+        entity_scope="COMPANY",
+        source_page=page,
+        source_line=code,
+        unit_source_text="Rs.",
+        confidence="HIGH",
+        status="EXTRACTED",
+        duration_months=None,
+        validation_status="PASSED",
+        review_status="APPROVED",
+        overall_certainty=0.96,
+    )
+
+
+def test_unreconciled_overlay_equity_is_dropped() -> None:
+    facts = [
+        _stock_fact("TOTAL_ASSETS", "24824640336"),
+        _stock_fact("TOTAL_EQUITY", "-4311614"),
+        _stock_fact("TOTAL_LIABILITIES", "2516225327"),
+    ]
+    updated = _drop_unreconciled_overlay_equity(facts, "COMPANY")
+    equity = next(item for item in updated if item.metric_code == "TOTAL_EQUITY")
+    assert equity.status == "VALUE_CONTEXT_UNRESOLVED"
+    assert equity.normalized_value is None
+
+
+def test_reconciling_equity_is_kept() -> None:
+    facts = [
+        _stock_fact("TOTAL_ASSETS", "24824640336"),
+        _stock_fact("TOTAL_EQUITY", "22308415009"),
+        _stock_fact("TOTAL_LIABILITIES", "2516225327"),
+    ]
+    updated = _drop_unreconciled_overlay_equity(facts, "COMPANY")
+    equity = next(item for item in updated if item.metric_code == "TOTAL_EQUITY")
+    assert equity.status == "EXTRACTED"
+    assert equity.raw_value == Decimal("22308415009")

@@ -1,3 +1,4 @@
+import json
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -89,6 +90,27 @@ def test_group_where_standalone_required_is_a_hard_stop(tmp_path: Path) -> None:
     assert [hit.code for hit in hits] == ["GROUP_WHERE_STANDALONE_REQUIRED"]
 
 
+def test_group_parent_header_on_company_fact_is_a_hard_stop(tmp_path: Path) -> None:
+    evidence = {
+        "entity_parent_kind": "GROUP",
+        "graph": {
+            "nodes": [
+                {"id": "parent_header", "type": "PARENT_HEADER", "text": "Group", "kind": "GROUP"}
+            ]
+        },
+    }
+    hits = evaluate_production_gates(
+        [
+            (
+                _filing(tmp_path),
+                [_fact(entity_scope="COMPANY", evidence_json=json.dumps(evidence))],
+            )
+        ],
+        required_scope={"Acme PLC": "COMPANY"},
+    )
+    assert [hit.code for hit in hits] == ["GROUP_WHERE_STANDALONE_REQUIRED"]
+
+
 def test_unit_assumed_without_evidence_is_a_hard_stop(tmp_path: Path) -> None:
     hits = evaluate_production_gates(
         [(_filing(tmp_path), [_fact(unit_source_text="")])]
@@ -131,11 +153,86 @@ def test_gold_mismatch_is_wrong_populated() -> None:
                     "metric_code": "PAT",
                     "expected": "100",
                     "actual": "90",
+                    "verification_status": "MANUAL_QA",
                 }
             ]
         },
     )
     assert [hit.code for hit in hits] == ["GOLD_WRONG_POPULATED"]
+
+
+def test_pipeline_seeded_gold_mismatch_is_not_a_hard_stop() -> None:
+    hits = evaluate_production_gates(
+        [],
+        golden_validation={
+            "sample_size": 100,
+            "passed": 99,
+            "results": [
+                {
+                    "status": "FAIL",
+                    "issuer_name": "Seeded PLC",
+                    "period_end": "2025-06-30",
+                    "metric_code": "PAT",
+                    "expected": "100",
+                    "actual": "90",
+                    "verification_status": "PIPELINE_SEEDED",
+                }
+            ]
+        },
+        coverage_baseline={"min_gold_sample": 100, "min_extracted_plus_derived": 0},
+    )
+    assert hits == []
+
+
+def test_gold_sample_below_baseline_is_a_hard_stop() -> None:
+    hits = evaluate_production_gates(
+        [],
+        golden_validation={"sample_size": 20, "passed": 20, "results": []},
+        coverage_baseline={"min_gold_sample": 100, "min_extracted_plus_derived": 0},
+    )
+    assert [hit.code for hit in hits] == ["GOLD_SAMPLE_INCOMPLETE"]
+
+
+def test_derived_liabilities_without_explicit_row_is_a_hard_stop(tmp_path: Path) -> None:
+    hits = evaluate_production_gates(
+        [
+            (
+                _filing(tmp_path),
+                [
+                    _fact(
+                        metric_code="TOTAL_LIABILITIES",
+                        status="EXTRACTED_DERIVED",
+                        extraction_method="CURRENT_PLUS_NONCURRENT",
+                    )
+                ],
+            )
+        ]
+    )
+    assert any(hit.code == "DERIVED_LIABILITIES_WITHOUT_EXPLICIT_ROW" for hit in hits)
+
+
+def test_issuer_quarter_coherence_gate(tmp_path: Path) -> None:
+    hits = evaluate_production_gates(
+        [
+            (
+                _filing(tmp_path),
+                [
+                    _fact(metric_code="PAT", duration_months=3, comparison_role="CURRENT"),
+                    _fact(metric_code="PBT", duration_months=6, comparison_role="CURRENT"),
+                ],
+            )
+        ]
+    )
+    assert any(hit.code == "ISSUER_QUARTER_CONTEXT_INCONSISTENT" for hit in hits)
+
+
+def test_coverage_regression_is_a_hard_stop(tmp_path: Path) -> None:
+    hits = evaluate_production_gates(
+        [(_filing(tmp_path), [_fact()])],
+        previous_status_counts={"EXTRACTED": 5, "EXTRACTED_DERIVED": 0},
+    )
+    assert [hit.code for hit in hits] == ["COVERAGE_REGRESSION"]
+    assert "below floor 5" in hits[0].detail
 
 
 def test_validation_required_does_not_promote_gold(tmp_path: Path) -> None:

@@ -13,8 +13,8 @@ extraction:
   auto_approve_threshold: 0.95
   manual_review_threshold: 0.80
   ocr_enabled: true
-  use_transformer: true
-  semantic_model: sentence-transformers/all-MiniLM-L6-v2
+  use_transformer: false
+  semantic_model: rapidfuzz-token-set
   keep_review_diagnostics: true
 reporting:
   rolling_period_count: 3

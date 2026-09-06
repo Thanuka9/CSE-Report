@@ -655,15 +655,7 @@ outputs/
 
 # 30. Final workbook sheets
 
-1. README
-2. Snapshot_YYYY-MM-DD
-3. Checks
-4. Accuracy_Certainty
-5. Extraction_Coverage
-6. Failure_Analysis
-7. Audit_Lineage
-8. Review_Queue
-9. Metric_Definitions
+The published workbook contains exactly one sheet, `Snapshot_YYYY-MM-DD`. Coverage, review, lineage, prices, gold and definitions are in `dashboard.html` for that run.
 
 The quarterly ratio columns must be labelled:
 

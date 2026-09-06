@@ -21,7 +21,13 @@ from cse_financial_etl.extraction.statement_extractor import (
     entity_scope_for_issuer,
 )
 from cse_financial_etl.reporting.excel import _previous_ranks
-from cse_financial_etl.storage.run_archive import MANIFESTS_DIRNAME, archive_pipeline_artifacts
+from cse_financial_etl.storage.run_archive import (
+    MANIFESTS_DIRNAME,
+    RUNS_DIRNAME,
+    archive_pipeline_artifacts,
+    preserve_current_run_folder,
+    run_output_dir,
+)
 from cse_financial_etl.transformation.ratios import derive_ratio_facts
 
 
@@ -71,9 +77,13 @@ def test_company_pat_attributable_line_is_kept() -> None:
 
 def test_nci_pat_line_is_excluded() -> None:
     assert _is_excluded_pat_line("Profit attributable to non-controlling interests 1,200")
+    assert _is_excluded_pat_line(
+        "Profit/(Loss) for the period from discontinued operations 557,775"
+    )
     assert not _is_excluded_pat_line(
         "Profit for the period attributable to equity holders of the company 12,500"
     )
+    assert not _is_excluded_pat_line("Profit/(Loss) for the period 532,077")
 
 
 def test_fourth_quarter_page_is_exact_quarter() -> None:
@@ -95,7 +105,7 @@ def test_app_config_enables_ocr() -> None:
     config = load_app_config(Path(__file__).resolve().parents[2])
     assert config.ocr_enabled is True
     assert config.manual_review_threshold == 0.80
-    assert config.use_transformer is True
+    assert config.use_transformer is False
     assert config.balance_sheet_relative == 0.005
 
 
@@ -205,6 +215,31 @@ def test_run_manifest_is_archived_from_plural_manifests(tmp_path: Path) -> None:
     assert MANIFESTS_DIRNAME == "manifests"
 
 
+def test_each_run_gets_a_separate_output_folder(tmp_path: Path) -> None:
+    as_of = "2026-09-05"
+    first = run_output_dir(tmp_path, as_of, "run-one")
+    second = run_output_dir(tmp_path, as_of, "run-two")
+    assert first != second
+    assert first.parent.name == RUNS_DIRNAME
+    outputs = tmp_path / "outputs"
+    outputs.mkdir()
+    (outputs / f"normalized_facts_{as_of}.csv").write_text("facts", encoding="utf-8")
+    manifests = outputs / MANIFESTS_DIRNAME
+    manifests.mkdir()
+    (manifests / f"run_manifest_{as_of}.json").write_text(
+        json.dumps({"run_id": "run-one"}), encoding="utf-8"
+    )
+    preserved = preserve_current_run_folder(tmp_path, as_of)
+    assert preserved == first
+    assert (first / "normalized_facts.csv").read_text(encoding="utf-8") == "facts"
+    assert (first / "run_manifest.json").read_text(encoding="utf-8") == json.dumps(
+        {"run_id": "run-one"}
+    )
+    again = preserve_current_run_folder(tmp_path, as_of)
+    assert again == first
+    assert list(first.glob("normalized_facts.csv")) == [first / "normalized_facts.csv"]
+
+
 def test_yaml_configs_and_intelligence_stack_are_wired() -> None:
     from cse_financial_etl.config import load_metric_catalog, load_unit_pattern_config
     from cse_financial_etl.documents.document_ir import (
@@ -228,7 +263,7 @@ def test_yaml_configs_and_intelligence_stack_are_wired() -> None:
     assert "gross income" in CANONICAL_LABELS["TOP_LINE"]
     assert any(pattern.pattern_id == "lkr_thousand" for pattern in PATTERNS)
     matcher = get_semantic_matcher()
-    assert matcher.model_name.startswith("rapidfuzz")
+    assert matcher.model_name == "rapidfuzz-token-set"
     match = matcher.match("Profit for the period", "PAT")
     assert match.score >= 0.9
 
@@ -270,3 +305,13 @@ def test_yaml_configs_and_intelligence_stack_are_wired() -> None:
     )
     centers = cluster_numeric_columns(page)
     assert len(centers) >= 2
+
+
+def test_semantic_matcher_stays_rapidfuzz_if_transformer_env_is_on(monkeypatch) -> None:
+    from cse_financial_etl.extraction.semantic_matcher import get_semantic_matcher
+
+    monkeypatch.setenv("CSE_ETL_USE_TRANSFORMER", "1")
+    get_semantic_matcher.cache_clear()
+    matcher = get_semantic_matcher()
+    assert matcher.model_name == "rapidfuzz-token-set"
+    get_semantic_matcher.cache_clear()

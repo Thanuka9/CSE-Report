@@ -21,6 +21,8 @@ from cse_financial_etl.documents.pdf_text import PdfPage
 from cse_financial_etl.extraction.statement_extractor import (
     METRIC_RULES,
     ExtractedFact,
+    _assemble_standalone_liabilities,
+    _coalesce_spaced_thousands,
     _layout_candidates,
     _numbers,
     _select_current,
@@ -28,7 +30,7 @@ from cse_financial_etl.extraction.statement_extractor import (
     extract_quarter_prices,
     facts_by_code,
 )
-from cse_financial_etl.storage.run_archive import MANIFESTS_DIRNAME
+from cse_financial_etl.storage.run_archive import MANIFESTS_DIRNAME, RUNS_DIRNAME
 from cse_financial_etl.validation.benchmark import (
     CaseResult,
     ExpectedFact,
@@ -136,9 +138,14 @@ def _fact_from_candidates(
 
 
 def _write_pdf(path: Path, text: str) -> Path:
+    return _write_pdf_pages(path, [text])
+
+
+def _write_pdf_pages(path: Path, pages: list[str]) -> Path:
     document = fitz.open()
-    page = document.new_page(width=595, height=842)
-    page.insert_textbox(fitz.Rect(36, 36, 559, 806), text, fontsize=10, fontname="helv")
+    for text in pages:
+        page = document.new_page(width=595, height=842)
+        page.insert_textbox(fitz.Rect(36, 36, 559, 806), text, fontsize=10, fontname="helv")
     path.parent.mkdir(parents=True, exist_ok=True)
     document.save(path)
     document.close()
@@ -148,6 +155,7 @@ def _write_pdf(path: Path, text: str) -> Path:
 def test_canonical_manifest_directory_is_plural() -> None:
     assert MANIFESTS_DIRNAME == "manifests"
     assert MANIFESTS_DIRNAME != "run_manifests"
+    assert RUNS_DIRNAME == "runs"
 
 
 def test_jkh_comparative_and_ytd_columns_are_rejected() -> None:
@@ -215,7 +223,7 @@ def test_jkh_comparative_and_ytd_columns_are_rejected() -> None:
             ),
         ],
     )
-    candidates, _outside, wrong = _layout_candidates(
+    candidates, _outside, wrong, _unresolved = _layout_candidates(
         _document([page]), _pat_rule(), "COMPANY", PERIOD
     )
     assert not wrong
@@ -340,7 +348,7 @@ def test_parent_header_span_beats_nearer_six_month_label() -> None:
             ),
         ],
     )
-    candidates, _outside, wrong = _layout_candidates(
+    candidates, _outside, wrong, _unresolved = _layout_candidates(
         _document([page]), _pat_rule(), "COMPANY", PERIOD
     )
     assert not wrong
@@ -370,6 +378,16 @@ def test_parent_header_span_beats_nearer_six_month_label() -> None:
             discovered={value.replace(",", "") for value in values},
         )
     )
+
+
+def test_group_company_two_values_selects_company_not_group() -> None:
+    page = PdfPage(
+        1,
+        "Statement of comprehensive income\nGroup Company\nFor the quarter ended 30 June 2025",
+    )
+    values = _numbers("Profit for the period 10,113,665 8,187,022")
+    selected = _select_current(values, page, "FLOW")
+    assert selected == ("8,187,022", Decimal("8187022"))
 
 
 def test_group_company_selects_company_region() -> None:
@@ -699,8 +717,12 @@ def test_eps_continuation_prefers_diluted() -> None:
     document = _document([income, notes])
     basic_rule = next(rule for rule in METRIC_RULES if rule.code == "EPS_BASIC")
     diluted_rule = next(rule for rule in METRIC_RULES if rule.code == "EPS_DILUTED")
-    basic, _outside, _wrong_b = _layout_candidates(document, basic_rule, "COMPANY", PERIOD)
-    diluted, _outside_d, _wrong_d = _layout_candidates(document, diluted_rule, "COMPANY", PERIOD)
+    basic, _outside, _wrong_b, _unresolved_b = _layout_candidates(
+        document, basic_rule, "COMPANY", PERIOD
+    )
+    diluted, _outside_d, _wrong_d, _unresolved_d = _layout_candidates(
+        document, diluted_rule, "COMPANY", PERIOD
+    )
     assert basic and diluted
     selected = ExtractedFact(
         "Acme PLC",
@@ -834,6 +856,20 @@ def test_key_value_price_keeps_security_class(tmp_path: Path) -> None:
             ),
         )
     )
+
+
+def test_highest_lowest_last_traded_prefers_last_traded(tmp_path: Path) -> None:
+    """JAT-style rows list highest / lowest / last traded — never take the lowest first."""
+
+    pdf = _write_pdf(
+        tmp_path / "jat_price.pdf",
+        "Share information\n"
+        "Market price per share as at 30 June 2025\n"
+        "Highest Lowest Last traded 45.00 8.50 39.80\n",
+    )
+    prices = extract_quarter_prices(pdf, "Acme PLC", ["ACM.N0000"], PERIOD)
+    assert prices
+    assert prices[0].value == Decimal("39.80")
 
 
 def test_narrative_navps(tmp_path: Path) -> None:
@@ -984,17 +1020,27 @@ def test_write_accuracy_dashboard() -> None:
     assert path.exists()
     assert payload["metrics"]["wrong_populated_value_rate"] == 0
     assert MANIFESTS_DIRNAME == "manifests"
+    assert RUNS_DIRNAME == "runs"
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def test_cumulative_only_flow_is_never_published_as_quarter(tmp_path: Path) -> None:
     pdf = _write_pdf(
         tmp_path / "cumulative_only.pdf",
-        "Statement of profit or loss - Company
-"
-        "For the six months ended 30 June 2025
-"
-        "Rs.'000
-"
+        "Statement of profit or loss - Company\n"
+        "For the six months ended 30 June 2025\n"
+        "Rs.'000\n"
         "Profit for the period 12,500 10,000",
     )
     facts = extract_filing(pdf, "Acme PLC", "ACM.N0000", PERIOD)
@@ -1005,14 +1051,10 @@ def test_cumulative_only_flow_is_never_published_as_quarter(tmp_path: Path) -> N
 def test_total_liabilities_is_never_assets_minus_equity_fallback(tmp_path: Path) -> None:
     pdf = _write_pdf(
         tmp_path / "no_liabilities.pdf",
-        "Statement of financial position - Company
-"
-        "As at 30 June 2025
-"
-        "Rs.'000
-"
-        "Total assets 300 250
-"
+        "Statement of financial position - Company\n"
+        "As at 30 June 2025\n"
+        "Rs.'000\n"
+        "Total assets 300 250\n"
         "Total equity 100 90",
     )
     facts = extract_filing(pdf, "Acme PLC", "ACM.N0000", PERIOD)

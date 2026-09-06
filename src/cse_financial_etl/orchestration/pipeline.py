@@ -15,12 +15,14 @@ from pathlib import Path
 from cse_financial_etl.config import (
     code_version,
     config_hash,
+    git_identity,
     load_app_config,
+    load_coverage_baseline,
     load_issuers,
     load_metric_catalog,
     load_unit_pattern_config,
 )
-from cse_financial_etl.domain.periods import shift_quarter, supporting_periods
+from cse_financial_etl.domain.periods import supporting_periods
 from cse_financial_etl.extraction.semantic_matcher import apply_metric_catalog, get_semantic_matcher
 from cse_financial_etl.extraction.statement_extractor import (
     ExtractedFact,
@@ -30,6 +32,7 @@ from cse_financial_etl.extraction.statement_extractor import (
     facts_by_code,
 )
 from cse_financial_etl.extraction.unit_detector import configure_unit_patterns
+from cse_financial_etl.reporting.dashboard import generate_run_dashboard
 from cse_financial_etl.reporting.excel import generate_excel
 from cse_financial_etl.sources.cse import (
     DownloadedFiling,
@@ -49,15 +52,20 @@ from cse_financial_etl.storage.repository import Repository
 from cse_financial_etl.storage.run_archive import (
     MANIFESTS_DIRNAME,
     archive_pipeline_artifacts,
+    preserve_current_run_folder,
+    run_output_dir,
     utc_stamp,
 )
 from cse_financial_etl.transformation.ratios import derive_ratio_facts
 from cse_financial_etl.validation.cross_filing import flag_cross_filing_mismatches
+from cse_financial_etl.validation.equation_engine import ValidationOutcome
 from cse_financial_etl.validation.golden import validate_golden
 from cse_financial_etl.validation.production_gates import (
     evaluate_production_gates,
     run_status_from_gates,
 )
+from cse_financial_etl.validation.registry import build_default_equation_engine
+from cse_financial_etl.validation.retry_controller import RetryController
 
 DEFAULT_PERIODS = (date(2025, 12, 31), date(2026, 3, 31), date(2026, 6, 30))
 
@@ -68,6 +76,22 @@ def derive_cumulative_quarters(
     """Compatibility no-op: cumulative/YTD values are never published as quarters."""
 
     return extracted_results
+
+
+def _previous_fact_status_counts(preserved: Path | None) -> dict[str, int] | None:
+    if preserved is None:
+        return None
+    manifest = preserved / "run_manifest.json"
+    if not manifest.exists():
+        return None
+    try:
+        payload = json.loads(manifest.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return None
+    counts = payload.get("fact_status_counts")
+    if not isinstance(counts, dict):
+        return None
+    return {str(key): int(value) for key, value in counts.items() if str(value).isdigit() or isinstance(value, int)}
 
 
 class Pipeline:
@@ -111,8 +135,11 @@ class Pipeline:
         errors: list[dict[str, str]] = []
         archive_stamp = utc_stamp()
         archived = archive_pipeline_artifacts(self.root, as_of_date.isoformat(), archive_stamp)
+        preserved = preserve_current_run_folder(self.root, as_of_date.isoformat())
         if archived:
             self.progress(f"      archived {len(archived)} prior-run files under history/archive")
+        if preserved is not None:
+            self.progress(f"      preserved prior run folder {preserved.name}")
 
         self.progress("[1/7] Fetching live CSE market-capitalization universe")
         market_path = self.data / "raw" / "api" / f"market_cap_{as_of_date.isoformat()}.json"
@@ -359,10 +386,19 @@ class Pipeline:
 
         self.progress("[6/7] Applying validation and review rules")
         status_counts: Counter[str] = Counter()
+        equation_engine = build_default_equation_engine(
+            balance_sheet_relative=self.app_config.balance_sheet_relative
+        )
+        retry_controller = RetryController(max_rounds=2)
+        equation_summary: Counter[str] = Counter()
+        retry_summary = {"attempts": 0, "recovered": 0, "filings": 0}
+
+        def _validate_fact_list(fact_list: list[ExtractedFact]):
+            return equation_engine.evaluate(facts_by_code(fact_list))
+
+        refreshed_results: list[tuple[DownloadedFiling, list[ExtractedFact]]] = []
         for item, facts in extracted_results:
-            fact_map = facts_by_code(facts)
             for fact in facts:
-                status_counts[fact.status] += 1
                 if fact.status not in {"EXTRACTED", "EXTRACTED_DERIVED"}:
                     diagnostic_path = (
                         self.data / "tmp" / run_id / item.sha256[:16] / "diagnostics.json"
@@ -377,49 +413,112 @@ class Pipeline:
                         detail=fact.source_line,
                         diagnostic_path=str(diagnostic_path) if diagnostic_path.exists() else None,
                     )
-            assets = fact_map.get("TOTAL_ASSETS")
-            equity = fact_map.get("TOTAL_EQUITY")
-            liabilities = fact_map.get("TOTAL_LIABILITIES")
-            if (
-                assets
-                and equity
-                and assets.normalized_value is not None
-                and equity.normalized_value is not None
-                and assets.normalized_value < equity.normalized_value
-            ):
+            results = _validate_fact_list(facts)
+            for result in results:
+                equation_summary[result.outcome.value] += 1
+            failures = [
+                result for result in results if result.outcome == ValidationOutcome.FAIL
+            ]
+            if failures:
+                lineage_dir = self.data / "tmp" / run_id / item.sha256[:16]
+                outcome = retry_controller.run(
+                    facts,
+                    pdf_path=item.local_path,
+                    issuer_name=item.filing.issuer_name,
+                    symbol=item.filing.symbol,
+                    period_end=item.filing.period_end,
+                    validate=_validate_fact_list,
+                    extract=extract_filing,
+                    lineage_dir=lineage_dir,
+                )
+                retry_summary["filings"] += 1
+                retry_summary["attempts"] += len(outcome.attempts)
+                if outcome.recovered:
+                    retry_summary["recovered"] += 1
+                if outcome.attempts and outcome.facts is not facts:
+                    facts = outcome.facts
+                    self.repository.save_filing_and_facts(item, facts)
+                results = outcome.final_results
+            for result in results:
+                if result.outcome != ValidationOutcome.FAIL:
+                    continue
+                reason = {
+                    "BALANCE_SHEET_IDENTITY": "BALANCE_SHEET_RECONCILIATION_FAILED",
+                    "BALANCE_SHEET_SANITY": "BALANCE_SHEET_SANITY_FAILED",
+                    "CROSS_METRIC_CONTEXT_INCONSISTENT": "CROSS_METRIC_CONTEXT_INCONSISTENT",
+                    "PAT_TAX_BRIDGE": "PAT_TAX_BRIDGE_MISMATCH",
+                    "EPS_RECONCILIATION": "EPS_RECONCILIATION_FAILED",
+                    "NAVPS_RECONCILIATION": "NAVPS_RECONCILIATION_FAILED",
+                }.get(result.rule_id, result.rule_id)
                 self.repository.add_review(
                     run_id,
                     item.filing.issuer_name,
                     item.filing.symbol,
-                    "BALANCE_SHEET_SANITY_FAILED",
+                    reason,
                     period_end=item.filing.period_end,
-                    detail="Total assets are less than total equity.",
+                    detail=result.detail,
                 )
-            if (
-                assets is not None
-                and equity is not None
-                and liabilities is not None
-                and assets.normalized_value is not None
-                and equity.normalized_value is not None
-                and liabilities.normalized_value is not None
-            ):
-                difference = abs(
-                    assets.normalized_value - liabilities.normalized_value - equity.normalized_value
+            failed_metrics: set[str] = set()
+            for result in results:
+                if result.outcome != ValidationOutcome.FAIL:
+                    continue
+                failed_metrics.update(
+                    {
+                        "BALANCE_SHEET_IDENTITY": {
+                            "TOTAL_ASSETS",
+                            "TOTAL_LIABILITIES",
+                            "TOTAL_EQUITY",
+                        },
+                        "BALANCE_SHEET_SANITY": {"TOTAL_ASSETS", "TOTAL_EQUITY"},
+                        "CROSS_METRIC_CONTEXT_INCONSISTENT": {
+                            "TOP_LINE",
+                            "OPERATING_PROFIT",
+                            "PBT",
+                            "PAT",
+                            "EPS_BASIC",
+                            "EPS_DILUTED",
+                        },
+                        "PAT_TAX_BRIDGE": {"PBT", "PAT"},
+                        "EPS_RECONCILIATION": {
+                            "PAT",
+                            "EPS_BASIC",
+                            "EPS_DILUTED",
+                            "EPS_SELECTED",
+                        },
+                        "NAVPS_RECONCILIATION": {"TOTAL_EQUITY", "NAVPS"},
+                    }.get(result.rule_id, set())
                 )
-                tolerance = max(
-                    abs(assets.normalized_value)
-                    * Decimal(str(self.app_config.balance_sheet_relative)),
-                    Decimal(1),
-                )
-                if difference > tolerance:
-                    self.repository.add_review(
-                        run_id,
-                        item.filing.issuer_name,
-                        item.filing.symbol,
-                        "BALANCE_SHEET_RECONCILIATION_FAILED",
-                        period_end=item.filing.period_end,
-                        detail=f"Assets - liabilities - equity = {difference}; tolerance = {tolerance}.",
+            stamped: list[ExtractedFact] = []
+            for fact in facts:
+                if fact.status not in {"EXTRACTED", "EXTRACTED_DERIVED"}:
+                    stamped.append(fact)
+                    continue
+                if fact.metric_code in failed_metrics:
+                    evidence = {}
+                    if fact.evidence_json:
+                        try:
+                            parsed = json.loads(fact.evidence_json)
+                            evidence = parsed if isinstance(parsed, dict) else {}
+                        except json.JSONDecodeError:
+                            evidence = {}
+                    evidence["equation_failures"] = sorted(failed_metrics)
+                    stamped.append(
+                        replace(
+                            fact,
+                            validation_status="FAILED",
+                            evidence_json=json.dumps(evidence, separators=(",", ":")),
+                        )
                     )
+                elif fact.validation_status in {"NOT_VALIDATED", "REVIEW"}:
+                    stamped.append(replace(fact, validation_status="PASSED"))
+                else:
+                    stamped.append(fact)
+            facts = stamped
+            refreshed_results.append((item, facts))
+        extracted_results = refreshed_results
+        status_counts = Counter(
+            fact.status for _item, facts in extracted_results for fact in facts
+        )
         for mismatch in flag_cross_filing_mismatches(
             extracted_results,
             self.data / "gold" / "current_financial_facts.parquet",
@@ -436,6 +535,8 @@ class Pipeline:
 
         self.progress("[7/7] Exporting normalized facts, prices, review queue, and manifest")
         self.outputs.mkdir(parents=True, exist_ok=True)
+        run_dir = run_output_dir(self.root, as_of_date.isoformat(), run_id)
+        run_dir.mkdir(parents=True, exist_ok=True)
         facts_csv = self.outputs / f"normalized_facts_{as_of_date.isoformat()}.csv"
         review_csv = self.outputs / f"review_queue_{as_of_date.isoformat()}.csv"
         prices_csv = self.outputs / f"quarter_end_prices_{as_of_date.isoformat()}.csv"
@@ -444,6 +545,10 @@ class Pipeline:
         self.repository.export_review_csv(review_csv, run_id)
         error_path = self.outputs / f"pipeline_errors_{as_of_date.isoformat()}.json"
         error_path.write_text(json.dumps(errors, indent=2), encoding="utf-8")
+        shutil.copy2(facts_csv, run_dir / "normalized_facts.csv")
+        shutil.copy2(review_csv, run_dir / "review_queue.csv")
+        shutil.copy2(prices_csv, run_dir / "quarter_end_prices.csv")
+        shutil.copy2(error_path, run_dir / "pipeline_errors.json")
         golden_validation = validate_golden(self.root, as_of_date)
         gate_hits = evaluate_production_gates(
             extracted_results,
@@ -452,6 +557,8 @@ class Pipeline:
             required_scope={
                 name: profile.standalone_scope_label for name, profile in self.issuers.items()
             },
+            previous_status_counts=_previous_fact_status_counts(preserved),
+            coverage_baseline=load_coverage_baseline(self.root),
         )
         for hit in gate_hits:
             self.repository.add_review(
@@ -503,9 +610,13 @@ class Pipeline:
             "facts_csv": str(facts_csv),
             "review_csv": str(review_csv),
             "prices_csv": str(prices_csv),
+            "run_dir": str(run_dir),
             "storage": "Parquet + JSONL",
             "code_version": code_version(),
             "config_hash": config_hash(self.root),
+            **git_identity(self.root).as_dict(),
+            "equation_validation": dict(equation_summary),
+            "retry_summary": retry_summary,
             "ocr_enabled": self.app_config.ocr_enabled,
             "use_transformer": self.app_config.use_transformer,
             "semantic_model": get_semantic_matcher().model_name,
@@ -517,6 +628,10 @@ class Pipeline:
         if not skip_excel:
             workbook_path = generate_excel(self.root, as_of_date, target_periods, run_id)
             statistics["workbook"] = str(workbook_path)
+        dashboard_path = generate_run_dashboard(
+            self.root, as_of_date, target_periods, run_id, run_dir, statistics
+        )
+        statistics["dashboard"] = str(dashboard_path)
         manifests_dir = self.outputs / MANIFESTS_DIRNAME
         manifests_dir.mkdir(parents=True, exist_ok=True)
         manifest_path = manifests_dir / f"run_manifest_{as_of_date.isoformat()}.json"
@@ -526,6 +641,12 @@ class Pipeline:
         payload = json.dumps(statistics, indent=2)
         manifest_path.write_text(payload, encoding="utf-8")
         dated_manifest.write_text(payload, encoding="utf-8")
+        shutil.copy2(manifest_path, run_dir / "run_manifest.json")
+        golden_path = self.outputs / f"golden_validation_{as_of_date.isoformat()}.json"
+        if golden_path.exists():
+            shutil.copy2(golden_path, run_dir / "golden_validation.json")
+        if workbook_path is not None:
+            shutil.copy2(workbook_path, run_dir / "CSE_Financial_Snapshot.xlsx")
         self.repository.finish_run(run_id, run_status, statistics)
         return statistics
 

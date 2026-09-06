@@ -48,9 +48,27 @@ PATTERNS: tuple[UnitPattern, ...] = (
         1_000_000,
     ),
     UnitPattern(
+        "lkr_paren_million",
+        re.compile(r"\(\s*(?:rs\.?|lkr)\s*mn\s*\)", re.I),
+        "LKR",
+        1_000_000,
+    ),
+    UnitPattern(
+        "lkr_rs_space_thousand",
+        re.compile(r"\b(?:rs\.?|lkr)\s+0{3}s?\b", re.I),
+        "LKR",
+        1_000,
+    ),
+    UnitPattern(
+        "lkr_in_rs_thousands",
+        re.compile(r"\bin\s+(?:rs\.?|lkr)\s*thousands?\b", re.I),
+        "LKR",
+        1_000,
+    ),
+    UnitPattern(
         "lkr_thousand",
         re.compile(
-            r"\b(?:lkr|rs\.?|sri\s+lank(?:a|an)\s+rupees?)\s*(?:in\s+)?(?:['’]?0{3}s?|thousands?)\b",
+            r"\b(?:lkr|rs\.?|sri\s+lank(?:a|an)\s+rupees?)\s*(?:in\s+)?(?:['’]\s*0{3}s?|thousands?)\b",
             re.I,
         ),
         "LKR",
@@ -76,7 +94,7 @@ PATTERNS: tuple[UnitPattern, ...] = (
     ),
     UnitPattern(
         "usd_thousand",
-        re.compile(r"(?:\busd\b|us\$)\s*(?:['’]?0{3}s?|thousands?)\b", re.I),
+        re.compile(r"(?:\busd\b|us\$)\s*(?:['’]\s*0{3}s?|thousands?)\b", re.I),
         "USD",
         1_000,
     ),
@@ -169,12 +187,42 @@ def detect_candidates(
     return candidates
 
 
+def compose_unit_text(*parts: str) -> str:
+    """Join adjacent currency and scale fragments into one detector string."""
+
+    chunks = [re.sub(r"\s+", " ", part).strip() for part in parts if part and part.strip()]
+    return " ".join(chunks)
+
+
+def prefer_explicit_scale(candidates: list[UnitCandidate]) -> list[UnitCandidate]:
+    """Within the same page and scope, currency+scale outranks a bare currency."""
+
+    if not candidates:
+        return candidates
+    kept: list[UnitCandidate] = []
+    for candidate in candidates:
+        scaled_peers = [
+            other
+            for other in candidates
+            if other.page == candidate.page
+            and other.scope == candidate.scope
+            and other.currency == candidate.currency
+            and other.scale_factor > 1
+        ]
+        if candidate.scale_factor == 1 and scaled_peers:
+            continue
+        kept.append(candidate)
+    return kept or candidates
+
+
 def resolve_unit(candidates: Iterable[UnitCandidate]) -> UnitCandidate:
     """Resolve by scope, then proximity; fail closed on an equal-priority conflict."""
 
-    ordered = sorted(
-        candidates,
-        key=lambda item: (SCOPE_PRIORITY[item.scope], item.distance),
+    ordered = prefer_explicit_scale(
+        sorted(
+            candidates,
+            key=lambda item: (SCOPE_PRIORITY[item.scope], item.distance),
+        )
     )
     if not ordered:
         raise UnitNotDetectedError("UNIT_NOT_DETECTED")

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import csv
 import json
-from collections import Counter
 from collections.abc import Iterable
 from datetime import date
 from pathlib import Path
@@ -19,7 +18,7 @@ from cse_financial_etl.sources.historical_prices import resolve_quarter_end_pric
 VISIBLE_METRICS: tuple[tuple[str, str], ...] = (
     ("PAT", "PAT"),
     ("PBT", "PBT"),
-    ("EPS_SELECTED", "EPS (Diluted Preferred)"),
+    ("EPS_SELECTED", "EPS"),
     ("NAVPS", "NAVPS"),
     ("OPERATING_PROFIT", "Operating Profit"),
     ("TOTAL_EQUITY", "Total Equity"),
@@ -28,11 +27,11 @@ VISIBLE_METRICS: tuple[tuple[str, str], ...] = (
     ("TOP_LINE", "Revenue / Gross Income"),
 )
 DERIVED_HEADERS = (
-    "Market Price at Quarter End",
-    "Debt to Equity (x)",
-    "ROE (Quarter)",
-    "ROA (Quarter)",
-    "NPM (Quarter)",
+    "Qtr-End Price",
+    "Debt / Equity",
+    "ROE (Qtr)",
+    "ROA (Qtr)",
+    "NPM (Qtr)",
 )
 ACCEPTED_STATUSES = {"EXTRACTED", "EXTRACTED_DERIVED"}
 BALANCE_SHEET_CODES = {
@@ -234,75 +233,28 @@ def generate_excel(
 
     wb = Workbook()
     wb.remove(wb.active)
-    readme = wb.create_sheet("README")
     snapshot = wb.create_sheet(f"Snapshot_{as_of_date.isoformat()}")
-    checks = wb.create_sheet("Checks")
-    accuracy = wb.create_sheet("Accuracy_Certainty")
-    audit = wb.create_sheet("Audit_Lineage")
-    price_audit = wb.create_sheet("Price_Lineage")
-    review = wb.create_sheet("Review_Queue")
-    coverage = wb.create_sheet("Extraction_Coverage")
-    failure = wb.create_sheet("Failure_Analysis")
-    definitions = wb.create_sheet("Metric_Definitions")
 
-    navy, blue, mid_blue, green = "17365D", "1F4E78", "5B9BD5", "548235"
-    light_blue, amber, white = "D9EAF7", "FFF2CC", "FFFFFF"
-    thin = Side(style="thin", color="D9E2F3")
+    navy, blue, mid_blue, green = "0F2E59", "1B4F72", "2A6F74", "1E6B45"
+    light, light_teal, amber, white = "F4F7FA", "E8F4F4", "FBE9D0", "FFFFFF"
+    ink = "1A2332"
+    thin = Side(style="thin", color="C5D0DC")
+    hair = Side(style="hair", color="D8DEE6")
 
     def title(ws: Any, cell_range: str, text: str) -> None:
         ws.merge_cells(cell_range)
         cell = ws[cell_range.split(":")[0]]
         cell.value = text
         cell.fill = PatternFill("solid", fgColor=navy)
-        cell.font = Font(color=white, bold=True, size=16)
+        cell.font = Font(color=white, bold=True, size=15, name="Calibri")
+        cell.alignment = Alignment(horizontal="left", vertical="center")
 
     def style_header(cells: Any, fill: str = blue) -> None:
         for cell in cells:
             cell.fill = PatternFill("solid", fgColor=fill)
-            cell.font = Font(color=white, bold=True, size=9)
+            cell.font = Font(color=white, bold=True, size=9, name="Calibri")
             cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-            cell.border = Border(bottom=thin)
-
-    title(readme, "A1:H1", "CSE Financial Data Platform — Production ETL Output")
-    readme_rows = (
-        ("Workbook version", "3.1"),
-        ("Run ID", run_id),
-        ("Market snapshot", as_of_date.isoformat()),
-        ("Displayed periods", " | ".join(period.isoformat() for period in periods)),
-        ("Snapshot grain", "One row per exact listed security symbol"),
-        (
-            "Financial grain",
-            "Standalone Company/Bank, exact three-month quarter for flows, as-at for stocks",
-        ),
-        (
-            "Q4 rule",
-            "Only an explicitly reported standalone 3M/4Q flow is publishable; cumulative/FY deltas are never used",
-        ),
-        (
-            "EPS rule",
-            "Diluted EPS when reported; otherwise basic. Both values remain in Audit_Lineage",
-        ),
-        (
-            "Quarter ratios",
-            "ROE (Quarter) = PAT / equity, ROA (Quarter) = PAT / assets, NPM (Quarter) = PAT / revenue or gross income; same quarter only; no TTM",
-        ),
-        (
-            "Quarter price",
-            "Filing first, then official CSE history, then last trade on or before quarter end. Never use a later live snapshot as a historical price",
-        ),
-        ("Missing values", "Typed reason text; no value is guessed or silently converted to zero"),
-        ("Source", "Official Colombo Stock Exchange market data and quarterly PDF filings"),
-    )
-    for row_index, (label, value) in enumerate(readme_rows, start=3):
-        readme.cell(row_index, 1, label)
-        readme.cell(row_index, 2, value)
-        readme.merge_cells(start_row=row_index, start_column=2, end_row=row_index, end_column=8)
-        readme.cell(row_index, 1).fill = PatternFill("solid", fgColor=blue)
-        readme.cell(row_index, 1).font = Font(color=white, bold=True)
-        readme.cell(row_index, 2).alignment = Alignment(wrap_text=True)
-    readme.column_dimensions["A"].width = 24
-    for column in "BCDEFGH":
-        readme.column_dimensions[column].width = 18
+            cell.border = Border(bottom=Side(style="medium", color=navy), left=thin, right=thin)
 
     columns_per_period = 14
     total_columns = 10 + len(periods) * columns_per_period
@@ -311,21 +263,26 @@ def generate_excel(
         f"A1:{get_column_letter(total_columns)}1",
         "CSE Market Capitalization and Standalone Financial Snapshot",
     )
+    snapshot.row_dimensions[1].height = 28
     snapshot.merge_cells(start_row=2, start_column=1, end_row=2, end_column=6)
-    snapshot.cell(2, 1, f"Market as of: {as_of_date.isoformat()}")
+    snapshot.cell(2, 1, f"Market as of: {as_of_date.isoformat()}  |  Run {run_id}")
     snapshot.merge_cells(start_row=2, start_column=7, end_row=2, end_column=total_columns)
     snapshot.cell(
-        2, 7, "Absolute monetary values normalized to LKR; per-share amounts remain LKR/share"
+        2,
+        7,
+        "Standalone Company/Bank values in LKR. Open dashboard.html in the run folder for audit, coverage and review.",
     )
     for cell in snapshot[2]:
-        cell.fill = PatternFill("solid", fgColor=light_blue)
-        cell.font = Font(color=navy, bold=True)
+        cell.fill = PatternFill("solid", fgColor=light_teal)
+        cell.font = Font(color=navy, bold=True, size=9, name="Calibri")
+        cell.alignment = Alignment(vertical="center", wrap_text=True)
 
     snapshot.merge_cells(start_row=3, start_column=1, end_row=3, end_column=10)
     snapshot.cell(3, 1, "Ranking and Market Data")
     for column in range(1, 11):
         snapshot.cell(3, column).fill = PatternFill("solid", fgColor=navy)
-        snapshot.cell(3, column).font = Font(color=white, bold=True)
+        snapshot.cell(3, column).font = Font(color=white, bold=True, size=10, name="Calibri")
+        snapshot.cell(3, column).alignment = Alignment(horizontal="center", vertical="center")
     fills = (blue, mid_blue, green)
     for index, period in enumerate(periods):
         start = 11 + index * columns_per_period
@@ -335,7 +292,8 @@ def generate_excel(
         snapshot.cell(3, start, f"Financial period ended {period.isoformat()}")
         for column in range(start, start + columns_per_period):
             snapshot.cell(3, column).fill = PatternFill("solid", fgColor=fills[index % len(fills)])
-            snapshot.cell(3, column).font = Font(color=white, bold=True)
+            snapshot.cell(3, column).font = Font(color=white, bold=True, size=10, name="Calibri")
+            snapshot.cell(3, column).alignment = Alignment(horizontal="center", vertical="center")
 
     base_headers = (
         "Previous Rank",
@@ -356,6 +314,20 @@ def generate_excel(
     for column, header in enumerate(headers, start=1):
         snapshot.cell(4, column, header)
     style_header(snapshot[4])
+    # Metric block headers use period band colours so columns stay visually grouped.
+    for index, _period in enumerate(periods):
+        start = 11 + index * columns_per_period
+        band = fills[index % len(fills)]
+        for column in range(start, start + columns_per_period):
+            cell = snapshot.cell(4, column)
+            cell.fill = PatternFill("solid", fgColor=band)
+            cell.font = Font(color=white, bold=True, size=8, name="Calibri")
+            cell.alignment = Alignment(
+                horizontal="center", vertical="center", wrap_text=True, shrink_to_fit=False
+            )
+    snapshot.row_dimensions[2].height = 22
+    snapshot.row_dimensions[3].height = 24
+    snapshot.row_dimensions[4].height = 56
 
     for row_index, security in enumerate(ranked, start=5):
         market_cap = security.get("market_capitalization")
@@ -442,19 +414,38 @@ def generate_excel(
             )
 
         for cell in snapshot[row_index]:
-            cell.border = Border(bottom=Side(style="hair", color="D9E2F3"))
-            cell.font = Font(size=9)
+            cell.border = Border(bottom=hair, left=thin, right=thin)
+            cell.font = Font(size=9, color=ink, name="Calibri")
+            if row_index % 2 == 1:
+                cell.fill = PatternFill("solid", fgColor=light)
 
     last_row = 4 + len(ranked)
-    snapshot.freeze_panes = "F5"
-    snapshot.auto_filter.ref = f"A4:{get_column_letter(total_columns)}{last_row}"
-    snapshot.sheet_view.showGridLines = False
-    widths = {1: 14, 2: 13, 3: 13, 4: 35, 5: 15, 6: 14, 7: 17, 8: 23, 9: 15, 10: 18}
+    widths = {1: 12, 2: 12, 3: 11, 4: 34, 5: 13, 6: 13, 7: 15, 8: 20, 9: 13, 10: 15}
     for column, width in widths.items():
         snapshot.column_dimensions[get_column_letter(column)].width = width
+    metric_widths = {
+        0: 14,  # PAT
+        1: 14,  # PBT
+        2: 11,  # EPS
+        3: 11,  # NAVPS
+        4: 15,  # OP
+        5: 14,  # Equity
+        6: 14,  # Assets
+        7: 15,  # Liabilities
+        8: 16,  # Top line
+        9: 12,  # Price
+        10: 12,  # D/E
+        11: 11,  # ROE
+        12: 11,  # ROA
+        13: 11,  # NPM
+    }
     for column in range(11, total_columns + 1):
-        snapshot.column_dimensions[get_column_letter(column)].width = 18
-    snapshot.row_dimensions[4].height = 52
+        offset = (column - 11) % columns_per_period
+        snapshot.column_dimensions[get_column_letter(column)].width = metric_widths.get(offset, 13)
+    # Freeze header rows only — do not lock the first five identity columns.
+    snapshot.freeze_panes = "A5"
+    snapshot.auto_filter.ref = f"A4:{get_column_letter(total_columns)}{last_row}"
+    snapshot.sheet_view.showGridLines = False
     for row in range(5, last_row + 1):
         snapshot.cell(row, 6).number_format = "#,##0.00;[Red](#,##0.00);-"
         snapshot.cell(row, 7).number_format = "#,##0;[Red](#,##0);-"
@@ -473,259 +464,6 @@ def generate_excel(
         data_range, FormulaRule(formula=["ISTEXT(K5)"], fill=PatternFill("solid", fgColor=amber))
     )
 
-    title(checks, "A1:F1", "Pipeline Quality Checks")
-    checks.append([])
-    checks.append(("Check", "Actual", "Expected", "Difference", "Status", "Notes"))
-    style_header(checks[3])
-    unique_issuers = len({row["company_name"] for row in market})
-    display_facts = [row for row in facts if row["period_end"] in {p.isoformat() for p in periods}]
-    extracted = sum(row.get("status") in ACCEPTED_STATUSES for row in display_facts)
-    price_extracted = sum(row.get("status") == "EXTRACTED" for row in prices)
-    fact_slots = len(display_facts)
-    price_slots = len(prices)
-    for check in (
-        (
-            "Listed securities",
-            len(market),
-            "Live CSE universe",
-            "",
-            "OK" if market else "FAIL",
-            "Security symbol is the market key.",
-        ),
-        (
-            "Unique issuers",
-            unique_issuers,
-            "Live CSE universe",
-            "",
-            "OK" if unique_issuers else "FAIL",
-            "Financial facts are reused across share classes.",
-        ),
-        (
-            "Display-period facts extracted",
-            extracted,
-            fact_slots,
-            extracted - fact_slots,
-            "OK" if extracted == fact_slots else "REVIEW",
-            "Includes both EPS variants and EPS_SELECTED.",
-        ),
-        (
-            "Quarter-end prices extracted",
-            price_extracted,
-            price_slots,
-            price_extracted - price_slots,
-            "OK" if price_extracted == price_slots else "REVIEW",
-            "Only source-backed filing, CSE historical, or last-trade-on-or-before-quarter-end prices are counted.",
-        ),
-        (
-            "Review items",
-            len(reviews),
-            0,
-            len(reviews),
-            "OK" if not reviews else "REVIEW",
-            "Typed exceptions remain visible.",
-        ),
-        ("Pipeline status", "Completed", "Completed", 0, "OK", f"Run {run_id}"),
-    ):
-        checks.append(check)
-    for column, width in zip("ABCDEF", (32, 18, 20, 14, 14, 62), strict=True):
-        checks.column_dimensions[column].width = width
-
-    title(accuracy, "A1:K1", "Extraction Accuracy, Certainty and Coverage")
-    accuracy.append([])
-    accuracy.append(
-        (
-            "Metric",
-            "Total",
-            "Extracted",
-            "Coverage",
-            "High",
-            "Medium",
-            "Low",
-            "No score",
-            "Mean certainty",
-            "Measured accuracy",
-            "Validated sample",
-        )
-    )
-    style_header(accuracy[3])
-    validation_path = project_root / "outputs" / f"golden_validation_{as_of_date.isoformat()}.json"
-    validation = (
-        json.loads(validation_path.read_text(encoding="utf-8")) if validation_path.exists() else {}
-    )
-    validation_by_metric = validation.get("by_metric", {})
-    fact_metrics = [code for code, _label in VISIBLE_METRICS if code != "EPS_SELECTED"]
-    for metric in ["ALL", *fact_metrics]:
-        subset = (
-            facts if metric == "ALL" else [row for row in facts if row["metric_code"] == metric]
-        )
-        extracted_rows = [row for row in subset if row.get("status") in ACCEPTED_STATUSES]
-        bands = Counter(row.get("certainty_band") or "NONE" for row in subset)
-        scores = [
-            score for row in subset if (score := _number(row.get("overall_certainty"))) is not None
-        ]
-        validation_row = validation if metric == "ALL" else validation_by_metric.get(metric, {})
-        accuracy.append(
-            (
-                metric,
-                len(subset),
-                len(extracted_rows),
-                len(extracted_rows) / len(subset) if subset else None,
-                bands["HIGH"],
-                bands["MEDIUM"],
-                bands["LOW"],
-                bands["NONE"],
-                sum(scores) / len(scores) if scores else None,
-                validation_row.get("accuracy"),
-                validation_row.get("sample_size", 0),
-            )
-        )
-    start_reason = accuracy.max_row + 3
-    accuracy.cell(start_reason, 1, "Open review reasons")
-    accuracy.cell(start_reason, 1).font = Font(bold=True, color=navy, size=12)
-    accuracy.cell(start_reason + 1, 1, "Reason")
-    accuracy.cell(start_reason + 1, 2, "Count")
-    style_header(accuracy[start_reason + 1][:2])
-    for reason, count in Counter(row.get("reason") or "UNKNOWN" for row in reviews).most_common():
-        accuracy.append((reason, count))
-    for row_index in range(4, 4 + len(fact_metrics) + 1):
-        accuracy.cell(row_index, 4).number_format = "0.0%"
-        accuracy.cell(row_index, 9).number_format = "0.0%"
-        accuracy.cell(row_index, 10).number_format = "0.0%"
-    for column, width in zip(
-        "ABCDEFGHIJK", (24, 12, 12, 14, 10, 10, 10, 12, 16, 19, 18), strict=True
-    ):
-        accuracy.column_dimensions[column].width = width
-    accuracy.freeze_panes = "A4"
-
-    def append_dict_sheet(ws: Any, rows: list[dict[str, str]]) -> None:
-        headers = list(rows[0].keys()) if rows else ["Status", "Detail"]
-        ws.append(headers)
-        style_header(ws[1])
-        if rows:
-            for row in rows:
-                ws.append([row.get(header, "") for header in headers])
-        else:
-            ws.append(["OK", "No rows"])
-        ws.freeze_panes = "A2"
-        ws.auto_filter.ref = f"A1:{get_column_letter(len(headers))}{ws.max_row}"
-        for index, header in enumerate(headers, start=1):
-            ws.column_dimensions[get_column_letter(index)].width = (
-                55 if header in {"source_line", "source_url", "filing_title", "local_path"} else 20
-            )
-
-    append_dict_sheet(audit, facts)
-    append_dict_sheet(price_audit, prices)
-    append_dict_sheet(review, reviews)
-
-    title(coverage, "A1:D1", "Extraction Coverage")
-    coverage.append([])
-    coverage.append(("Metric", "Total", "Extracted", "Coverage"))
-    style_header(coverage[3])
-    for row_index in range(4, accuracy.max_row + 1):
-        metric = accuracy.cell(row_index, 1).value
-        if metric in {None, "Open review reasons", "Reason"}:
-            break
-        coverage.append(
-            (
-                metric,
-                accuracy.cell(row_index, 2).value,
-                accuracy.cell(row_index, 3).value,
-                accuracy.cell(row_index, 4).value,
-            )
-        )
-    for column, width in zip("ABCD", (24, 12, 12, 14), strict=True):
-        coverage.column_dimensions[column].width = width
-    for row in coverage.iter_rows(min_row=4, min_col=4, max_col=4):
-        for cell in row:
-            if isinstance(cell.value, float):
-                cell.number_format = "0.0%"
-
-    title(failure, "A1:B1", "Failure Analysis")
-    failure.append([])
-    failure.append(("Reason", "Count"))
-    style_header(failure[3])
-    status_counts = Counter(row.get("status") or "UNKNOWN" for row in facts)
-    reason_counts = Counter(row.get("reason") or "UNKNOWN" for row in reviews)
-    failure.append(("Fact statuses", ""))
-    for status, count in status_counts.most_common():
-        failure.append((status, count))
-    failure.append(("Review reasons", ""))
-    for reason, count in reason_counts.most_common():
-        failure.append((reason, count))
-    failure.column_dimensions["A"].width = 42
-    failure.column_dimensions["B"].width = 12
-
-    definition_rows = (
-        ("Metric", "Type", "Definition", "Scaling"),
-        (
-            "PAT / PBT / Operating Profit / Top Line",
-            "FLOW",
-            "Standalone Company/Bank exact three-month quarter; audited compatible cumulative delta when necessary",
-            "Detected currency and scale",
-        ),
-        (
-            "EPS Basic",
-            "PER_SHARE",
-            "Exact three-month basic EPS retained internally",
-            "Never inherit statement scale",
-        ),
-        (
-            "EPS Diluted",
-            "PER_SHARE",
-            "Exact three-month diluted EPS retained internally",
-            "Never inherit statement scale",
-        ),
-        (
-            "EPS Selected",
-            "PER_SHARE",
-            "Diluted when reported, otherwise basic",
-            "Never inherit statement scale",
-        ),
-        (
-            "Assets / Equity / Liabilities",
-            "STOCK",
-            "Standalone Company/Bank balance at period end",
-            "Detected currency and scale",
-        ),
-        (
-            "Total Liabilities",
-            "STOCK",
-            "Explicit total, or derived as Assets minus Equity with lineage",
-            "Normalized LKR",
-        ),
-        (
-            "Quarter-end Price",
-            "PER_SHARE",
-            "Exact security class; filing first, official history fallback",
-            "LKR/share",
-        ),
-        (
-            "Debt to Equity",
-            "RATIO",
-            "Total Liabilities / Total Equity",
-            "Multiple (x), not percentage",
-        ),
-        ("ROE (Quarter)", "RATIO", "Same-quarter PAT / Total Equity", "Percentage"),
-        ("ROA (Quarter)", "RATIO", "Same-quarter PAT / Total Assets", "Percentage"),
-        (
-            "NPM (Quarter)",
-            "RATIO",
-            "Same-quarter PAT / revenue or gross income",
-            "Percentage",
-        ),
-        (
-            "Q4",
-            "RULE",
-            "Explicit standalone three-month/4Q preferred; compatible cumulative-only flows may use an audited delta; EPS is never derived",
-            "Not applicable",
-        ),
-    )
-    for row in definition_rows:
-        definitions.append(row)
-    style_header(definitions[1])
-    for column, width in zip("ABCD", (35, 20, 78, 35), strict=True):
-        definitions.column_dimensions[column].width = width
-
     for ws in wb.worksheets:
         ws.sheet_view.showGridLines = False
         ws.sheet_properties.pageSetUpPr.fitToPage = True
@@ -735,7 +473,7 @@ def generate_excel(
                     cell.alignment = Alignment(
                         horizontal=cell.alignment.horizontal,
                         vertical="center",
-                        wrap_text=cell.alignment.wrap_text or ws.title != snapshot.title,
+                        wrap_text=cell.alignment.wrap_text,
                     )
 
     wb.calculation.fullCalcOnLoad = True

@@ -22,6 +22,13 @@ FLOW_CODES = {
 ABSOLUTE = "MONETARY_ABSOLUTE"
 STANDALONE = {"COMPANY", "BANK"}
 PUBLISHED = {"EXTRACTED", "EXTRACTED_DERIVED"}
+DEFAULT_MIN_GOLD_SAMPLE = 100
+
+
+def _published_count(status_counts: dict[str, int] | None) -> int:
+    if not status_counts:
+        return 0
+    return int(status_counts.get("EXTRACTED") or 0) + int(status_counts.get("EXTRACTED_DERIVED") or 0)
 
 
 @dataclass(frozen=True, slots=True)
@@ -43,21 +50,44 @@ def _price_date(price: QuarterPrice) -> date | None:
     return date.fromisoformat(match.group(1))
 
 
+def _parent_header_kind(evidence: dict[str, Any]) -> str | None:
+    kind = evidence.get("entity_parent_kind")
+    if kind:
+        return str(kind)
+    graph = evidence.get("graph")
+    if not isinstance(graph, dict):
+        return None
+    for node in graph.get("nodes", []):
+        if node.get("type") == "PARENT_HEADER" and node.get("kind"):
+            return str(node["kind"])
+    return None
+
+
 def evaluate_production_gates(
     extracted_results: Iterable[tuple[DownloadedFiling, list[ExtractedFact]]],
     prices: Iterable[QuarterPrice] = (),
     *,
     golden_validation: dict[str, Any] | None = None,
     required_scope: dict[str, str] | None = None,
+    previous_status_counts: dict[str, int] | None = None,
+    coverage_baseline: dict[str, Any] | None = None,
 ) -> list[GateHit]:
     """Hard stops for a universe run. Any hit means VALIDATION_REQUIRED, not gold promotion."""
 
     hits: list[GateHit] = []
+    published = 0
     if golden_validation:
-        failed = [
+        all_failed = [
             row
             for row in golden_validation.get("results", [])
             if row.get("status") == "FAIL"
+        ]
+        failed = [
+            row
+            for row in all_failed
+            # PIPELINE_SEEDED rows are regression anchors, not independent truth.
+            # Hard-stop only on manually verified gold mismatches.
+            if str(row.get("verification_status") or "") != "PIPELINE_SEEDED"
         ]
         for row in failed:
             hits.append(
@@ -70,13 +100,45 @@ def evaluate_production_gates(
                     f"expected {row.get('expected')} actual {row.get('actual')}",
                 )
             )
+        sample = int(golden_validation.get("sample_size") or 0)
+        passed = int(golden_validation.get("passed") or 0)
+        if coverage_baseline:
+            min_gold = int(coverage_baseline.get("min_gold_sample") or DEFAULT_MIN_GOLD_SAMPLE)
+            if sample < min_gold:
+                hits.append(
+                    GateHit(
+                        "GOLD_SAMPLE_INCOMPLETE",
+                        "",
+                        "",
+                        None,
+                        None,
+                        f"gold sample_size={sample} below required {min_gold}",
+                    )
+                )
+        # Inconsistent payload: counts disagree with result rows.
+        if sample and passed < sample and not all_failed:
+            hits.append(
+                GateHit(
+                    "GOLD_WRONG_POPULATED",
+                    "",
+                    "",
+                    None,
+                    None,
+                    f"gold passed={passed} of sample_size={sample}",
+                )
+            )
 
-    scopes = required_scope or {}
+    issuer_scope_map: dict[str, str] = {}
+    if isinstance(required_scope, dict):
+        issuer_scope_map = {str(key): str(value) for key, value in required_scope.items()}
     for downloaded, facts in extracted_results:
-        required = scopes.get(downloaded.filing.issuer_name)
+        required = issuer_scope_map.get(downloaded.filing.issuer_name) or issuer_scope_map.get(
+            downloaded.filing.issuer_name.casefold()
+        )
         for fact in facts:
             if fact.status not in PUBLISHED:
                 continue
+            published += 1
             if fact.metric_code in FLOW_CODES and fact.status == "EXTRACTED_DERIVED":
                 hits.append(
                     GateHit(
@@ -86,6 +148,20 @@ def evaluate_production_gates(
                         fact.period_end,
                         fact.metric_code,
                         f"flow fact published with extraction_method={fact.extraction_method}",
+                    )
+                )
+            if (
+                fact.metric_code == "TOTAL_LIABILITIES"
+                and fact.status == "EXTRACTED_DERIVED"
+            ):
+                hits.append(
+                    GateHit(
+                        "DERIVED_LIABILITIES_WITHOUT_EXPLICIT_ROW",
+                        fact.issuer_name,
+                        fact.symbol,
+                        fact.period_end,
+                        fact.metric_code,
+                        f"liabilities published via {fact.extraction_method}",
                     )
                 )
             if (
@@ -174,6 +250,65 @@ def evaluate_production_gates(
                         "unresolved candidate marked EXTRACTED",
                     )
                 )
+            parent_kind = _parent_header_kind(evidence)
+            if (
+                expected_scope in STANDALONE
+                and fact.entity_scope in STANDALONE
+                and parent_kind in {"GROUP", "CONSOLIDATED"}
+            ):
+                hits.append(
+                    GateHit(
+                        "GROUP_WHERE_STANDALONE_REQUIRED",
+                        fact.issuer_name,
+                        fact.symbol,
+                        fact.period_end,
+                        fact.metric_code,
+                        f"entity_scope={fact.entity_scope} parent_header_kind={parent_kind}",
+                    )
+                )
+
+        # Issuer-quarter coherence: published facts for one filing must share
+        # entity scope / comparison role / flow duration (QA P0 finding).
+        published_facts = [fact for fact in facts if fact.status in PUBLISHED]
+        if len(published_facts) >= 2:
+            entity_scopes = {fact.entity_scope for fact in published_facts}
+            roles = {fact.comparison_role for fact in published_facts}
+            flow_durations = {
+                fact.duration_months
+                for fact in published_facts
+                if fact.metric_code in FLOW_CODES and fact.duration_months is not None
+            }
+            if len(entity_scopes) > 1 or len(roles) > 1 or len(flow_durations) > 1:
+                hits.append(
+                    GateHit(
+                        "ISSUER_QUARTER_CONTEXT_INCONSISTENT",
+                        downloaded.filing.issuer_name,
+                        downloaded.filing.symbol,
+                        downloaded.filing.period_end,
+                        None,
+                        (
+                            f"scopes={sorted(entity_scopes)} roles={sorted(roles)} "
+                            f"flow_durations={sorted(str(item) for item in flow_durations)}"
+                        ),
+                    )
+                )
+
+    min_published = 0
+    if coverage_baseline and coverage_baseline.get("min_extracted_plus_derived") is not None:
+        min_published = int(coverage_baseline["min_extracted_plus_derived"])
+    previous_published = _published_count(previous_status_counts)
+    floor = max(min_published, previous_published)
+    if floor and published < floor:
+        hits.append(
+            GateHit(
+                "COVERAGE_REGRESSION",
+                "",
+                "",
+                None,
+                None,
+                f"EXTRACTED+DERIVED={published} below floor {floor}",
+            )
+        )
 
     for price in prices:
         if price.status != "EXTRACTED" or price.value is None:

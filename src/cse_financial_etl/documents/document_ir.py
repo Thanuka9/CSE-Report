@@ -260,7 +260,7 @@ def _extract_docling_pages(pdf_path: Path) -> list[PageIR] | None:
     """Optional complex-layout engine. Never required; skipped if Docling is absent."""
 
     try:
-        from docling.document_converter import DocumentConverter  # type: ignore[import-not-found]
+        from docling.document_converter import DocumentConverter
     except ImportError:
         return None
     try:

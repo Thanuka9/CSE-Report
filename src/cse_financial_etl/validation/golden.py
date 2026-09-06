@@ -31,6 +31,7 @@ def validate_golden(project_root: Path, as_of_date: date) -> dict[str, Any]:
             results.append({"pdf": fixture["pdf"], "status": "SKIPPED_PDF_NOT_AVAILABLE"})
             continue
         period_end = date.fromisoformat(fixture["period_end"])
+        verification = str(fixture.get("verification_status") or "UNKNOWN")
         facts = facts_by_code(
             extract_filing(
                 pdf_path,
@@ -59,6 +60,7 @@ def validate_golden(project_root: Path, as_of_date: date) -> dict[str, Any]:
                     ),
                     "source_page": fact.source_page if fact else None,
                     "status": status,
+                    "verification_status": verification,
                 }
             )
         symbols = list(fixture.get("prices", {}))
@@ -88,6 +90,7 @@ def validate_golden(project_root: Path, as_of_date: date) -> dict[str, Any]:
                     "actual": str(price.value) if price and price.value is not None else None,
                     "source_page": price.source_page if price else None,
                     "status": status,
+                    "verification_status": verification,
                 }
             )
 
@@ -113,6 +116,13 @@ def validate_golden(project_root: Path, as_of_date: date) -> dict[str, Any]:
         },
         "results": results,
     }
+    from cse_financial_etl.reporting.accuracy import accuracy_dashboard_payload
+
+    payload["field_accuracy"] = accuracy_dashboard_payload(
+        fixture_path=fixture_path,
+        golden_validation=payload,
+    )
+    payload["issuer_count"] = payload["field_accuracy"].get("issuer_count")
     output_path = project_root / "outputs" / f"golden_validation_{as_of_date.isoformat()}.json"
     output_path.parent.mkdir(parents=True, exist_ok=True)
     temporary = output_path.with_suffix(".json.tmp")
