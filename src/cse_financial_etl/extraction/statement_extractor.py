@@ -628,6 +628,15 @@ def _is_rejected_top_line_label(label: str) -> bool:
             label,
             re.I,
         )
+        # Net finance income/cost is a P&L subtotal, never Revenue / Gross Income.
+        or re.search(
+            r"\bnet\s+finance\s+(?:income|cost|expense)|"
+            r"\bfinance\s+(?:income|cost|expense)\s*/\s*\(?\s*(?:expense|income|cost)",
+            label,
+            re.I,
+        )
+        # Income tax / deferred tax must never win TOP_LINE via fuzzy "income".
+        or re.search(r"\bincome\s+tax\b|\btax\s+(?:expense|reversal|charge)\b", label, re.I)
     )
 
 
@@ -1100,12 +1109,20 @@ class _HeaderSpan(NamedTuple):
 
 _DURATION_PHRASES: tuple[tuple[str, str], ...] = (
     ("three months", "QUARTER"),
+    ("3 months", "QUARTER"),
+    ("03 months", "QUARTER"),
     ("for the quarter", "QUARTER"),
     ("quarter ended", "QUARTER"),
     # Bare "period ended" is not a three-month cue; column fiscal dates resolve it.
+    # Digit forms ("6 months" / "06 months") are common in CSE bank and tobacco packs.
     ("six months", "YTD"),
+    ("6 months", "YTD"),
+    ("06 months", "YTD"),
     ("nine months", "YTD"),
+    ("9 months", "YTD"),
+    ("09 months", "YTD"),
     ("twelve months", "YTD"),
+    ("12 months", "YTD"),
     ("year to date", "YTD"),
     ("year ended", "YTD"),
 )
@@ -1430,13 +1447,21 @@ def _column_duration_months(
             return 3
         if parent.kind == "YTD":
             phrase = parent.phrase.lower()
-            if "six" in phrase:
+            explicit = _duration_months(phrase)
+            if explicit in {6, 9, 12}:
+                return explicit
+            if "six" in phrase or re.search(r"\b6\s+months?\b", phrase):
                 return 6
-            if "nine" in phrase:
+            if "nine" in phrase or re.search(r"\b9\s+months?\b", phrase):
                 return 9
-            if "twelve" in phrase or "year ended" in phrase or "year to date" in phrase:
+            if (
+                "twelve" in phrase
+                or "year ended" in phrase
+                or "year to date" in phrase
+                or re.search(r"\b12\s+months?\b", phrase)
+            ):
                 return 12
-            explicit = _duration_months(phrase) or _duration_months(_page_head_text(page))
+            explicit = _duration_months(_page_head_text(page))
             if explicit in {6, 9, 12}:
                 return explicit
             return _page_flow_duration(
@@ -1851,10 +1876,21 @@ def _select_layout_value(
         point for point in target_year_points if point not in target_date_points
     )
     quarter_points = _header_points(page, line, r"QUARTER|\b[1-4]\s*Q\b")
-    quarter_points.extend(_line_points(page, line, "three months"))
+    for phrase in ("three months", "3 months", "03 months"):
+        quarter_points.extend(_line_points(page, line, phrase))
     change_points = _header_points(page, line, r"%|CHANGE|VARIANCE")
     ytd_points: list[float] = []
-    for phrase in ("six months", "nine months", "twelve months", "year to date"):
+    for phrase in (
+        "six months",
+        "6 months",
+        "06 months",
+        "nine months",
+        "9 months",
+        "09 months",
+        "twelve months",
+        "12 months",
+        "year to date",
+    ):
         ytd_points.extend(_line_points(page, line, phrase))
     duration_regions = _duration_parent_regions(page, line)
     entity_regions = _entity_parent_regions(page, line)
@@ -3425,9 +3461,14 @@ def _extract_filing_layout(
         ) -> tuple[float, int]:
             label = (candidate.raw_label or "").strip().lower()
             exact_boost = 0.0
-            if _code == "TOP_LINE" and label == "income":
-                # Finance packs often print gross "Income" above Net interest income.
-                exact_boost = 0.12
+            if _code == "TOP_LINE":
+                if re.match(r"^gross\s+income\b", label) or re.match(
+                    r"^(?:net\s+)?revenue\b", label
+                ):
+                    exact_boost = 0.14
+                elif label == "income":
+                    # Finance packs often print gross "Income" above Net interest income.
+                    exact_boost = 0.12
             return (candidate.candidate_score + exact_boost, -candidate.page.number)
 
         candidates.sort(key=_top_line_rank, reverse=True)

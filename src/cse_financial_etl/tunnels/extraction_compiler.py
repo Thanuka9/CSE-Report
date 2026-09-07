@@ -19,6 +19,7 @@ from cse_financial_etl.recovery.recovery_router import run_recovery
 from cse_financial_etl.resolution.arbiter import arbitrate_candidates
 from cse_financial_etl.resolution.candidate_ledger import CandidateLedger
 from cse_financial_etl.resolution.global_resolver import global_resolve
+from cse_financial_etl.resolution.resource_budget import ResourceBudget
 from cse_financial_etl.resolution.uncertainty import uncertainty_from_entry
 from cse_financial_etl.tunnels.tunnel_a_geometry import run_tunnel_a
 from cse_financial_etl.tunnels.tunnel_b_table import run_tunnel_b
@@ -45,6 +46,7 @@ def compile_filing(
 ) -> dict[str, Any]:
     """Run A (+B as needed), Resolver C, arbiter, recovery, target queries, final checks."""
 
+    budget = ResourceBudget()
     try:
         entity = infer_entity_scope(issuer_name)
     except Exception:
@@ -84,13 +86,20 @@ def compile_filing(
         bool(core_missing) and pdf_path.exists() and pdf_path.stat().st_size > 64
     )
     if run_b and (compile_statements or run_tunnel_b_always or legacy_facts is None):
-        try:
-            tunnel_b = run_tunnel_b(pdf_path, known=known, period_end=period_end)
-            tunnel_b_report = tunnel_b["report"]
-            for entry in tunnel_b["ledger"].entries:
-                ledger.add(entry)
-        except Exception as exc:  # pragma: no cover - defensive
-            tunnel_b_report = {"error": str(exc)}
+        if budget.exhausted():
+            tunnel_b_report = {
+                "deferred": True,
+                "reason": budget.stop_reason or "BUDGET_EXHAUSTED",
+                "missing": sorted(core_missing),
+            }
+        else:
+            try:
+                tunnel_b = run_tunnel_b(pdf_path, known=known, period_end=period_end)
+                tunnel_b_report = tunnel_b["report"]
+                for entry in tunnel_b["ledger"].entries:
+                    ledger.add(entry)
+            except Exception as exc:  # pragma: no cover - defensive
+                tunnel_b_report = {"error": str(exc)}
     elif core_missing:
         tunnel_b_report = {
             "deferred": True,
@@ -237,6 +246,9 @@ def compile_filing(
     report["no_overpublication_violations"] = violations
     report["final_checks"] = [asdict(c) for c in final_checks]
     report["core_concepts_missing_before_b"] = sorted(core_missing)
+    report["resource_budget"] = budget.as_dict()
+    if budget.exhausted():
+        report["budget_stop_reason"] = budget.stop_reason
 
     if diagnostics_dir is not None:
         diagnostics_dir.mkdir(parents=True, exist_ok=True)

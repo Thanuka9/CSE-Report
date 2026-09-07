@@ -744,3 +744,63 @@ def test_year_and_period_ended_six_month_fiscal_span() -> None:
     assert (
         _column_duration_months(page, lines[-1], value_token, date(2026, 9, 30)) == 6
     )
+
+
+def test_digit_six_months_builds_ytd_and_quarter_regions() -> None:
+    """HNB-style headers use '6 months' (digit), not only 'six months'."""
+
+    from cse_financial_etl.extraction.statement_extractor import (
+        _column_duration_months,
+        _duration_parent_regions,
+        _is_rejected_top_line_label,
+    )
+
+    header = _line(
+        1,
+        20,
+        [
+            _token("For", 10, 20, 20),
+            _token("the", 35, 20, 20),
+            _token("6", 60, 20, 10),
+            _token("months", 75, 20, 40),
+            _token("ended", 120, 20, 35),
+            _token("For", 220, 20, 20),
+            _token("the", 245, 20, 20),
+            _token("quarter", 270, 20, 45),
+            _token("ended", 320, 20, 35),
+        ],
+    )
+    years = _line(
+        1,
+        40,
+        [
+            _token("2026", 60, 40, 30),
+            _token("2025", 110, 40, 30),
+            _token("2026", 270, 40, 30),
+            _token("2025", 320, 40, 30),
+        ],
+    )
+    value_line = _line(
+        1,
+        90,
+        [
+            _token("Gross", 10, 90, 35),
+            _token("income", 50, 90, 40),
+            _token("100", 70, 90, 25),
+            _token("90", 120, 90, 25),
+            _token("40", 280, 90, 25),
+            _token("30", 330, 90, 25),
+        ],
+    )
+    page = _page(1, [header, years, value_line])
+    regions = _duration_parent_regions(page, value_line)
+    kinds = [span.kind for span in regions]
+    assert "YTD" in kinds and "QUARTER" in kinds
+    quarter_token = value_line.tokens[4]  # 40 under quarter
+    assert _column_duration_months(page, value_line, quarter_token, date(2026, 6, 30)) == 3
+    ytd_token = value_line.tokens[2]  # 100 under 6 months
+    assert _column_duration_months(page, value_line, ytd_token, date(2026, 6, 30)) == 6
+    assert _is_rejected_top_line_label("Net Finance Income / (Expense)")
+    assert _is_rejected_top_line_label("Income Tax (Expense) / Reversal")
+    assert not _is_rejected_top_line_label("Gross income")
+    assert not _is_rejected_top_line_label("Revenue")

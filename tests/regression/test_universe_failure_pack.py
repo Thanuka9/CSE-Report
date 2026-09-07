@@ -383,3 +383,47 @@ def test_jat_last_traded_price_and_no_derived_liabilities() -> None:
     )
     assert prices[0].value == Decimal("39.80")
     assert prices[0].value != Decimal("8.5")
+
+
+def test_hnb_bank_quarter_gross_income_not_six_month() -> None:
+    """HNB digit '6 months' + quarter headers must publish Bank 3M Gross income."""
+
+    facts = _facts(
+        "data/raw/filings/HATTON_NATIONAL_BANK_PLC/2026-06-30_373_1786545582269.pdf",
+        "HATTON NATIONAL BANK PLC",
+        "HNB.N0000",
+        date(2026, 6, 30),
+    )
+    assert facts["TOP_LINE"].status == "EXTRACTED"
+    assert facts["TOP_LINE"].duration_months == 3
+    assert facts["TOP_LINE"].raw_label and "gross income" in facts["TOP_LINE"].raw_label.lower()
+    assert facts["TOP_LINE"].normalized_value == Decimal("73320179000")
+    assert facts["TOP_LINE"].raw_value != Decimal("10545")
+    assert facts["PAT"].status == "EXTRACTED"
+    assert facts["PAT"].duration_months == 3
+    assert facts["PAT"].normalized_value == Decimal("13192754000")
+
+
+def test_bppl_top_line_rejects_net_finance_and_income_tax() -> None:
+    """Company Revenue dashes must not fall through to Net Finance or Income Tax."""
+
+    import json
+
+    rows = json.loads(
+        (ROOT / "tests/fixtures/golden_financial_facts.json").read_text(encoding="utf-8")
+    )
+    row = next(r for r in rows if r["symbol"] == "BPPL.N0000")
+    facts = _facts(
+        row["pdf"],
+        row["issuer_name"],
+        row["symbol"],
+        date.fromisoformat(row["period_end"]),
+    )
+    top = facts["TOP_LINE"]
+    label = (top.raw_label or "").lower()
+    assert "net finance" not in label
+    assert "income tax" not in label
+    if top.status == "EXTRACTED":
+        assert top.normalized_value not in {Decimal("49000"), Decimal("-10740000")}
+    else:
+        assert top.normalized_value is None
