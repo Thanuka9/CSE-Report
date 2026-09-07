@@ -11,6 +11,7 @@ from typing import Any
 from cse_financial_etl.accounting.sector_profiles import profile_for_issuer
 from cse_financial_etl.compiler.known_context import build_known_context
 from cse_financial_etl.config import infer_entity_scope
+from cse_financial_etl.document.document_ir import CanonicalDocumentIR
 from cse_financial_etl.facts.derived_facts import compute_quarter_ratios
 from cse_financial_etl.facts.query_engine import query_target_facts
 from cse_financial_etl.recovery.failure_diagnoser import diagnose_failures
@@ -37,6 +38,8 @@ def compile_filing(
     ocr_enabled: bool = True,
     ocr_dir: Path | None = None,
     legacy_facts: list[Any] | None = None,
+    document: CanonicalDocumentIR | None = None,
+    compile_statements: bool = True,
     run_tunnel_b_always: bool = False,
     diagnostics_dir: Path | None = None,
 ) -> dict[str, Any]:
@@ -63,14 +66,24 @@ def compile_filing(
         ocr_dir=ocr_dir,
         known=known,
         legacy_facts=legacy_facts,
+        document=document,
+        compile_statements=compile_statements,
     )
     ledger: CandidateLedger = tunnel_a["ledger"]
     unresolved_before_b = [
-        e for e in ledger.entries if e.status == "unresolved" and e.normalized_value is None
+        e
+        for e in ledger.entries
+        if e.status == "unresolved"
+        and e.normalized_value is None
+        and e.evidence.get("candidate_origin") != "layout_geometry"
     ]
+    core_missing = _core_concepts_missing(ledger)
     tunnel_b_report = None
-    # Full Tunnel B only when running pure compiler mode (no layout seed) or forced.
-    if run_tunnel_b_always or legacy_facts is None:
+    # Prefer Tunnel B only when core valued concepts are missing AND a real PDF exists.
+    run_b = bool(run_tunnel_b_always) or (
+        bool(core_missing) and pdf_path.exists() and pdf_path.stat().st_size > 64
+    )
+    if run_b and (compile_statements or run_tunnel_b_always or legacy_facts is None):
         try:
             tunnel_b = run_tunnel_b(pdf_path, known=known, period_end=period_end)
             tunnel_b_report = tunnel_b["report"]
@@ -78,10 +91,16 @@ def compile_filing(
                 ledger.add(entry)
         except Exception as exc:  # pragma: no cover - defensive
             tunnel_b_report = {"error": str(exc)}
+    elif core_missing:
+        tunnel_b_report = {
+            "deferred": True,
+            "reason": "core_missing_but_b_not_invoked",
+            "missing": sorted(core_missing),
+        }
     elif unresolved_before_b:
         tunnel_b_report = {
             "deferred": True,
-            "reason": "unresolved_after_layout_seed",
+            "reason": "no_core_gaps_after_layout_assist",
             "unresolved_concepts": sorted({e.concept for e in unresolved_before_b}),
         }
 
@@ -96,7 +115,6 @@ def compile_filing(
         required_entity=entity,
         target_duration=3,
     )
-    # Targeted recovery for still-unresolved concepts.
     unresolved_map: dict[str, list[str]] = {}
     for entry in ledger.unresolved():
         unresolved_map.setdefault(entry.concept, []).extend(entry.reasons or ["unresolved"])
@@ -117,12 +135,9 @@ def compile_filing(
             "target_duration": 3,
             "pdf_path": str(pdf_path),
             "unit_texts": unit_texts,
-            "row_labels": [
-                e.label for e in ledger.entries if e.label
-            ][:200],
+            "row_labels": [e.label for e in ledger.entries if e.label][:200],
         },
     )
-    # Re-arbitrate after recovery.
     decisions = arbitrate_candidates(
         ledger,
         required_entity=entity,
@@ -221,6 +236,7 @@ def compile_filing(
     ]
     report["no_overpublication_violations"] = violations
     report["final_checks"] = [asdict(c) for c in final_checks]
+    report["core_concepts_missing_before_b"] = sorted(core_missing)
 
     if diagnostics_dir is not None:
         diagnostics_dir.mkdir(parents=True, exist_ok=True)
@@ -236,4 +252,23 @@ def compile_filing(
         "decisions": decisions,
         "report": report,
         "legacy_facts": legacy_facts,
+        "required_entity": entity,
     }
+
+
+def _core_concepts_missing(ledger: CandidateLedger) -> set[str]:
+    core = {
+        "PAT",
+        "PBT",
+        "TOP_LINE",
+        "OPERATING_PROFIT",
+        "TOTAL_ASSETS",
+        "TOTAL_EQUITY",
+        "TOTAL_LIABILITIES",
+    }
+    present = {
+        e.concept
+        for e in ledger.entries
+        if e.normalized_value is not None and e.status != "rejected"
+    }
+    return core - present

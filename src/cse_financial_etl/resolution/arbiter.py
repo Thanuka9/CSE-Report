@@ -33,6 +33,9 @@ def arbitrate_candidates(
         pool = [e for e in ledger.for_concept(concept) if e.status != "rejected"]
         eligible: list[LedgerEntry] = []
         for entry in pool:
+            if entry.normalized_value is None:
+                # Absence / miss rows are not publishable selections.
+                continue
             if group_cannot_satisfy_company(required_entity, entry.entity or ""):
                 ledger.reject(entry.entry_id, "GROUP_CANNOT_SATISFY_COMPANY")
                 continue
@@ -63,6 +66,32 @@ def arbitrate_candidates(
             top = score_factors(ranked[0], required_entity=required_entity, target_duration=target_duration)
             second = score_factors(ranked[1], required_entity=required_entity, target_duration=target_duration)
             if top - second < 0.1:
+                # Prefer mature layout-assist evidence over abstention when scores collide.
+                layout_pool = [
+                    e
+                    for e in ranked
+                    if e.evidence.get("candidate_origin") == "layout_geometry"
+                    and e.normalized_value is not None
+                ]
+                if layout_pool:
+                    winner = max(
+                        layout_pool,
+                        key=lambda e: score_factors(
+                            e, required_entity=required_entity, target_duration=target_duration
+                        ),
+                    )
+                    winner.status = "accepted"
+                    winner.reasons.append("layout_assist_tiebreak")
+                    for entry in ranked:
+                        if entry.entry_id != winner.entry_id:
+                            entry.status = "alternative"
+                            entry.reasons.append("lower_than_arbiter_winner")
+                    decisions.append(
+                        ArbitrationDecision(
+                            concept, winner, "SELECTED", "layout_assist_tiebreak"
+                        )
+                    )
+                    continue
                 for entry in ranked:
                     entry.status = "unresolved"
                 decisions.append(ArbitrationDecision(concept, None, "UNRESOLVED", "indistinguishable"))

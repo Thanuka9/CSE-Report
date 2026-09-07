@@ -9,9 +9,13 @@ from typing import Any
 from cse_financial_etl.accounting.sector_profiles import profile_for_issuer
 from cse_financial_etl.compiler.known_context import KnownContext, build_known_context
 from cse_financial_etl.config import infer_entity_scope
+from cse_financial_etl.document.document_ir import CanonicalDocumentIR
 from cse_financial_etl.ingestion.quality_router import route_document_ingestion
 from cse_financial_etl.resolution.candidate_ledger import CandidateLedger, LedgerEntry
 from cse_financial_etl.tunnels.common_financial_engine import apply_financial_engine
+
+# Layout-assist candidates rank high but remain subject to arbiter hard gates.
+_LAYOUT_ASSIST_SCORE = 0.93
 
 
 def run_tunnel_a(
@@ -24,8 +28,14 @@ def run_tunnel_a(
     ocr_dir: Path | None = None,
     known: KnownContext | None = None,
     legacy_facts: list[Any] | None = None,
+    document: CanonicalDocumentIR | None = None,
+    compile_statements: bool = True,
 ) -> dict[str, Any]:
-    """Primary compiler. Incorporates mature layout extraction as accepted seed candidates."""
+    """Primary compiler.
+
+    Layout extractor facts may assist discovery as ledger candidates. They are
+    never pre-accepted for publication — arbiter + query remain mandatory.
+    """
 
     if known is None:
         try:
@@ -40,106 +50,127 @@ def run_tunnel_a(
             required_entity=entity,
             sector_profile=profile.code,
         )
-    if legacy_facts is not None:
-        # Fast publication path: seed ledger from layout extractor; skip second PDF parse.
-        from cse_financial_etl.document.document_ir import (
-            CanonicalDocumentIR,
-            DocumentQuality,
-            sha256_file,
-        )
-        from cse_financial_etl.resolution.candidate_ledger import CandidateLedger
 
-        digest = ""
-        try:
-            # Hash is required for lineage; skip only if file missing.
-            if pdf_path.exists():
-                digest = sha256_file(pdf_path)
-        except OSError:
-            digest = ""
-        document = CanonicalDocumentIR(
-            pages=(),
-            quality=DocumentQuality(
-                page_count=0,
-                token_count=0,
-                numeric_token_count=0,
-                text_page_ratio=1.0,
-                extraction_method="LEGACY_SEEDED",
-                requires_ocr=False,
-            ),
-            source_sha256=digest,
-            source_path=str(pdf_path),
+    statements: list[Any] = []
+    graph: Any = None
+    ledger = CandidateLedger()
+    mode = "full_compiler"
+
+    if document is not None:
+        working_doc = document
+    elif compile_statements:
+        working_doc = route_document_ingestion(
+            pdf_path, ocr_enabled=ocr_enabled, ocr_dir=ocr_dir
         )
-        ledger = CandidateLedger()
-        _seed_from_legacy(ledger, legacy_facts, tunnel="A")
-        return {
-            "tunnel": "A",
-            "document": document,
-            "statements": [],
-            "ledger": ledger,
-            "graph": None,
-            "known": known,
-            "report": {
-                "pages": 0,
-                "tokens": 0,
-                "statements": 0,
-                "candidates": len(ledger.entries),
-                "method": "LEGACY_SEEDED",
-                "mode": "legacy_seeded",
-            },
-        }
-    document = route_document_ingestion(pdf_path, ocr_enabled=ocr_enabled, ocr_dir=ocr_dir)
-    statements, ledger, graph = apply_financial_engine(document, known, tunnel="A")
+    else:
+        working_doc = _empty_document(pdf_path)
+        mode = "layout_assist_only"
+
+    if compile_statements and working_doc.pages:
+        statements, ledger, graph = apply_financial_engine(
+            working_doc, known, tunnel="A"
+        )
+        mode = "full_compiler"
+
+    if legacy_facts is not None:
+        _seed_layout_assist(ledger, legacy_facts, tunnel="A")
+        mode = (
+            "full_compiler_with_layout_assist"
+            if statements or (working_doc.pages and compile_statements)
+            else "layout_assist_compiler"
+        )
+
     return {
         "tunnel": "A",
-        "document": document,
+        "document": working_doc,
         "statements": statements,
         "ledger": ledger,
         "graph": graph,
         "known": known,
         "report": {
-            "pages": document.quality.page_count,
-            "tokens": document.quality.token_count,
+            "pages": working_doc.quality.page_count,
+            "tokens": working_doc.quality.token_count,
             "statements": len(statements),
             "candidates": len(ledger.entries),
-            "method": document.quality.extraction_method,
-            "mode": "full_compiler",
+            "method": working_doc.quality.extraction_method,
+            "mode": mode,
+            "layout_assist_candidates": sum(
+                1
+                for e in ledger.entries
+                if e.evidence.get("candidate_origin") == "layout_geometry"
+            ),
         },
     }
 
 
-def _seed_from_legacy(ledger: CandidateLedger, facts: list[Any], *, tunnel: str) -> None:
+def _empty_document(pdf_path: Path) -> CanonicalDocumentIR:
+    from cse_financial_etl.document.document_ir import DocumentQuality, sha256_file
+
+    digest = ""
+    try:
+        if pdf_path.exists():
+            digest = sha256_file(pdf_path)
+    except OSError:
+        digest = ""
+    return CanonicalDocumentIR(
+        pages=(),
+        quality=DocumentQuality(
+            page_count=0,
+            token_count=0,
+            numeric_token_count=0,
+            text_page_ratio=1.0,
+            extraction_method="LAYOUT_ASSIST_ONLY",
+            requires_ocr=False,
+        ),
+        source_sha256=digest,
+        source_path=str(pdf_path),
+    )
+
+
+def _seed_layout_assist(ledger: CandidateLedger, facts: list[Any], *, tunnel: str) -> None:
+    """Inject layout discoveries as unresolved candidates (not pre-published)."""
+
     for index, fact in enumerate(facts, start=1):
         status = getattr(fact, "status", "")
-        ledger_status = "accepted" if status in {"EXTRACTED", "EXTRACTED_DERIVED"} else (
-            "rejected" if status in {"CUMULATIVE_ONLY"} else "unresolved"
-        )
-        if status in {
-            "NOT_FOUND_BY_PARSER",
-            "VALUE_CONTEXT_UNRESOLVED",
+        has_value = getattr(fact, "normalized_value", None) is not None
+        if status in {"EXTRACTED", "EXTRACTED_DERIVED"} and has_value:
+            ledger_status = "unresolved"
+            score = _LAYOUT_ASSIST_SCORE
+        elif status == "CUMULATIVE_ONLY":
+            ledger_status = "rejected"
+            score = 0.2
+        elif status in {
             "SOURCE_CONFIRMED_NOT_REPORTED",
             "EXACT_QUARTER_NOT_REPORTED",
+            "NOT_FOUND_BY_PARSER",
+            "VALUE_CONTEXT_UNRESOLVED",
             "UNIT_NOT_RESOLVED",
             "LOW_CERTAINTY",
             "INSUFFICIENT_INPUT",
+            "CONSOLIDATED_ONLY",
         }:
-            # Keep terminal legacy misses visible without inventing numbers.
-            ledger_status = "rejected" if status == "CUMULATIVE_ONLY" else "unresolved"
-            if getattr(fact, "normalized_value", None) is None and status.startswith("SOURCE_"):
-                ledger_status = "rejected"
+            ledger_status = "rejected" if not has_value else "unresolved"
+            score = 0.1
+        else:
+            ledger_status = "unresolved" if has_value else "rejected"
+            score = float(
+                getattr(fact, "overall_certainty", 0.0)
+                or getattr(fact, "semantic_confidence", 0.0)
+                or (0.4 if has_value else 0.1)
+            )
+
+        period = getattr(fact, "period_end", None)
+        period_s = period.isoformat() if hasattr(period, "isoformat") else str(period or "")
         ledger.add(
             LedgerEntry(
-                entry_id=f"{tunnel}-legacy-{index}",
+                entry_id=f"{tunnel}-layout-{index}",
                 tunnel=tunnel,
                 concept=getattr(fact, "metric_code", "UNKNOWN"),
-                status=ledger_status if getattr(fact, "normalized_value", None) is not None else (
-                    "rejected" if status in {"SOURCE_CONFIRMED_NOT_REPORTED", "CUMULATIVE_ONLY"} else "unresolved"
-                ),
+                status=ledger_status,
                 raw_value=getattr(fact, "raw_value", None),
                 normalized_value=getattr(fact, "normalized_value", None),
                 entity=getattr(fact, "entity_scope", None),
-                period_end=getattr(fact, "period_end", date.today()).isoformat()
-                if hasattr(getattr(fact, "period_end", None), "isoformat")
-                else str(getattr(fact, "period_end", "")),
+                period_end=period_s,
                 duration_months=getattr(fact, "duration_months", None),
                 comparison_role=getattr(fact, "comparison_role", "CURRENT"),
                 unit=getattr(fact, "currency", None),
@@ -147,8 +178,12 @@ def _seed_from_legacy(ledger: CandidateLedger, facts: list[Any], *, tunnel: str)
                 page=getattr(fact, "source_page", None),
                 bbox=getattr(fact, "source_bbox", None),
                 label=getattr(fact, "raw_label", None) or getattr(fact, "source_line", None),
-                score=float(getattr(fact, "overall_certainty", 0.0) or getattr(fact, "semantic_confidence", 0.0) or 0.85),
-                reasons=[f"legacy_status:{status}"],
-                evidence={"extraction_method": getattr(fact, "extraction_method", "LAYOUT_TEXT")},
+                score=score,
+                reasons=[f"legacy_status:{status}", "layout_assist"],
+                evidence={
+                    "candidate_origin": "layout_geometry",
+                    "extraction_method": getattr(fact, "extraction_method", "LAYOUT_TEXT"),
+                    "layout_status": status,
+                },
             )
         )

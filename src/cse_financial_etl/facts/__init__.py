@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from cse_financial_etl.facts.derived_facts import compute_quarter_ratios
+from cse_financial_etl.facts.publisher import publish_from_compiler
 from cse_financial_etl.facts.query_engine import query_target_facts
 from cse_financial_etl.facts.target_metrics import TARGET_METRIC_CODES, TargetQuery
 
@@ -10,5 +11,6 @@ __all__ = [
     "TARGET_METRIC_CODES",
     "TargetQuery",
     "compute_quarter_ratios",
+    "publish_from_compiler",
     "query_target_facts",
 ]

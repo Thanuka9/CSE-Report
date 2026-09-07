@@ -201,3 +201,49 @@ def test_no_overpublication_gates() -> None:
     )
     violations = gate_no_overpublication([bad], [])
     assert any(v.startswith("GROUP_SUBSTITUTION") for v in violations)
+
+
+def test_review_packet_and_accuracy_quality() -> None:
+    from cse_financial_etl.reporting.redesign_metrics import (
+        empty_redesign_metrics,
+        record_extraction_report,
+        summarize_redesign_metrics,
+    )
+    from cse_financial_etl.reporting.review_views import (
+        build_accuracy_quality_view,
+        build_review_packet,
+    )
+
+    packet = build_review_packet(
+        fact={"metric_code": "PAT", "status": "EXTRACTED", "source_page": 3},
+        competing_candidates=[{"id": "alt"}],
+        blocked_reason=None,
+    )
+    assert packet["scope_period_unit"] is not None
+    assert packet["approval_binding"]["requires_authenticated_reviewer"] is True
+    view = build_accuracy_quality_view(
+        universe_filings=10,
+        filings_processed=10,
+        published_facts=80,
+        eligible_disclosures=100,
+        independent_review_coverage=None,
+        measured_precision=None,
+        false_absence_rate=None,
+        unresolved_issues=5,
+        release_status="DRAFT_OFFLINE",
+    )
+    assert view["universe_filing_coverage"]["rate"] == 1.0
+    metrics = empty_redesign_metrics()
+    record_extraction_report(
+        metrics,
+        {
+            "document_quality": {"token_count": 10},
+            "statements_detected": [{"type": "PROFIT_LOSS"}],
+            "tunnel_a": {"mode": "layout_assist_compiler"},
+            "tunnel_b": {"deferred": True},
+            "final_facts": [{"status": "EXTRACTED"}, {"status": "CUMULATIVE_ONLY"}],
+            "failure_tickets": [{"terminal": "RECOVERED"}],
+        },
+    )
+    summary = summarize_redesign_metrics(metrics)
+    assert summary["core_metric_coverage"]["EXTRACTED"] == 1

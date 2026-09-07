@@ -35,6 +35,7 @@ def _query_one(ledger: CandidateLedger, query: TargetQuery) -> QueriedFact:
         e
         for e in ledger.for_concept(query.concept)
         if e.status == "accepted"
+        and e.normalized_value is not None
         and (e.entity is None or e.entity == query.entity or query.entity in {e.entity})
     ]
     if query.duration_months is not None:

@@ -3115,14 +3115,19 @@ def extract_filing(
     prefer_exact_quarter: bool = True,
     prefer_standalone_sofp: bool = False,
     run_compiler: bool = True,
+    compile_statements: bool = False,
 ) -> list[ExtractedFact]:
-    """Extract facts via Revision 2 compiler (Tunnel A/B + arbiter) with layout core.
+    """Extract facts via Revision 2 compiler publish path.
 
-    Retry flags (Phase One retry controller) may change layout/unit interpretation
-    but never relax Company/Bank, exact-quarter, or non-zero blank rules.
+    Layout geometry assists discovery (regex + RapidFuzz). Publication is always
+    A/B/C → arbiter → target query → gates. Silent layout-only publish is forbidden.
+
+    ``compile_statements`` enables full statement-IR compilation in Tunnel A
+    (slower; used for benchmark / recovery). Production default uses layout-assist
+    candidates through the same compiler publish gates.
     """
 
-    facts = _extract_filing_layout(
+    layout_facts = _extract_filing_layout(
         pdf_path,
         issuer_name,
         symbol,
@@ -3137,48 +3142,82 @@ def extract_filing(
         prefer_exact_quarter=prefer_exact_quarter,
         prefer_standalone_sofp=prefer_standalone_sofp,
     )
-    if run_compiler:
-        try:
-            from cse_financial_etl.tunnels.extraction_compiler import compile_filing
+    if not run_compiler:
+        from cse_financial_etl.facts.publisher import (
+            COMPILER_DISABLED,
+            mark_explicit_layout_fallback,
+        )
 
-            compiled = compile_filing(
-                pdf_path,
-                issuer_name=issuer_name,
-                symbol=symbol,
-                period_end=period_end,
-                ocr_enabled=ocr_enabled,
-                ocr_dir=text_cache_dir,
-                legacy_facts=facts,
-                run_tunnel_b_always=False,
-                diagnostics_dir=diagnostics_dir,
+        return mark_explicit_layout_fallback(
+            layout_facts,
+            issue_code=COMPILER_DISABLED,
+            detail="run_compiler=False",
+        )
+
+    from cse_financial_etl.facts.publisher import (
+        LAYOUT_FALLBACK_COMPILER_EXCEPTION,
+        mark_explicit_layout_fallback,
+        publish_from_compiler,
+    )
+    from cse_financial_etl.tunnels.extraction_compiler import compile_filing
+
+    try:
+        compiled = compile_filing(
+            pdf_path,
+            issuer_name=issuer_name,
+            symbol=symbol,
+            period_end=period_end,
+            ocr_enabled=ocr_enabled,
+            ocr_dir=text_cache_dir,
+            legacy_facts=layout_facts,
+            compile_statements=compile_statements,
+            run_tunnel_b_always=False,
+            diagnostics_dir=diagnostics_dir,
+        )
+    except Exception as exc:
+        fallback = mark_explicit_layout_fallback(
+            layout_facts,
+            issue_code=LAYOUT_FALLBACK_COMPILER_EXCEPTION,
+            detail=str(exc),
+        )
+        if diagnostics_dir is not None:
+            diagnostics_dir.mkdir(parents=True, exist_ok=True)
+            (diagnostics_dir / f"{pdf_path.stem}.layout_fallback.json").write_text(
+                json.dumps(
+                    {
+                        "issue_code": LAYOUT_FALLBACK_COMPILER_EXCEPTION,
+                        "detail": str(exc),
+                        "metrics": [f.metric_code for f in fallback],
+                    },
+                    indent=2,
+                ),
+                encoding="utf-8",
             )
-            report = compiled.get("report") or {}
-            # Attach compiler lineage to each fact without changing published values.
-            enriched: list[ExtractedFact] = []
-            for fact in facts:
-                evidence = {}
-                if fact.evidence_json:
-                    try:
-                        evidence = json.loads(fact.evidence_json)
-                    except json.JSONDecodeError:
-                        evidence = {"prior": fact.evidence_json}
-                evidence["compiler_report_summary"] = {
-                    "filing_sha": report.get("filing_sha"),
-                    "tunnel_a": report.get("tunnel_a"),
-                    "tunnel_b": report.get("tunnel_b"),
-                    "resolver_c": report.get("resolver_c"),
-                    "no_overpublication_violations": report.get(
-                        "no_overpublication_violations"
-                    ),
-                }
-                enriched.append(
-                    replace(fact, evidence_json=json.dumps(evidence, default=str))
-                )
-            return enriched
-        except Exception:
-            # Compiler diagnostics must never block layout publication path.
-            return facts
-    return facts
+        return fallback
+
+    report = compiled.get("report") or {}
+    published, pub_stats = publish_from_compiler(
+        queried=compiled.get("queried") or [],
+        layout_facts=layout_facts,
+        report=report,
+        issuer_name=issuer_name,
+        symbol=symbol,
+        period_end=period_end,
+        required_entity=compiled.get("required_entity")
+        or entity_scope_for_issuer(issuer_name, issuers),
+    )
+    report["publication_stats"] = pub_stats
+    if diagnostics_dir is not None:
+        diagnostics_dir.mkdir(parents=True, exist_ok=True)
+        (diagnostics_dir / f"{pdf_path.stem}.publication_stats.json").write_text(
+            json.dumps(pub_stats, indent=2, default=str),
+            encoding="utf-8",
+        )
+        # Refresh extraction report with publication stats.
+        (diagnostics_dir / f"{pdf_path.stem}.extraction_report.json").write_text(
+            json.dumps(report, indent=2, default=str), encoding="utf-8"
+        )
+    return published
 
 
 def _extract_filing_layout(
