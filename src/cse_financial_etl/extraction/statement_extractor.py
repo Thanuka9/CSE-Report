@@ -3114,12 +3114,90 @@ def extract_filing(
     force_unit_rescan: bool = False,
     prefer_exact_quarter: bool = True,
     prefer_standalone_sofp: bool = False,
+    run_compiler: bool = True,
 ) -> list[ExtractedFact]:
-    """Extract facts from one filing.
+    """Extract facts via Revision 2 compiler (Tunnel A/B + arbiter) with layout core.
 
     Retry flags (Phase One retry controller) may change layout/unit interpretation
     but never relax Company/Bank, exact-quarter, or non-zero blank rules.
     """
+
+    facts = _extract_filing_layout(
+        pdf_path,
+        issuer_name,
+        symbol,
+        period_end,
+        text_cache_dir,
+        ocr_enabled=ocr_enabled,
+        issuers=issuers,
+        diagnostics_dir=diagnostics_dir,
+        auto_approve_threshold=auto_approve_threshold,
+        manual_review_threshold=manual_review_threshold,
+        force_unit_rescan=force_unit_rescan,
+        prefer_exact_quarter=prefer_exact_quarter,
+        prefer_standalone_sofp=prefer_standalone_sofp,
+    )
+    if run_compiler:
+        try:
+            from cse_financial_etl.tunnels.extraction_compiler import compile_filing
+
+            compiled = compile_filing(
+                pdf_path,
+                issuer_name=issuer_name,
+                symbol=symbol,
+                period_end=period_end,
+                ocr_enabled=ocr_enabled,
+                ocr_dir=text_cache_dir,
+                legacy_facts=facts,
+                run_tunnel_b_always=False,
+                diagnostics_dir=diagnostics_dir,
+            )
+            report = compiled.get("report") or {}
+            # Attach compiler lineage to each fact without changing published values.
+            enriched: list[ExtractedFact] = []
+            for fact in facts:
+                evidence = {}
+                if fact.evidence_json:
+                    try:
+                        evidence = json.loads(fact.evidence_json)
+                    except json.JSONDecodeError:
+                        evidence = {"prior": fact.evidence_json}
+                evidence["compiler_report_summary"] = {
+                    "filing_sha": report.get("filing_sha"),
+                    "tunnel_a": report.get("tunnel_a"),
+                    "tunnel_b": report.get("tunnel_b"),
+                    "resolver_c": report.get("resolver_c"),
+                    "no_overpublication_violations": report.get(
+                        "no_overpublication_violations"
+                    ),
+                }
+                enriched.append(
+                    replace(fact, evidence_json=json.dumps(evidence, default=str))
+                )
+            return enriched
+        except Exception:
+            # Compiler diagnostics must never block layout publication path.
+            return facts
+    return facts
+
+
+def _extract_filing_layout(
+    pdf_path: Path,
+    issuer_name: str,
+    symbol: str,
+    period_end: date,
+    text_cache_dir: Path | None = None,
+    *,
+    ocr_enabled: bool = True,
+    issuers: dict[str, IssuerProfile] | None = None,
+    diagnostics_dir: Path | None = None,
+    auto_approve_threshold: float = 0.95,
+    manual_review_threshold: float = 0.80,
+    force_unit_rescan: bool = False,
+    prefer_exact_quarter: bool = True,
+    prefer_standalone_sofp: bool = False,
+) -> list[ExtractedFact]:
+    """Mature Tunnel A layout extractor (geometry + regex/RapidFuzz)."""
 
     document = extract_document_ir(
         pdf_path,
