@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import hashlib
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -57,12 +57,57 @@ class TableCellIR:
 
 
 @dataclass(frozen=True, slots=True)
+class TableColumnIR:
+    """A stable geometric column interval.
+
+    ``col_idx`` 0 is always the label column. Value columns are bound by the
+    horizontal interval ``[x_min, x_max]`` around ``x_center`` (right-edge cluster
+    of numeric tokens), never by numeric-token order within a row.
+    """
+
+    col_idx: int
+    x_center: float
+    x_min: float
+    x_max: float
+    kind: str = "VALUE"  # LABEL | VALUE | NOTE | PERCENT
+    cell_count: int = 0
+
+
+@dataclass(frozen=True, slots=True)
+class HeaderPhraseIR:
+    """A header-region phrase with its geometry (bound later by the compiler)."""
+
+    row_idx: int
+    text: str
+    bbox: BBox
+    kind: str = "TEXT"  # DATE | YEAR | ENTITY | DURATION | UNIT | ANNOTATION | NOTE | PERCENT | CHANGE | TEXT
+
+
+@dataclass(frozen=True, slots=True)
+class UnitLineIR:
+    """A unit-only line inside the table body (e.g. ``Rs. | Rs.``) scoped to following rows."""
+
+    row_idx: int
+    text: str
+    bbox: BBox
+    phrases: tuple[HeaderPhraseIR, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
 class TableIR:
     page_number: int
     bbox: BBox
     cells: tuple[TableCellIR, ...]
     header_rows: tuple[int, ...] = ()
     source_method: str = "geometry"
+    columns: tuple[TableColumnIR, ...] = ()
+    header_phrases: tuple[HeaderPhraseIR, ...] = ()
+    title_texts: tuple[str, ...] = ()
+    caption_phrases: tuple[HeaderPhraseIR, ...] = ()
+    unit_lines: tuple[UnitLineIR, ...] = ()
+    footer_texts: tuple[str, ...] = ()
+    row_line_ids: dict[int, tuple[str, ...]] = field(default_factory=dict)
+    label_zone: tuple[float, float] | None = None
 
 
 @dataclass(frozen=True, slots=True)
