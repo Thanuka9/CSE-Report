@@ -147,6 +147,12 @@ def compile_header(
                 table_units.append(decl)
 
     instant_statement = statement_type in _INSTANT_STATEMENTS
+    # When any column header states an explicit month count ("Quarter", "Six months"), a sibling
+    # column that only says "Period ended" is a *different* (unstated) duration — the caption
+    # duration must not be copied onto it (NDB: "Period ended" = YTD next to "Quarter ended").
+    explicit_column_durations = any(
+        normalize_duration_phrase(p.text) is not None for p in table.header_phrases if p.kind == "DURATION"
+    )
 
     compiled: list[CompiledHeaderColumn] = []
     for col in columns:
@@ -188,12 +194,13 @@ def compile_header(
                     col_conflicts.append(f"DURATION_CONFLICT:{duration}|{months}")
                 duration = months
                 duration_source = _phrase_evidence(phrase, "header_block")
-        if duration is None and caption_duration is not None:
+        period_ended_only = duration is None and any(
+            re.search(r"\bperiod\b", p.text.lower()) and not is_instant_phrase(p.text) for p in duration_phrases
+        )
+        if duration is None and caption_duration is not None and not (period_ended_only and explicit_column_durations):
             duration = caption_duration
             duration_source = {"text": caption_duration, "source": "table_caption"}
-        period_ended_only = duration is None and any(
-            re.search(r"\bperiod\s+(?:ended|ending)\b", p.text.lower()) for p in duration_phrases
-        )
+            period_ended_only = False
 
         # Period end.
         period_end: date | None = None

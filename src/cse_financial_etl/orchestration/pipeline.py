@@ -130,6 +130,8 @@ class Pipeline:
         issuer_limit: int | None = None,
         offline: bool = False,
         skip_excel: bool = False,
+        compile_statements: bool = True,
+        run_tunnel_b_always: bool = False,
     ) -> dict[str, object]:
         target_periods = tuple(periods)
         extraction_periods = supporting_periods(target_periods)
@@ -259,6 +261,8 @@ class Pipeline:
                 ),
                 auto_approve_threshold=self.app_config.auto_approve_threshold,
                 manual_review_threshold=self.app_config.manual_review_threshold,
+                compile_statements=compile_statements,
+                run_tunnel_b_always=run_tunnel_b_always,
             )
             quality_path = diagnostics_dir / "document_quality.json"
             if quality_path.exists():

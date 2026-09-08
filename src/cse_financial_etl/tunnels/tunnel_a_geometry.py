@@ -14,8 +14,10 @@ from cse_financial_etl.ingestion.quality_router import route_document_ingestion
 from cse_financial_etl.resolution.candidate_ledger import CandidateLedger, LedgerEntry
 from cse_financial_etl.tunnels.common_financial_engine import apply_financial_engine
 
-# Layout-assist candidates rank high but remain subject to arbiter hard gates.
-_LAYOUT_ASSIST_SCORE = 0.93
+# Layout-assist candidates are discovery aids: their score is derived from the layout
+# extractor's own certainty and capped below any compiler candidate with a regex-anchored
+# label match (1.0 semantic) so they can never outrank real compiled evidence.
+_LAYOUT_ASSIST_CAP = 0.45
 
 
 def run_tunnel_a(
@@ -91,9 +93,12 @@ def run_tunnel_a(
             "pages": working_doc.quality.page_count,
             "tokens": working_doc.quality.token_count,
             "statements": len(statements),
+            "compiled_statement_types": sorted({s.statement_type for s in statements}),
             "candidates": len(ledger.entries),
             "method": working_doc.quality.extraction_method,
             "mode": mode,
+            "compile_requested": bool(compile_statements),
+            "native_compiler_success": bool(statements),
             "layout_assist_candidates": sum(
                 1
                 for e in ledger.entries
@@ -135,7 +140,8 @@ def _seed_layout_assist(ledger: CandidateLedger, facts: list[Any], *, tunnel: st
         has_value = getattr(fact, "normalized_value", None) is not None
         if status in {"EXTRACTED", "EXTRACTED_DERIVED"} and has_value:
             ledger_status = "unresolved"
-            score = _LAYOUT_ASSIST_SCORE
+            certainty = float(getattr(fact, "overall_certainty", 0.0) or 0.0)
+            score = min(_LAYOUT_ASSIST_CAP, max(0.1, certainty * _LAYOUT_ASSIST_CAP))
         elif status == "CUMULATIVE_ONLY":
             ledger_status = "rejected"
             score = 0.2
@@ -153,10 +159,14 @@ def _seed_layout_assist(ledger: CandidateLedger, facts: list[Any], *, tunnel: st
             score = 0.1
         else:
             ledger_status = "unresolved" if has_value else "rejected"
-            score = float(
-                getattr(fact, "overall_certainty", 0.0)
-                or getattr(fact, "semantic_confidence", 0.0)
-                or (0.4 if has_value else 0.1)
+            score = min(
+                _LAYOUT_ASSIST_CAP,
+                float(
+                    getattr(fact, "overall_certainty", 0.0)
+                    or getattr(fact, "semantic_confidence", 0.0)
+                    or (0.4 if has_value else 0.1)
+                )
+                * _LAYOUT_ASSIST_CAP,
             )
 
         period = getattr(fact, "period_end", None)

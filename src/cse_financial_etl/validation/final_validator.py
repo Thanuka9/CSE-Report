@@ -1,43 +1,54 @@
-"""Final validation and publication gates for the compiler path (§41, §49)."""
+"""Final validation and publication gates for the compiler path (§41, §49).
+
+The final validator re-runs the shared eligibility contract on the *chosen*
+evidence, independently of the arbiter that selected it, and adds the
+no-overpublication checks. A FAIL here is preserved on the published fact until
+an explicit revalidation produces a new result.
+"""
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from cse_financial_etl.accounting.concept_rules import (
-    group_cannot_satisfy_company,
-    requires_exact_3m,
-)
-from cse_financial_etl.facts.derived_facts import DerivedRatio
-from cse_financial_etl.facts.query_engine import QueriedFact
+from cse_financial_etl.accounting.concept_rules import requires_exact_3m
+from cse_financial_etl.contracts.eligibility import FinalCheck, evaluate_eligibility
 from cse_financial_etl.resolution.candidate_ledger import LedgerEntry
 
+if TYPE_CHECKING:  # dependency-neutral at runtime: facts imports *this* module
+    from cse_financial_etl.facts.derived_facts import DerivedRatio
+    from cse_financial_etl.facts.query_engine import QueriedFact
 
-@dataclass(frozen=True, slots=True)
-class FinalCheck:
-    metric_code: str
-    status: str  # PASS | FAIL | UNTESTED | NOT_APPLICABLE
-    detail: str
+__all__ = [
+    "FinalCheck",
+    "build_extraction_report",
+    "gate_no_overpublication",
+    "publication_allowed",
+    "validate_source_fact",
+]
 
 
-def validate_source_fact(entry: LedgerEntry | None, *, required_entity: str, target_duration: int) -> FinalCheck:
+def validate_source_fact(
+    entry: LedgerEntry | None,
+    *,
+    required_entity: str,
+    target_duration: int,
+    target_period_end: str | None = None,
+    concept: str | None = None,
+) -> FinalCheck:
+    """Independent re-check of the selected evidence against the shared contract."""
+
     if entry is None:
-        return FinalCheck("UNKNOWN", "UNTESTED", "no_entry")
-    if group_cannot_satisfy_company(required_entity, entry.entity or ""):
-        return FinalCheck(entry.concept, "FAIL", "group_cannot_satisfy_company")
-    if (
-        requires_exact_3m(entry.concept)
-        and entry.duration_months not in {None, target_duration}
-        and entry.duration_months
-        and entry.duration_months != target_duration
-    ):
-        return FinalCheck(entry.concept, "FAIL", "ytd_cannot_satisfy_3m")
-    if entry.comparison_role == "COMPARATIVE":
-        return FinalCheck(entry.concept, "FAIL", "comparative_not_current")
-    if entry.normalized_value is None:
-        return FinalCheck(entry.concept, "UNTESTED", "missing_value")
-    return FinalCheck(entry.concept, "PASS", "source_context_ok")
+        return FinalCheck(concept or "UNKNOWN", "UNTESTED", "no_entry")
+    result = evaluate_eligibility(
+        entry,
+        required_entity=required_entity,
+        target_duration=target_duration if requires_exact_3m(concept or entry.concept) else None,
+        target_period_end=target_period_end,
+        concept=concept,
+    )
+    if result.eligible:
+        return FinalCheck(entry.concept, "PASS", "source_context_ok")
+    return FinalCheck(entry.concept, "FAIL", ",".join(result.reasons), result.reasons)
 
 
 def publication_allowed(
@@ -46,19 +57,15 @@ def publication_allowed(
     *,
     review_required: bool = True,
 ) -> bool:
-    """No confidence threshold directly publishes. Source facts need review gate."""
+    """Machine eligibility only. Official release additionally needs a reviewer approval
+    bound to the fact identity (see :mod:`cse_financial_etl.contracts.release`)."""
 
     if fact.status != "EXTRACTED":
         return False
-    if check.status == "FAIL":
+    if check.status != "PASS":
         return False
     if fact.entry is None or fact.entry.normalized_value is None:
         return False
-    # Derived-looking liabilities from Assets-Equity are never publishable as source.
-    if fact.concept == "TOTAL_LIABILITIES":
-        reasons = " ".join(fact.entry.reasons).upper()
-        if "ASSETS" in reasons and "EQUITY" in reasons and "DERIV" in reasons:
-            return False
     return not review_required
 
 
@@ -67,9 +74,9 @@ def gate_no_overpublication(facts: list[QueriedFact], ratios: list[DerivedRatio]
 
     violations: list[str] = []
     for fact in facts:
-        if fact.entry is None:
+        if fact.entry is None or fact.status != "EXTRACTED":
             continue
-        if fact.status == "EXTRACTED" and fact.entry.entity == "GROUP" and fact.concept in {
+        if fact.entry.entity == "GROUP" and fact.metric_code in {
             "PAT",
             "PBT",
             "TOP_LINE",
@@ -78,17 +85,13 @@ def gate_no_overpublication(facts: list[QueriedFact], ratios: list[DerivedRatio]
             "TOTAL_EQUITY",
             "TOTAL_LIABILITIES",
         }:
-            # Caller must have required COMPANY/BANK — flag if Group slipped through.
-            violations.append(f"GROUP_SUBSTITUTION:{fact.concept}")
-        if (
-            fact.status == "EXTRACTED"
-            and requires_exact_3m(fact.concept)
-            and fact.entry.duration_months
-            and fact.entry.duration_months != 3
-        ):
-            violations.append(f"YTD_AS_QUARTER:{fact.concept}")
-        if fact.status == "EXTRACTED" and fact.entry.comparison_role == "COMPARATIVE":
-            violations.append(f"COMPARATIVE_AS_CURRENT:{fact.concept}")
+            violations.append(f"GROUP_SUBSTITUTION:{fact.metric_code}")
+        if requires_exact_3m(fact.concept) and fact.entry.duration_months != 3:
+            violations.append(f"YTD_AS_QUARTER:{fact.metric_code}")
+        if fact.entry.comparison_role != "CURRENT":
+            violations.append(f"COMPARATIVE_AS_CURRENT:{fact.metric_code}")
+        if not fact.entry.unit and fact.concept not in {"WEIGHTED_AVG_SHARES", "ORDINARY_SHARES"}:
+            violations.append(f"UNIT_MISSING:{fact.metric_code}")
     for ratio in ratios:
         if ratio.status == "EXTRACTED_DERIVED" and ratio.value is None:
             violations.append(f"BLANK_RATIO:{ratio.code}")

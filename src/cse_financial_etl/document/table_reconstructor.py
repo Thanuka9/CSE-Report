@@ -136,6 +136,10 @@ _STATEMENT_TITLE_RE = re.compile(
     re.I,
 )
 _ENTITY_WORD_RE = re.compile(r"\b(group|company|bank|consolidated|separate)\b", re.I)
+# Maximum horizontal gap (points) between a number and the following word for the pair to be
+# read as prose ("Act No. 07 of 2007").  Values in a column to the LEFT of the label zone are
+# separated from the label by a clear column gutter and must stay numeric.
+_PROSE_GAP_MAX = 9.0
 
 
 def _effective_kinds(tokens: tuple[TokenIR, ...]) -> list[str]:
@@ -157,8 +161,10 @@ def _effective_kinds(tokens: tuple[TokenIR, ...]) -> list[str]:
             continue
         if kind in {"NUM", "YEAR"} and i + 1 < len(tokens):
             follower = tokens[i + 1].text.strip()
+            gap = tokens[i + 1].bbox.x0 - tokens[i].bbox.x1
             if (
                 kinds[i + 1] == "TEXT"
+                and gap <= _PROSE_GAP_MAX  # a value column left of the label sits further away
                 and re.fullmatch(r"[A-Za-z][A-Za-z'-]*[.,;:]?", follower)
                 and not _ANNOTATION_RE.match(follower)
                 and not _HEADER_CUE_RE.search(follower)
@@ -720,6 +726,10 @@ def _phrase_kind(text: str) -> str:
         return "DATE"
     if re.search(r"\b(?:three|six|nine|twelve|\d{1,2})\s+months?\b|\bquarter\b|\byear\s+(?:ended|ending|to)\b|"
                  r"\bperiod\s+(?:ended|ending)\b|\bas\s+at\b|\bmonths?\s+(?:ended|ending|to)\b", lower):
+        return "DURATION"
+    # A bare duration noun on its own header row ("Period" / "Year" above an "ended" row) is a
+    # duration block phrase too; "Period" alone carries no month count (stays unknown).
+    if re.fullmatch(r"(?:for\s+the\s+)?(?:period|year|half[\s-]?year|quarter)", lower):
         return "DURATION"
     if re.search(r"\b(group|company|bank|consolidated|separate)\b", lower):
         return "ENTITY"

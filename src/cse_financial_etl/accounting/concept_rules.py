@@ -54,7 +54,11 @@ def concept_compatible_with_statement(concept: str, statement_type: str) -> bool
 
 
 def requires_exact_3m(concept: str) -> bool:
-    return concept in FLOW_CONCEPTS and concept not in {"WEIGHTED_AVG_SHARES"}
+    from cse_financial_etl.accounting.ontology import PROFIT_LOSS_CONCEPTS
+
+    if concept in {"WEIGHTED_AVG_SHARES", "ORDINARY_SHARES"}:
+        return False
+    return concept in FLOW_CONCEPTS or concept in PROFIT_LOSS_CONCEPTS
 
 
 def group_cannot_satisfy_company(required_entity: str, candidate_entity: str) -> bool:

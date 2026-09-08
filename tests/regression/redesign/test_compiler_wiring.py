@@ -7,13 +7,12 @@ from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
-import pytest
-
 from cse_financial_etl.extraction.statement_extractor import ExtractedFact, extract_filing
 from cse_financial_etl.facts.publisher import publish_from_compiler
 from cse_financial_etl.storage.stage_cache import StageCache, cache_key, default_version_vector
 from cse_financial_etl.tunnels.extraction_compiler import compile_filing
 from cse_financial_etl.validation.eval_harness import run_offline_eval
+from tests.fixture_paths import real_pdf
 
 
 def test_compiler_layout_assist_mode(tmp_path: Path) -> None:
@@ -66,15 +65,17 @@ def test_compiler_layout_assist_mode(tmp_path: Path) -> None:
     assert pat.extraction_method == "COMPILER_QUERY"
     assert pat.normalized_value == Decimal("100000")
     evidence = json.loads(pat.evidence_json or "{}")
-    assert evidence["publication_path"] == "statement_compiler"
+    # With the compiler disabled the row is honestly routed layout-assist-only and
+    # never labelled as a statement-compiler publication (audit finding 2).
+    assert evidence["publication_routing"] == "layout_assist_only"
+    assert evidence["native_compiler_success"] is False
+    assert evidence["explicit_fallback"] == "COMPILER_DISABLED"
+    assert evidence["extraction_origin"] == "layout_geometry"
     assert stats["explicit_layout_fallback"] == 0
 
 
 def test_extract_filing_publishes_via_compiler() -> None:
-    root = Path(__file__).resolve().parents[3]
-    pdf = root / "data/raw/filings/HAYLEYS_FIBRE_PLC/2026-06-30_768_1785840975698.06.2026.pdf"
-    if not pdf.exists():
-        pytest.skip("Hayleys Fibre PDF not present")
+    pdf = real_pdf("HAYLEYS_FIBRE_PLC/2026-06-30_768_1785840975698.06.2026.pdf")
     facts = extract_filing(
         pdf,
         "HAYLEYS FIBRE PLC",
@@ -94,12 +95,9 @@ def test_extract_filing_publishes_via_compiler() -> None:
         if fact.metric_code in {"CROSS_METRIC_CONTEXT"}:
             continue
         evidence = json.loads(fact.evidence_json or "{}")
-        assert evidence.get("publication_path") in {
-            "statement_compiler",
-            "explicit_layout_fallback",
-        }
-        if evidence.get("publication_path") == "explicit_layout_fallback":
-            assert evidence.get("issue_code")
+        assert evidence.get("publication_routing") == "statement_compiler"
+        assert evidence.get("native_compiler_success") is True
+        assert evidence.get("explicit_fallback") is None
 
 
 def test_stage_cache_roundtrip(tmp_path: Path) -> None:

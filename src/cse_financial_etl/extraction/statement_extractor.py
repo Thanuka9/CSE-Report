@@ -3151,16 +3151,20 @@ def extract_filing(
     prefer_exact_quarter: bool = True,
     prefer_standalone_sofp: bool = False,
     run_compiler: bool = True,
-    compile_statements: bool = False,
+    compile_statements: bool = True,
+    run_tunnel_b_always: bool = False,
 ) -> list[ExtractedFact]:
     """Extract facts via Revision 2 compiler publish path.
 
-    Layout geometry assists discovery (regex + RapidFuzz). Publication is always
-    A/B/C → arbiter → target query → gates. Silent layout-only publish is forbidden.
+    The native statement compiler (Tunnel A geometry → tables → header binding →
+    unit typing → ledger) is the DEFAULT path. Layout geometry facts are seeded as
+    low-score discovery candidates only. Publication is always A/B/C → arbiter →
+    target query → gates. Silent layout-only publish is forbidden; when the compiler
+    produced no statements the rows are routed ``layout_assist_only`` with an explicit
+    fallback code, never labelled ``statement_compiler``.
 
-    ``compile_statements`` enables full statement-IR compilation in Tunnel A
-    (slower; used for benchmark / recovery). Production default uses layout-assist
-    candidates through the same compiler publish gates.
+    ``compile_statements=False`` disables the native compiler (layout-assist only,
+    explicitly coded ``COMPILER_DISABLED``); exposed on the CLI as ``--no-compile``.
     """
 
     layout_facts = _extract_filing_layout(
@@ -3207,7 +3211,7 @@ def extract_filing(
             ocr_dir=text_cache_dir,
             legacy_facts=layout_facts,
             compile_statements=compile_statements,
-            run_tunnel_b_always=False,
+            run_tunnel_b_always=run_tunnel_b_always,
             diagnostics_dir=diagnostics_dir,
         )
     except Exception as exc:
@@ -3514,15 +3518,13 @@ def _extract_filing_layout(
             overall = min(overall * 0.88, auto_approve_threshold - 0.02)
             if overall < manual_review_threshold:
                 status = "LOW_CERTAINTY"
-        review_status = (
-            "APPROVED"
-            if status in {"EXTRACTED", "EXTRACTED_DERIVED"} and overall >= auto_approve_threshold
-            else "REVIEW"
-        )
+        # Machine confidence never grants human approval (audit finding 6): every
+        # extracted row awaits review; the release gate binds approvals to identity.
+        review_status = "REVIEW"
         band = _certainty_band(overall)
         stored_graph = (
             summarize_graph(selected.graph)
-            if status == "EXTRACTED" and review_status == "APPROVED"
+            if status == "EXTRACTED" and overall >= auto_approve_threshold
             else selected.graph
         )
         comparison_role, header_year = _comparison_from_layout(
