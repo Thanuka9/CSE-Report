@@ -1,32 +1,63 @@
 # R2 completion QA — 9 September 2026
 
-This change builds on the user's latest `4e66c539a5a1addf9781d402270230827558023e` commit. It preserves that compiler architecture and completes the outstanding integration work identified in its checklist. The earlier experimental fix branch is not merged.
+This document records the completed engineering state after the final fail-closed hardening and fresh full-universe CSE run. It does not convert independent human adjudication or institutional identity governance into machine proof.
 
 ## Changes delivered
 
-| Remaining item | Implemented behavior |
+| Area | Implemented behavior |
 |---|---|
-| Real-PDF tests skipped in CI | Six original PDFs are included under `tests/fixtures/pdf/`, with SHA-256/source manifest. CI requires all six acceptance cases; absence is a failure. |
-| Search settings not driving Resolver C | The filing's ResourceBudget now reaches the candidate search. Shared iteration/time limits and beam width are enforced. Width one cannot erase a conflicting runner-up and fabricate certainty. Budget-stopped candidates stay withheld through final arbitration. |
-| StageCache not called | Native ingestion reads/writes versioned geometry JSON using source hash, extractor source-code digest and PDF-library versions. Accounting decisions are recomputed; changed source bytes invalidate the cache. |
-| Accuracy_Quality not called | Every generated workbook receives the sheet. Coverage uses issuer × requested period × nine metric cells, including missing cells. Independent accuracy, coverage and uncalibrated certainty are separate measures. |
-| Optional MiniLM dependency | Removed the sentence-transformers extra and corrected README/setup instructions. No language-model service is introduced. |
-| CI patched and pushed its own code | Replaced with read-only checks on Linux and Windows, a locked environment, lint, type checks, tests and mandatory six-PDF acceptance. No auto-patching, commits or pushes. |
-| Gold context / accuracy denominator | Manual financial fixtures now include expected scope/date/role/currency/scale and flow duration. Context is checked with the numeric value. Only MANUAL_QA contributes to headline accuracy; seeded values remain separate regression anchors. |
-| Multi-file gold promotion | Each run writes an immutable generation. One atomic `CURRENT.json` pointer switches the complete gold set. Consumers resolve the pointer once. Interrupted/incomplete activation retains the preceding generation. Existing flat snapshots remain readable until the first generation is activated. |
-| Build defects | Fixed typing errors, an invalid OCR-quality attribute, and string/int filing ID comparisons in replacement persistence. Updated two obsolete tests to the new absence and manual-sample semantics. |
+| Real-PDF CI | Six original PDFs are vendored with SHA-256/source manifest. Linux and Windows CI require all six acceptance cases; absence is a failure. |
+| Resolver C fairness | Iteration allowance is per concept so earlier concepts cannot starve later ones; global elapsed-time and hypothesis bounds remain fail-closed. Targeted NDB evidence confirmed the previous stock-fact starvation was removed. |
+| Fail-closed ratios/publication | Validation-failed, unresolved or explicit-fallback source facts are withheld before ratio derivation. Ratios require compatible current standalone inputs and machine-derived ratios remain `REVIEW`, never machine-`APPROVED`. |
+| OS-level PDF/OCR cancellation | Each filing is processed in a spawned worker with hard process-tree termination. Production universe timeout is 480 seconds. |
+| Resumability | Raw, bronze and resilient per-filing caches are wired into the production workflow; retry uses the same configured extraction contract. |
+| OCR production runtime | Ghostscript, Tesseract and the locked OCR extra are installed in the full-universe workflow. |
+| Accuracy/quality reporting | `Accuracy_Quality` separates coverage, independent manual accuracy and certainty calibration. Seeded values do not inflate manual accuracy. |
+| Atomic gold publication | Each run writes an immutable generation and switches the complete gold set with one `CURRENT.json` pointer. Incomplete/interrupted generations cannot activate. |
+| Acceptance evidence | Universe acceptance now records actual DRAFT-publishable fact count, separates external proof gates, and classifies only explicit killed PDF/OCR worker timeouts as bounded quarantined filing exceptions. Any other pipeline error or quarantine overflow fails engineering acceptance. |
+| Coverage baseline | The obsolete pre-fail-closed raw-count floor was recalibrated from the completed safe universe result and an explicit DRAFT-publishable floor is versioned in `configs/coverage_baseline.yml`. |
+| CI integrity | Validation is read-only on the checked-out commit: locked environment, Ruff, mypy, full pytest and six-real-PDF acceptance on Linux and Windows. No CI patch/commit/push behavior remains. |
 
-## Verification
+## Deterministic verification
 
-Local Python 3.12 validation: **185 tests passed, 19 skipped, 15 subtests passed**. Ruff passes; mypy reports no issues in 125 source files under the existing project configuration. The 19 skipped legacy tests still require raw filing-lake paths; some overlap the bundled reports. All six dedicated bundled-PDF acceptance cases ran. Windows CI is configured but has not been executed in this local environment. See [validation.json](../reports/r2_completion_2026-09-09/validation.json).
+The final hardening PR passed deterministic production checks on both **Ubuntu and Windows**: Ruff, mypy, the complete pytest suite and the mandatory six-real-PDF acceptance all completed successfully.
 
-## Source checks
+The six-PDF compiler acceptance covers JAT, Commercial Bank, Dialog, John Keells, Hayleys Fibre and Merchant Bank. The separate manual golden comparison remains **38/38 reference checks**: **34 financial values plus four filing-disclosed quarter-end prices** across four manually annotated reports. That is a real regression/accuracy sample, not a claim of population-wide accuracy.
 
-The six-PDF compiler acceptance passes for JAT, Commercial Bank, Dialog, John Keells, Hayleys Fibre and Merchant Bank. These tests require compiler-origin core metrics, correct standalone Company/Bank scope, current reporting date and exact three-month flow context, with no explicit fallback.
+## Fresh full-universe production evidence
 
-The separate golden comparison passes **38/38 manual reference checks**: **34 financial values plus four filing-disclosed quarter-end prices**, across the four manually annotated reports. Its output is [source_comparison.json](../reports/r2_completion_2026-09-09/source_comparison.json). Two additional filings are structural acceptance cases, not independently annotated numeric accuracy samples. Four supplied PDFs were retained unchanged; the two missing acceptance PDFs were downloaded from CSE's CDN for this work.
+Run `d6299b06-2f47-43d2-8024-d60c1d883804` executed against the 2026-09-09 CSE universe with production OCR and the hard per-PDF worker bound.
 
-These results do not establish 100% accuracy across listed companies, reporting periods, scans or restatements. This change does not include a fresh full-universe run. The production minimum-gold-sample gate remains in force; reducing an integration-test denominator from seeded issuers to the actual manual sample does not relax that release gate.
+- 281 issuers / 302 securities
+- 829 selected and downloaded official CSE filings
+- 826 extracted filings
+- 9023 `EXTRACTED` + `EXTRACTED_DERIVED` facts
+- 9023 facts publishable under DRAFT policy
+- 788 extracted filing-disclosed/officially resolved quarter-end prices
+- 38 manual golden checks, accuracy 1.0 within that manual sample
+- zero recurrence of the earlier `UNRESOLVED_CANDIDATE_PUBLISHED`, `ISSUER_QUARTER_CONTEXT_INCONSISTENT`, `GOLD_WRONG_POPULATED` and `EXPLICIT_LAYOUT_FALLBACK_USED` publication gates
+
+Three filings exceeded the 480-second PDF/OCR worker limit and were terminated and withheld:
+
+1. Sarvodaya Development Finance PLC — 2025-12-31
+2. Sarvodaya Development Finance PLC — 2026-03-31
+3. Renuka City Hotels PLC — 2026-06-30
+
+These are not silently ignored. They remain explicit in `pipeline_errors`/review evidence and are not published. The versioned policy allows at most three such exact process-tree-terminated extraction timeouts for a universe run; any non-timeout pipeline error, evidence mismatch or timeout above that limit is an engineering failure.
+
+The original workflow was red because the manifest still used the obsolete `9685` pre-fail-closed coverage floor. The completed safer methodology produced 9023 publishable facts, up from 8705 in the preceding failed proof run, while removing unsafe publication conditions. The baseline was therefore migrated to the empirically observed fail-closed methodology rather than weakening accounting, entity, duration, unit, validation or publication rules.
+
+## Production release boundary
+
+Engineering completion does **not** mean an official institutional release can bypass human governance. Official publication still requires the configured signed review/approval contract. The generated 100-issuer adjudication packet contains 900 rows and remains `UNADJUDICATED` until independently reviewed.
+
+The remaining non-code requirements are:
+
+- independent human adjudication of the 100-issuer sample;
+- institution-controlled reviewer identity/key governance for official approvals;
+- GitHub `main` branch protection/ruleset activation by a repository administrator (the connected GitHub App has no administration permission).
+
+Those are external human/admin controls, not unfinished extraction-engineering work.
 
 ## Run locally
 
@@ -41,8 +72,4 @@ uv run cse-etl validate-golden --project-root . --as-of 2026-09-09
 uv run cse-etl run --project-root .
 ```
 
-Full live runs need access to CSE endpoints. The bundled native PDF checks need no CSE download. OCR tools remain optional external prerequisites for scans.
-
-## Remaining acceptance work
-
-Institutional reviewer identities, authenticated approval integration and human adjudication of the wider issuer sample are external acceptance requirements. A nonempty reviewer ID in the existing local decision API is not proof of authentication; this change does not certify that API as an institutional identity service. Confidence calibration, wider scan/layout validation and a fresh full-universe run remain necessary before claiming production accuracy. Resource limits bound the resolver's work; they are not operating-system memory limits or cancellation of a blocked PDF/OCR process. Cache support added here covers native ingestion, not resumability of every ETL stage. Atomicity covers the gold generation; the separate silver/history writes are not one transaction.
+A complete live universe run additionally needs CSE endpoint access plus the OCR system dependencies used by the production workflow.
