@@ -11,6 +11,9 @@ on:
         description: Hard per-PDF extraction/OCR timeout
         required: true
         default: '180'
+  push:
+    branches:
+      - chatgpt/full-universe-proof-20260909
 
 permissions:
   contents: read
