@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       as_of:
-        description: CSE snapshot date (YYYY-MM-DD)
-        required: true
-        default: '2026-09-09'
+        description: CSE live observation date (YYYY-MM-DD); blank uses current Asia/Colombo date
+        required: false
+        default: ''
       process_timeout_seconds:
         description: Hard per-PDF extraction/OCR timeout
         required: true
@@ -31,12 +31,12 @@ jobs:
           sudo apt-get install -y ghostscript tesseract-ocr
       - name: Install locked environment with OCR support
         run: uv sync --locked --group dev --extra ocr
-      - name: Resolve acceptance inputs
+      - name: Resolve production inputs
         id: inputs
         shell: bash
         run: |
           AS_OF="${{ github.event.inputs.as_of }}"
-          if [ -z "$AS_OF" ]; then AS_OF="2026-09-09"; fi
+          if [ -z "$AS_OF" ]; then AS_OF="$(TZ=Asia/Colombo date +%F)"; fi
           TIMEOUT="${{ github.event.inputs.process_timeout_seconds }}"
           if [ -z "$TIMEOUT" ]; then TIMEOUT="480"; fi
           echo "as_of=$AS_OF" >> "$GITHUB_OUTPUT"
@@ -51,9 +51,9 @@ jobs:
           key: cse-universe-${{ steps.inputs.outputs.as_of }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
             cse-universe-${{ steps.inputs.outputs.as_of }}-
-      - name: Run complete CSE universe with hard per-PDF cancellation
+      - name: Run governed complete CSE universe
         run: |
-          uv run python scripts/run_resilient_pipeline.py \
+          uv run python scripts/run_production_pipeline.py \
             --as-of "${{ steps.inputs.outputs.as_of }}" \
             --process-timeout-seconds "${{ steps.inputs.outputs.timeout }}" \
             --skip-excel \
@@ -61,7 +61,7 @@ jobs:
       - name: Build 100-issuer adjudication packet
         if: always()
         run: uv run cse-etl prepare-adjudication --as-of "${{ steps.inputs.outputs.as_of }}" --target-issuers 100
-      - name: Separate engineering failures from external proof and quarantined timeouts
+      - name: Independently recheck universe acceptance
         if: always()
         run: |
           uv run python scripts/check_universe_acceptance.py \
@@ -70,7 +70,7 @@ jobs:
             --facts "outputs/normalized_facts_${{ steps.inputs.outputs.as_of }}.csv" \
             --errors "outputs/pipeline_errors_${{ steps.inputs.outputs.as_of }}.json" \
             --baseline "configs/coverage_baseline.yml" \
-            --output "outputs/universe_acceptance_${{ steps.inputs.outputs.as_of }}.json"
+            --output "outputs/universe_acceptance_recheck_${{ steps.inputs.outputs.as_of }}.json"
       - name: Upload universe acceptance evidence
         if: always()
         uses: actions/upload-artifact@v4
