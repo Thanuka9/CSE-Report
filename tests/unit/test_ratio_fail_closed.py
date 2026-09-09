@@ -8,6 +8,7 @@ from cse_financial_etl.extraction.statement_extractor import ExtractedFact
 from cse_financial_etl.transformation.ratios import derive_ratio_facts
 
 PERIOD = date(2026, 6, 30)
+FLOW_CODES = {"PAT", "PBT", "TOP_LINE", "OPERATING_PROFIT", "EPS_BASIC", "EPS_DILUTED", "EPS_SELECTED"}
 
 
 def _fact(
@@ -38,7 +39,7 @@ def _fact(
         status="EXTRACTED",
         raw_label=code,
         comparison_role=role,
-        duration_months=3 if code == "PAT" else None,
+        duration_months=3 if code in FLOW_CODES else None,
         validation_status=validation,
         review_status="APPROVED",
         overall_certainty=0.95,
