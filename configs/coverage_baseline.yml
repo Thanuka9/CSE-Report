@@ -2,18 +2,122 @@ min_extracted_plus_derived: 9023
 min_draft_publishable: 9023
 min_gold_sample: 100
 min_gold_issuers: 100
+min_issuer_count: 281
+min_downloaded_filing_count: 829
+min_extracted_filing_count: 826
 max_quarantined_extraction_timeouts: 3
-# Production coverage floor calibrated from the 2026-09-09 full-universe run
-# d6299b06-2f47-43d2-8024-d60c1d883804 after fail-closed validation,
-# Resolver C starvation repair, real OCR runtime, and safe ratio/publication handling.
-# That run produced 9023 EXTRACTED+DERIVED facts and 9023 DRAFT-publishable facts,
-# improving on the prior safer run's 8705 while removing unsafe published failures.
-#
-# A bounded PDF/OCR worker timeout is an explicit quarantined filing exception only
-# when the worker process tree was terminated by the resilient runner. Up to three
-# such filing exceptions may complete the universe with review; they remain absent
-# from publication and visible in pipeline_errors/review output. Any other pipeline
-# error, or more than three timeout quarantines, is an engineering failure.
+
+# Per-metric DRAFT-publishable floors from the accepted 2026-09-09 full-universe
+# evidence. A future reduction in one metric can no longer hide behind gains in another.
+min_publishable_by_metric:
+  DEBT_TO_EQUITY: 447  # legacy code; semantic display is Liabilities / Equity
+  EPS_BASIC: 660
+  EPS_DILUTED: 190
+  EPS_SELECTED: 668
+  NAVPS: 718
+  NPM: 652
+  OPERATING_PROFIT: 545
+  PAT: 686
+  PBT: 681
+  ROA: 614
+  ROE: 583
+  TOP_LINE: 693
+  TOTAL_ASSETS: 719
+  TOTAL_EQUITY: 693
+  TOTAL_LIABILITIES: 474
+
+# Sector × metric floors prevent a healthy aggregate total from masking a regression in
+# banks, finance companies, insurance companies, or general issuers. These are seeded
+# from the same accepted 9023-fact universe and must only be recalibrated from a newer
+# independently accepted run.
+min_publishable_by_sector_metric:
+  BANK:
+    DEBT_TO_EQUITY: 35
+    EPS_BASIC: 30
+    EPS_DILUTED: 26
+    EPS_SELECTED: 30
+    NAVPS: 35
+    NPM: 33
+    OPERATING_PROFIT: 31
+    PAT: 33
+    PBT: 32
+    ROA: 33
+    ROE: 33
+    TOP_LINE: 34
+    TOTAL_ASSETS: 35
+    TOTAL_EQUITY: 35
+    TOTAL_LIABILITIES: 35
+  FINANCE_COMPANY:
+    DEBT_TO_EQUITY: 65
+    EPS_BASIC: 60
+    EPS_DILUTED: 20
+    EPS_SELECTED: 62
+    NAVPS: 64
+    NPM: 65
+    OPERATING_PROFIT: 60
+    PAT: 66
+    PBT: 68
+    ROA: 57
+    ROE: 57
+    TOP_LINE: 68
+    TOTAL_ASSETS: 65
+    TOTAL_EQUITY: 65
+    TOTAL_LIABILITIES: 65
+  INSURANCE:
+    DEBT_TO_EQUITY: 25
+    EPS_BASIC: 26
+    EPS_DILUTED: 15
+    EPS_SELECTED: 28
+    NAVPS: 30
+    NPM: 27
+    OPERATING_PROFIT: 6
+    PAT: 27
+    PBT: 27
+    ROA: 26
+    ROE: 26
+    TOP_LINE: 27
+    TOTAL_ASSETS: 29
+    TOTAL_EQUITY: 30
+    TOTAL_LIABILITIES: 26
+  GENERAL:
+    DEBT_TO_EQUITY: 322
+    EPS_BASIC: 544
+    EPS_DILUTED: 129
+    EPS_SELECTED: 548
+    NAVPS: 589
+    NPM: 527
+    OPERATING_PROFIT: 448
+    PAT: 560
+    PBT: 554
+    ROA: 498
+    ROE: 467
+    TOP_LINE: 564
+    TOTAL_ASSETS: 590
+    TOTAL_EQUITY: 563
+    TOTAL_LIABILITIES: 348
+
+# Only these exact pathological issuer/period identities may use timeout quarantine.
+# A timeout on any other filing is a new engineering failure even if fewer than three
+# timeouts occurred in the run.
+quarantined_extraction_timeouts:
+  - issuer_name: SARVODAYA DEVELOPMENT FINANCE PLC
+    symbol: SDF.N0000
+    period_end: '2025-12-31'
+  - issuer_name: SARVODAYA DEVELOPMENT FINANCE PLC
+    symbol: SDF.N0000
+    period_end: '2026-03-31'
+  - issuer_name: RENUKA CITY HOTELS PLC.
+    symbol: RENU.N0000
+    period_end: '2026-06-30'
+
+# Baseline provenance:
+#   accepted full-universe run: 4e9ef5ff-878f-4348-b0fe-4d48b6572e67
+#   source workflow run: 34339810852
+#   issuer_count: 281
+#   downloaded filings: 829
+#   extracted filings: 826 + 3 known timeout quarantines
+#   DRAFT-publishable facts: 9023
 #
 # min_gold_sample counts independently checked fields; min_gold_issuers separately
-# enforces the institutional target of 100 manually adjudicated issuers.
+# enforces the institutional target of 100 manually adjudicated issuers. Those remain
+# external proof gates for DRAFT but are mandatory before OFFICIAL promotion.
