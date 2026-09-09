@@ -56,6 +56,12 @@ class IssuerProfile:
     fiscal_year_end_month: int | None = None
 
 
+# The pipeline loads issuer profiles once per process. Compiler stages that are invoked
+# downstream without an explicit profile mapping must still use the same configured
+# standalone scope instead of silently falling back to name heuristics.
+_ACTIVE_ISSUERS: dict[str, IssuerProfile] = {}
+
+
 def load_yaml(path: Path) -> dict[str, Any]:
     if not path.exists():
         return {}
@@ -117,7 +123,17 @@ def load_issuers(project_root: Path) -> dict[str, IssuerProfile]:
             fiscal_year_end_month=int(fy_end) if fy_end not in (None, "") else None,
         )
         profiles[legal_name.casefold()] = profile
+    global _ACTIVE_ISSUERS
+    _ACTIVE_ISSUERS = dict(profiles)
     return profiles
+
+
+def issuer_profile_for_name(
+    issuer_name: str,
+    issuers: dict[str, IssuerProfile] | None = None,
+) -> IssuerProfile | None:
+    profiles = issuers if issuers is not None else _ACTIVE_ISSUERS
+    return profiles.get(issuer_name.casefold()) if profiles else None
 
 
 def config_hash(project_root: Path) -> str:
@@ -193,10 +209,9 @@ def infer_issuer_type(issuer_name: str) -> str:
 
 
 def infer_entity_scope(issuer_name: str, issuers: dict[str, IssuerProfile] | None = None) -> str:
-    if issuers:
-        profile = issuers.get(issuer_name.casefold())
-        if profile is not None:
-            return profile.standalone_scope_label
+    profile = issuer_profile_for_name(issuer_name, issuers)
+    if profile is not None:
+        return profile.standalone_scope_label
     return "BANK" if infer_issuer_type(issuer_name) == "BANK" else "COMPANY"
 
 

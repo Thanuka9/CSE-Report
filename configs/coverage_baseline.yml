@@ -1,6 +1,9 @@
 min_extracted_plus_derived: 9685
 min_gold_sample: 100
+min_gold_issuers: 100
 # Floor reduced from 9902 after demoting 217 CURRENT_PLUS_NONCURRENT
 # TOTAL_LIABILITIES rows. Those rows are coded NOT_LOCATED_AFTER_CONFIGURED_RECOVERY
 # (automated search found no printed total row) - never SOURCE_CONFIRMED_NOT_REPORTED,
 # which is reserved for an independently reviewed absence packet (gap B4).
+# min_gold_sample counts independently checked fields; min_gold_issuers separately
+# enforces the institutional target of 100 manually adjudicated issuers.

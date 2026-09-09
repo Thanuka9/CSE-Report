@@ -56,11 +56,15 @@ def validate_golden(project_root: Path, as_of_date: date) -> dict[str, Any]:
                 "scale_factor": fact.scale_factor if fact else None,
             }
             context_ok = bool(expected_context) and all(
-                str(actual_context.get(key)) == str(value) for key, value in expected_context.items())
-            # A matching number is not independent accuracy without its expected context.
+                str(actual_context.get(key)) == str(value) for key, value in expected_context.items()
+            )
             numeric_match = bool(fact and _same_value(fact.normalized_value, expected))
-            passed = bool(numeric_match and fact and is_publishable_fact(fact, release_mode="DRAFT")
-                and (context_ok or verification != "MANUAL_QA"))
+            passed = bool(
+                numeric_match
+                and fact
+                and is_publishable_fact(fact, release_mode="DRAFT")
+                and (context_ok or verification != "MANUAL_QA")
+            )
             status = "PASS" if passed else "FAIL"
             by_metric[metric_code][status] += 1
             overall[status] += 1
@@ -69,14 +73,11 @@ def validate_golden(project_root: Path, as_of_date: date) -> dict[str, Any]:
                 {
                     "pdf": fixture["pdf"],
                     "issuer_name": fixture["issuer_name"],
+                    "symbol": fixture.get("symbol"),
                     "period_end": fixture["period_end"],
                     "metric_code": metric_code,
                     "expected": expected,
-                    "actual": (
-                        str(fact.normalized_value)
-                        if fact and fact.normalized_value is not None
-                        else None
-                    ),
+                    "actual": str(fact.normalized_value) if fact and fact.normalized_value is not None else None,
                     "actual_status": fact.status if fact else None,
                     "actual_duration_months": fact.duration_months if fact else None,
                     "actual_entity_scope": fact.entity_scope if fact else None,
@@ -108,9 +109,9 @@ def validate_golden(project_root: Path, as_of_date: date) -> dict[str, Any]:
                 {
                     "pdf": fixture["pdf"],
                     "issuer_name": fixture["issuer_name"],
+                    "symbol": symbol,
                     "period_end": fixture["period_end"],
                     "metric_code": "MARKET_PRICE_QUARTER_END",
-                    "symbol": symbol,
                     "expected": expected,
                     "actual": str(price.value) if price and price.value is not None else None,
                     "source_page": price.source_page if price else None,
@@ -125,9 +126,17 @@ def validate_golden(project_root: Path, as_of_date: date) -> dict[str, Any]:
             by_metric[row["metric_code"]][row["status"]] += 1
     manual = by_verification["MANUAL_QA"]
     sample_size = manual["PASS"] + manual["FAIL"]
+    manual_issuers = {
+        str(row.get("issuer_name"))
+        for row in results
+        if row.get("verification_status") == "MANUAL_QA"
+        and row.get("status") in {"PASS", "FAIL"}
+        and row.get("issuer_name")
+    }
     payload: dict[str, Any] = {
         "as_of_date": as_of_date.isoformat(),
         "sample_size": sample_size,
+        "manual_issuer_count": len(manual_issuers),
         "passed": manual["PASS"],
         "failed": manual["FAIL"],
         "accuracy": manual["PASS"] / sample_size if sample_size else None,

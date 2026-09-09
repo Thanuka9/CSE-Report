@@ -66,12 +66,12 @@ def run_pipeline(
     offline: bool = typer.Option(
         False, help="Use the cached market snapshot and already downloaded filings"
     ),
-    compile: bool = typer.Option(
-        True,
-        "--compile/--no-compile",
+    no_compile: bool = typer.Option(
+        False,
+        "--no-compile",
         help=(
-            "Run the native statement compiler (default). --no-compile disables it and routes "
-            "rows layout_assist_only with explicit_fallback=COMPILER_DISABLED (diagnostics only)."
+            "Disable the native statement compiler. Rows then route layout_assist_only "
+            "with explicit_fallback=COMPILER_DISABLED; diagnostics only."
         ),
     ),
     tunnel_b_always: bool = typer.Option(
@@ -93,7 +93,7 @@ def run_pipeline(
             issuer_limit=issuer_limit,
             offline=offline,
             skip_excel=skip_excel,
-            compile_statements=compile,
+            compile_statements=not no_compile,
             run_tunnel_b_always=tunnel_b_always,
         )
     finally:

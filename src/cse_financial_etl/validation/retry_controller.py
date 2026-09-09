@@ -1,7 +1,8 @@
 """Bounded, failure-specific extraction retry controller (Phase One).
 
 Retries may change parser/layout interpretation. They never relax business rules
-(Company→Group, 3M→YTD, etc.).
+(Company→Group, 3M→YTD, etc.). Native-compiler retries force the independent Tunnel B
+reader so a retry is a materially different structural read, not just the same pass.
 """
 
 from __future__ import annotations
@@ -37,36 +38,19 @@ STRATEGY_BY_FAILURE: dict[str, str] = {
     "INCOMPLETE_EXTRACTION": "EXPAND_SEMANTIC_SEARCH",
 }
 
-# Core publish metrics where an incomplete extraction is worth a bounded retry.
 CORE_RETRY_METRICS = frozenset(
     {
-        "PAT",
-        "PBT",
-        "TOP_LINE",
-        "OPERATING_PROFIT",
-        "TOTAL_ASSETS",
-        "TOTAL_EQUITY",
-        "TOTAL_LIABILITIES",
-        "EPS_BASIC",
-        "EPS_DILUTED",
-        "EPS_SELECTED",
-        "NAVPS",
+        "PAT", "PBT", "TOP_LINE", "OPERATING_PROFIT", "TOTAL_ASSETS",
+        "TOTAL_EQUITY", "TOTAL_LIABILITIES", "EPS_BASIC", "EPS_DILUTED",
+        "EPS_SELECTED", "NAVPS",
     }
 )
 
-# Statuses that may recover under an alternate layout/unit/entity pass.
 ACTIONABLE_EXTRACTION_STATUSES = frozenset(
     {
-        "NOT_FOUND_BY_PARSER",
-        "VALUE_CONTEXT_UNRESOLVED",
-        "UNIT_NOT_RESOLVED",
-        "PERIOD_NOT_RESOLVED",
-        "ENTITY_NOT_RESOLVED",
-        "WRONG_STATEMENT_REGION",
-        "COLUMN_AMBIGUOUS",
-        "CUMULATIVE_ONLY",
-        "LOW_CERTAINTY",
-        "UNIT_CONFLICT",
+        "NOT_FOUND_BY_PARSER", "VALUE_CONTEXT_UNRESOLVED", "UNIT_NOT_RESOLVED",
+        "PERIOD_NOT_RESOLVED", "ENTITY_NOT_RESOLVED", "WRONG_STATEMENT_REGION",
+        "COLUMN_AMBIGUOUS", "CUMULATIVE_ONLY", "LOW_CERTAINTY", "UNIT_CONFLICT",
     }
 )
 
@@ -125,11 +109,7 @@ ExtractFn = Callable[..., list[ExtractedFact]]
 ValidateFn = Callable[[list[ExtractedFact]], list[ValidationResult]]
 
 
-def extraction_gap_triggers(
-    facts: Iterable[ExtractedFact],
-) -> list[ValidationResult]:
-    """Synthesize retry triggers for actionable incomplete core-metric extractions."""
-
+def extraction_gap_triggers(facts: Iterable[ExtractedFact]) -> list[ValidationResult]:
     triggers: list[ValidationResult] = []
     for fact in facts:
         if fact.metric_code not in CORE_RETRY_METRICS:
@@ -154,8 +134,7 @@ def extraction_gap_triggers(
 
 def _failures(results: list[ValidationResult]) -> list[ValidationResult]:
     return [
-        result
-        for result in results
+        result for result in results
         if result.outcome in {ValidationOutcome.FAIL, ValidationOutcome.WARN}
     ]
 
@@ -202,8 +181,7 @@ class RetryController:
         if extra_failures:
             pending = list(pending) + list(extra_failures)
         if not pending:
-            gap_triggers = extraction_gap_triggers(facts)
-            pending = list(gap_triggers)
+            pending = list(extraction_gap_triggers(facts))
         if not pending or extract_fn is None:
             return RetryOutcome(facts, attempts, results, recovered=False)
 
@@ -221,38 +199,29 @@ class RetryController:
                 detail=focus.detail,
                 metrics_touched=list(focus.evidence.get("metrics") or focus.evidence.keys()),
             )
-            # Controlled re-extract: same business rules, alternate layout pass.
             kwargs: dict[str, Any] = dict(base_kwargs)
+            # Keep the compiler on and force the materially different independent reader.
+            kwargs["compile_statements"] = True
+            kwargs["run_tunnel_b_always"] = True
             if strategy == "RESEARCH_UNIT_SCOPE":
                 kwargs["force_unit_rescan"] = True
             if strategy in {
-                "RESELECT_PNL_CONTEXT",
-                "REBUILD_DURATION_SPANS",
-                "EXPAND_SEMANTIC_SEARCH",
+                "RESELECT_PNL_CONTEXT", "REBUILD_DURATION_SPANS", "EXPAND_SEMANTIC_SEARCH",
             }:
                 kwargs["prefer_exact_quarter"] = True
             if strategy in {
-                "RESELECT_SOFP_CANDIDATES",
-                "REBUILD_ENTITY_SPANS",
-                "RESELECT_STATEMENT_REGION",
+                "RESELECT_SOFP_CANDIDATES", "REBUILD_ENTITY_SPANS", "RESELECT_STATEMENT_REGION",
             }:
                 kwargs["prefer_standalone_sofp"] = True
+
             refreshed = extract_fn(
-                pdf_path,
-                issuer_name,
-                symbol,
-                period_end,
-                **kwargs,
+                pdf_path, issuer_name, symbol, period_end, **kwargs,
             )
             facts = list(refreshed)
             results = validate_fn(facts)
             pending = _failures(results) + extraction_gap_triggers(facts)
-            after = next(
-                (item for item in results if item.rule_id == focus.rule_id),
-                None,
-            )
+            after = next((item for item in results if item.rule_id == focus.rule_id), None)
             if after is None and focus.rule_id in STRATEGY_BY_FAILURE:
-                # Extraction-gap triggers are not equation results; treat recovery by status.
                 metric = None
                 metrics = focus.evidence.get("metrics")
                 if isinstance(metrics, list) and metrics:
@@ -260,33 +229,22 @@ class RetryController:
                 elif isinstance(focus.evidence.get("metric_code"), str):
                     metric = focus.evidence["metric_code"]
                 if metric:
-                    recovered_fact = next(
-                        (fact for fact in facts if fact.metric_code == metric),
-                        None,
-                    )
-                    if recovered_fact and recovered_fact.status in {
-                        "EXTRACTED",
-                        "EXTRACTED_DERIVED",
-                    }:
+                    recovered_fact = next((fact for fact in facts if fact.metric_code == metric), None)
+                    if recovered_fact and recovered_fact.status in {"EXTRACTED", "EXTRACTED_DERIVED"}:
                         attempt.validation_after = ValidationOutcome.PASS.value
                     else:
-                        attempt.validation_after = (
-                            recovered_fact.status if recovered_fact else None
-                        )
+                        attempt.validation_after = recovered_fact.status if recovered_fact else None
                 else:
                     attempt.validation_after = None
             else:
                 attempt.validation_after = after.outcome.value if after else None
             attempts.append(attempt)
 
-        recovered = bool(attempts) and not (
-            _failures(results) or extraction_gap_triggers(facts)
-        )
+        recovered = bool(attempts) and not (_failures(results) or extraction_gap_triggers(facts))
         outcome = RetryOutcome(facts, attempts, results, recovered=recovered)
         if lineage_dir is not None:
             lineage_dir.mkdir(parents=True, exist_ok=True)
             (lineage_dir / "retry_lineage.json").write_text(
-                json.dumps(outcome.as_dict(), indent=2),
-                encoding="utf-8",
+                json.dumps(outcome.as_dict(), indent=2), encoding="utf-8"
             )
         return outcome
