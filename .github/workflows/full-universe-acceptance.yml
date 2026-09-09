@@ -11,9 +11,6 @@ on:
         description: Hard per-PDF extraction/OCR timeout
         required: true
         default: '480'
-  push:
-    branches:
-      - chatgpt/final-engineering-hardening-20260909
 
 permissions:
   contents: read
@@ -64,13 +61,15 @@ jobs:
       - name: Build 100-issuer adjudication packet
         if: always()
         run: uv run cse-etl prepare-adjudication --as-of "${{ steps.inputs.outputs.as_of }}" --target-issuers 100
-      - name: Separate engineering failures from external proof gates
+      - name: Separate engineering failures from external proof and quarantined timeouts
         if: always()
         run: |
           uv run python scripts/check_universe_acceptance.py \
             --manifest "outputs/manifests/run_manifest_${{ steps.inputs.outputs.as_of }}.json" \
             --review "outputs/review_queue_${{ steps.inputs.outputs.as_of }}.csv" \
             --facts "outputs/normalized_facts_${{ steps.inputs.outputs.as_of }}.csv" \
+            --errors "outputs/pipeline_errors_${{ steps.inputs.outputs.as_of }}.json" \
+            --baseline "configs/coverage_baseline.yml" \
             --output "outputs/universe_acceptance_${{ steps.inputs.outputs.as_of }}.json"
       - name: Upload universe acceptance evidence
         if: always()

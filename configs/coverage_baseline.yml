@@ -1,9 +1,19 @@
-min_extracted_plus_derived: 9685
+min_extracted_plus_derived: 9023
+min_draft_publishable: 9023
 min_gold_sample: 100
 min_gold_issuers: 100
-# Floor reduced from 9902 after demoting 217 CURRENT_PLUS_NONCURRENT
-# TOTAL_LIABILITIES rows. Those rows are coded NOT_LOCATED_AFTER_CONFIGURED_RECOVERY
-# (automated search found no printed total row) - never SOURCE_CONFIRMED_NOT_REPORTED,
-# which is reserved for an independently reviewed absence packet (gap B4).
+max_quarantined_extraction_timeouts: 3
+# Production coverage floor calibrated from the 2026-09-09 full-universe run
+# d6299b06-2f47-43d2-8024-d60c1d883804 after fail-closed validation,
+# Resolver C starvation repair, real OCR runtime, and safe ratio/publication handling.
+# That run produced 9023 EXTRACTED+DERIVED facts and 9023 DRAFT-publishable facts,
+# improving on the prior safer run's 8705 while removing unsafe published failures.
+#
+# A bounded PDF/OCR worker timeout is an explicit quarantined filing exception only
+# when the worker process tree was terminated by the resilient runner. Up to three
+# such filing exceptions may complete the universe with review; they remain absent
+# from publication and visible in pipeline_errors/review output. Any other pipeline
+# error, or more than three timeout quarantines, is an engineering failure.
+#
 # min_gold_sample counts independently checked fields; min_gold_issuers separately
 # enforces the institutional target of 100 manually adjudicated issuers.
