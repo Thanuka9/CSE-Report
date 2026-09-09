@@ -1,6 +1,6 @@
 """Production-only safety boundary around the stable quarterly ETL core.
 
-The extraction/compiler/resolver logic is intentionally not reimplemented here.  This
+The extraction/compiler/resolver logic is intentionally not reimplemented here. This
 module hardens the edges that differ between research execution and a governed
 production run: time semantics, CSE request pacing, source revision retention,
 historical-price provenance, legacy correction blocking, and acceptance-gated gold
@@ -17,14 +17,14 @@ import time
 import urllib.error
 import urllib.request
 from collections import defaultdict
-from collections.abc import Iterator
+from collections.abc import Callable, Iterable, Iterator
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 from zoneinfo import ZoneInfo
 
 import polars as pl
@@ -126,7 +126,7 @@ def _make_rate_limited_post(
 
 
 def _strict_financial_metadata(
-    securities: list[Security] | Any,
+    securities: Iterable[Security],
     cache_dir: Path,
     *,
     workers: int = 24,
@@ -134,18 +134,19 @@ def _strict_financial_metadata(
 ) -> dict[str, list[Filing]]:
     """Never disguise a failed live metadata request as fresh production data.
 
-    Offline mode is an explicit replay and may use the existing cache.  Online mode
+    Offline mode is an explicit replay and may use the existing cache. Online mode
     either gets fresh metadata for every issuer or fails the run; stale-cache fallback
     is not silent in production.
     """
 
+    security_list = list(securities)
     if offline:
         return cse_source.fetch_all_financial_metadata(
-            securities, cache_dir, workers=workers, offline=True
+            security_list, cache_dir, workers=workers, offline=True
         )
 
     cache_dir.mkdir(parents=True, exist_ok=True)
-    representatives = cse_source.issuer_representatives(securities)
+    representatives = cse_source.issuer_representatives(security_list)
     results: dict[str, list[Filing]] = {}
     failures: list[str] = []
 
@@ -213,9 +214,9 @@ def revision_safe_download_filing(
 ) -> DownloadedFiling:
     """Persist immutable, content-addressed filing versions.
 
-    Online execution always verifies the current remote bytes.  If CSE replaces or
+    Online execution always verifies the current remote bytes. If CSE replaces or
     amends a filing, the new SHA gets a new file instead of silently reusing the old
-    period/basename cache.  Offline replay follows the last verified pointer.
+    period/basename cache. Offline replay follows the last verified pointer.
     """
 
     issuer_dir = destination_root / cse_source.safe_slug(filing.issuer_name)
@@ -233,11 +234,17 @@ def revision_safe_download_filing(
             except (OSError, json.JSONDecodeError):
                 pass
         candidates.extend(
-            sorted(issuer_dir.glob(f"{filing.period_end.isoformat()}_{filing.filing_id}_*.pdf"))
+            sorted(
+                issuer_dir.glob(
+                    f"{filing.period_end.isoformat()}_{filing.filing_id}_*.pdf"
+                )
+            )
         )
         legacy = issuer_dir / f"{filing.period_end.isoformat()}_{Path(filing.source_path).name}"
         candidates.append(legacy)
-        destination = next((path for path in candidates if path.is_file() and path.stat().st_size), None)
+        destination = next(
+            (path for path in candidates if path.is_file() and path.stat().st_size), None
+        )
         if destination is None:
             raise FileNotFoundError(
                 f"Offline filing cache not found for filing_id={filing.filing_id}: {issuer_dir}"
@@ -397,7 +404,9 @@ def _block_legacy_corrections(repository: Repository) -> None:
 def build_issuer_master(project_root: Path, as_of_date: date) -> Path:
     """Write the versioned issuer classification actually used for this universe."""
 
-    market_path = project_root / "data" / "raw" / "api" / f"market_cap_{as_of_date.isoformat()}.json"
+    market_path = (
+        project_root / "data" / "raw" / "api" / f"market_cap_{as_of_date.isoformat()}.json"
+    )
     rows = json.loads(market_path.read_text(encoding="utf-8")) if market_path.exists() else []
     rows = rows if isinstance(rows, list) else []
     configured = load_issuers(project_root)
@@ -413,19 +422,22 @@ def build_issuer_master(project_root: Path, as_of_date: date) -> Path:
     master: list[dict[str, Any]] = []
     for name in sorted(symbols):
         profile = configured.get(name.casefold())
+        inferred_type = infer_issuer_type(name)
         master.append(
             {
                 "legal_name": name,
                 "symbols": sorted(symbols[name]),
-                "issuer_type": profile.issuer_type if profile else infer_issuer_type(name),
+                "issuer_type": profile.issuer_type if profile else inferred_type,
                 "standalone_scope_label": (
                     profile.standalone_scope_label
                     if profile
                     else "BANK"
-                    if infer_issuer_type(name) == "BANK"
+                    if inferred_type == "BANK"
                     else "COMPANY"
                 ),
-                "classification_source": "CONFIGURED" if profile else "DETERMINISTIC_INFERENCE",
+                "classification_source": (
+                    "CONFIGURED" if profile else "DETERMINISTIC_INFERENCE"
+                ),
                 "as_of_date": as_of_date.isoformat(),
             }
         )
@@ -448,7 +460,10 @@ def write_metric_definitions(project_root: Path, as_of_date: date) -> Path:
             ),
         }
     }
-    destination = project_root / "outputs" / f"metric_definitions_{as_of_date.isoformat()}.json"
+    destination = (
+        project_root / "outputs" / f"metric_definitions_{as_of_date.isoformat()}.json"
+    )
+    destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     return destination
 
@@ -481,21 +496,24 @@ def production_runtime(
     requests_per_second, timeout_seconds, max_retries = _production_http_settings(root)
     capture = ProductionRunCapture()
 
-    original_post = cse_source._post
-    original_metadata = pipeline_module.fetch_all_financial_metadata
-    original_download = pipeline_module.download_filing
-    original_price_resolver = pipeline_module.resolve_quarter_end_price
-    original_finish_run = Repository.finish_run
-    original_apply_corrections = Repository._apply_curated_corrections
+    source_module: Any = cse_source
+    pipeline: Any = pipeline_module
+    repository_class: Any = Repository
+    original_post = source_module._post
+    original_metadata = pipeline.fetch_all_financial_metadata
+    original_download = pipeline.download_filing
+    original_price_resolver = pipeline.resolve_quarter_end_price
+    original_finish_run = repository_class.finish_run
+    original_apply_corrections = repository_class._apply_curated_corrections
 
-    cse_source._post = _make_rate_limited_post(
+    source_module._post = _make_rate_limited_post(
         requests_per_second=requests_per_second,
         timeout_seconds=timeout_seconds,
         max_retries=max_retries,
     )
-    pipeline_module.fetch_all_financial_metadata = _strict_financial_metadata
-    pipeline_module.download_filing = revision_safe_download_filing
-    pipeline_module.resolve_quarter_end_price = strict_resolve_quarter_end_price
+    pipeline.fetch_all_financial_metadata = _strict_financial_metadata
+    pipeline.download_filing = revision_safe_download_filing
+    pipeline.resolve_quarter_end_price = strict_resolve_quarter_end_price
 
     def blocked_corrections(self: Repository) -> None:
         _block_legacy_corrections(self)
@@ -511,17 +529,17 @@ def production_runtime(
         capture.status = status
         capture.statistics = dict(statistics)
 
-    Repository._apply_curated_corrections = blocked_corrections
-    Repository.finish_run = stage_only_finish
+    repository_class._apply_curated_corrections = blocked_corrections
+    repository_class.finish_run = stage_only_finish
     try:
         yield capture
     finally:
-        cse_source._post = original_post
-        pipeline_module.fetch_all_financial_metadata = original_metadata
-        pipeline_module.download_filing = original_download
-        pipeline_module.resolve_quarter_end_price = original_price_resolver
-        Repository.finish_run = original_finish_run
-        Repository._apply_curated_corrections = original_apply_corrections
+        source_module._post = original_post
+        pipeline.fetch_all_financial_metadata = original_metadata
+        pipeline.download_filing = original_download
+        pipeline.resolve_quarter_end_price = original_price_resolver
+        repository_class.finish_run = original_finish_run
+        repository_class._apply_curated_corrections = original_apply_corrections
 
 
 def promote_staged_run(
