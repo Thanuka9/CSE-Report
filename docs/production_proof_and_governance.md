@@ -1,17 +1,26 @@
 # Production proof and governance
 
-This repository deliberately separates **engineering completion** from **empirical/institutional proof**. A green unit/regression suite is necessary but is not evidence that every CSE issuer is correct.
+This repository deliberately separates **engineering completion** from **empirical/institutional proof**. A green unit/regression suite and a full-universe engineering pass are necessary, but they are not evidence that every CSE issuer is correct or that an institutional reviewer has approved official publication.
 
 ## Full-universe acceptance
 
 Run **Full universe acceptance** from GitHub Actions and provide an `as_of` date. The workflow:
 
-1. runs the complete CSE issuer universe with the native compiler and Tunnel B enabled,
-2. writes the normal manifest/review/error artifacts,
-3. creates a deterministic 100-issuer adjudication packet, and
-4. separates engineering gates from proof gates such as an incomplete human benchmark.
+1. runs the complete CSE issuer universe with the native compiler, Tunnel B and production OCR runtime enabled,
+2. uses a spawned per-PDF worker with hard process-tree cancellation,
+3. writes the normal manifest, normalized facts, review and pipeline-error artifacts,
+4. creates a deterministic 100-issuer adjudication packet, and
+5. separates engineering failures, bounded quarantined filing exceptions and external proof gates.
 
-A full-universe run is an engineering pass only when there are no pipeline errors and no production gates other than explicitly external proof gates. The generated artifact is still not an official release until the independent benchmark and reviewer requirements are satisfied.
+A full-universe run is an engineering pass when there are no production gates other than explicitly external proof gates and there are no **unhandled** pipeline errors. The only pipeline error class that may be quarantined is an `EXTRACTION` timeout whose message proves that the PDF/OCR worker exceeded its configured bound and its process tree was terminated. The maximum number of those quarantines is versioned in `configs/coverage_baseline.yml`. Quarantined filings remain absent from publication and visible in both pipeline-error and review evidence. Any non-timeout error, missing/mismatched error evidence, or quarantine count above the configured limit fails engineering acceptance.
+
+Coverage is also fail-closed. The current baseline is calibrated from the completed 2026-09-09 safe universe run and explicitly measures DRAFT-publishable facts rather than relying only on a pre-hardening raw extraction count.
+
+### 2026-09-09 engineering evidence
+
+The completed production run `d6299b06-2f47-43d2-8024-d60c1d883804` covered 281 issuers / 302 securities and 829 official CSE filings. It produced 9023 `EXTRACTED` + `EXTRACTED_DERIVED` facts, all 9023 publishable under the DRAFT policy. The earlier unsafe publication/context/fallback gates did not recur. Three pathological filings exceeded the 480-second worker bound and were terminated, withheld and review-queued; the current policy allows at most those three bounded timeout quarantines before the universe becomes an engineering failure.
+
+The artifact is still not an official institutional release until the independent benchmark and reviewer requirements below are satisfied.
 
 ## 100-issuer independent adjudication
 
@@ -21,11 +30,11 @@ The production gold gate continues to require `min_gold_issuers: 100`. Importing
 
 ## Certainty calibration
 
-Golden validation now computes reliability bins, Brier score and expected calibration error from MANUAL_QA observations that carry machine `overall_certainty`. Fewer than the configured minimum observations returns `INSUFFICIENT_MANUAL_SAMPLE`; certainty must be described as a heuristic ranking score until the status is `CALIBRATED`.
+Golden validation computes reliability bins, Brier score and expected calibration error from MANUAL_QA observations that carry machine `overall_certainty`. Fewer than the configured minimum observations returns `INSUFFICIENT_MANUAL_SAMPLE`; certainty must be described as a heuristic ranking score until the status is `CALIBRATED`.
 
 ## OCR acceptance
 
-The normal deterministic suite tests routing without requiring system OCR packages. The separate **OCR production acceptance** workflow installs Tesseract/Ghostscript and the locked OCR extra, then requires the scanned fixture to complete through an actual OCR extraction method. This prevents a weak native document from passing merely because it was marked `requires_ocr`.
+The deterministic suite tests routing without requiring system OCR packages. Production OCR acceptance installs Tesseract/Ghostscript and the locked OCR extra and requires scanned material to complete through an actual OCR extraction method. The full-universe workflow uses the same OCR runtime.
 
 ## Signed institutional review
 
