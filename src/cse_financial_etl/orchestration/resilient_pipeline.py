@@ -5,7 +5,7 @@ from datetime import date
 from pathlib import Path
 from typing import Any, Iterator
 
-from cse_financial_etl.config import config_hash
+from cse_financial_etl.config import config_hash, git_identity
 from cse_financial_etl.extraction.resilient_runner import (
     extract_filing_resilient,
     extract_quarter_prices_resilient,
@@ -73,13 +73,13 @@ def _patched_resilient_extractors(
             cache_namespace=cache_namespace,
         )
 
-    pipeline_module.extract_filing = resilient_extract
-    pipeline_module.extract_quarter_prices = resilient_prices
+    setattr(pipeline_module, "extract_filing", resilient_extract)
+    setattr(pipeline_module, "extract_quarter_prices", resilient_prices)
     try:
         yield
     finally:
-        pipeline_module.extract_filing = original_extract
-        pipeline_module.extract_quarter_prices = original_prices
+        setattr(pipeline_module, "extract_filing", original_extract)
+        setattr(pipeline_module, "extract_quarter_prices", original_prices)
 
 
 def run_resilient_pipeline(
@@ -101,7 +101,9 @@ def run_resilient_pipeline(
     """Run the normal ETL with per-PDF process isolation and resumable result caches."""
 
     root = project_root.resolve()
-    namespace = f"{config_hash(root)}:resilient-v1"
+    identity = git_identity(root)
+    revision = identity.commit_sha or "no-git-sha"
+    namespace = f"{revision}:{config_hash(root)}:resilient-v1"
     pipeline = Pipeline(root, progress=progress)
     try:
         with _patched_resilient_extractors(
