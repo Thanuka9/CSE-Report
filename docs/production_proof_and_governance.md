@@ -14,13 +14,19 @@ Run **Full universe acceptance** from GitHub Actions and provide an `as_of` date
 
 A full-universe run is an engineering pass when there are no production gates other than explicitly external proof gates and there are no **unhandled** pipeline errors. The only pipeline error class that may be quarantined is an `EXTRACTION` timeout whose message proves that the PDF/OCR worker exceeded its configured bound and its process tree was terminated. The maximum number of those quarantines is versioned in `configs/coverage_baseline.yml`. Quarantined filings remain absent from publication and visible in both pipeline-error and review evidence. Any non-timeout error, missing/mismatched error evidence, or quarantine count above the configured limit fails engineering acceptance.
 
-Coverage is also fail-closed. The current baseline is calibrated from the completed 2026-09-09 safe universe run and explicitly measures DRAFT-publishable facts rather than relying only on a pre-hardening raw extraction count.
+Coverage is also fail-closed. The current baseline is calibrated from the completed 2026-09-09 safe universe methodology and explicitly measures DRAFT-publishable facts rather than relying only on a pre-hardening raw extraction count.
 
-### 2026-09-09 engineering evidence
+### 2026-09-09 final engineering evidence
 
-The completed production run `d6299b06-2f47-43d2-8024-d60c1d883804` covered 281 issuers / 302 securities and 829 official CSE filings. It produced 9023 `EXTRACTED` + `EXTRACTED_DERIVED` facts, all 9023 publishable under the DRAFT policy. The earlier unsafe publication/context/fallback gates did not recur. Three pathological filings exceeded the 480-second worker bound and were terminated, withheld and review-queued; the current policy allows at most those three bounded timeout quarantines before the universe becomes an engineering failure.
+The final passing production proof is pipeline run `4e9ef5ff-878f-4348-b0fe-4d48b6572e67`, GitHub Actions run `34339810852`, on main commit `c0844ff366e20ae5c23fec721a51e4cd8559276c`. Artifact `10102186226` is the retained full-universe evidence.
 
-The artifact is still not an official institutional release until the independent benchmark and reviewer requirements below are satisfied.
+It covered 281 issuers / 302 securities and 829 official CSE filings. It produced 6727 `EXTRACTED` facts plus 2296 `EXTRACTED_DERIVED` facts, for 9023 facts publishable under the DRAFT policy. The acceptance artifact records zero engineering gates and zero unhandled pipeline errors, with exactly three bounded extraction-timeout quarantines. The earlier unsafe publication/context/fallback gates did not recur. Acceptance is `ENGINEERING_PASS_EXTERNAL_PROOF_PENDING`.
+
+The three quarantined filings are Sarvodaya Development Finance PLC for 2025-12-31 and 2026-03-31, and Renuka City Hotels PLC for 2026-06-30. Each exceeded the 480-second PDF/OCR worker limit, its process tree was terminated, and its output remained withheld/review-queued. The current policy allows at most three such exact bounded timeout quarantines; any overflow or any other pipeline-error class fails engineering acceptance.
+
+The only remaining acceptance gates are `GOLD_SAMPLE_INCOMPLETE` and `GOLD_ISSUER_SAMPLE_INCOMPLETE`, which are external proof requirements. The artifact is therefore not an official institutional release until the independent benchmark and reviewer requirements below are satisfied.
+
+The historical red proof `d6299b06-2f47-43d2-8024-d60c1d883804` is retained for auditability. It exposed the stale pre-fail-closed coverage floor; the floor was recalibrated from the empirically observed safe methodology without weakening accounting, entity, duration, unit, validation or publication rules.
 
 ## 100-issuer independent adjudication
 
