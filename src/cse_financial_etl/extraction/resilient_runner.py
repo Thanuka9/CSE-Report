@@ -355,7 +355,7 @@ def _terminate_process_tree(process: Any) -> None:
 
 def _await_process_payload(
     process: Any,
-    receive: Connection,
+    receive: Any,
     timeout_seconds: float,
 ) -> dict[str, Any]:
     deadline = time.monotonic() + max(0.01, timeout_seconds)
