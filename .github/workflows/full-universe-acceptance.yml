@@ -7,6 +7,10 @@ on:
         description: CSE snapshot date (YYYY-MM-DD)
         required: true
         default: '2026-09-09'
+      process_timeout_seconds:
+        description: Hard per-PDF extraction/OCR timeout
+        required: true
+        default: '180'
 
 permissions:
   contents: read
@@ -23,30 +27,48 @@ jobs:
           enable-cache: true
       - name: Install locked environment
         run: uv sync --locked --group dev
-      - name: Resolve acceptance date
-        id: date
+      - name: Resolve acceptance inputs
+        id: inputs
         shell: bash
         run: |
           AS_OF="${{ github.event.inputs.as_of }}"
           if [ -z "$AS_OF" ]; then AS_OF="2026-09-09"; fi
+          TIMEOUT="${{ github.event.inputs.process_timeout_seconds }}"
+          if [ -z "$TIMEOUT" ]; then TIMEOUT="180"; fi
           echo "as_of=$AS_OF" >> "$GITHUB_OUTPUT"
-      - name: Run complete CSE universe
-        run: uv run cse-etl run --as-of "${{ steps.date.outputs.as_of }}" --skip-excel --tunnel-b-always
+          echo "timeout=$TIMEOUT" >> "$GITHUB_OUTPUT"
+      - name: Restore resumable CSE run cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            data/raw
+            data/cache/resilient
+            data/bronze
+          key: cse-universe-${{ steps.inputs.outputs.as_of }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            cse-universe-${{ steps.inputs.outputs.as_of }}-
+      - name: Run complete CSE universe with hard per-PDF cancellation
+        run: |
+          uv run python scripts/run_resilient_pipeline.py \
+            --as-of "${{ steps.inputs.outputs.as_of }}" \
+            --process-timeout-seconds "${{ steps.inputs.outputs.timeout }}" \
+            --skip-excel \
+            --tunnel-b-always
       - name: Build 100-issuer adjudication packet
         if: always()
-        run: uv run cse-etl prepare-adjudication --as-of "${{ steps.date.outputs.as_of }}" --target-issuers 100
+        run: uv run cse-etl prepare-adjudication --as-of "${{ steps.inputs.outputs.as_of }}" --target-issuers 100
       - name: Separate engineering failures from external proof gates
         if: always()
         run: |
           uv run python scripts/check_universe_acceptance.py \
-            --manifest "outputs/manifests/run_manifest_${{ steps.date.outputs.as_of }}.json" \
-            --review "outputs/review_queue_${{ steps.date.outputs.as_of }}.csv" \
-            --output "outputs/universe_acceptance_${{ steps.date.outputs.as_of }}.json"
+            --manifest "outputs/manifests/run_manifest_${{ steps.inputs.outputs.as_of }}.json" \
+            --review "outputs/review_queue_${{ steps.inputs.outputs.as_of }}.csv" \
+            --output "outputs/universe_acceptance_${{ steps.inputs.outputs.as_of }}.json"
       - name: Upload universe acceptance evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: full-universe-${{ steps.date.outputs.as_of }}
+          name: full-universe-${{ steps.inputs.outputs.as_of }}
           path: |
             outputs/*.json
             outputs/*.csv
