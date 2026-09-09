@@ -29,13 +29,24 @@ def add_accuracy_quality_sheet(wb: Workbook, *, facts: list[dict[str, Any]],
     ws.append(["Extraction coverage", eligible / expected if expected else None, "Coverage is not accuracy"])
     ws.cell(4, 2).number_format = "0.00%"
     ws.append(["Independent manual checks", validation.get("sample_size", 0), "MANUAL_QA fixtures only; excludes pipeline-seeded matches"])
+    ws.append(["Independent manual issuers", validation.get("manual_issuer_count", 0), "Production benchmark target is independently adjudicated issuer breadth"])
     ws.append(["Manual sample accuracy", validation.get("accuracy") if validation.get("accuracy") is not None else "NOT_MEASURED", "Cannot certify the entire CSE universe"])
-    ws.cell(6, 2).number_format = "0.00%"
-    ws.append(["Certainty calibration", "NOT_CALIBRATED", "Heuristic confidence is not a probability of correctness"])
+    ws.cell(7, 2).number_format = "0.00%"
+
+    calibration = validation.get("certainty_calibration") or {}
+    calibration_status = calibration.get("status")
+    if not calibration_status:
+        calibration_status = "NOT_CALIBRATED"
+    ws.append(["Certainty calibration", calibration_status, "Heuristic certainty is probability-like only after independent calibration requirements are met"])
+    ws.append(["Calibration sample size", calibration.get("sample_size", 0), "Independent MANUAL_QA observations with usable certainty scores"])
+    ws.append(["Calibration ECE", calibration.get("expected_calibration_error") if calibration.get("expected_calibration_error") is not None else "NOT_MEASURED", "Weighted absolute gap between certainty and observed accuracy"])
+    ws.append(["Calibration Brier score", calibration.get("brier_score") if calibration.get("brier_score") is not None else "NOT_MEASURED", "Mean squared error of certainty against independent correctness labels"])
+    if isinstance(calibration.get("expected_calibration_error"), (int, float)):
+        ws.cell(10, 2).number_format = "0.00%"
     ws.append(["Source absence accuracy", "NOT_MEASURED", "Requires adjudicated reported/absent examples"])
     for cell in ws[1]:
         cell.font = Font(bold=True, color="FFFFFF")
         cell.fill = PatternFill("solid", fgColor="17365D")
-    for column, width in [("A", 38), ("B", 24), ("C", 85)]:
+    for column, width in [("A", 38), ("B", 28), ("C", 90)]:
         ws.column_dimensions[column].width = width
     ws.freeze_panes = "A2"

@@ -11,11 +11,20 @@ os.environ.setdefault("NO_COLOR", "1")
 
 import typer
 
+from cse_financial_etl.contracts.release import (
+    DEFAULT_DECISIONS_RELATIVE_PATH,
+    append_decision,
+    make_decision,
+)
 from cse_financial_etl.domain.enums import MetricType, UnitScope
 from cse_financial_etl.extraction.unit_detector import detect_candidates, resolve_unit
 from cse_financial_etl.orchestration.pipeline import Pipeline
 from cse_financial_etl.sources.cse import fetch_market_capitalization
 from cse_financial_etl.transformation.normalizer import normalize_value
+from cse_financial_etl.validation.adjudication import (
+    prepare_adjudication_packet,
+    validate_adjudication_packet,
+)
 from cse_financial_etl.validation.golden import validate_golden
 
 app = typer.Typer(no_args_is_help=True, help="CSE financial-data ETL operator CLI")
@@ -139,6 +148,65 @@ def validate_golden_command(
 
     result = validate_golden(project_root.resolve(), date.fromisoformat(as_of))
     typer.echo(json.dumps(result, indent=2))
+
+
+@app.command("prepare-adjudication")
+def prepare_adjudication_command(
+    project_root: Path = typer.Option(Path.cwd(), help="Repository root"),
+    as_of: str = typer.Option(..., help="Universe-run as-of date (YYYY-MM-DD)"),
+    target_issuers: int = typer.Option(100, min=1, help="Unique issuers to independently adjudicate"),
+    output: Path | None = typer.Option(None, help="Optional output CSV path"),
+) -> None:
+    """Create a deterministic 100-issuer human adjudication packet from a universe run."""
+
+    result = prepare_adjudication_packet(
+        project_root.resolve(),
+        date.fromisoformat(as_of),
+        target_issuers=target_issuers,
+        output_path=output,
+    )
+    typer.echo(json.dumps(result, indent=2))
+
+
+@app.command("validate-adjudication")
+def validate_adjudication_command(
+    packet: Path = typer.Argument(..., exists=True, dir_okay=False),
+    target_issuers: int = typer.Option(100, min=1),
+) -> None:
+    """Check whether an adjudication packet has enough explicit independent human truth."""
+
+    typer.echo(json.dumps(validate_adjudication_packet(packet, target_issuers=target_issuers), indent=2))
+
+
+@app.command("sign-review-decision")
+def sign_review_decision_command(
+    issuer_name: str = typer.Option(...),
+    symbol: str = typer.Option(...),
+    period_end: str = typer.Option(...),
+    metric_code: str = typer.Option(...),
+    filing_sha256: str = typer.Option(...),
+    reviewer_id: str = typer.Option(...),
+    decision: str = typer.Option(..., help="APPROVED or REJECTED"),
+    key_id: str = typer.Option(..., help="Key id; secret must exist in CSE_REVIEW_KEY_<KEY_ID>"),
+    note: str = typer.Option(""),
+    project_root: Path = typer.Option(Path.cwd(), help="Repository root"),
+) -> None:
+    """Append a cryptographically signed, source-bound human review decision."""
+
+    signed = make_decision(
+        issuer_name=issuer_name,
+        symbol=symbol,
+        period_end=period_end,
+        metric_code=metric_code,
+        filing_sha256=filing_sha256,
+        reviewer_id=reviewer_id,
+        decision=decision,
+        note=note,
+        key_id=key_id,
+    )
+    destination = project_root.resolve() / DEFAULT_DECISIONS_RELATIVE_PATH
+    append_decision(destination, signed)
+    typer.echo(json.dumps({"status": "SIGNED_AND_APPENDED", "path": str(destination), "decision": signed.as_dict()}, indent=2))
 
 
 if __name__ == "__main__":
