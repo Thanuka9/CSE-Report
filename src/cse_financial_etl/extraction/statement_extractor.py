@@ -1986,8 +1986,8 @@ def _select_layout_value(
             (token, value)
             for token, value in candidates
             if value is not None
-            and _parent_kind_at(token.bbox.center_x, entity_regions) is not None
-            and _parent_kind_at(token.bbox.center_x, entity_regions).kind == entity
+            and (parent := _parent_kind_at(token.bbox.center_x, entity_regions)) is not None
+            and parent.kind == entity
         ]
         if entity in {"COMPANY", "BANK"} and len(company_money) == 1:
             token, value = company_money[0]

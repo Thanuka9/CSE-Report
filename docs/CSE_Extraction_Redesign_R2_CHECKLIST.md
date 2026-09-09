@@ -17,18 +17,23 @@ DONE only when a named test or wired production caller proves it. Labels without
 | Review CSV after gate hits | DONE | `pipeline.py` stage 7 order |
 | EPS/NAVPS sign-aware, UNTESTED without shares | DONE | `tests/unit/test_equation_retry.py` |
 
-## PARTIAL / NOT DONE (in-repo remaining)
-| Item | Status | Why |
+## Completion update — 9 September 2026
+
+See [completion QA and limits](R2_Completion_QA_2026-09-09.md).
+
+| Item | Status | Evidence |
 |---|---|---|
-| Six-PDF zero-fallback compiler acceptance | PARTIAL | `test_compiler_real_pdfs.py` may exist; CI still skips when `data/**` is absent |
-| Resource budget driving beam search | PARTIAL | `ResourceBudget.exhausted()` checked; beam width/iterations not fully enforced |
-| StageCache / Accuracy_Quality sheet | PARTIAL | helpers exist; not all called every run |
-| MiniLM extra still in pyproject | NOT DONE | `semantic` extra still listed; default-off is not removal |
-| CI immutable-main / no patch-push | NOT DONE | workflow still needs rewrite |
-| Gold fixture context fields | PARTIAL | MANUAL_* flows checked; seeded rows remain numeric-only |
-| Atomic gold promote | NOT DONE | per-file `os.replace` |
-| Human 100-issuer adjudication | EXTERNAL | bank reviewers |
-| Official release identities | EXTERNAL | gate exists (`contracts/release.py`); identities are bank-supplied |
+| Six-PDF zero-fallback compiler acceptance | DONE | Vendored source PDFs; required CI acceptance test |
+| Resource budget driving candidate search | DONE | Shared iterations/time/width; ambiguity and stop-preservation tests |
+| Native StageCache / Accuracy_Quality sheet | DONE | Ingestion and workbook callers; cache invalidation and denominator tests |
+| MiniLM extra removal | DONE | pyproject and lockfile; README updated |
+| CI immutable-main / no patch-push | DONE | Read-only Linux/Windows workflow |
+| Manual gold fixture context | DONE | 34 contextual financial checks and 4 price checks pass; seeded accuracy excluded |
+| Atomic gold generation switch | DONE | Immutable generation + CURRENT.json; interrupted activation test |
+| OS-level PDF/OCR cancellation; all-stage resume | PARTIAL | Resolver limits/native cache do not implement these broader guarantees |
+| Human 100-issuer adjudication | EXTERNAL | Bank reviewers; current manual sample is four reports |
+| Authenticated official release identities | EXTERNAL | Local decision contract is not an identity provider |
+| Full-universe / wider OCR accuracy acceptance | PENDING | Not performed in this completion run |
 
 ## Freeze (still in force)
 No LLM on publish; regex + RapidFuzz; never blank→0; never A−E liabilities; exact 3M flow; never live prices as quarter-end.

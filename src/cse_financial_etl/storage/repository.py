@@ -280,14 +280,14 @@ class Repository:
             row
             for row in self.fact_rows
             if not (
-                str(row.get("filing_sha256")) == sha or str(row.get("filing_id")) == filing_id
+                str(row.get("filing_sha256")) == sha or str(row.get("filing_id")) == str(filing_id)
             )
         ]
         self.evidence_rows = [
             row
             for row in self.evidence_rows
             if not (
-                str(row.get("filing_sha256")) == sha or str(row.get("filing_id")) == filing_id
+                str(row.get("filing_sha256")) == sha or str(row.get("filing_id")) == str(filing_id)
             )
         ]
         # Avoid duplicate filing metadata rows when re-persisting after validation.
@@ -295,7 +295,7 @@ class Repository:
             row
             for row in self.filing_rows
             if not (
-                str(row.get("sha256")) == sha or str(row.get("filing_id")) == filing_id
+                str(row.get("sha256")) == sha or str(row.get("filing_id")) == str(filing_id)
             )
         ]
         self.save_filing_and_facts(downloaded, facts)
@@ -586,21 +586,24 @@ class Repository:
                 / f"year={year}"
                 / f"part-{short_run}.parquet",
             )
+        snapshot = self.root / "gold" / "snapshots" / self.run_id
+        if snapshot.exists():
+            raise FileExistsError(f"gold generation already exists: {self.run_id}")
         self._promote_file(
             staging / "financial_facts.parquet",
-            self.root / "gold" / "current_financial_facts.parquet",
+            snapshot / "current_financial_facts.parquet",
         )
         if (staging / "derived_facts.parquet").exists():
             self._promote_file(
                 staging / "derived_facts.parquet",
-                self.root / "gold" / "derived_metrics.parquet",
+                snapshot / "derived_metrics.parquet",
             )
         self._promote_file(
             staging / "market_prices.parquet",
-            self.root / "gold" / "current_market_prices.parquet",
+            snapshot / "current_market_prices.parquet",
         )
         _atomic_parquet(
-            self.root / "gold" / "extraction_coverage.parquet",
+            snapshot / "extraction_coverage.parquet",
             self._coverage_rows(),
             {
                 "metric_code": pl.String,
@@ -610,7 +613,7 @@ class Repository:
             },
         )
         _atomic_parquet(
-            self.root / "gold" / "accuracy_certainty.parquet",
+            snapshot / "accuracy_certainty.parquet",
             self._certainty_rows(),
             {
                 "metric_code": pl.String,
@@ -650,6 +653,9 @@ class Repository:
         hints = self.root / "curated" / "extraction_hints.json"
         if not hints.exists():
             _atomic_text(hints, "{}\n")
+
+        from cse_financial_etl.storage.gold_snapshot import activate_gold_snapshot
+        activate_gold_snapshot(self.root, self.run_id)
 
     def finish_run(self, run_id: str, status: str, statistics: dict[str, Any]) -> None:
         if run_id != self.run_id:

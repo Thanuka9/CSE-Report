@@ -157,6 +157,8 @@ def evaluate_eligibility(
             ("ENTITY_CONFLICT", "PERIOD_CONFLICT", "DURATION_CONFLICT")
         ):
             reasons.append(HEADER_CONFLICT)
+        elif reason == "SEARCH_BUDGET_EXHAUSTED":
+            reasons.append(reason)
         elif reason == "VALIDATION_FAILED":
             reasons.append(VALIDATION_FAILED_PRESERVED)
     if concept == "TOTAL_LIABILITIES" and _derived_from_assets_minus_equity(entry):

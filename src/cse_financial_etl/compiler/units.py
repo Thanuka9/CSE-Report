@@ -187,7 +187,7 @@ def resolve_unit(
             # Per-share amounts are printed in whole currency units unless the row says cents.
             scale = Decimal("1")
             scale_owner = "per_share_dimension_rule"
-        if any(d.scale_explicit and d.scale >= Decimal("1000") for d in row_scales):
+        if any(d.scale_explicit and d.scale is not None and d.scale >= Decimal("1000") for d in row_scales):
             # "(Rs. '000)" on a per-share row is not a plausible per-share scale.
             reasons.append("PER_SHARE_ROW_SCALE_IMPLAUSIBLE")
     elif dimension == COUNT:

@@ -1,0 +1,32 @@
+{
+  "2026-06-30_2353_1786011152811.27_Q1_SIGNED.pdf": {
+    "sha256": "227a9232dd3804c87b42b8c1d6bd7be65708df6b3d69e54499dbb459c58c73e3",
+    "source_url": "https://cdn.cse.lk/cmt/upload_report_file/2353_1786011152811.27_Q1_SIGNED.pdf",
+    "acquisition": "supplied PDF"
+  },
+  "2026-06-30_369_1786618965674.pdf": {
+    "sha256": "6e6ca4efd1778c18293bfc33fb75c05a9fce494f8e8de12de41391b6fb90279a",
+    "source_url": "https://cdn.cse.lk/cmt/upload_report_file/369_1786618965674.pdf",
+    "acquisition": "supplied PDF"
+  },
+  "2026-06-30_380_1786934627322.06.2026 (1).pdf": {
+    "sha256": "3c750d95985138ab8c76abe5839b410243bcc0461dae40d25c1c5544cb5d92bf",
+    "source_url": "https://cdn.cse.lk/cmt/upload_report_file/380_1786934627322.06.2026 (1).pdf",
+    "acquisition": "downloaded from CSE CDN on 2026-09-09"
+  },
+  "2026-06-30_389_1786711190916.pdf": {
+    "sha256": "c5a4d964e95f08e2314cf47f499924064ecea80d8a499296da05797aca7c79ae",
+    "source_url": "https://cdn.cse.lk/cmt/upload_report_file/389_1786711190916.pdf",
+    "acquisition": "supplied PDF"
+  },
+  "2026-06-30_508_1785229278745.pdf": {
+    "sha256": "2c94f23f3f62769c1a22f5a51b03665feef60d22bfb8f58355b52ceac8b254c5",
+    "source_url": "https://cdn.cse.lk/cmt/upload_report_file/508_1785229278745.pdf",
+    "acquisition": "supplied PDF"
+  },
+  "2026-06-30_768_1785840975698.06.2026.pdf": {
+    "sha256": "658ac29afe63cf48aaa4108fd0c1d46ae8231ad90f788dcf3604f5122008ad3f",
+    "source_url": "https://cdn.cse.lk/cmt/upload_report_file/768_1785840975698.06.2026.pdf",
+    "acquisition": "downloaded from CSE CDN on 2026-09-09"
+  }
+}

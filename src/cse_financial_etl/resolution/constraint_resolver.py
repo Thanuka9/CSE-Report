@@ -7,6 +7,7 @@ from typing import Any
 
 from cse_financial_etl.resolution.beam_search import BeamSearchResult, beam_search_concept
 from cse_financial_etl.resolution.candidate_ledger import CandidateLedger
+from cse_financial_etl.resolution.resource_budget import ResourceBudget
 
 
 @dataclass
@@ -20,9 +21,12 @@ def resolve_ambiguities(
     *,
     required_entity: str,
     target_duration: int = 3,
+    target_period_end: str | None = None,
+    budget: ResourceBudget | None = None,
 ) -> ResolverCResult:
     """C is not an independent witness; it resolves compatible ambiguities or abstains."""
 
+    budget = budget or ResourceBudget()
     concepts = sorted({e.concept for e in ledger.entries if e.status in {"unresolved", "alternative", "accepted"}})
     by_concept: dict[str, BeamSearchResult] = {}
     for concept in concepts:
@@ -34,6 +38,8 @@ def resolve_ambiguities(
             candidates,
             required_entity=required_entity,
             target_duration=target_duration,
+            target_period_end=target_period_end,
+            budget=budget,
         )
         by_concept[concept] = result
         if result.status == "RESOLVED" and result.winner is not None:
@@ -44,12 +50,13 @@ def resolve_ambiguities(
                     alt.reasons.append("dominated_by_resolver_c")
         elif result.status in {"ABSTAIN", "SEARCH_BUDGET_EXHAUSTED"}:
             for alt in candidates:
-                if alt.status == "accepted":
+                if alt.status == "accepted" or result.status == "SEARCH_BUDGET_EXHAUSTED":
                     alt.status = "unresolved"
                     alt.reasons.append(result.status)
     return ResolverCResult(
         by_concept=by_concept,
         report={
+            "resource_budget": budget.as_dict(),
             "concepts": {
                 concept: {
                     "status": result.status,

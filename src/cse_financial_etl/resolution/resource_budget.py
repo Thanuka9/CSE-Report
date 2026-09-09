@@ -19,11 +19,14 @@ class ResourceBudget:
     max_ocr_threads: int = 1
     started_at: float = field(default_factory=time.monotonic)
     stop_reason: str | None = None
+    iterations_used: int = 0
 
     def elapsed(self) -> float:
         return time.monotonic() - self.started_at
 
     def exhausted(self) -> bool:
+        if self.stop_reason:
+            return True
         if self.elapsed() >= self.max_elapsed_seconds:
             self.stop_reason = "ELAPSED_BUDGET_EXHAUSTED"
             return True
@@ -35,12 +38,22 @@ class ResourceBudget:
             return False
         return not self.exhausted()
 
+    def consume_iteration(self) -> bool:
+        if self.exhausted():
+            return False
+        if self.iterations_used >= self.max_iterations:
+            self.stop_reason = "ITERATION_BUDGET_EXHAUSTED"
+            return False
+        self.iterations_used += 1
+        return True
+
     def as_dict(self) -> dict[str, Any]:
         return {
             "max_hypotheses": self.max_hypotheses,
             "max_graph_nodes": self.max_graph_nodes,
             "beam_width": self.beam_width,
             "max_iterations": self.max_iterations,
+            "iterations_used": self.iterations_used,
             "max_elapsed_seconds": self.max_elapsed_seconds,
             "max_ocr_threads": self.max_ocr_threads,
             "elapsed_seconds": self.elapsed(),

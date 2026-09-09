@@ -483,6 +483,11 @@ def generate_excel(
         data_range, FormulaRule(formula=["ISTEXT(K5)"], fill=PatternFill("solid", fgColor=amber))
     )
 
+    from cse_financial_etl.reporting.quality_sheet import add_accuracy_quality_sheet
+    validation_path = project_root / "outputs" / f"golden_validation_{as_of_date.isoformat()}.json"
+    validation = json.loads(validation_path.read_text(encoding="utf-8")) if validation_path.exists() else {}
+    add_accuracy_quality_sheet(wb, facts=facts, market=market, periods=periods, validation=validation)
+
     for ws in wb.worksheets:
         ws.sheet_view.showGridLines = False
         ws.sheet_properties.pageSetUpPr.fitToPage = True

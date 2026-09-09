@@ -61,12 +61,18 @@ STOCK_METRIC_CODES = frozenset(
 
 
 class SupportsPublishFields(Protocol):
-    status: str
-    normalized_value: Any
-    review_status: str
-    validation_status: str
-    duration_months: int | None
-    metric_type: str
+    @property
+    def status(self) -> str: ...
+    @property
+    def normalized_value(self) -> Any: ...
+    @property
+    def review_status(self) -> str: ...
+    @property
+    def validation_status(self) -> str: ...
+    @property
+    def duration_months(self) -> int | None: ...
+    @property
+    def metric_type(self) -> str: ...
 
 
 def _field(fact: SupportsPublishFields | Mapping[str, Any], name: str, default: Any = "") -> Any:

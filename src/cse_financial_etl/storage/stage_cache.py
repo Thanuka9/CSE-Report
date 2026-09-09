@@ -57,7 +57,8 @@ class StageCache:
         if not path.exists():
             return None
         try:
-            return json.loads(path.read_text(encoding="utf-8"))
+            payload = json.loads(path.read_text(encoding="utf-8"))
+            return payload if isinstance(payload, dict) else None
         except (OSError, json.JSONDecodeError):
             return None
 

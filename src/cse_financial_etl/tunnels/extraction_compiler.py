@@ -122,6 +122,8 @@ def compile_filing(
         ledger,
         required_entity=entity,
         target_duration=3,
+        target_period_end=period_end.isoformat(),
+        budget=budget,
     )
     unresolved_map: dict[str, list[str]] = {}
     for entry in ledger.unresolved():

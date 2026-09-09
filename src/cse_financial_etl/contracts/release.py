@@ -156,9 +156,9 @@ def apply_review_decisions(
 
     summary = ReleaseSummary(policy_version=policy_version, decisions_loaded=len(decisions))
     by_identity: dict[str, ReviewDecision] = {}
-    for decision in decisions:
-        # Latest decision per identity wins (append-only log).
-        by_identity[decision.identity] = decision
+    for loaded_decision in decisions:
+        # Latest loaded_decision per identity wins (append-only log).
+        by_identity[loaded_decision.identity] = loaded_decision
     updated: list[Any] = []
     matched: set[str] = set()
     for fact in facts:

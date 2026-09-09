@@ -94,13 +94,13 @@ def attach_fixture_context(
     """Enrich result rows with expected context from the gold fixture when available."""
 
     index: dict[tuple[str, str, str], dict[str, Any]] = {}
-    for fixture in fixtures:
+    for fixture_row in fixtures:
         key = (
-            str(fixture.get("issuer_name")),
-            str(fixture.get("symbol")),
-            str(fixture.get("period_end")),
+            str(fixture_row.get("issuer_name")),
+            str(fixture_row.get("symbol")),
+            str(fixture_row.get("period_end")),
         )
-        index[key] = fixture
+        index[key] = fixture_row
     enriched: list[dict[str, Any]] = []
     for row in results:
         item = dict(row)
@@ -143,7 +143,7 @@ def accuracy_dashboard_payload(
     fixtures = json.loads(fixture_path.read_text(encoding="utf-8"))
     summary = summarize_gold_fixture(fixture_path)
     results = attach_fixture_context(list(golden_validation.get("results") or []), fixtures)
-    field = field_accuracy_from_results(results)
+    field = field_accuracy_from_results([row for row in results if row.get("verification_status") == "MANUAL_QA"])
     by_verification: dict[str, Counter[str]] = defaultdict(Counter)
     for row in results:
         bucket = str(row.get("verification_status") or "UNKNOWN")

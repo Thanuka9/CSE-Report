@@ -902,7 +902,7 @@ def test_narrative_navps(tmp_path: Path) -> None:
     )
 
 
-def test_missing_metric_distinguishes_parser_from_confirmed(tmp_path: Path) -> None:
+def test_missing_metric_does_not_claim_source_absence(tmp_path: Path) -> None:
     income = _write_pdf(
         tmp_path / "income.pdf",
         "Statement of profit or loss - Company\n"
@@ -923,8 +923,8 @@ def test_missing_metric_distinguishes_parser_from_confirmed(tmp_path: Path) -> N
     )
     income_pat = income_facts["PAT"]
     notes_pat = notes_facts["PAT"]
-    assert income_pat.status == "SOURCE_CONFIRMED_NOT_REPORTED"
-    assert notes_pat.status == "NOT_FOUND_BY_PARSER"
+    assert income_pat.status == "NOT_LOCATED_AFTER_CONFIGURED_RECOVERY"
+    assert notes_pat.status == "NOT_LOCATED_AFTER_CONFIGURED_RECOVERY"
     RESULTS.append(
         CaseResult(
             "confirmed_missing_pat",
@@ -932,12 +932,12 @@ def test_missing_metric_distinguishes_parser_from_confirmed(tmp_path: Path) -> N
             True,
             "PASS",
             [
-                FieldResult("status", True, "SOURCE_CONFIRMED_NOT_REPORTED", income_pat.status),
-                FieldResult("parser_status", True, "NOT_FOUND_BY_PARSER", notes_pat.status),
+                FieldResult("status", True, "NOT_LOCATED_AFTER_CONFIGURED_RECOVERY", income_pat.status),
+                FieldResult("parser_status", True, "NOT_LOCATED_AFTER_CONFIGURED_RECOVERY", notes_pat.status),
             ],
         )
     )
-    assert notes_pat.status != income_pat.status
+    assert notes_pat.status == income_pat.status
 
 
 def test_restated_comparative_goes_to_review(tmp_path: Path) -> None:

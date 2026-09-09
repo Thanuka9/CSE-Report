@@ -24,15 +24,15 @@ def recover_unit(
             break
     if resolved is None:
         return {"status": "NO_CHANGE", "reason": "no_unit_evidence"}
-    currency, scale = resolved
+    resolved_currency, resolved_scale = resolved
     changed = 0
     for entry in ledger.for_concept(ticket.concept):
         if entry.unit is None or entry.scale_factor is None:
-            entry.unit = currency
-            entry.scale_factor = scale
+            entry.unit = resolved_currency
+            entry.scale_factor = resolved_scale
             if entry.raw_value is not None and entry.normalized_value is None:
-                entry.normalized_value = entry.raw_value * scale
+                entry.normalized_value = entry.raw_value * resolved_scale
             entry.reasons.append("unit_recovery_applied")
             entry.status = "unresolved" if entry.status == "rejected" else entry.status
             changed += 1
-    return {"status": "RECOVERED" if changed else "NO_CHANGE", "unit": currency, "scale": scale}
+    return {"status": "RECOVERED" if changed else "NO_CHANGE", "unit": resolved_currency, "scale": resolved_scale}

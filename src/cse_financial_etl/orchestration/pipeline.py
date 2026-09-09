@@ -5,7 +5,7 @@ import os
 import shutil
 import uuid
 from collections import Counter
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Sequence
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import replace
 from datetime import date
@@ -53,6 +53,7 @@ from cse_financial_etl.sources.cse import (
     serialize_security,
 )
 from cse_financial_etl.sources.historical_prices import resolve_quarter_end_price
+from cse_financial_etl.storage.gold_snapshot import current_gold_dir
 from cse_financial_etl.storage.repository import DERIVED_METRIC_CODES, Repository
 from cse_financial_etl.storage.run_archive import (
     MANIFESTS_DIRNAME,
@@ -64,7 +65,7 @@ from cse_financial_etl.storage.run_archive import (
 from cse_financial_etl.transformation.ratios import derive_ratio_facts
 from cse_financial_etl.validation.acceptance import current_release_mode, set_release_mode
 from cse_financial_etl.validation.cross_filing import flag_cross_filing_mismatches
-from cse_financial_etl.validation.equation_engine import ValidationOutcome
+from cse_financial_etl.validation.equation_engine import ValidationOutcome, ValidationResult
 from cse_financial_etl.validation.golden import validate_golden
 from cse_financial_etl.validation.production_gates import (
     evaluate_production_gates,
@@ -80,8 +81,10 @@ DEFAULT_PERIODS = (date(2025, 12, 31), date(2026, 3, 31), date(2026, 6, 30))
 
 
 class ValidationOutcomeLike(Protocol):
-    rule_id: str
-    outcome: ValidationOutcome
+    @property
+    def rule_id(self) -> str: ...
+    @property
+    def outcome(self) -> ValidationOutcome: ...
 
 # Equation rule -> metric codes whose validation status the rule speaks for.
 RULE_METRICS: dict[str, frozenset[str]] = {
@@ -131,7 +134,7 @@ def build_extract_kwargs(
 
 def stamp_validation_status(
     facts: list[ExtractedFact],
-    results: list[ValidationOutcomeLike],
+    results: Sequence[ValidationOutcomeLike],
 ) -> list[ExtractedFact]:
     """Stamp equation outcomes onto facts (gap A4).
 
@@ -537,7 +540,7 @@ class Pipeline:
         equation_summary: Counter[str] = Counter()
         retry_summary = {"attempts": 0, "recovered": 0, "filings": 0}
 
-        def _validate_fact_list(fact_list: list[ExtractedFact]):
+        def _validate_fact_list(fact_list: list[ExtractedFact]) -> list[ValidationResult]:
             return equation_engine.evaluate(facts_by_code(fact_list))
 
         refreshed_results: list[tuple[DownloadedFiling, list[ExtractedFact]]] = []
@@ -638,7 +641,7 @@ class Pipeline:
         )
         for mismatch in flag_cross_filing_mismatches(
             extracted_results,
-            self.data / "gold" / "current_financial_facts.parquet",
+            current_gold_dir(self.data) / "current_financial_facts.parquet",
         ):
             self.repository.add_review(
                 run_id,
@@ -739,8 +742,8 @@ class Pipeline:
             "use_transformer": self.app_config.use_transformer,
             "semantic_model": get_semantic_matcher().model_name,
             "archived_prior_run_files": [str(path) for path in archived],
-            "current_facts_parquet": str(self.data / "gold" / "current_financial_facts.parquet"),
-            "current_prices_parquet": str(self.data / "gold" / "current_market_prices.parquet"),
+            "current_facts_parquet": str(self.data / "gold" / "snapshots" / run_id / "current_financial_facts.parquet"),
+            "current_prices_parquet": str(self.data / "gold" / "snapshots" / run_id / "current_market_prices.parquet"),
         }
         workbook_path: Path | None = None
         if not skip_excel:

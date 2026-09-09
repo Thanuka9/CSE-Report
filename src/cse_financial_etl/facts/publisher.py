@@ -387,7 +387,7 @@ def _evidence_blob(
 
 def _metric_type(layout: Any | None, concept: str) -> str:
     if layout is not None:
-        return layout.metric_type
+        return str(layout.metric_type)
     if concept in {"EPS_BASIC", "EPS_DILUTED", "NAVPS"}:
         return "MONETARY_PER_SHARE"
     if concept in {"TOTAL_ASSETS", "TOTAL_EQUITY", "TOTAL_LIABILITIES"}:
@@ -424,6 +424,7 @@ def _from_accepted_entry(
 
     entry = queried.entry
     assert entry is not None
+    assert entry.entity is not None and entry.comparison_role is not None
     origin = _candidate_origin(entry)
     routing, native_ok, fallback_code = compiler_routing(report)
     unit_resolution = entry.evidence.get("unit_resolution") or {}
@@ -510,7 +511,7 @@ def _from_terminal(
         normalized_value=None,  # never publish a value on a non-EXTRACTED row
         currency=entry.unit if entry is not None else None,
         scale_factor=entry.scale_factor if entry is not None else None,
-        entity_scope=(entry.entity if entry and entry.entity else None) or (layout.entity_scope if layout else None),
+        entity_scope=(entry.entity if entry and entry.entity else None) or (layout.entity_scope if layout else "UNKNOWN"),
         source_page=entry.page if entry and entry.page is not None else (layout.source_page if layout else None),
         source_line=entry.label if entry and entry.label else (layout.source_line if layout else None),
         unit_source_text=None,
@@ -528,7 +529,7 @@ def _from_terminal(
         validation_confidence=0.0,
         overall_certainty=0.0,
         certainty_band="NONE",
-        comparison_role=entry.comparison_role if entry and entry.comparison_role else None,
+        comparison_role=entry.comparison_role if entry and entry.comparison_role else "UNKNOWN",
         duration_months=entry.duration_months if entry and entry.duration_months is not None else None,
         validation_status="FAILED" if check is not None and check.status == "FAIL" else "NOT_VALIDATED",
         review_status=MACHINE_REVIEW_STATUS,

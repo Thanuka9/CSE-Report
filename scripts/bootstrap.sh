@@ -5,8 +5,9 @@ command -v uv >/dev/null 2>&1 || {
   exit 1
 }
 uv python install 3.12
-uv sync
+uv sync --locked --group dev
 uv run pytest
-uv run ruff check src tests
+uv run ruff check src
+uv run mypy src
 command -v pdftotext >/dev/null 2>&1 || \
   echo "Warning: Poppler pdftotext is missing; pypdf fallback accuracy may be lower." >&2

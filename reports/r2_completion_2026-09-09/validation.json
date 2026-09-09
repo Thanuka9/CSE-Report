@@ -1,0 +1,18 @@
+{
+  "upstream_commit": "4e66c539a5a1addf9781d402270230827558023e",
+  "pytest": {
+    "passed": 185,
+    "skipped": 19,
+    "subtests_passed": 15,
+    "skip_reason": "Legacy regression PDFs absent from the local filing lake; the six required source cases ran."
+  },
+  "ruff": "PASS",
+  "mypy": "PASS (125 source files)",
+  "six_pdf_acceptance": "6 passed",
+  "manual_checks": {
+    "passed": 38,
+    "failed": 0
+  },
+  "full_universe_rerun": false,
+  "windows_ci": "Configured; not executed locally"
+}

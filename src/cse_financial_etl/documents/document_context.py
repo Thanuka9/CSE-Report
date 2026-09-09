@@ -28,7 +28,7 @@ def build_document_context(document: DocumentIR) -> dict[str, Any]:
     return {
         "page_count": len(document.pages),
         "extraction_method": quality.extraction_method,
-        "ocr_used": quality.ocr_used,
+        "ocr_used": "OCR" in quality.extraction_method.upper(),
         "quality": document.evidence_dict(),
         "pages": pages,
     }

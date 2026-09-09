@@ -77,8 +77,8 @@ def evaluate_case(case: EvalCase, *, compile_statements: bool = False) -> dict[s
         compile_statements=compile_statements,
     )
     by_code = facts_by_code(facts)
-    publication_paths = Counter()
-    candidate_origins = Counter()
+    publication_paths: Counter[str] = Counter()
+    candidate_origins: Counter[str] = Counter()
     explicit_fallbacks = 0
     extracted = 0
     for fact in facts:
@@ -99,10 +99,10 @@ def evaluate_case(case: EvalCase, *, compile_statements: bool = False) -> dict[s
     numeric_fail = 0
     if case.expected:
         for code, expected in case.expected.items():
-            fact = by_code.get(code)
+            found_fact = by_code.get(code)
             actual = (
-                str(fact.normalized_value)
-                if fact is not None and fact.normalized_value is not None
+                str(found_fact.normalized_value)
+                if found_fact is not None and found_fact.normalized_value is not None
                 else None
             )
             if actual is None:

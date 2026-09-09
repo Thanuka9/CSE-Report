@@ -64,7 +64,62 @@
       "JKH.N0000": "20.20"
     },
     "issuer_type": "HOLDING",
-    "verification_status": "MANUAL_QA"
+    "verification_status": "MANUAL_QA",
+    "fact_context": {
+      "TOP_LINE": {
+        "entity_scope": "COMPANY",
+        "period_end": "2026-06-30",
+        "comparison_role": "CURRENT",
+        "unit": "LKR",
+        "scale_factor": 1000,
+        "duration_months": 3
+      },
+      "OPERATING_PROFIT": {
+        "entity_scope": "COMPANY",
+        "period_end": "2026-06-30",
+        "comparison_role": "CURRENT",
+        "unit": "LKR",
+        "scale_factor": 1000,
+        "duration_months": 3
+      },
+      "PBT": {
+        "entity_scope": "COMPANY",
+        "period_end": "2026-06-30",
+        "comparison_role": "CURRENT",
+        "unit": "LKR",
+        "scale_factor": 1000,
+        "duration_months": 3
+      },
+      "PAT": {
+        "entity_scope": "COMPANY",
+        "period_end": "2026-06-30",
+        "comparison_role": "CURRENT",
+        "unit": "LKR",
+        "scale_factor": 1000,
+        "duration_months": 3
+      },
+      "TOTAL_ASSETS": {
+        "entity_scope": "COMPANY",
+        "period_end": "2026-06-30",
+        "comparison_role": "CURRENT",
+        "unit": "LKR",
+        "scale_factor": 1000
+      },
+      "TOTAL_EQUITY": {
+        "entity_scope": "COMPANY",
+        "period_end": "2026-06-30",
+        "comparison_role": "CURRENT",
+        "unit": "LKR",
+        "scale_factor": 1000
+      },
+      "NAVPS": {
+        "entity_scope": "COMPANY",
+        "period_end": "2026-06-30",
+        "comparison_role": "CURRENT",
+        "unit": "LKR",
+        "scale_factor": 1
+      }
+    }
   },
   {
     "issuer_name": "NATIONAL DEVELOPMENT BANK PLC",
@@ -111,7 +166,77 @@
       "COMB.N0000": "208.75"
     },
     "issuer_type": "BANK",
-    "verification_status": "MANUAL_QA"
+    "verification_status": "MANUAL_QA",
+    "fact_context": {
+      "PAT": {
+        "entity_scope": "BANK",
+        "period_end": "2026-06-30",
+        "comparison_role": "CURRENT",
+        "unit": "LKR",
+        "scale_factor": 1000,
+        "duration_months": 3
+      },
+      "PBT": {
+        "entity_scope": "BANK",
+        "period_end": "2026-06-30",
+        "comparison_role": "CURRENT",
+        "unit": "LKR",
+        "scale_factor": 1000,
+        "duration_months": 3
+      },
+      "EPS_DILUTED": {
+        "entity_scope": "BANK",
+        "period_end": "2026-06-30",
+        "comparison_role": "CURRENT",
+        "unit": "LKR",
+        "scale_factor": 1,
+        "duration_months": 3
+      },
+      "NAVPS": {
+        "entity_scope": "BANK",
+        "period_end": "2026-06-30",
+        "comparison_role": "CURRENT",
+        "unit": "LKR",
+        "scale_factor": 1
+      },
+      "OPERATING_PROFIT": {
+        "entity_scope": "BANK",
+        "period_end": "2026-06-30",
+        "comparison_role": "CURRENT",
+        "unit": "LKR",
+        "scale_factor": 1000,
+        "duration_months": 3
+      },
+      "TOTAL_EQUITY": {
+        "entity_scope": "BANK",
+        "period_end": "2026-06-30",
+        "comparison_role": "CURRENT",
+        "unit": "LKR",
+        "scale_factor": 1000
+      },
+      "TOTAL_ASSETS": {
+        "entity_scope": "BANK",
+        "period_end": "2026-06-30",
+        "comparison_role": "CURRENT",
+        "unit": "LKR",
+        "scale_factor": 1000
+      },
+      "TOTAL_LIABILITIES": {
+        "entity_scope": "BANK",
+        "period_end": "2026-06-30",
+        "comparison_role": "CURRENT",
+        "unit": "LKR",
+        "scale_factor": 1000
+      },
+      "TOP_LINE": {
+        "entity_scope": "BANK",
+        "period_end": "2026-06-30",
+        "comparison_role": "CURRENT",
+        "unit": "LKR",
+        "scale_factor": 1000,
+        "duration_months": 3
+      }
+    }
   },
   {
     "issuer_name": "DIALOG AXIATA PLC",
@@ -135,7 +260,85 @@
       "DIAL.N0000": "46.10"
     },
     "issuer_type": "GENERAL",
-    "verification_status": "MANUAL_QA"
+    "verification_status": "MANUAL_QA",
+    "fact_context": {
+      "PAT": {
+        "entity_scope": "COMPANY",
+        "period_end": "2026-06-30",
+        "comparison_role": "CURRENT",
+        "unit": "LKR",
+        "scale_factor": 1000,
+        "duration_months": 3
+      },
+      "PBT": {
+        "entity_scope": "COMPANY",
+        "period_end": "2026-06-30",
+        "comparison_role": "CURRENT",
+        "unit": "LKR",
+        "scale_factor": 1000,
+        "duration_months": 3
+      },
+      "EPS_BASIC": {
+        "entity_scope": "COMPANY",
+        "period_end": "2026-06-30",
+        "comparison_role": "CURRENT",
+        "unit": "LKR",
+        "scale_factor": 1,
+        "duration_months": 3
+      },
+      "EPS_DILUTED": {
+        "entity_scope": "COMPANY",
+        "period_end": "2026-06-30",
+        "comparison_role": "CURRENT",
+        "unit": "LKR",
+        "scale_factor": 1,
+        "duration_months": 3
+      },
+      "NAVPS": {
+        "entity_scope": "COMPANY",
+        "period_end": "2026-06-30",
+        "comparison_role": "CURRENT",
+        "unit": "LKR",
+        "scale_factor": 1
+      },
+      "OPERATING_PROFIT": {
+        "entity_scope": "COMPANY",
+        "period_end": "2026-06-30",
+        "comparison_role": "CURRENT",
+        "unit": "LKR",
+        "scale_factor": 1000,
+        "duration_months": 3
+      },
+      "TOTAL_EQUITY": {
+        "entity_scope": "COMPANY",
+        "period_end": "2026-06-30",
+        "comparison_role": "CURRENT",
+        "unit": "LKR",
+        "scale_factor": 1000
+      },
+      "TOTAL_ASSETS": {
+        "entity_scope": "COMPANY",
+        "period_end": "2026-06-30",
+        "comparison_role": "CURRENT",
+        "unit": "LKR",
+        "scale_factor": 1000
+      },
+      "TOTAL_LIABILITIES": {
+        "entity_scope": "COMPANY",
+        "period_end": "2026-06-30",
+        "comparison_role": "CURRENT",
+        "unit": "LKR",
+        "scale_factor": 1000
+      },
+      "TOP_LINE": {
+        "entity_scope": "COMPANY",
+        "period_end": "2026-06-30",
+        "comparison_role": "CURRENT",
+        "unit": "LKR",
+        "scale_factor": 1000,
+        "duration_months": 3
+      }
+    }
   },
   {
     "issuer_name": "JAT HOLDINGS PLC",
@@ -157,7 +360,70 @@
       "JAT.N0000": "39.80"
     },
     "issuer_type": "HOLDING",
-    "verification_status": "MANUAL_QA"
+    "verification_status": "MANUAL_QA",
+    "fact_context": {
+      "EPS_BASIC": {
+        "entity_scope": "COMPANY",
+        "period_end": "2026-06-30",
+        "comparison_role": "CURRENT",
+        "unit": "LKR",
+        "scale_factor": 1,
+        "duration_months": 3
+      },
+      "NAVPS": {
+        "entity_scope": "COMPANY",
+        "period_end": "2026-06-30",
+        "comparison_role": "CURRENT",
+        "unit": "LKR",
+        "scale_factor": 1
+      },
+      "OPERATING_PROFIT": {
+        "entity_scope": "COMPANY",
+        "period_end": "2026-06-30",
+        "comparison_role": "CURRENT",
+        "unit": "LKR",
+        "scale_factor": 1,
+        "duration_months": 3
+      },
+      "PAT": {
+        "entity_scope": "COMPANY",
+        "period_end": "2026-06-30",
+        "comparison_role": "CURRENT",
+        "unit": "LKR",
+        "scale_factor": 1,
+        "duration_months": 3
+      },
+      "PBT": {
+        "entity_scope": "COMPANY",
+        "period_end": "2026-06-30",
+        "comparison_role": "CURRENT",
+        "unit": "LKR",
+        "scale_factor": 1,
+        "duration_months": 3
+      },
+      "TOP_LINE": {
+        "entity_scope": "COMPANY",
+        "period_end": "2026-06-30",
+        "comparison_role": "CURRENT",
+        "unit": "LKR",
+        "scale_factor": 1,
+        "duration_months": 3
+      },
+      "TOTAL_ASSETS": {
+        "entity_scope": "COMPANY",
+        "period_end": "2026-06-30",
+        "comparison_role": "CURRENT",
+        "unit": "LKR",
+        "scale_factor": 1
+      },
+      "TOTAL_EQUITY": {
+        "entity_scope": "COMPANY",
+        "period_end": "2026-06-30",
+        "comparison_role": "CURRENT",
+        "unit": "LKR",
+        "scale_factor": 1
+      }
+    }
   },
   {
     "issuer_name": "AMANA BANK PLC",

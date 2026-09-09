@@ -30,6 +30,8 @@ def validate_golden(project_root: Path, as_of_date: date) -> dict[str, Any]:
     for fixture in fixtures:
         pdf_path = project_root / fixture["pdf"]
         if not pdf_path.exists():
+            pdf_path = project_root / "tests" / "fixtures" / "pdf" / pdf_path.name
+        if not pdf_path.exists():
             results.append({"pdf": fixture["pdf"], "status": "SKIPPED_PDF_NOT_AVAILABLE"})
             continue
         period_end = date.fromisoformat(fixture["period_end"])
@@ -44,35 +46,21 @@ def validate_golden(project_root: Path, as_of_date: date) -> dict[str, Any]:
         )
         for metric_code, expected in fixture["facts"].items():
             fact = facts.get(metric_code)
-            passed = bool(fact and _same_value(fact.normalized_value, expected))
-            # Manual truth also requires accepted publish status + quarter duration for flows.
-            verification_manual = verification in {"MANUAL_OR_PRIOR", "MANUAL_QA"}
-            if (
-                passed
-                and verification_manual
-                and fact is not None
-                and metric_code
-                in {"TOP_LINE", "OPERATING_PROFIT", "PBT", "PAT", "EPS_BASIC", "EPS_DILUTED"}
-            ):
-                if fact.status not in {"EXTRACTED", "EXTRACTED_DERIVED"}:
-                    passed = False
-                if fact.duration_months != 3:
-                    passed = False
-                expected_scope = fixture.get("entity_scope")
-                if expected_scope and fact.entity_scope != expected_scope:
-                    passed = False
-                if not is_publishable_fact(
-                    {
-                        "status": fact.status,
-                        "normalized_value": fact.normalized_value,
-                        "review_status": fact.review_status,
-                        "validation_status": fact.validation_status or "PASSED",
-                        "duration_months": fact.duration_months,
-                        "metric_type": fact.metric_type,
-                        "metric_code": metric_code,
-                    }
-                ):
-                    passed = False
+            expected_context = fixture.get("fact_context", {}).get(metric_code, {})
+            actual_context = {
+                "entity_scope": fact.entity_scope if fact else None,
+                "period_end": fact.period_end.isoformat() if fact else None,
+                "duration_months": fact.duration_months if fact else None,
+                "comparison_role": fact.comparison_role if fact else None,
+                "unit": fact.currency if fact else None,
+                "scale_factor": fact.scale_factor if fact else None,
+            }
+            context_ok = bool(expected_context) and all(
+                str(actual_context.get(key)) == str(value) for key, value in expected_context.items())
+            # A matching number is not independent accuracy without its expected context.
+            numeric_match = bool(fact and _same_value(fact.normalized_value, expected))
+            passed = bool(numeric_match and fact and is_publishable_fact(fact, release_mode="DRAFT")
+                and (context_ok or verification != "MANUAL_QA"))
             status = "PASS" if passed else "FAIL"
             by_metric[metric_code][status] += 1
             overall[status] += 1
@@ -95,6 +83,8 @@ def validate_golden(project_root: Path, as_of_date: date) -> dict[str, Any]:
                     "source_page": fact.source_page if fact else None,
                     "status": status,
                     "verification_status": verification,
+                    **{f"expected_{key}": value for key, value in expected_context.items()},
+                    **{f"actual_{key}": value for key, value in actual_context.items()},
                 }
             )
         symbols = list(fixture.get("prices", {}))
@@ -113,6 +103,7 @@ def validate_golden(project_root: Path, as_of_date: date) -> dict[str, Any]:
             status = "PASS" if passed else "FAIL"
             by_metric["MARKET_PRICE_QUARTER_END"][status] += 1
             overall[status] += 1
+            by_verification[verification][status] += 1
             results.append(
                 {
                     "pdf": fixture["pdf"],
@@ -128,16 +119,23 @@ def validate_golden(project_root: Path, as_of_date: date) -> dict[str, Any]:
                 }
             )
 
-    sample_size = overall["PASS"] + overall["FAIL"]
-    payload = {
+    by_metric = defaultdict(Counter)
+    for row in results:
+        if row.get("verification_status") == "MANUAL_QA":
+            by_metric[row["metric_code"]][row["status"]] += 1
+    manual = by_verification["MANUAL_QA"]
+    sample_size = manual["PASS"] + manual["FAIL"]
+    payload: dict[str, Any] = {
         "as_of_date": as_of_date.isoformat(),
         "sample_size": sample_size,
-        "passed": overall["PASS"],
-        "failed": overall["FAIL"],
-        "accuracy": overall["PASS"] / sample_size if sample_size else None,
+        "passed": manual["PASS"],
+        "failed": manual["FAIL"],
+        "accuracy": manual["PASS"] / sample_size if sample_size else None,
+        "regression_checks": sum(overall.values()),
+        "accuracy_basis": "MANUAL_QA_CONTEXT",
         "accuracy_disclaimer": (
-            "Fixture-level scores only. PIPELINE_SEEDED and MANUAL_OR_PRIOR are reported "
-            "separately under by_verification_status; this is not population accuracy."
+            "Headline accuracy uses MANUAL_QA fixtures only. Other rows are regression anchors, "
+            "not independent truth. Sample accuracy is not population accuracy."
         ),
         "by_verification_status": {
             key: {

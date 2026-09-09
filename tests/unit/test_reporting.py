@@ -207,7 +207,7 @@ def test_workbook_contains_only_snapshot_sheet(tmp_path: Path) -> None:
     _seed_outputs(tmp_path)
     path = generate_excel(tmp_path, AS_OF, [PERIOD], RUN_ID)
     workbook = load_workbook(path)
-    assert workbook.sheetnames == [f"Snapshot_{AS_OF.isoformat()}"]
+    assert workbook.sheetnames == [f"Snapshot_{AS_OF.isoformat()}", "Accuracy_Quality"]
     assert RUN_ID in str(workbook.active["A2"].value)
     assert "dashboard.html" in str(workbook.active["G2"].value)
     # Header rows stay frozen; identity columns must scroll freely.

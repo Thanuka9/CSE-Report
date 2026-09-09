@@ -8,6 +8,7 @@ figure — ``SOURCE_CONFIRMED_NOT_REPORTED`` requires a reviewed evidence packet
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import date
 from decimal import Decimal
 from typing import Any
 
@@ -62,7 +63,7 @@ def query_target_facts(
     ledger: CandidateLedger,
     *,
     entity: str,
-    period_end,
+    period_end: date,
     target_duration: int = 3,
     recovery_attempted: bool = False,
 ) -> list[QueriedFact]:
@@ -110,8 +111,8 @@ def _query_one(
     if eligible_accepted:
         first_concept = eligible_accepted[0][0].concept
         same_concept = [item for item in eligible_accepted if item[0].concept == first_concept]
-        best, reasons = max(same_concept, key=lambda item: item[0].score)
-        return QueriedFact(query.metric_code, best.concept, best, "EXTRACTED", None, eligibility_reasons=reasons)
+        best, eligible_reasons = max(same_concept, key=lambda item: item[0].score)
+        return QueriedFact(query.metric_code, best.concept, best, "EXTRACTED", None, eligibility_reasons=eligible_reasons)
 
     trace = _trace(all_entries, recovery_attempted)
     unresolved = [e for e in all_entries if e.status == "unresolved"]

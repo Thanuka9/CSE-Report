@@ -74,7 +74,7 @@ Generated files appear under `outputs/`:
 - `pipeline_errors_<date>.json`
 - `manifests/run_manifest_<date>.json`
 
-Raw PDFs and API payloads are cached under `data/raw/`; run staging, immutable evidence, partitioned history, current views and review records live under `data/`. Parquet promotion is atomic, so re-running is restartable and reuses cached source files.
+Raw PDFs and API payloads are cached under `data/raw/`; run staging, immutable evidence, partitioned history, current views and review records live under `data/`. Gold snapshots use immutable generation directories selected through `data/gold/CURRENT.json`. Resolve that pointer once when reading multiple gold files. Re-runs reuse source files and versioned native geometry caches.
 
 VS Code also exposes these tasks through **Terminal -> Run Task**:
 
@@ -100,7 +100,7 @@ uv run cse-etl run --issuer-limit 4 --project-root .  # safe smoke test
 | Language/runtime | Python 3.12, managed by `uv` |
 | Public-source adapter | Python standard-library HTTP with bounded retries; official CSE endpoints and CDN |
 | PDF extraction | PyMuPDF word coordinates, measured pdfplumber coordinate fallback; optional OCRmyPDF/Tesseract for scans |
-| Document understanding | Visual-row reconstruction, numeric-column clustering, RapidFuzz aliases; optional local MiniLM semantic matching |
+| Document understanding | Visual-row reconstruction, numeric-column clustering, RapidFuzz aliases; no language-model embeddings |
 | Transformation | `Decimal` arithmetic and deterministic exact-quarter/entity/unit rules |
 | File store | Polars + Parquet partitions, JSONL evidence, atomic staging/promotion and CSV interoperability |
 | Reporting | `openpyxl` for the locally generated Excel workbook |
@@ -108,7 +108,7 @@ uv run cse-etl run --issuer-limit 4 --project-root .  # safe smoke test
 | Testing/quality | pytest, Ruff, mypy, golden filing fixtures |
 | Deployment | Native VS Code/PowerShell first; optional Docker |
 
-Python is the complete runtime. There is no Node application, local/cloud database, paid market-data API, or required AI service. Embeddings are optional and transient; the default extractor runs fully with deterministic coordinate and fuzzy-label logic. Scanned filings trigger OCRmyPDF only when both digital-text engines fail a quality gate, and the original PDF is never overwritten.
+Python is the complete runtime. There is no Node application, local/cloud database, paid market-data API, or required AI service. The extractor uses deterministic coordinates and fuzzy-label matching; language-model embeddings are not supported. Scanned filings trigger OCRmyPDF only when both digital-text engines fail a quality gate, and the original PDF is never overwritten.
 
 ## Data rules that fail closed
 
@@ -154,3 +154,5 @@ cse-financial-data-platform/
 ```
 
 See `docs/production_specification.md` for the frozen contract and `docs/operator_runbook.md` for operating and review steps.
+
+R2 completion changes and verified limits: [Completion QA](docs/R2_Completion_QA_2026-09-09.md). The workbook includes `Accuracy_Quality`; independent sample accuracy is reported separately from extraction coverage and uncalibrated confidence.

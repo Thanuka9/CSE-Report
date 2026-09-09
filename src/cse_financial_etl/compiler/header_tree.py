@@ -216,9 +216,9 @@ def compile_header(
                 period_source = _phrase_evidence(phrase, "header_leaf")
         if period_end is None:
             for phrase in duration_phrases:
-                embedded = normalize_date(phrase.text)
-                if embedded is not None and _phrase_right_aligned(phrase, col):
-                    period_end = embedded
+                embedded_date = normalize_date(phrase.text)
+                if embedded_date is not None and _phrase_right_aligned(phrase, col):
+                    period_end = embedded_date
                     period_source = _phrase_evidence(phrase, "header_block_embedded_date")
                     break
         if period_end is None and year_phrases:
@@ -335,20 +335,20 @@ def compile_header(
     compiled = _period_starts(compiled)
 
     if known is not None:
-        for col in compiled:
-            if col.kind != "VALUE" or col.comparison_role != "CURRENT":
+        for compiled_col in compiled:
+            if compiled_col.kind != "VALUE" or compiled_col.comparison_role != "CURRENT":
                 continue
             if (
-                col.period_end is not None
+                compiled_col.period_end is not None
                 and known.target_period_end
-                and col.period_end != known.target_period_end
-                and (col.duration_months == known.target_duration_months or col.duration_months is None)
+                and compiled_col.period_end != known.target_period_end
+                and (compiled_col.duration_months == known.target_duration_months or compiled_col.duration_months is None)
             ):
                 conflicts.append(
-                    f"PERIOD_END_MISMATCH:{col.column_id}:{col.period_end.isoformat()}!={known.target_period_end.isoformat()}"
+                    f"PERIOD_END_MISMATCH:{compiled_col.column_id}:{compiled_col.period_end.isoformat()}!={known.target_period_end.isoformat()}"
                 )
-    for col in compiled:
-        conflicts.extend(f"{col.column_id}:{c}" for c in col.conflicts)
+    for compiled_col in compiled:
+        conflicts.extend(f"{compiled_col.column_id}:{c}" for c in compiled_col.conflicts)
 
     return HeaderCompilation(
         columns=compiled,
@@ -584,7 +584,7 @@ def _period_starts(columns: list[CompiledHeaderColumn]) -> list[CompiledHeaderCo
 
 
 def _replace(col: CompiledHeaderColumn, **changes: Any) -> CompiledHeaderColumn:
-    data = {
+    data: dict[str, Any] = {
         "column_id": col.column_id,
         "entity": col.entity,
         "comparison_role": col.comparison_role,

@@ -170,7 +170,7 @@ def _seed_layout_assist(ledger: CandidateLedger, facts: list[Any], *, tunnel: st
             )
 
         period = getattr(fact, "period_end", None)
-        period_s = period.isoformat() if hasattr(period, "isoformat") else str(period or "")
+        period_s = period.isoformat() if period is not None and hasattr(period, "isoformat") else str(period or "")
         ledger.add(
             LedgerEntry(
                 entry_id=f"{tunnel}-layout-{index}",

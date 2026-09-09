@@ -168,7 +168,7 @@ def _rows_from_table(
     *,
     page_units: list[UnitDeclaration],
 ) -> list[StatementRow]:
-    by_row: dict[int, list] = {}
+    by_row: dict[int, list[Any]] = {}
     for cell in table.cells:
         by_row.setdefault(cell.row_idx, []).append(cell)
     row_indices = sorted(by_row)
