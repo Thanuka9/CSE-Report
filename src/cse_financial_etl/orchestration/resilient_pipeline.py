@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import date
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
 
 from cse_financial_etl.config import config_hash, git_identity
 from cse_financial_etl.extraction.resilient_runner import (
@@ -73,13 +74,13 @@ def _patched_resilient_extractors(
             cache_namespace=cache_namespace,
         )
 
-    setattr(pipeline_module, "extract_filing", resilient_extract)
-    setattr(pipeline_module, "extract_quarter_prices", resilient_prices)
+    pipeline_module.extract_filing = resilient_extract  # type: ignore[assignment]
+    pipeline_module.extract_quarter_prices = resilient_prices
     try:
         yield
     finally:
-        setattr(pipeline_module, "extract_filing", original_extract)
-        setattr(pipeline_module, "extract_quarter_prices", original_prices)
+        pipeline_module.extract_filing = original_extract
+        pipeline_module.extract_quarter_prices = original_prices
 
 
 def run_resilient_pipeline(
