@@ -58,7 +58,7 @@ def _stable(value: Any) -> Any:
         return value.isoformat()
     if isinstance(value, Decimal):
         return str(value)
-    if is_dataclass(value):
+    if is_dataclass(value) and not isinstance(value, type):
         return _stable(asdict(value))
     if isinstance(value, dict):
         return {
@@ -339,7 +339,7 @@ def _terminate_process_tree(process: Any) -> None:
             process.terminate()
     else:
         pgid = _posix_process_group_id(pid)
-        if pgid != pid or not _signal_process_group(pgid, int(signal.SIGTERM)):
+        if pgid is None or pgid != pid or not _signal_process_group(pgid, int(signal.SIGTERM)):
             process.terminate()
     process.join(timeout=5)
     if process.is_alive():
@@ -348,7 +348,7 @@ def _terminate_process_tree(process: Any) -> None:
         else:
             pgid = _posix_process_group_id(pid)
             sigkill = int(getattr(signal, "SIGKILL", signal.SIGTERM))
-            if pgid != pid or not _signal_process_group(pgid, sigkill):
+            if pgid is None or pgid != pid or not _signal_process_group(pgid, sigkill):
                 process.kill()
         process.join(timeout=5)
 
@@ -509,6 +509,7 @@ def extract_filing_resilient(
     )
     cache_path = result_cache_dir / f"{key}.json" if result_cache_dir is not None else None
     if cache_path is not None:
+        assert result_cache_dir is not None
         cached = _read_fact_cache(cache_path, source_sha)
         if cached is not None:
             _restore_diagnostics(result_cache_dir, key, diagnostics_path)
@@ -538,6 +539,7 @@ def extract_filing_resilient(
         )
 
     if cache_path is not None:
+        assert result_cache_dir is not None
         _atomic_json(
             cache_path,
             {
