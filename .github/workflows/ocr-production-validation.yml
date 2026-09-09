@@ -1,0 +1,28 @@
+name: OCR production acceptance
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ocr:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: '3.12'
+          enable-cache: true
+      - name: Install OCR system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ghostscript tesseract-ocr
+      - name: Install locked OCR environment
+        run: uv sync --locked --group dev --extra ocr
+      - name: Run OCR and weak-layout acceptance gates
+        env:
+          CSE_REQUIRE_REAL_OCR: '1'
+        run: uv run pytest tests/regression/test_parser_method_gates.py -q

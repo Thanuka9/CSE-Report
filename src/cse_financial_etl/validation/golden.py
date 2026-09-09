@@ -13,6 +13,7 @@ from cse_financial_etl.extraction.statement_extractor import (
     facts_by_code,
 )
 from cse_financial_etl.validation.acceptance import is_publishable_fact
+from cse_financial_etl.validation.calibration import calibration_from_results
 
 
 def _same_value(actual: Decimal | None, expected: str) -> bool:
@@ -82,6 +83,8 @@ def validate_golden(project_root: Path, as_of_date: date) -> dict[str, Any]:
                     "actual_duration_months": fact.duration_months if fact else None,
                     "actual_entity_scope": fact.entity_scope if fact else None,
                     "source_page": fact.source_page if fact else None,
+                    "overall_certainty": fact.overall_certainty if fact else None,
+                    "certainty_band": fact.certainty_band if fact else None,
                     "status": status,
                     "verification_status": verification,
                     **{f"expected_{key}": value for key, value in expected_context.items()},
@@ -115,6 +118,8 @@ def validate_golden(project_root: Path, as_of_date: date) -> dict[str, Any]:
                     "expected": expected,
                     "actual": str(price.value) if price and price.value is not None else None,
                     "source_page": price.source_page if price else None,
+                    "overall_certainty": price.confidence_score if price else None,
+                    "certainty_band": price.certainty_band if price else None,
                     "status": status,
                     "verification_status": verification,
                 }
@@ -174,6 +179,8 @@ def validate_golden(project_root: Path, as_of_date: date) -> dict[str, Any]:
         },
         "results": results,
     }
+    payload["certainty_calibration"] = calibration_from_results(results)
+
     from cse_financial_etl.reporting.accuracy import accuracy_dashboard_payload
 
     payload["field_accuracy"] = accuracy_dashboard_payload(
