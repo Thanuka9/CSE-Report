@@ -20,9 +20,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 240
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
         with:
+          version: '0.12.11'
           python-version: '3.12'
           enable-cache: true
       - name: Install OCR system dependencies
@@ -42,7 +43,7 @@ jobs:
           echo "as_of=$AS_OF" >> "$GITHUB_OUTPUT"
           echo "timeout=$TIMEOUT" >> "$GITHUB_OUTPUT"
       - name: Restore resumable CSE run cache
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: |
             data/raw
@@ -73,7 +74,7 @@ jobs:
             --output "outputs/universe_acceptance_recheck_${{ steps.inputs.outputs.as_of }}.json"
       - name: Upload universe acceptance evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: full-universe-${{ steps.inputs.outputs.as_of }}
           path: |
