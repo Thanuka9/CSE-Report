@@ -1,8 +1,9 @@
 """Production acceptance for a complete CSE universe run.
 
-This is deliberately stricter than the pipeline's per-filing validation.  It owns the
-universe-level contract: known timeout quarantine, aggregate and decomposed coverage,
-and separation of engineering failures from independent human-proof requirements.
+This is deliberately stricter than the pipeline's per-filing validation. It owns the
+universe-level contract: known timeout quarantine, universe cardinality, aggregate and
+decomposed coverage, and separation of engineering failures from independent
+human-proof requirements.
 """
 
 from __future__ import annotations
@@ -88,7 +89,7 @@ def _classify_pipeline_errors(
     """Quarantine only explicitly approved pathological filings.
 
     A newly timing-out filing is an engineering failure even when the total number of
-    timeouts remains below the historical limit.  This prevents a new OCR/parser
+    timeouts remains below the historical limit. This prevents a new OCR/parser
     regression from hiding behind an old universe-wide count allowance.
     """
 
@@ -138,7 +139,10 @@ def _coverage_summary(
 ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     by_metric = Counter(str(row.get("metric_code") or "") for row in rows)
     by_sector_metric = Counter(
-        (infer_issuer_type(str(row.get("issuer_name") or "")), str(row.get("metric_code") or ""))
+        (
+            infer_issuer_type(str(row.get("issuer_name") or "")),
+            str(row.get("metric_code") or ""),
+        )
         for row in rows
     )
     regressions: list[dict[str, Any]] = []
@@ -193,6 +197,58 @@ def _coverage_summary(
     return summary, regressions
 
 
+def _universe_regressions(
+    manifest: dict[str, Any], baseline: dict[str, Any]
+) -> list[dict[str, Any]]:
+    checks = (
+        ("issuer_count", "min_issuer_count", "ISSUER_UNIVERSE_REGRESSION"),
+        (
+            "downloaded_filing_count",
+            "min_downloaded_filing_count",
+            "DOWNLOADED_FILING_REGRESSION",
+        ),
+        (
+            "extracted_filing_count",
+            "min_extracted_filing_count",
+            "EXTRACTED_FILING_REGRESSION",
+        ),
+    )
+    regressions: list[dict[str, Any]] = []
+    for manifest_key, floor_key, code in checks:
+        if baseline.get(floor_key) is None:
+            continue
+        actual = int(manifest.get(manifest_key) or 0)
+        floor = int(baseline[floor_key])
+        if actual < floor:
+            regressions.append(
+                {
+                    "code": code,
+                    "manifest_field": manifest_key,
+                    "actual": actual,
+                    "floor": floor,
+                }
+            )
+
+    status_counts = manifest.get("fact_status_counts") or {}
+    if not isinstance(status_counts, dict):
+        status_counts = {}
+    extracted_plus_derived = int(status_counts.get("EXTRACTED") or 0) + int(
+        status_counts.get("EXTRACTED_DERIVED") or 0
+    )
+    if baseline.get("min_extracted_plus_derived") is not None:
+        floor = int(baseline["min_extracted_plus_derived"])
+        if extracted_plus_derived < floor:
+            regressions.append(
+                {
+                    "code": "FACT_COVERAGE_REGRESSION",
+                    "manifest_field": "EXTRACTED+EXTRACTED_DERIVED",
+                    "actual": extracted_plus_derived,
+                    "floor": floor,
+                }
+            )
+    return regressions
+
+
 def evaluate_universe_acceptance(
     *,
     manifest_path: Path,
@@ -204,7 +260,9 @@ def evaluate_universe_acceptance(
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     baseline = _load_yaml(baseline_path)
     gates = list((manifest.get("production_gates") or {}).get("hits") or [])
-    engineering_gates = [row for row in gates if row.get("code") not in EXTERNAL_PROOF_GATES]
+    engineering_gates = [
+        row for row in gates if row.get("code") not in EXTERNAL_PROOF_GATES
+    ]
     proof_gates = [row for row in gates if row.get("code") in EXTERNAL_PROOF_GATES]
 
     expected_error_count = int(manifest.get("pipeline_error_count") or 0)
@@ -232,9 +290,13 @@ def evaluate_universe_acceptance(
                 "floor": global_floor,
             }
         )
+    universe_regressions = _universe_regressions(manifest, baseline)
 
     engineering_pass = (
-        not engineering_gates and not unhandled_errors and not coverage_regressions
+        not engineering_gates
+        and not unhandled_errors
+        and not coverage_regressions
+        and not universe_regressions
     )
     if engineering_pass and proof_gates:
         acceptance = "ENGINEERING_PASS_EXTERNAL_PROOF_PENDING"
@@ -262,6 +324,8 @@ def evaluate_universe_acceptance(
         "coverage": coverage,
         "coverage_regression_count": len(coverage_regressions),
         "coverage_regressions": coverage_regressions,
+        "universe_regression_count": len(universe_regressions),
+        "universe_regressions": universe_regressions,
         "retry_summary": manifest.get("retry_summary"),
         "engineering_gate_count": len(engineering_gates),
         "engineering_gates": engineering_gates,
