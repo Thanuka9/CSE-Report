@@ -48,8 +48,9 @@ def compile_filing(
     """Run A (+B as needed), Resolver C, arbiter, recovery, target queries, final checks.
 
     Tunnel B is invoked for unresolved / risky core concepts and for a deterministic
-    sample (``1 / tunnel_b_sample_every`` by filing sha) of A successes so that the
-    independent reader is continuously measured against A, not only on failures.
+    sample of A successes so that the independent reader is continuously measured
+    against A, not only on failures. Recovery reuses the same KnownContext and can
+    add genuinely new OCR/compiler candidates without relaxing truth conditions.
     """
 
     budget = ResourceBudget()
@@ -80,7 +81,6 @@ def compile_filing(
     ledger: CandidateLedger = tunnel_a["ledger"]
     filing_sha = tunnel_a["document"].source_sha256
 
-    # First arbitration on A alone decides whether B is needed.
     decisions = arbitrate_candidates(
         ledger,
         required_entity=entity,
@@ -118,6 +118,7 @@ def compile_filing(
                 target_duration=3,
                 target_period_end=period_end.isoformat(),
             )
+
     ledger, resolver, equation_results = global_resolve(
         ledger,
         required_entity=entity,
@@ -132,22 +133,35 @@ def compile_filing(
         if decision.status != "SELECTED":
             unresolved_map.setdefault(decision.concept, []).append(decision.reason)
     tickets = diagnose_failures(unresolved_map)
-    unit_texts = []
+
+    unit_texts: list[str] = []
     for statement in tunnel_a.get("statements") or []:
         for item in getattr(statement, "unit_evidence", []) or []:
             if item.get("text"):
                 unit_texts.append(item["text"])
+
+    raw_numeric_texts = [
+        str(entry.raw_value) for entry in ledger.entries if entry.raw_value is not None
+    ]
     tickets = run_recovery(
         tickets,
         ledger,
         context={
             "required_entity": entity,
             "target_duration": 3,
+            "target_period_end": period_end.isoformat(),
             "pdf_path": str(pdf_path),
+            "ocr_dir": ocr_dir,
+            "known": known,
             "unit_texts": unit_texts,
+            "raw_numeric_texts": raw_numeric_texts,
             "row_labels": [e.label for e in ledger.entries if e.label][:200],
         },
     )
+
+    # Re-arbitrate recovered/new candidates, but do not run Resolver C a second time:
+    # a recovery candidate is additional evidence, not permission to reopen already
+    # settled independent concepts and manufacture fresh ambiguity.
     decisions = arbitrate_candidates(
         ledger,
         required_entity=entity,
@@ -323,8 +337,7 @@ def _core_concepts_missing(ledger: CandidateLedger) -> set[str]:
 
 
 def _risky_concepts(ledger: CandidateLedger, decisions: list[Any]) -> set[str]:
-    """Core concepts A could not settle: no selection, abstention, or a selection that
-    rests on a single low-score / layout-assist candidate."""
+    """Core concepts A could not settle without relying on weak/assisted evidence."""
 
     from cse_financial_etl.accounting.ontology import TARGET_CONCEPT_MAP
 

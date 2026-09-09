@@ -9,6 +9,7 @@ from typing import Any
 
 from cse_financial_etl.extraction.statement_extractor import ExtractedFact, QuarterPrice
 from cse_financial_etl.sources.cse import DownloadedFiling
+from cse_financial_etl.validation.acceptance import is_publishable_fact
 
 FLOW_CODES = {
     "PAT",
@@ -75,18 +76,14 @@ def evaluate_production_gates(
     """Hard stops for a universe run. Any hit means VALIDATION_REQUIRED, not gold promotion."""
 
     hits: list[GateHit] = []
-    published = 0
+    extracted_status_count = 0
+    draft_publishable_count = 0
+
     if golden_validation:
-        all_failed = [
-            row
-            for row in golden_validation.get("results", [])
-            if row.get("status") == "FAIL"
-        ]
+        all_failed = [row for row in golden_validation.get("results", []) if row.get("status") == "FAIL"]
         failed = [
             row
             for row in all_failed
-            # PIPELINE_SEEDED rows are regression anchors, not independent truth.
-            # Hard-stop only on manually verified gold mismatches.
             if str(row.get("verification_status") or "") != "PIPELINE_SEEDED"
         ]
         for row in failed:
@@ -102,6 +99,7 @@ def evaluate_production_gates(
             )
         sample = int(golden_validation.get("sample_size") or 0)
         passed = int(golden_validation.get("passed") or 0)
+        manual_issuers = int(golden_validation.get("manual_issuer_count") or 0)
         if coverage_baseline:
             min_gold = int(coverage_baseline.get("min_gold_sample") or DEFAULT_MIN_GOLD_SAMPLE)
             if sample < min_gold:
@@ -115,7 +113,21 @@ def evaluate_production_gates(
                         f"gold sample_size={sample} below required {min_gold}",
                     )
                 )
-        # Inconsistent payload: counts disagree with result rows.
+            # Issuer breadth is a new, explicit contract. Legacy/unit-test payloads that
+            # do not configure it keep their historical semantics.
+            if coverage_baseline.get("min_gold_issuers") is not None:
+                min_gold_issuers = int(coverage_baseline["min_gold_issuers"])
+                if manual_issuers < min_gold_issuers:
+                    hits.append(
+                        GateHit(
+                            "GOLD_ISSUER_SAMPLE_INCOMPLETE",
+                            "",
+                            "",
+                            None,
+                            None,
+                            f"manual_issuer_count={manual_issuers} below required {min_gold_issuers}",
+                        )
+                    )
         if sample and passed < sample and not all_failed:
             hits.append(
                 GateHit(
@@ -131,6 +143,7 @@ def evaluate_production_gates(
     issuer_scope_map: dict[str, str] = {}
     if isinstance(required_scope, dict):
         issuer_scope_map = {str(key): str(value) for key, value in required_scope.items()}
+
     for downloaded, facts in extracted_results:
         required = issuer_scope_map.get(downloaded.filing.issuer_name) or issuer_scope_map.get(
             downloaded.filing.issuer_name.casefold()
@@ -138,7 +151,30 @@ def evaluate_production_gates(
         for fact in facts:
             if fact.status not in PUBLISHED:
                 continue
-            published += 1
+            extracted_status_count += 1
+            if is_publishable_fact(fact, release_mode="DRAFT"):
+                draft_publishable_count += 1
+
+            evidence: dict[str, Any] = {}
+            if fact.evidence_json:
+                try:
+                    parsed = json.loads(fact.evidence_json)
+                    evidence = parsed if isinstance(parsed, dict) else {}
+                except json.JSONDecodeError:
+                    evidence = {}
+
+            explicit_fallback = evidence.get("explicit_fallback")
+            if explicit_fallback:
+                hits.append(
+                    GateHit(
+                        "EXPLICIT_LAYOUT_FALLBACK_USED",
+                        fact.issuer_name,
+                        fact.symbol,
+                        fact.period_end,
+                        fact.metric_code,
+                        f"publication required explicit fallback {explicit_fallback}",
+                    )
+                )
             if fact.metric_code in FLOW_CODES and fact.status == "EXTRACTED_DERIVED":
                 hits.append(
                     GateHit(
@@ -150,10 +186,7 @@ def evaluate_production_gates(
                         f"flow fact published with extraction_method={fact.extraction_method}",
                     )
                 )
-            if (
-                fact.metric_code == "TOTAL_LIABILITIES"
-                and fact.status == "EXTRACTED_DERIVED"
-            ):
+            if fact.metric_code == "TOTAL_LIABILITIES" and fact.status == "EXTRACTED_DERIVED":
                 hits.append(
                     GateHit(
                         "DERIVED_LIABILITIES_WITHOUT_EXPLICIT_ROW",
@@ -164,10 +197,7 @@ def evaluate_production_gates(
                         f"liabilities published via {fact.extraction_method}",
                     )
                 )
-            if (
-                fact.metric_code in FLOW_CODES
-                and fact.comparison_role != "CURRENT"
-            ):
+            if fact.metric_code in FLOW_CODES and fact.comparison_role != "CURRENT":
                 hits.append(
                     GateHit(
                         "CURRENT_COMPARATIVE_MISMATCH",
@@ -192,10 +222,7 @@ def evaluate_production_gates(
             expected_scope = required or (
                 fact.entity_scope if fact.entity_scope in STANDALONE else "COMPANY"
             )
-            if (
-                expected_scope in STANDALONE
-                and fact.entity_scope in {"GROUP", "CONSOLIDATED"}
-            ):
+            if expected_scope in STANDALONE and fact.entity_scope in {"GROUP", "CONSOLIDATED"}:
                 hits.append(
                     GateHit(
                         "GROUP_WHERE_STANDALONE_REQUIRED",
@@ -232,13 +259,6 @@ def evaluate_production_gates(
                         "EXTRACTED despite FAILED validation",
                     )
                 )
-            evidence = {}
-            if fact.evidence_json:
-                try:
-                    parsed = json.loads(fact.evidence_json)
-                    evidence = parsed if isinstance(parsed, dict) else {}
-                except json.JSONDecodeError:
-                    evidence = {}
             if fact.status == "EXTRACTED" and evidence.get("unresolved"):
                 hits.append(
                     GateHit(
@@ -267,8 +287,6 @@ def evaluate_production_gates(
                     )
                 )
 
-        # Issuer-quarter coherence: published facts for one filing must share
-        # entity scope / comparison role / flow duration (QA P0 finding).
         published_facts = [fact for fact in facts if fact.status in PUBLISHED]
         if len(published_facts) >= 2:
             entity_scopes = {fact.entity_scope for fact in published_facts}
@@ -293,12 +311,18 @@ def evaluate_production_gates(
                     )
                 )
 
-    min_published = 0
-    if coverage_baseline and coverage_baseline.get("min_extracted_plus_derived") is not None:
-        min_published = int(coverage_baseline["min_extracted_plus_derived"])
-    previous_published = _published_count(previous_status_counts)
-    floor = max(min_published, previous_published)
-    if floor and published < floor:
+    min_extracted = 0
+    min_draft_publishable = 0
+    if coverage_baseline:
+        if coverage_baseline.get("min_extracted_plus_derived") is not None:
+            min_extracted = int(coverage_baseline["min_extracted_plus_derived"])
+        if coverage_baseline.get("min_draft_publishable") is not None:
+            min_draft_publishable = int(coverage_baseline["min_draft_publishable"])
+
+    previous_extracted = _published_count(previous_status_counts)
+    extracted_floor = max(min_extracted, previous_extracted)
+    if extracted_floor and extracted_status_count < extracted_floor:
+        # Keep the established public gate code for compatibility with dashboards/tests.
         hits.append(
             GateHit(
                 "COVERAGE_REGRESSION",
@@ -306,7 +330,18 @@ def evaluate_production_gates(
                 "",
                 None,
                 None,
-                f"EXTRACTED+DERIVED={published} below floor {floor}",
+                f"EXTRACTED+DERIVED={extracted_status_count} below floor {extracted_floor}",
+            )
+        )
+    if min_draft_publishable and draft_publishable_count < min_draft_publishable:
+        hits.append(
+            GateHit(
+                "PUBLISHABLE_COVERAGE_REGRESSION",
+                "",
+                "",
+                None,
+                None,
+                f"draft_publishable={draft_publishable_count} below floor {min_draft_publishable}",
             )
         )
 

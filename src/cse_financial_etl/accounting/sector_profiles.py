@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from contextlib import suppress
 from dataclasses import dataclass
 
-from cse_financial_etl.config import IssuerProfile, infer_issuer_type, load_issuers
+from cse_financial_etl.config import infer_issuer_type, issuer_profile_for_name, load_issuers
 
 
 @dataclass(frozen=True, slots=True)
@@ -56,20 +57,25 @@ PROFILES: dict[str, SectorProfile] = {
 
 
 def profile_for_issuer(issuer_name: str, project_root: object | None = None) -> SectorProfile:
-    issuer_type = infer_issuer_type(issuer_name)
+    if project_root is not None:
+        with suppress(Exception):
+            load_issuers(project_root)  # type: ignore[arg-type]
+
+    configured = issuer_profile_for_name(issuer_name)
+    issuer_type = (
+        configured.issuer_type.strip().upper()
+        if configured is not None and configured.issuer_type
+        else infer_issuer_type(issuer_name)
+    )
     mapping = {
         "BANK": "BANK",
         "FINANCE_COMPANY": "FINANCE_LEASING",
+        "FINANCE": "FINANCE_LEASING",
+        "LEASING": "FINANCE_LEASING",
         "INSURANCE": "INSURANCE",
+        "GENERAL": "GENERAL_CORPORATE",
         "CORPORATE": "GENERAL_CORPORATE",
+        "HOLDING": "INVESTMENT_HOLDING",
+        "INVESTMENT_HOLDING": "INVESTMENT_HOLDING",
     }
-    code = mapping.get(issuer_type, "OTHER")
-    if project_root is not None:
-        try:
-            issuers = load_issuers(project_root)  # type: ignore[arg-type]
-            for profile in issuers:
-                if isinstance(profile, IssuerProfile) and profile.name.upper() == issuer_name.upper():
-                    break
-        except Exception:
-            pass
-    return PROFILES[code]
+    return PROFILES[mapping.get(issuer_type, "OTHER")]
