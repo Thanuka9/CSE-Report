@@ -49,7 +49,11 @@ def resolve_ambiguities(
 
     budget = budget or ResourceBudget()
     concepts = sorted(
-        {e.concept for e in ledger.entries if e.status in {"unresolved", "alternative", "accepted"}}
+        {
+            e.concept
+            for e in ledger.entries
+            if e.status in {"unresolved", "alternative", "accepted"}
+        }
     )
     total_candidates = sum(
         1
@@ -58,6 +62,7 @@ def resolve_ambiguities(
     )
     by_concept: dict[str, BeamSearchResult] = {}
     per_concept_budget: dict[str, dict[str, Any]] = {}
+    concept_iteration_exhausted: list[str] = []
     total_iterations = 0
 
     global_hypothesis_exhausted = total_candidates > budget.max_hypotheses
@@ -88,6 +93,10 @@ def resolve_ambiguities(
             per_concept_budget[concept] = local_budget.as_dict()
             if local_budget.stop_reason == "ELAPSED_BUDGET_EXHAUSTED":
                 budget.stop_reason = local_budget.stop_reason
+            elif local_budget.stop_reason == "ITERATION_BUDGET_EXHAUSTED":
+                # Record the local stop, but do not poison the parent while later
+                # concepts still have their own independent iteration allowance.
+                concept_iteration_exhausted.append(concept)
 
         by_concept[concept] = result
         if result.status == "RESOLVED" and result.winner is not None:
@@ -102,12 +111,20 @@ def resolve_ambiguities(
                     alt.status = "unresolved"
                     alt.reasons.append(result.status)
 
+    # Backward-compatible caller signal: callers that supplied ResourceBudget used
+    # these fields to verify that bounded work survived final arbitration. Project a
+    # per-concept iteration stop only after all concepts have had a fair chance.
+    if concept_iteration_exhausted and budget.stop_reason is None:
+        budget.iterations_used = budget.max_iterations
+        budget.stop_reason = "ITERATION_BUDGET_EXHAUSTED"
+
     resource_report = budget.as_dict()
     resource_report.update(
         {
             "max_iterations_scope": "PER_CONCEPT",
             "total_iterations_used": total_iterations,
             "candidate_hypotheses": total_candidates,
+            "concept_iteration_budget_exhausted": concept_iteration_exhausted,
             "per_concept": per_concept_budget,
         }
     )
