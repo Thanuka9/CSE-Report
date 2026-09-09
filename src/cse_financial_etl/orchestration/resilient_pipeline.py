@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from datetime import date
 from pathlib import Path
@@ -11,6 +11,7 @@ from cse_financial_etl.extraction.resilient_runner import (
     extract_filing_resilient,
     extract_quarter_prices_resilient,
 )
+from cse_financial_etl.extraction.statement_extractor import ExtractedFact, QuarterPrice
 from cse_financial_etl.orchestration import pipeline as pipeline_module
 from cse_financial_etl.orchestration.pipeline import Pipeline
 
@@ -30,8 +31,9 @@ def _patched_resilient_extractors(
     later run only when source SHA + code/config namespace + extraction options match.
     """
 
-    original_extract = pipeline_module.extract_filing
-    original_prices = pipeline_module.extract_quarter_prices
+    module: Any = pipeline_module
+    original_extract = module.extract_filing
+    original_prices = module.extract_quarter_prices
     financial_cache = project_root / "data" / "cache" / "resilient" / "financial"
     price_cache = project_root / "data" / "cache" / "resilient" / "prices"
 
@@ -42,7 +44,7 @@ def _patched_resilient_extractors(
         period_end: date,
         text_cache_dir: Path | None = None,
         **kwargs: Any,
-    ):
+    ) -> list[ExtractedFact]:
         return extract_filing_resilient(
             pdf_path,
             issuer_name,
@@ -59,10 +61,10 @@ def _patched_resilient_extractors(
     def resilient_prices(
         pdf_path: Path,
         issuer_name: str,
-        symbols: list[str],
+        symbols: Iterable[str],
         period_end: date,
         text_cache_dir: Path | None = None,
-    ):
+    ) -> list[QuarterPrice]:
         return extract_quarter_prices_resilient(
             pdf_path,
             issuer_name,
@@ -74,13 +76,13 @@ def _patched_resilient_extractors(
             cache_namespace=cache_namespace,
         )
 
-    pipeline_module.extract_filing = resilient_extract  # type: ignore[assignment]
-    pipeline_module.extract_quarter_prices = resilient_prices
+    module.extract_filing = resilient_extract
+    module.extract_quarter_prices = resilient_prices
     try:
         yield
     finally:
-        pipeline_module.extract_filing = original_extract
-        pipeline_module.extract_quarter_prices = original_prices
+        module.extract_filing = original_extract
+        module.extract_quarter_prices = original_prices
 
 
 def run_resilient_pipeline(
