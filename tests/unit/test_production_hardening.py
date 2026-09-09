@@ -58,6 +58,7 @@ def _acceptance_files(
     baseline: dict[str, Any] | None = None,
     manifest_overrides: dict[str, Any] | None = None,
 ) -> dict[str, Path]:
+    tmp_path.mkdir(parents=True, exist_ok=True)
     errors = errors or []
     manifest: dict[str, Any] = {
         "run_id": "run-1",

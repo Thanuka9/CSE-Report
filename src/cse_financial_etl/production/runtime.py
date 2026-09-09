@@ -21,11 +21,10 @@ from collections.abc import Callable, Iterable, Iterator
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
-from zoneinfo import ZoneInfo
 
 import polars as pl
 import yaml
@@ -36,7 +35,7 @@ from cse_financial_etl.sources import cse as cse_source
 from cse_financial_etl.sources.cse import DownloadedFiling, Filing, Security
 from cse_financial_etl.storage.repository import Repository
 
-COLOMBO = ZoneInfo("Asia/Colombo")
+COLOMBO_UTC_OFFSET = timedelta(hours=5, minutes=30)
 
 
 @dataclass(slots=True)
@@ -188,7 +187,7 @@ def _fetch_pdf_bytes(filing: Filing, *, timeout: int, max_file_bytes: int) -> by
         try:
             with urllib.request.urlopen(request, timeout=timeout) as response:
                 content_type = response.headers.get("Content-Type", "")
-                payload = response.read(max_file_bytes + 1)
+                payload = bytes(response.read(max_file_bytes + 1))
             if len(payload) > max_file_bytes:
                 raise ValueError(
                     f"Filing exceeds max size {max_file_bytes} bytes ({len(payload)}+ bytes)"
@@ -376,7 +375,7 @@ def assert_production_as_of(as_of_date: date, *, offline: bool) -> None:
 
     if offline:
         return
-    today = datetime.now(COLOMBO).date()
+    today = (datetime.now(UTC) + COLOMBO_UTC_OFFSET).date()
     if as_of_date != today:
         raise ValueError(
             f"Online production run requested as_of={as_of_date.isoformat()} but the live "
