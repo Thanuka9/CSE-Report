@@ -14,20 +14,23 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
         with:
+          version: '0.12.11'
           python-version: '3.12'
           enable-cache: true
       - run: uv sync --locked --group dev
-      - run: uv run ruff check src
+      - run: uv run ruff check src scripts/run_production_pipeline.py scripts/check_universe_acceptance.py
       - run: uv run mypy src
       - run: uv run pytest --junitxml=outputs/tests.xml
+      - name: Production hardening contract is mandatory
+        run: uv run pytest tests/unit/test_production_hardening.py --junitxml=outputs/production-hardening.xml
       - name: Six real PDFs are mandatory
         env:
           CSE_REQUIRE_FIXTURES: '1'
         run: uv run pytest tests/regression/redesign/test_compiler_real_pdfs.py --junitxml=outputs/source-acceptance.xml
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
           name: validation-${{ matrix.os }}
