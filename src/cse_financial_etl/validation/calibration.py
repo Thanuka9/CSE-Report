@@ -39,8 +39,8 @@ def _observations(results: Iterable[dict[str, Any]]) -> list[CalibrationObservat
         if raw in (None, ""):
             continue
         try:
-            score = float(raw)
-        except (TypeError, ValueError):
+            score = float(str(raw))
+        except ValueError:
             continue
         if not 0.0 <= score <= 1.0:
             continue
