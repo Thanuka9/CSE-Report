@@ -11,6 +11,9 @@ on:
         description: Hard per-PDF extraction/OCR timeout
         required: true
         default: '480'
+  push:
+    branches:
+      - chatgpt/finalize-production-20260909
 
 permissions:
   contents: read
