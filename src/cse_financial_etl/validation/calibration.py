@@ -1,14 +1,15 @@
 """Empirical calibration of machine certainty against independent MANUAL_QA truth.
 
-The extractor's ``overall_certainty`` is a ranking/triage score.  It becomes a
+The extractor's ``overall_certainty`` is a ranking/triage score. It becomes a
 calibrated probability-like quantity only after enough independent manual labels
-exist.  Until then every consumer receives an explicit insufficient-sample status.
+exist. Until then every consumer receives an explicit insufficient-sample status.
 """
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Any, Iterable
+from typing import Any
 
 MIN_CALIBRATION_SAMPLES = 100
 MIN_POPULATED_BIN_SAMPLES = 10
