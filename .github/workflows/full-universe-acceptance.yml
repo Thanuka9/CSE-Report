@@ -11,6 +11,9 @@ on:
         description: Hard per-PDF extraction/OCR timeout
         required: true
         default: '480'
+  push:
+    branches:
+      - chatgpt/final-engineering-hardening-20260909
 
 permissions:
   contents: read
@@ -67,6 +70,7 @@ jobs:
           uv run python scripts/check_universe_acceptance.py \
             --manifest "outputs/manifests/run_manifest_${{ steps.inputs.outputs.as_of }}.json" \
             --review "outputs/review_queue_${{ steps.inputs.outputs.as_of }}.csv" \
+            --facts "outputs/normalized_facts_${{ steps.inputs.outputs.as_of }}.csv" \
             --output "outputs/universe_acceptance_${{ steps.inputs.outputs.as_of }}.json"
       - name: Upload universe acceptance evidence
         if: always()

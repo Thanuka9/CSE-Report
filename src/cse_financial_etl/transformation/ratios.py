@@ -157,7 +157,7 @@ def _ratio_fact(
         certainty_band=band,
         duration_months=3,
         validation_status="PASSED",
-        review_status="APPROVED",
+        review_status="REVIEW",
         evidence_json=json.dumps(
             {
                 "formula": formula,

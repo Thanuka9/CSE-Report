@@ -7,16 +7,30 @@ import json
 from collections import Counter
 from pathlib import Path
 
+from cse_financial_etl.validation.acceptance import is_publishable_fact
+
 EXTERNAL_PROOF_GATES = {
     "GOLD_SAMPLE_INCOMPLETE",
     "GOLD_ISSUER_SAMPLE_INCOMPLETE",
 }
 
 
+def _draft_publishable_count(path: Path) -> int:
+    if not path.exists():
+        return 0
+    with path.open(newline="", encoding="utf-8") as handle:
+        return sum(
+            1
+            for row in csv.DictReader(handle)
+            if is_publishable_fact(row, release_mode="DRAFT")
+        )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--review", type=Path, required=True)
+    parser.add_argument("--facts", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
 
@@ -39,6 +53,7 @@ def main() -> int:
         "extracted_filing_count": manifest.get("extracted_filing_count"),
         "pipeline_error_count": manifest.get("pipeline_error_count"),
         "fact_status_counts": manifest.get("fact_status_counts"),
+        "draft_publishable_count": _draft_publishable_count(args.facts),
         "retry_summary": manifest.get("retry_summary"),
         "engineering_gate_count": len(engineering_gates),
         "engineering_gates": engineering_gates,
