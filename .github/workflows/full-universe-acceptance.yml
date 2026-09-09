@@ -10,10 +10,7 @@ on:
       process_timeout_seconds:
         description: Hard per-PDF extraction/OCR timeout
         required: true
-        default: '180'
-  push:
-    branches:
-      - chatgpt/full-universe-proof-20260909
+        default: '480'
 
 permissions:
   contents: read
@@ -41,7 +38,7 @@ jobs:
           AS_OF="${{ github.event.inputs.as_of }}"
           if [ -z "$AS_OF" ]; then AS_OF="2026-09-09"; fi
           TIMEOUT="${{ github.event.inputs.process_timeout_seconds }}"
-          if [ -z "$TIMEOUT" ]; then TIMEOUT="180"; fi
+          if [ -z "$TIMEOUT" ]; then TIMEOUT="480"; fi
           echo "as_of=$AS_OF" >> "$GITHUB_OUTPUT"
           echo "timeout=$TIMEOUT" >> "$GITHUB_OUTPUT"
       - name: Restore resumable CSE run cache
