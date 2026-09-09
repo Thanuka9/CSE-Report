@@ -2,13 +2,10 @@
 
 from __future__ import annotations
 
+from contextlib import suppress
 from dataclasses import dataclass
 
-from cse_financial_etl.config import (
-    infer_issuer_type,
-    issuer_profile_for_name,
-    load_issuers,
-)
+from cse_financial_etl.config import infer_issuer_type, issuer_profile_for_name, load_issuers
 
 
 @dataclass(frozen=True, slots=True)
@@ -61,10 +58,8 @@ PROFILES: dict[str, SectorProfile] = {
 
 def profile_for_issuer(issuer_name: str, project_root: object | None = None) -> SectorProfile:
     if project_root is not None:
-        try:
+        with suppress(Exception):
             load_issuers(project_root)  # type: ignore[arg-type]
-        except Exception:
-            pass
 
     configured = issuer_profile_for_name(issuer_name)
     issuer_type = (
