@@ -10,7 +10,7 @@ on:
       process_timeout_seconds:
         description: Hard per-PDF extraction/OCR timeout
         required: true
-        default: '180'
+        default: '480'
 
 permissions:
   contents: read
@@ -25,8 +25,12 @@ jobs:
         with:
           python-version: '3.12'
           enable-cache: true
-      - name: Install locked environment
-        run: uv sync --locked --group dev
+      - name: Install OCR system runtime
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ghostscript tesseract-ocr
+      - name: Install locked environment with OCR support
+        run: uv sync --locked --group dev --extra ocr
       - name: Resolve acceptance inputs
         id: inputs
         shell: bash
@@ -34,7 +38,7 @@ jobs:
           AS_OF="${{ github.event.inputs.as_of }}"
           if [ -z "$AS_OF" ]; then AS_OF="2026-09-09"; fi
           TIMEOUT="${{ github.event.inputs.process_timeout_seconds }}"
-          if [ -z "$TIMEOUT" ]; then TIMEOUT="180"; fi
+          if [ -z "$TIMEOUT" ]; then TIMEOUT="480"; fi
           echo "as_of=$AS_OF" >> "$GITHUB_OUTPUT"
           echo "timeout=$TIMEOUT" >> "$GITHUB_OUTPUT"
       - name: Restore resumable CSE run cache
