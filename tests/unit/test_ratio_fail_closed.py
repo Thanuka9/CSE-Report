@@ -100,3 +100,4 @@ def test_ratio_context_comes_from_compatible_inputs_not_arbitrary_template() -> 
         assert ratio.comparison_role == "CURRENT"
         assert ratio.currency is None
         assert ratio.source_page is None
+        assert ratio.review_status == "REVIEW"
