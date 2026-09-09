@@ -2,9 +2,6 @@ name: OCR production acceptance
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - chatgpt/production-proof-20260909
 
 permissions:
   contents: read
