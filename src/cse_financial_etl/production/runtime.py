@@ -188,7 +188,7 @@ def _fetch_pdf_bytes(filing: Filing, *, timeout: int, max_file_bytes: int) -> by
         try:
             with urllib.request.urlopen(request, timeout=timeout) as response:
                 content_type = response.headers.get("Content-Type", "")
-                payload = response.read(max_file_bytes + 1)
+                payload = bytes(response.read(max_file_bytes + 1))
             if len(payload) > max_file_bytes:
                 raise ValueError(
                     f"Filing exceeds max size {max_file_bytes} bytes ({len(payload)}+ bytes)"
