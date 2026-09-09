@@ -1,7 +1,12 @@
 import json
+import os
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
+
+# Typer/Rich otherwise inserts ANSI sequences inside option names in CliRunner help,
+# which makes deterministic help-contract tests platform/color-mode dependent.
+os.environ.setdefault("NO_COLOR", "1")
 
 import typer
 

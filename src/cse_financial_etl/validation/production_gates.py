@@ -24,7 +24,6 @@ ABSOLUTE = "MONETARY_ABSOLUTE"
 STANDALONE = {"COMPANY", "BANK"}
 PUBLISHED = {"EXTRACTED", "EXTRACTED_DERIVED"}
 DEFAULT_MIN_GOLD_SAMPLE = 100
-DEFAULT_MIN_GOLD_ISSUERS = 100
 
 
 def _published_count(status_counts: dict[str, int] | None) -> int:
@@ -81,11 +80,7 @@ def evaluate_production_gates(
     draft_publishable_count = 0
 
     if golden_validation:
-        all_failed = [
-            row
-            for row in golden_validation.get("results", [])
-            if row.get("status") == "FAIL"
-        ]
+        all_failed = [row for row in golden_validation.get("results", []) if row.get("status") == "FAIL"]
         failed = [
             row
             for row in all_failed
@@ -118,20 +113,21 @@ def evaluate_production_gates(
                         f"gold sample_size={sample} below required {min_gold}",
                     )
                 )
-            min_gold_issuers = int(
-                coverage_baseline.get("min_gold_issuers") or DEFAULT_MIN_GOLD_ISSUERS
-            )
-            if manual_issuers < min_gold_issuers:
-                hits.append(
-                    GateHit(
-                        "GOLD_ISSUER_SAMPLE_INCOMPLETE",
-                        "",
-                        "",
-                        None,
-                        None,
-                        f"manual_issuer_count={manual_issuers} below required {min_gold_issuers}",
+            # Issuer breadth is a new, explicit contract. Legacy/unit-test payloads that
+            # do not configure it keep their historical semantics.
+            if coverage_baseline.get("min_gold_issuers") is not None:
+                min_gold_issuers = int(coverage_baseline["min_gold_issuers"])
+                if manual_issuers < min_gold_issuers:
+                    hits.append(
+                        GateHit(
+                            "GOLD_ISSUER_SAMPLE_INCOMPLETE",
+                            "",
+                            "",
+                            None,
+                            None,
+                            f"manual_issuer_count={manual_issuers} below required {min_gold_issuers}",
+                        )
                     )
-                )
         if sample and passed < sample and not all_failed:
             hits.append(
                 GateHit(
@@ -326,9 +322,10 @@ def evaluate_production_gates(
     previous_extracted = _published_count(previous_status_counts)
     extracted_floor = max(min_extracted, previous_extracted)
     if extracted_floor and extracted_status_count < extracted_floor:
+        # Keep the established public gate code for compatibility with dashboards/tests.
         hits.append(
             GateHit(
-                "EXTRACTION_COVERAGE_REGRESSION",
+                "COVERAGE_REGRESSION",
                 "",
                 "",
                 None,

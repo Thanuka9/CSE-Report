@@ -141,9 +141,7 @@ def compile_filing(
                 unit_texts.append(item["text"])
 
     raw_numeric_texts = [
-        str(entry.raw_value)
-        for entry in ledger.entries
-        if entry.raw_value is not None
+        str(entry.raw_value) for entry in ledger.entries if entry.raw_value is not None
     ]
     tickets = run_recovery(
         tickets,
@@ -161,29 +159,15 @@ def compile_filing(
         },
     )
 
-    # Recovery may add fresh OCR/B candidates; re-run arbitration and Resolver C under
-    # the same hard entity/period/duration contract before querying publication facts.
+    # Re-arbitrate recovered/new candidates, but do not run Resolver C a second time:
+    # a recovery candidate is additional evidence, not permission to reopen already
+    # settled independent concepts and manufacture fresh ambiguity.
     decisions = arbitrate_candidates(
         ledger,
         required_entity=entity,
         target_duration=3,
         target_period_end=period_end.isoformat(),
     )
-    if any(t.terminal_status == "RECOVERED" for t in tickets):
-        ledger, resolver, equation_results = global_resolve(
-            ledger,
-            required_entity=entity,
-            target_duration=3,
-            target_period_end=period_end.isoformat(),
-            budget=budget,
-        )
-        decisions = arbitrate_candidates(
-            ledger,
-            required_entity=entity,
-            target_duration=3,
-            target_period_end=period_end.isoformat(),
-        )
-
     recovery_attempted = any(t.attempts for t in tickets)
     queried = query_target_facts(
         ledger,
