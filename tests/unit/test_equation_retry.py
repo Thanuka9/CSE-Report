@@ -204,6 +204,53 @@ def test_eps_and_navps_are_untested_without_independent_shares() -> None:
     assert "independent" in eps.detail.lower()
 
 
+def test_eps_sign_mismatch_fails_with_independent_shares() -> None:
+    from cse_financial_etl.validation.eps import evaluate_eps_reconciliation
+
+    facts = {
+        "PAT": _fact("PAT", "-1000"),
+        "EPS_BASIC": _fact("EPS_BASIC", "10", metric_type="MONETARY_PER_SHARE"),
+        "WEIGHTED_AVG_SHARES": _fact("WEIGHTED_AVG_SHARES", "100", metric_type="COUNT"),
+    }
+    result = evaluate_eps_reconciliation(facts)
+    assert result.outcome == ValidationOutcome.FAIL
+
+
+def test_retry_extract_kwargs_reach_extractor(tmp_path: Path) -> None:
+    captured: dict[str, object] = {}
+
+    def extract(*_args, **kwargs):  # type: ignore[no-untyped-def]
+        captured.update(kwargs)
+        return [
+            _fact("TOTAL_ASSETS", "1000"),
+            _fact("TOTAL_LIABILITIES", "400"),
+            _fact("TOTAL_EQUITY", "600"),
+        ]
+
+    def validate(facts):  # type: ignore[no-untyped-def]
+        mapped = {fact.metric_code: fact for fact in facts}
+        return [evaluate_balance_sheet_identity(mapped)]
+
+    failing = [
+        _fact("TOTAL_ASSETS", "1000"),
+        _fact("TOTAL_LIABILITIES", "100"),
+        _fact("TOTAL_EQUITY", "600"),
+    ]
+    RetryController(max_rounds=1).run(
+        failing,
+        pdf_path=tmp_path / "x.pdf",
+        issuer_name="Acme PLC",
+        symbol="ACM.N0000",
+        period_end=date(2026, 6, 30),
+        validate=validate,
+        extract=extract,
+        lineage_dir=tmp_path,
+        extract_kwargs={"issuers": {"x": 1}, "ocr_enabled": True},
+    )
+    assert captured.get("issuers") == {"x": 1}
+    assert captured.get("ocr_enabled") is True
+
+
 def test_eps_reconciles_with_independent_shares() -> None:
     from cse_financial_etl.validation.eps import evaluate_eps_reconciliation
 

@@ -11,6 +11,7 @@ from dataclasses import replace
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
+from typing import Any, Protocol
 
 from cse_financial_etl.config import (
     code_version,
@@ -21,6 +22,10 @@ from cse_financial_etl.config import (
     load_issuers,
     load_metric_catalog,
     load_unit_pattern_config,
+)
+from cse_financial_etl.contracts.release import (
+    DEFAULT_DECISIONS_RELATIVE_PATH,
+    apply_review_decisions,
 )
 from cse_financial_etl.domain.periods import supporting_periods
 from cse_financial_etl.extraction.semantic_matcher import apply_metric_catalog, get_semantic_matcher
@@ -57,6 +62,7 @@ from cse_financial_etl.storage.run_archive import (
     utc_stamp,
 )
 from cse_financial_etl.transformation.ratios import derive_ratio_facts
+from cse_financial_etl.validation.acceptance import current_release_mode, set_release_mode
 from cse_financial_etl.validation.cross_filing import flag_cross_filing_mismatches
 from cse_financial_etl.validation.equation_engine import ValidationOutcome
 from cse_financial_etl.validation.golden import validate_golden
@@ -73,12 +79,121 @@ from cse_financial_etl.validation.retry_controller import (
 DEFAULT_PERIODS = (date(2025, 12, 31), date(2026, 3, 31), date(2026, 6, 30))
 
 
-def derive_cumulative_quarters(
-    extracted_results: list[tuple[DownloadedFiling, list[ExtractedFact]]],
-) -> list[tuple[DownloadedFiling, list[ExtractedFact]]]:
-    """Compatibility no-op: cumulative/YTD values are never published as quarters."""
+class ValidationOutcomeLike(Protocol):
+    rule_id: str
+    outcome: ValidationOutcome
 
-    return extracted_results
+# Equation rule -> metric codes whose validation status the rule speaks for.
+RULE_METRICS: dict[str, frozenset[str]] = {
+    "BALANCE_SHEET_IDENTITY": frozenset({"TOTAL_ASSETS", "TOTAL_LIABILITIES", "TOTAL_EQUITY"}),
+    "BALANCE_SHEET_SANITY": frozenset({"TOTAL_ASSETS", "TOTAL_EQUITY"}),
+    "CROSS_METRIC_CONTEXT_INCONSISTENT": frozenset(
+        {"TOP_LINE", "OPERATING_PROFIT", "PBT", "PAT", "EPS_BASIC", "EPS_DILUTED"}
+    ),
+    "PAT_TAX_BRIDGE": frozenset({"PBT", "PAT"}),
+    "EPS_RECONCILIATION": frozenset({"PAT", "EPS_BASIC", "EPS_DILUTED", "EPS_SELECTED"}),
+    "NAVPS_RECONCILIATION": frozenset({"TOTAL_EQUITY", "NAVPS"}),
+}
+RULE_REVIEW_REASON: dict[str, str] = {
+    "BALANCE_SHEET_IDENTITY": "BALANCE_SHEET_RECONCILIATION_FAILED",
+    "BALANCE_SHEET_SANITY": "BALANCE_SHEET_SANITY_FAILED",
+    "CROSS_METRIC_CONTEXT_INCONSISTENT": "CROSS_METRIC_CONTEXT_INCONSISTENT",
+    "PAT_TAX_BRIDGE": "PAT_TAX_BRIDGE_MISMATCH",
+    "EPS_RECONCILIATION": "EPS_RECONCILIATION_FAILED",
+    "NAVPS_RECONCILIATION": "NAVPS_RECONCILIATION_FAILED",
+}
+
+
+def build_extract_kwargs(
+    *,
+    app_config: Any,
+    issuers: dict[str, Any],
+    text_cache_dir: Path,
+    diagnostics_dir: Path | None,
+    compile_statements: bool,
+    run_tunnel_b_always: bool,
+) -> dict[str, Any]:
+    """The ONE set of extraction business rules — used by the primary pass and every
+    retry (gap A1). A retry that ran under different issuer profiles / OCR / thresholds
+    would silently replace production facts with differently-ruled ones."""
+
+    return {
+        "text_cache_dir": text_cache_dir,
+        "ocr_enabled": app_config.ocr_enabled,
+        "issuers": issuers,
+        "diagnostics_dir": diagnostics_dir if app_config.keep_review_diagnostics else None,
+        "auto_approve_threshold": app_config.auto_approve_threshold,
+        "manual_review_threshold": app_config.manual_review_threshold,
+        "compile_statements": compile_statements,
+        "run_tunnel_b_always": run_tunnel_b_always,
+    }
+
+
+def stamp_validation_status(
+    facts: list[ExtractedFact],
+    results: list[ValidationOutcomeLike],
+) -> list[ExtractedFact]:
+    """Stamp equation outcomes onto facts (gap A4).
+
+    * A metric covered by a FAILED equation -> ``FAILED`` (with the failing rules recorded).
+    * A metric covered by at least one PASSED equation -> ``PASSED``.
+    * A fact the publisher already validated against the source contract keeps ``PASSED``.
+    * Everything else stays ``NOT_VALIDATED`` — there is no vacuous PASSED.
+    """
+
+    failed_metrics: set[str] = set()
+    passed_metrics: set[str] = set()
+    for result in results:
+        metrics = RULE_METRICS.get(result.rule_id, frozenset())
+        if result.outcome == ValidationOutcome.FAIL:
+            failed_metrics.update(metrics)
+        elif result.outcome == ValidationOutcome.PASS:
+            passed_metrics.update(metrics)
+    passed_metrics -= failed_metrics
+    stamped: list[ExtractedFact] = []
+    for fact in facts:
+        if fact.status not in {"EXTRACTED", "EXTRACTED_DERIVED"}:
+            stamped.append(fact)
+            continue
+        if fact.metric_code in failed_metrics:
+            evidence = _evidence_dict(fact)
+            evidence["equation_failures"] = sorted(failed_metrics)
+            stamped.append(
+                replace(
+                    fact,
+                    validation_status="FAILED",
+                    evidence_json=json.dumps(evidence, separators=(",", ":")),
+                )
+            )
+        elif fact.validation_status == "PASSED":
+            stamped.append(fact)
+        elif fact.metric_code in passed_metrics:
+            evidence = _evidence_dict(fact)
+            evidence["equation_passes"] = sorted(
+                r.rule_id for r in results if r.outcome == ValidationOutcome.PASS and fact.metric_code in RULE_METRICS.get(r.rule_id, ())
+            )
+            stamped.append(
+                replace(
+                    fact,
+                    validation_status="PASSED",
+                    evidence_json=json.dumps(evidence, separators=(",", ":")),
+                )
+            )
+        elif fact.validation_status in {"FAILED", "REJECTED"}:
+            stamped.append(fact)
+        else:
+            stamped.append(replace(fact, validation_status="NOT_VALIDATED"))
+    return stamped
+
+
+def _evidence_dict(fact: ExtractedFact) -> dict[str, Any]:
+    if not fact.evidence_json:
+        return {}
+    try:
+        parsed = json.loads(fact.evidence_json)
+    except json.JSONDecodeError:
+        return {}
+    return parsed if isinstance(parsed, dict) else {}
 
 
 def _previous_fact_status_counts(preserved: Path | None) -> dict[str, int] | None:
@@ -135,6 +250,7 @@ class Pipeline:
     ) -> dict[str, object]:
         target_periods = tuple(periods)
         extraction_periods = supporting_periods(target_periods)
+        set_release_mode(self.app_config.release_mode)
         run_id = str(uuid.uuid4())
         self.repository.start_run(run_id, as_of_date)
         errors: list[dict[str, str]] = []
@@ -246,23 +362,26 @@ class Pipeline:
         self.progress(f"[4/7] Extracting statements from {len(downloaded)} PDFs")
         extracted_results: list[tuple[DownloadedFiling, list[ExtractedFact]]] = []
 
+        def extract_kwargs_for(item: DownloadedFiling) -> dict[str, Any]:
+            diagnostics_dir = self.data / "tmp" / run_id / item.sha256[:16]
+            return build_extract_kwargs(
+                app_config=self.app_config,
+                issuers=self.issuers,
+                text_cache_dir=self.data / "bronze" / "ocr" / item.local_path.parent.name,
+                diagnostics_dir=diagnostics_dir,
+                compile_statements=compile_statements,
+                run_tunnel_b_always=run_tunnel_b_always,
+            )
+
         def extract_one(item: DownloadedFiling) -> tuple[DownloadedFiling, list[ExtractedFact]]:
             diagnostics_dir = self.data / "tmp" / run_id / item.sha256[:16]
+            kwargs = extract_kwargs_for(item)
             facts = extract_filing(
                 item.local_path,
                 item.filing.issuer_name,
                 item.filing.symbol,
                 item.filing.period_end,
-                self.data / "bronze" / "ocr" / item.local_path.parent.name,
-                ocr_enabled=self.app_config.ocr_enabled,
-                issuers=self.issuers,
-                diagnostics_dir=(
-                    diagnostics_dir if self.app_config.keep_review_diagnostics else None
-                ),
-                auto_approve_threshold=self.app_config.auto_approve_threshold,
-                manual_review_threshold=self.app_config.manual_review_threshold,
-                compile_statements=compile_statements,
-                run_tunnel_b_always=run_tunnel_b_always,
+                **kwargs,
             )
             quality_path = diagnostics_dir / "document_quality.json"
             if quality_path.exists():
@@ -301,7 +420,6 @@ class Pipeline:
                 if index % 50 == 0 or index == len(extraction_futures):
                     self.progress(f"      extracted {index}/{len(extraction_futures)}")
 
-        extracted_results = derive_cumulative_quarters(extracted_results)
         extracted_results = derive_ratio_facts(extracted_results, display_periods=target_periods)
         for downloaded_item, facts in extracted_results:
             self.repository.save_filing_and_facts(downloaded_item, facts)
@@ -348,17 +466,18 @@ class Pipeline:
                             filled.append(price)
                             continue
                         value, price_date, method = resolved
+                        staleness = (price.period_end - price_date).days
                         filled.append(
                             replace(
                                 price,
                                 value=value,
                                 source_line=(
-                                    f"price_date={price_date.isoformat()}; never live snapshot "
-                                    "after quarter end"
+                                    f"price_date={price_date.isoformat()}; method={method}; "
+                                    f"staleness_days={staleness}; never live snapshot after quarter end"
                                 ),
                                 source_method=method,
                                 confidence="MEDIUM",
-                                status="EXTRACTED",
+                                status="RESOLVED_HISTORICAL",
                                 confidence_score=0.8,
                                 certainty_band="MEDIUM",
                                 validation_status="PASSED",
@@ -368,7 +487,7 @@ class Pipeline:
                     published_prices.extend(filled)
                     for price in filled:
                         price_status_counts[price.status] += 1
-                        if price.status != "EXTRACTED":
+                        if price.status not in {"EXTRACTED", "RESOLVED_HISTORICAL"}:
                             self.repository.add_review(
                                 run_id,
                                 price.issuer_name,
@@ -378,6 +497,24 @@ class Pipeline:
                                 metric_code="MARKET_PRICE_QUARTER_END",
                                 detail=price.source_line,
                             )
+                        elif price.status == "RESOLVED_HISTORICAL":
+                            staleness_text = ""
+                            if price.source_line and "staleness_days=" in price.source_line:
+                                staleness_text = price.source_line.split("staleness_days=")[1].split(";")[0]
+                            try:
+                                stale_days = int(staleness_text)
+                            except ValueError:
+                                stale_days = 0
+                            if stale_days > self.app_config.price_staleness_max_days:
+                                self.repository.add_review(
+                                    run_id,
+                                    price.issuer_name,
+                                    price.symbol,
+                                    "PRICE_STALE",
+                                    period_end=price.period_end,
+                                    metric_code="MARKET_PRICE_QUARTER_END",
+                                    detail=price.source_line,
+                                )
                 except Exception as exc:
                     errors.append(
                         {
@@ -422,6 +559,7 @@ class Pipeline:
                     extract=extract_filing,
                     lineage_dir=lineage_dir,
                     extra_failures=gap_triggers,
+                    extract_kwargs=extract_kwargs_for(item),
                 )
                 retry_summary["filings"] += 1
                 retry_summary["attempts"] += len(outcome.attempts)
@@ -468,62 +606,21 @@ class Pipeline:
                     period_end=item.filing.period_end,
                     detail=result.detail,
                 )
-            failed_metrics: set[str] = set()
-            for result in results:
-                if result.outcome != ValidationOutcome.FAIL:
-                    continue
-                failed_metrics.update(
-                    {
-                        "BALANCE_SHEET_IDENTITY": {
-                            "TOTAL_ASSETS",
-                            "TOTAL_LIABILITIES",
-                            "TOTAL_EQUITY",
-                        },
-                        "BALANCE_SHEET_SANITY": {"TOTAL_ASSETS", "TOTAL_EQUITY"},
-                        "CROSS_METRIC_CONTEXT_INCONSISTENT": {
-                            "TOP_LINE",
-                            "OPERATING_PROFIT",
-                            "PBT",
-                            "PAT",
-                            "EPS_BASIC",
-                            "EPS_DILUTED",
-                        },
-                        "PAT_TAX_BRIDGE": {"PBT", "PAT"},
-                        "EPS_RECONCILIATION": {
-                            "PAT",
-                            "EPS_BASIC",
-                            "EPS_DILUTED",
-                            "EPS_SELECTED",
-                        },
-                        "NAVPS_RECONCILIATION": {"TOTAL_EQUITY", "NAVPS"},
-                    }.get(result.rule_id, set())
+            facts = stamp_validation_status(facts, results)
+            decisions_path = self.root / DEFAULT_DECISIONS_RELATIVE_PATH
+            facts, _release = apply_review_decisions(
+                facts,
+                [],
+                filing_sha256=item.sha256,
+            )
+            if decisions_path.exists():
+                from cse_financial_etl.contracts.release import load_review_decisions
+
+                facts, _release = apply_review_decisions(
+                    facts,
+                    load_review_decisions(decisions_path),
+                    filing_sha256=item.sha256,
                 )
-            stamped: list[ExtractedFact] = []
-            for fact in facts:
-                if fact.status not in {"EXTRACTED", "EXTRACTED_DERIVED"}:
-                    stamped.append(fact)
-                    continue
-                if fact.metric_code in failed_metrics:
-                    evidence = {}
-                    if fact.evidence_json:
-                        try:
-                            parsed = json.loads(fact.evidence_json)
-                            evidence = parsed if isinstance(parsed, dict) else {}
-                        except json.JSONDecodeError:
-                            evidence = {}
-                    evidence["equation_failures"] = sorted(failed_metrics)
-                    stamped.append(
-                        replace(
-                            fact,
-                            validation_status="FAILED",
-                            evidence_json=json.dumps(evidence, separators=(",", ":")),
-                        )
-                    )
-                elif fact.validation_status in {"NOT_VALIDATED", "REVIEW"}:
-                    stamped.append(replace(fact, validation_status="PASSED"))
-                else:
-                    stamped.append(fact)
-            facts = stamped
             refreshed_results.append((item, facts))
         extracted_results = refreshed_results
         # Rebuild ratios from stamped validation so FAILED inputs are not published.
@@ -560,15 +657,6 @@ class Pipeline:
         facts_csv = self.outputs / f"normalized_facts_{as_of_date.isoformat()}.csv"
         review_csv = self.outputs / f"review_queue_{as_of_date.isoformat()}.csv"
         prices_csv = self.outputs / f"quarter_end_prices_{as_of_date.isoformat()}.csv"
-        self.repository.export_facts_csv(facts_csv, extraction_periods)
-        self.repository.export_prices_csv(prices_csv, target_periods)
-        self.repository.export_review_csv(review_csv, run_id)
-        error_path = self.outputs / f"pipeline_errors_{as_of_date.isoformat()}.json"
-        error_path.write_text(json.dumps(errors, indent=2), encoding="utf-8")
-        shutil.copy2(facts_csv, run_dir / "normalized_facts.csv")
-        shutil.copy2(review_csv, run_dir / "review_queue.csv")
-        shutil.copy2(prices_csv, run_dir / "quarter_end_prices.csv")
-        shutil.copy2(error_path, run_dir / "pipeline_errors.json")
         golden_validation = validate_golden(self.root, as_of_date)
         gate_hits = evaluate_production_gates(
             extracted_results,
@@ -590,6 +678,15 @@ class Pipeline:
                 metric_code=hit.metric_code,
                 detail=hit.detail,
             )
+        self.repository.export_facts_csv(facts_csv, extraction_periods)
+        self.repository.export_prices_csv(prices_csv, target_periods)
+        self.repository.export_review_csv(review_csv, run_id)
+        error_path = self.outputs / f"pipeline_errors_{as_of_date.isoformat()}.json"
+        error_path.write_text(json.dumps(errors, indent=2), encoding="utf-8")
+        shutil.copy2(facts_csv, run_dir / "normalized_facts.csv")
+        shutil.copy2(review_csv, run_dir / "review_queue.csv")
+        shutil.copy2(prices_csv, run_dir / "quarter_end_prices.csv")
+        shutil.copy2(error_path, run_dir / "pipeline_errors.json")
         run_status = run_status_from_gates(
             gate_hits,
             has_errors=bool(errors),
@@ -638,6 +735,7 @@ class Pipeline:
             "equation_validation": dict(equation_summary),
             "retry_summary": retry_summary,
             "ocr_enabled": self.app_config.ocr_enabled,
+            "release_mode": current_release_mode(),
             "use_transformer": self.app_config.use_transformer,
             "semantic_model": get_semantic_matcher().model_name,
             "archived_prior_run_files": [str(path) for path in archived],

@@ -35,7 +35,26 @@ def _fact(**overrides: object) -> ExtractedFact:
 
 
 def test_extracted_passed_is_publishable() -> None:
+    from cse_financial_etl.validation.acceptance import set_release_mode
+
+    set_release_mode("OFFICIAL")
     assert is_publishable_fact(_fact())
+
+
+def test_review_is_not_publishable_in_official_mode() -> None:
+    from cse_financial_etl.validation.acceptance import (
+        RELEASE_DRAFT,
+        RELEASE_OFFICIAL,
+        set_release_mode,
+    )
+
+    set_release_mode(RELEASE_OFFICIAL)
+    pending = _fact(review_status="REVIEW")
+    assert not is_publishable_fact(pending)
+    assert publishability_decision(pending)[1] == "REVIEW_REQUIRED"
+    set_release_mode(RELEASE_DRAFT)
+    assert is_publishable_fact(pending, release_mode=RELEASE_DRAFT)
+    set_release_mode(RELEASE_OFFICIAL)
 
 
 def test_failed_validation_is_not_publishable() -> None:

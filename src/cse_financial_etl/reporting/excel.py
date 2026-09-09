@@ -13,9 +13,9 @@ from openpyxl.formatting.rule import FormulaRule
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
-from cse_financial_etl.sources.historical_prices import resolve_quarter_end_price
 from cse_financial_etl.validation.acceptance import (
     PUBLISHABLE_STATUSES,
+    current_release_mode,
     publishability_decision,
 )
 
@@ -232,10 +232,9 @@ def generate_excel(
         return profit / denominator
 
     def derived_metric(issuer: str, period: date, code: str, fallback: float | str) -> float | str:
-        value = value_or_reason(issuer, period, code)
-        if value != "NOT_REPORTED":
-            return value
-        return fallback
+        # Excel displays pipeline CSV values only; fallbacks must not recompute (gap A7).
+        del fallback
+        return value_or_reason(issuer, period, code)
 
     ranked = sorted(
         market,
@@ -282,7 +281,14 @@ def generate_excel(
     title(
         snapshot,
         f"A1:{get_column_letter(total_columns)}1",
-        "CSE Market Capitalization and Standalone Financial Snapshot",
+        (
+            "CSE Market Capitalization and Standalone Financial Snapshot"
+            + (
+                "  [DRAFT — not an official release]"
+                if current_release_mode() != "OFFICIAL"
+                else ""
+            )
+        ),
     )
     snapshot.row_dimensions[1].height = 28
     snapshot.merge_cells(start_row=2, start_column=1, end_row=2, end_column=6)
@@ -388,15 +394,12 @@ def generate_excel(
                 values[code] = value_or_reason(issuer, period, code)
                 snapshot.cell(row_index, start + offset, values[code])
             price_row = price_map.get((symbol, period.isoformat()))
+            accepted_price = {"EXTRACTED", "RESOLVED_HISTORICAL"}
             price = (
                 _number(price_row.get("value"))
-                if price_row and price_row.get("status") == "EXTRACTED"
+                if price_row and price_row.get("status") in accepted_price
                 else None
             )
-            if price is None:
-                resolved = resolve_quarter_end_price(project_root, symbol, period)
-                if resolved is not None:
-                    price, _price_date, _method = resolved
             snapshot.cell(
                 row_index,
                 start + 9,
@@ -404,15 +407,10 @@ def generate_excel(
                 if price is not None
                 else (price_row.get("status") if price_row else "HISTORICAL_PRICE_NOT_AVAILABLE"),
             )
-            liabilities, equity = values["TOTAL_LIABILITIES"], values["TOTAL_EQUITY"]
-            if isinstance(liabilities, float) and isinstance(equity, float):
-                debt_fallback: float | str = liabilities / equity if equity else "ZERO_EQUITY"
-            else:
-                debt_fallback = "INSUFFICIENT_INPUT"
             snapshot.cell(
                 row_index,
                 start + 10,
-                derived_metric(issuer, period, "DEBT_TO_EQUITY", debt_fallback),
+                derived_metric(issuer, period, "DEBT_TO_EQUITY", "NOT_REPORTED"),
             )
             snapshot.cell(
                 row_index,

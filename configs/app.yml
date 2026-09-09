@@ -16,6 +16,12 @@ extraction:
   use_transformer: false
   semantic_model: rapidfuzz-token-set
   keep_review_diagnostics: true
+publication:
+  # DRAFT: validated-but-unreviewed candidates are displayed and every artefact
+  # (workbook, dashboard, manifest) is labelled DRAFT. OFFICIAL: only facts with an
+  # authenticated reviewer approval in data/review/review_decisions.jsonl publish.
+  release_mode: DRAFT
+  price_staleness_max_days: 7
 reporting:
   rolling_period_count: 3
   currency: LKR

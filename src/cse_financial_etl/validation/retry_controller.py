@@ -237,17 +237,13 @@ class RetryController:
                 "RESELECT_STATEMENT_REGION",
             }:
                 kwargs["prefer_standalone_sofp"] = True
-            try:
-                refreshed = extract_fn(
-                    pdf_path,
-                    issuer_name,
-                    symbol,
-                    period_end,
-                    **kwargs,
-                )
-            except TypeError:
-                # Extractors that do not accept retry flags still get a clean re-run.
-                refreshed = extract_fn(pdf_path, issuer_name, symbol, period_end)
+            refreshed = extract_fn(
+                pdf_path,
+                issuer_name,
+                symbol,
+                period_end,
+                **kwargs,
+            )
             facts = list(refreshed)
             results = validate_fn(facts)
             pending = _failures(results) + extraction_gap_triggers(facts)

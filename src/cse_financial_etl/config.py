@@ -39,6 +39,12 @@ class AppConfig:
     http_max_retries: int = 3
     balance_sheet_relative: float = 0.005
     keep_review_diagnostics: bool = True
+    # OFFICIAL: only reviewer-approved facts publish. DRAFT: validated but unreviewed
+    # candidates are displayed, and every artefact is labelled DRAFT (audit finding 6).
+    release_mode: str = "OFFICIAL"
+    # Quarter-end prices resolved from history older than this many days before the
+    # quarter end raise a PRICE_STALE gate (gap A5).
+    price_staleness_max_days: int = 7
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,6 +53,7 @@ class IssuerProfile:
     legal_name: str
     issuer_type: str
     standalone_scope_label: str
+    fiscal_year_end_month: int | None = None
 
 
 def load_yaml(path: Path) -> dict[str, Any]:
@@ -63,7 +70,10 @@ def load_app_config(project_root: Path) -> AppConfig:
     validation = load_yaml(project_root / "configs" / "validation_rules.yml")
     thresholds = validation.get("thresholds") or {}
     tolerances = validation.get("tolerances") or {}
+    publication = payload.get("publication") or {}
     return AppConfig(
+        release_mode=str(publication.get("release_mode", "OFFICIAL")).strip().upper(),
+        price_staleness_max_days=int(publication.get("price_staleness_max_days", 7)),
         auto_approve_threshold=float(
             thresholds.get("auto_approve", extraction.get("auto_approve_threshold", 0.95))
         ),
@@ -98,11 +108,13 @@ def load_issuers(project_root: Path) -> dict[str, IssuerProfile]:
     profiles: dict[str, IssuerProfile] = {}
     for issuer_id, raw in (payload.get("issuers") or {}).items():
         legal_name = str(raw.get("legal_name") or issuer_id).strip()
+        fy_end = raw.get("fiscal_year_end_month")
         profile = IssuerProfile(
             issuer_id=str(issuer_id),
             legal_name=legal_name,
             issuer_type=str(raw.get("issuer_type") or "GENERAL"),
             standalone_scope_label=str(raw.get("standalone_scope_label") or "COMPANY"),
+            fiscal_year_end_month=int(fy_end) if fy_end not in (None, "") else None,
         )
         profiles[legal_name.casefold()] = profile
     return profiles

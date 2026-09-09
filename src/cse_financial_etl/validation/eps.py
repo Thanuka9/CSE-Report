@@ -33,7 +33,7 @@ def _independent_shares(facts: Mapping[str, ExtractedFact]) -> Decimal | None:
     for code in _SHARE_METRIC_CODES:
         shares = published_value(facts.get(code))
         if shares is not None and shares != 0:
-            return abs(shares)
+            return shares
     return None
 
 
@@ -47,7 +47,7 @@ def evaluate_eps_reconciliation(
         or published_value(facts.get("EPS_DILUTED"))
         or published_value(facts.get("EPS_BASIC"))
     )
-    if pat is None or eps is None or eps == 0:
+    if pat is None or eps is None:
         return ValidationResult(
             rule.rule_id,
             ValidationOutcome.NOT_APPLICABLE,
@@ -56,30 +56,16 @@ def evaluate_eps_reconciliation(
 
     shares = _independent_shares(facts)
     if shares is None:
-        # Circular PAT/EPS implied-share checks are not independent reconciliation.
-        implied = abs(pat / eps)
-        if implied < Decimal("1000") or implied > Decimal("1e12"):
-            return ValidationResult(
-                rule.rule_id,
-                ValidationOutcome.FAIL,
-                f"Implied shares {implied} outside plausible band (no independent denominator)",
-                evidence={"pat": str(pat), "eps": str(eps), "implied_shares": str(implied)},
-            )
         return ValidationResult(
             rule.rule_id,
             ValidationOutcome.UNTESTED,
             "Independent EPS reconciliation untested: no extracted share-count denominator",
-            evidence={
-                "pat": str(pat),
-                "eps": str(eps),
-                "implied_shares": str(implied),
-                "independent_shares": None,
-            },
+            evidence={"pat": str(pat), "eps": str(eps), "independent_shares": None},
         )
 
     recomputed = pat / shares
     difference, tolerance, ok = relative_difference(
-        abs(eps), abs(recomputed), relative=rule.tolerance_relative, floor=Decimal("0.0001")
+        eps, recomputed, relative=rule.tolerance_relative, floor=Decimal("0.0001")
     )
     evidence = {
         "pat": str(pat),

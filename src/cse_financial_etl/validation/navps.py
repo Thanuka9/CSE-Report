@@ -33,7 +33,7 @@ def _independent_shares(facts: Mapping[str, ExtractedFact]) -> Decimal | None:
     for code in _SHARE_METRIC_CODES:
         shares = published_value(facts.get(code))
         if shares is not None and shares != 0:
-            return abs(shares)
+            return shares
     return None
 
 
@@ -43,7 +43,7 @@ def evaluate_navps_reconciliation(
 ) -> ValidationResult:
     equity = published_value(facts.get("TOTAL_EQUITY"))
     navps = published_value(facts.get("NAVPS"))
-    if equity is None or navps is None or navps == 0:
+    if equity is None or navps is None:
         return ValidationResult(
             rule.rule_id,
             ValidationOutcome.NOT_APPLICABLE,
@@ -52,19 +52,6 @@ def evaluate_navps_reconciliation(
 
     shares = _independent_shares(facts)
     if shares is None:
-        implied = abs(equity / navps)
-        if implied < Decimal("1000") or implied > Decimal("1e12"):
-            return ValidationResult(
-                rule.rule_id,
-                ValidationOutcome.FAIL,
-                f"Implied shares from NAVPS {implied} outside plausible band "
-                "(no independent denominator)",
-                evidence={
-                    "equity": str(equity),
-                    "navps": str(navps),
-                    "implied_shares": str(implied),
-                },
-            )
         return ValidationResult(
             rule.rule_id,
             ValidationOutcome.UNTESTED,
@@ -72,14 +59,13 @@ def evaluate_navps_reconciliation(
             evidence={
                 "equity": str(equity),
                 "navps": str(navps),
-                "implied_shares": str(implied),
                 "independent_shares": None,
             },
         )
 
     recomputed = equity / shares
     difference, tolerance, ok = relative_difference(
-        abs(navps), abs(recomputed), relative=rule.tolerance_relative, floor=Decimal("0.0001")
+        navps, recomputed, relative=rule.tolerance_relative, floor=Decimal("0.0001")
     )
     evidence = {
         "equity": str(equity),

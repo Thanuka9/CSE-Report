@@ -1,44 +1,34 @@
-# CSE Extraction Redesign R2 — Completion Checklist
+# CSE Extraction Redesign R2 — honest status
 
-Status after compiler publish cutover. External-only remainders are marked EXTERNAL.
+DONE only when a named test or wired production caller proves it. Labels without callers are PARTIAL/NOT DONE.
 
-## Architecture / publish path
-- [x] Statement-compiler publish path (`A/B/C → arbiter → query → gates → publisher`)
-- [x] Layout extractor assists discovery only (ledger seed); not silent sole publisher
-- [x] Explicit bounded layout fallback with issue codes (`LAYOUT_FALLBACK_*`, `COMPILER_DISABLED`)
-- [x] Never blank→0; never A−E liabilities; exact 3M flow; no live prices as quarter-end
-- [x] No LLM on publish (regex + RapidFuzz)
+## Compiler / publish path
+| Item | Status | Evidence |
+|---|---|---|
+| Geometry-bound table reconstruction | DONE | `tests/unit/redesign/test_table_reconstruction.py` |
+| Header dates/entities (no invented 31 Dec) | DONE | `tests/unit/redesign/test_header_tree.py` |
+| Bounded unit typing (EPS not ×1000) | DONE | `tests/unit/redesign/test_unit_typing.py` |
+| Compiler is default path; honest routing fields | DONE | `tests/regression/redesign/test_compiler_wiring.py`, `tests/unit/redesign/test_eligibility_publisher.py` |
+| Shared eligibility + arbiter abstain + FAILED preserved | DONE | `tests/unit/redesign/test_eligibility_publisher.py` |
+| REVIEW not official-publishable | DONE | `tests/unit/test_acceptance.py` |
+| Vacuous PASSED removed | DONE | `tests/unit/test_pipeline_stamping.py` |
+| Retry uses same extract kwargs | DONE | `tests/unit/test_equation_retry.py::test_retry_extract_kwargs_reach_extractor` |
+| Excel reads CSV prices (no live re-resolve) | DONE | code path in `reporting/excel.py`; RESOLVED_HISTORICAL accepted |
+| Review CSV after gate hits | DONE | `pipeline.py` stage 7 order |
+| EPS/NAVPS sign-aware, UNTESTED without shares | DONE | `tests/unit/test_equation_retry.py` |
 
-## §45 modules (in-repo packages)
-- [x] ingestion/ document/ compiler/ accounting/ constraints/ tunnels/
-- [x] resolution/ recovery/ facts/ validation/ publication gates
-- [x] `facts/publisher.py` publish conversion
-- [x] Resource budget (`resolution/resource_budget.py`)
-- [x] Stage cache + atomic write (`storage/stage_cache.py`)
+## PARTIAL / NOT DONE (in-repo remaining)
+| Item | Status | Why |
+|---|---|---|
+| Six-PDF zero-fallback compiler acceptance | PARTIAL | `test_compiler_real_pdfs.py` may exist; CI still skips when `data/**` is absent |
+| Resource budget driving beam search | PARTIAL | `ResourceBudget.exhausted()` checked; beam width/iterations not fully enforced |
+| StageCache / Accuracy_Quality sheet | PARTIAL | helpers exist; not all called every run |
+| MiniLM extra still in pyproject | NOT DONE | `semantic` extra still listed; default-off is not removal |
+| CI immutable-main / no patch-push | NOT DONE | workflow still needs rewrite |
+| Gold fixture context fields | PARTIAL | MANUAL_* flows checked; seeded rows remain numeric-only |
+| Atomic gold promote | NOT DONE | per-file `os.replace` |
+| Human 100-issuer adjudication | EXTERNAL | bank reviewers |
+| Official release identities | EXTERNAL | gate exists (`contracts/release.py`); identities are bank-supplied |
 
-## §47 tests
-- [x] Redesign unit suite (`tests/unit/redesign`)
-- [x] Compiler wiring / no silent layout (`tests/regression/redesign`)
-- [x] Universe failure pack + structure benchmark + golden integration green
-- [x] No-overpublication gates covered
-
-## §48–54 offline DoD
-- [x] Separate redesign metrics tracker (`reporting/redesign_metrics.py`)
-- [x] Offline eval harness (`validation/eval_harness.py`) — ran on local golden lake
-- [x] Production logging contract (`build_extraction_report` §50)
-- [x] Review packets + Accuracy_Quality view builders (`reporting/review_views.py`)
-- [x] Cache key / atomic promote helpers (§52)
-- [x] Resource budget controls (§51)
-- [x] No production self-learning (§53) — unchanged policy
-
-## EXTERNAL remainders (cannot complete in-repo without humans/bank process)
-- [ ] §49 independent 100-issuer human adjudication of unique published source facts
-- [ ] §54 authenticated reviewer identity binding via bank-managed operating workflow
-- [ ] Full-universe production release sign-off against frozen inputs at bank scale
-
-## Offline eval snapshot (local)
-- cases: 100 (golden fixture lake)
-- compiler_publish_cases: 100
-- silent_layout_publish_cases: 0
-- explicit_fallback_facts: 0
-- numeric_pass/fail: 907 / 8 (failures confined to PIPELINE_SEEDED stratum; MANUAL_QA 34/34)
+## Freeze (still in force)
+No LLM on publish; regex + RapidFuzz; never blank→0; never A−E liabilities; exact 3M flow; never live prices as quarter-end.

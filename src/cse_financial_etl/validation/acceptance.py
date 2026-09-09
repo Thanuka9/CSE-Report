@@ -8,8 +8,37 @@ from typing import Any, Protocol
 PUBLISHABLE_STATUSES = frozenset({"EXTRACTED", "EXTRACTED_DERIVED"})
 BLOCKED_REVIEW = frozenset({"REJECTED", "FAILED"})
 PASSED_VALIDATION = frozenset({"PASSED", "APPROVED", "CURATED"})
-# Pending human review remains publishable only after automated validation passed.
-ALLOWED_REVIEW = frozenset({"APPROVED", "REVIEW", "CURATED", ""})
+# Official release: only an authenticated reviewer approval (or a curated
+# correction) makes a numeric cell publishable. ``REVIEW`` / blank never do
+# (gap A4, audit finding 6).
+ALLOWED_REVIEW = frozenset({"APPROVED", "CURATED"})
+# Machine-eligible but unreviewed rows may be *displayed* only in an explicitly
+# labelled DRAFT release; they are never part of the governed official release.
+DRAFT_ALLOWED_REVIEW = frozenset({"APPROVED", "CURATED", "REVIEW"})
+
+RELEASE_OFFICIAL = "OFFICIAL"
+RELEASE_DRAFT = "DRAFT"
+RELEASE_MODES = frozenset({RELEASE_OFFICIAL, RELEASE_DRAFT})
+_release_mode = RELEASE_OFFICIAL
+
+
+def set_release_mode(mode: str) -> str:
+    """Configure the process-wide release mode (from configs/app.yml ``publication``)."""
+
+    global _release_mode
+    normalized = (mode or RELEASE_OFFICIAL).strip().upper()
+    if normalized not in RELEASE_MODES:
+        raise ValueError(f"unknown release_mode {mode!r}; expected one of {sorted(RELEASE_MODES)}")
+    _release_mode = normalized
+    return _release_mode
+
+
+def current_release_mode() -> str:
+    return _release_mode
+
+
+def is_official_release() -> bool:
+    return _release_mode == RELEASE_OFFICIAL
 FLOW_METRIC_CODES = frozenset(
     {
         "PAT",
@@ -76,9 +105,17 @@ def publishability_decision(
     fact: SupportsPublishFields | Mapping[str, Any],
     *,
     require_quarter_flow: bool | None = None,
+    release_mode: str | None = None,
 ) -> tuple[bool, str | None]:
-    """Return (publishable?, reason_code). reason_code is set when rejected."""
+    """Return (publishable?, reason_code). reason_code is set when rejected.
 
+    ``release_mode`` defaults to the configured process-wide mode. In OFFICIAL
+    mode only APPROVED/CURATED rows publish; in DRAFT mode validated rows that
+    are still pending review are displayed as draft candidates.
+    """
+
+    mode = (release_mode or _release_mode).upper()
+    allowed_review = DRAFT_ALLOWED_REVIEW if mode == RELEASE_DRAFT else ALLOWED_REVIEW
     status = str(_field(fact, "status") or "")
     value = _field(fact, "normalized_value", None)
     review = str(_field(fact, "review_status") or "")
@@ -98,7 +135,7 @@ def publishability_decision(
         return False, "VALIDATION_FAILED"
     if validation not in PASSED_VALIDATION:
         return False, "NOT_VALIDATED"
-    if review not in ALLOWED_REVIEW and review not in BLOCKED_REVIEW:
+    if review not in allowed_review:
         return False, "REVIEW_REQUIRED"
 
     require_quarter = require_quarter_flow
@@ -126,7 +163,10 @@ def is_publishable_fact(
     fact: SupportsPublishFields | Mapping[str, Any],
     *,
     require_quarter_flow: bool | None = None,
+    release_mode: str | None = None,
 ) -> bool:
     """True when a fact may appear as a numeric cell in ratios/Excel/gates."""
 
-    return publishability_decision(fact, require_quarter_flow=require_quarter_flow)[0]
+    return publishability_decision(
+        fact, require_quarter_flow=require_quarter_flow, release_mode=release_mode
+    )[0]

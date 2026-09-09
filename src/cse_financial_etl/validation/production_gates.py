@@ -311,7 +311,7 @@ def evaluate_production_gates(
         )
 
     for price in prices:
-        if price.status != "EXTRACTED" or price.value is None:
+        if price.status not in {"EXTRACTED", "RESOLVED_HISTORICAL"} or price.value is None:
             continue
         observed = _price_date(price)
         if observed is not None and observed > price.period_end:
