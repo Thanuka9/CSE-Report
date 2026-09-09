@@ -32,16 +32,19 @@ See [completion QA and limits](R2_Completion_QA_2026-09-09.md).
 | Atomic gold generation switch | DONE | Immutable generation + CURRENT.json; interrupted activation test |
 | OS-level PDF/OCR cancellation | DONE | Spawned per-PDF worker with process-tree termination; 480 s hard timeout proven in full-universe run |
 | Resumable production processing | DONE | Raw/bronze/resilient caches and retry integration wired into full-universe workflow |
-| Full-universe OCR engineering proof | DONE | 2026-09-09 run `d6299b06-2f47-43d2-8024-d60c1d883804`: 281 issuers, 829 filings attempted, 9023 safe DRAFT-publishable facts; unsafe context/fallback publication gates eliminated |
-| Quarantined pathological filings | DONE | Three hard PDF/OCR timeouts remain fail-closed, explicitly recorded, bounded by versioned acceptance policy |
+| Full-universe OCR engineering proof | DONE | Final main run `4e9ef5ff-878f-4348-b0fe-4d48b6572e67` / Actions `34339810852`: 281 issuers, 829 filings attempted, 9023 safe DRAFT-publishable facts, zero engineering gates |
+| Quarantined pathological filings | DONE | Three hard PDF/OCR timeouts remain fail-closed, explicitly recorded, bounded by versioned acceptance policy; zero unhandled pipeline errors |
 | Coverage acceptance baseline | DONE | Calibrated from the safe fail-closed universe result; DRAFT-publishable coverage is explicitly measured |
+| Final main deterministic CI | DONE | Actions `34340973782` on `a8f0ac6a8bbfb7374c8fda3c9dc41493ebecfc81`: Ubuntu + Windows checks successful |
 | Human 100-issuer adjudication | EXTERNAL | Independent reviewers; generated 100-issuer/900-row packet remains UNADJUDICATED |
 | Authenticated institutional release identities | EXTERNAL | Signed local review contract exists; institution-controlled identity/key governance remains external |
 | GitHub `main` branch protection | EXTERNAL ADMIN | Repository-admin setting; connector cannot enable it |
 
 ## Full-universe evidence note
 
-The 2026-09-09 production run completed extraction, price recovery, validation and export. Its original red workflow result was caused by an obsolete pre-fail-closed coverage floor plus three bounded process-tree timeouts, not by unsafe publication. The final acceptance policy treats only those explicit worker-kill timeouts as quarantined filing exceptions up to the configured limit; every other pipeline error, missing error evidence, quarantine overflow, accounting/context gate or publication violation remains fail-closed.
+The final 2026-09-09 main production proof completed extraction, price recovery, validation, adjudication-packet generation and acceptance classification successfully. Its acceptance artifact reports `ENGINEERING_PASS_EXTERNAL_PROOF_PENDING`, `engineering_gate_count=0`, three bounded process-tree timeout quarantines, and `unhandled_pipeline_error_count=0`. The only remaining gates are `GOLD_SAMPLE_INCOMPLETE` and `GOLD_ISSUER_SAMPLE_INCOMPLETE`, which deliberately represent the independent human proof requirement. Artifact `10102186226` is the retained evidence for Actions run `34339810852`.
+
+The earlier red universe proof is retained as history: it exposed the stale pre-fail-closed coverage floor and the timeout behavior that led to the versioned quarantine policy. No accounting, entity, duration, unit, validation or publication rule was weakened to obtain the final engineering pass.
 
 ## Freeze (still in force)
 No LLM on publish; regex + RapidFuzz; never blank→0; never A−E liabilities; exact 3M flow; never live prices as quarter-end; machine-derived ratios remain REVIEW until signed human approval for official release.
