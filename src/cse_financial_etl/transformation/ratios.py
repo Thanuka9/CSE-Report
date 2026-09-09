@@ -5,11 +5,65 @@ from collections.abc import Iterable, Sequence
 from dataclasses import replace
 from datetime import date
 from decimal import Decimal
+from typing import Any
 
 from cse_financial_etl.extraction.statement_extractor import ExtractedFact
 from cse_financial_etl.validation.acceptance import is_publishable_fact
 
 ACCEPTED = {"EXTRACTED", "EXTRACTED_DERIVED"}
+STANDALONE = {"COMPANY", "BANK"}
+
+
+def _evidence(fact: ExtractedFact) -> dict[str, Any]:
+    if not fact.evidence_json:
+        return {}
+    try:
+        parsed = json.loads(fact.evidence_json)
+    except json.JSONDecodeError:
+        return {}
+    return parsed if isinstance(parsed, dict) else {}
+
+
+def _sanitize_source_fact(fact: ExtractedFact) -> ExtractedFact:
+    """Make the final materialized fact set fail closed before derivation.
+
+    ``EXTRACTED`` records are machine extraction candidates, but validation failures,
+    unresolved evidence and the explicitly bounded layout fallback must never retain a
+    publishable status in the normalized output. Raw source evidence is preserved while
+    the normalized value is withheld.
+    """
+
+    if fact.status not in ACCEPTED:
+        return fact
+    evidence = _evidence(fact)
+    if fact.validation_status in {"FAILED", "REJECTED"}:
+        return replace(
+            fact,
+            status="VALIDATION_FAILED",
+            normalized_value=None,
+            overall_certainty=0.0,
+            certainty_band="NONE",
+            confidence="LOW",
+        )
+    if evidence.get("explicit_fallback"):
+        return replace(
+            fact,
+            status="EXPLICIT_LAYOUT_FALLBACK_REQUIRED",
+            normalized_value=None,
+            overall_certainty=0.0,
+            certainty_band="NONE",
+            confidence="LOW",
+        )
+    if evidence.get("unresolved"):
+        return replace(
+            fact,
+            status="VALUE_CONTEXT_UNRESOLVED",
+            normalized_value=None,
+            overall_certainty=0.0,
+            certainty_band="NONE",
+            confidence="LOW",
+        )
+    return fact
 
 
 def _index_facts(
@@ -69,6 +123,8 @@ def _ratio_fact(
     inputs: dict[str, str],
     formula: str,
     certainty: float,
+    *,
+    entity_scope: str,
 ) -> ExtractedFact:
     band = "HIGH" if certainty >= 0.9 else "MEDIUM" if certainty >= 0.75 else "LOW"
     return replace(
@@ -78,15 +134,24 @@ def _ratio_fact(
         raw_text=None,
         raw_value=None,
         normalized_value=value,
+        currency=None,
         scale_factor=1,
+        entity_scope=entity_scope,
+        comparison_role="CURRENT",
+        source_page=None,
         source_line=formula,
         unit_source_text="DERIVED_RATIO",
         confidence=band,
         status="EXTRACTED_DERIVED",
         raw_label=metric_code,
+        source_bbox=None,
         extraction_method="DETERMINISTIC_DERIVATION",
         semantic_model="rule",
         semantic_confidence=1.0,
+        entity_confidence=1.0,
+        period_confidence=1.0,
+        unit_confidence=1.0,
+        column_confidence=1.0,
         validation_confidence=0.98,
         overall_certainty=round(certainty, 4),
         certainty_band=band,
@@ -94,7 +159,14 @@ def _ratio_fact(
         validation_status="PASSED",
         review_status="APPROVED",
         evidence_json=json.dumps(
-            {"formula": formula, "inputs": inputs, "derived_value": str(value)},
+            {
+                "formula": formula,
+                "inputs": inputs,
+                "derived_value": str(value),
+                "entity_scope": entity_scope,
+                "comparison_role": "CURRENT",
+                "period_end": template.period_end.isoformat(),
+            },
             separators=(",", ":"),
         ),
     )
@@ -112,7 +184,7 @@ def _same_quarter_ratio(
     formula: str,
     empty_denominator_reason: str,
 ) -> ExtractedFact:
-    """Compute a ratio from the same filing period only. No prior-quarter history."""
+    """Compute a ratio from compatible, current facts in the same filing period only."""
 
     numerator = _accepted(index.get((issuer_name, period_end, numerator_code)))
     denominator = _accepted(index.get((issuer_name, period_end, denominator_code)))
@@ -138,6 +210,20 @@ def _same_quarter_ratio(
             "INCOMPATIBLE_SCOPE",
             f"{numerator_code} and {denominator_code} entity scopes differ.",
         )
+    if numerator.entity_scope not in STANDALONE:
+        return _missing_ratio(
+            template,
+            ratio_code,
+            "INCOMPATIBLE_SCOPE",
+            f"{ratio_code} requires standalone COMPANY/BANK inputs.",
+        )
+    if numerator.comparison_role != "CURRENT" or denominator.comparison_role != "CURRENT":
+        return _missing_ratio(
+            template,
+            ratio_code,
+            "INCOMPATIBLE_PERIOD_CONTEXT",
+            f"{ratio_code} requires CURRENT numerator and denominator facts.",
+        )
     assert numerator.normalized_value is not None
     assert denominator.normalized_value is not None
     if denominator.normalized_value <= 0:
@@ -148,7 +234,7 @@ def _same_quarter_ratio(
             f"{denominator_code} is missing or not positive.",
         )
     return _ratio_fact(
-        template,
+        numerator,
         ratio_code,
         numerator.normalized_value / denominator.normalized_value,
         {
@@ -158,6 +244,7 @@ def _same_quarter_ratio(
         },
         formula,
         min(numerator.overall_certainty, denominator.overall_certainty) * 0.98,
+        entity_scope=numerator.entity_scope,
     )
 
 
@@ -165,12 +252,16 @@ def derive_ratio_facts[TFiling](
     extracted_results: Sequence[tuple[TFiling, list[ExtractedFact]]],
     display_periods: Iterable[date] | None = None,
 ) -> list[tuple[TFiling, list[ExtractedFact]]]:
-    """Attach same-quarter leverage and profitability ratios with lineage."""
+    """Fail-close source rows, then attach same-quarter ratios with exact lineage context."""
 
-    index = _index_facts(extracted_results)
+    sanitized_results = [
+        (item, [_sanitize_source_fact(fact) for fact in facts])
+        for item, facts in extracted_results
+    ]
+    index = _index_facts(sanitized_results)
     allowed = set(display_periods) if display_periods is not None else None
     derived_results: list[tuple[TFiling, list[ExtractedFact]]] = []
-    for item, facts in extracted_results:
+    for item, facts in sanitized_results:
         if not facts:
             derived_results.append((item, facts))
             continue
