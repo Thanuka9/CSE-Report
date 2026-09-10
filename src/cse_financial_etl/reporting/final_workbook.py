@@ -11,7 +11,7 @@ import json
 import shutil
 from datetime import date
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from openpyxl import load_workbook
 from openpyxl.styles import Alignment, Font, PatternFill
@@ -28,7 +28,7 @@ _HEADER_FONT = Font(bold=True, color="FFFFFF")
 def _replace_sheet(wb: Workbook, name: str, *, index: int | None = None) -> Worksheet:
     if name in wb.sheetnames:
         del wb[name]
-    return wb.create_sheet(name, index)
+    return cast(Worksheet, wb.create_sheet(name, index))
 
 
 def _style_table_sheet(ws: Worksheet, headers: list[str], rows: list[list[Any]]) -> None:
@@ -44,14 +44,14 @@ def _style_table_sheet(ws: Worksheet, headers: list[str], rows: list[list[Any]])
     ws.auto_filter.ref = f"A1:{get_column_letter(len(headers))}{max(1, len(rows) + 1)}"
     for column_index, header in enumerate(headers, start=1):
         width = len(header)
-        for row in rows[:300]:
-            if column_index - 1 < len(row):
-                value = row[column_index - 1]
+        for data_row in rows[:300]:
+            if column_index - 1 < len(data_row):
+                value = data_row[column_index - 1]
                 if value is not None:
                     width = max(width, len(str(value)))
         ws.column_dimensions[get_column_letter(column_index)].width = min(max(width + 2, 10), 42)
-    for row in ws.iter_rows(min_row=2):
-        for cell in row:
+    for worksheet_row in ws.iter_rows(min_row=2):
+        for cell in worksheet_row:
             cell.alignment = Alignment(vertical="top", wrap_text=False)
 
 
@@ -71,8 +71,8 @@ def _add_csv_sheet(wb: Workbook, name: str, path: Path) -> None:
     ws = _replace_sheet(wb, name)
     if headers:
         ws.append(headers)
-        for row in rows:
-            ws.append(row)
+        for data_row in rows:
+            ws.append(data_row)
     _style_table_sheet(ws, headers, rows)
 
 
@@ -102,8 +102,8 @@ def _add_records_sheet(wb: Workbook, name: str, records: list[dict[str, Any]]) -
     ws = _replace_sheet(wb, name)
     if headers:
         ws.append(headers)
-        for row in rows:
-            ws.append(row)
+        for data_row in rows:
+            ws.append(data_row)
     _style_table_sheet(ws, headers, rows)
 
 
@@ -173,14 +173,14 @@ def _add_run_summary(wb: Workbook, project_root: Path, as_of: date) -> None:
     ws = _replace_sheet(wb, "Run_Summary", index=1)
     headers = ["Source", "Key", "Value"]
     ws.append(headers)
-    for row in rows:
-        ws.append(row)
+    for summary_row in rows:
+        ws.append(summary_row)
     _style_table_sheet(ws, headers, rows)
     ws.column_dimensions["A"].width = 24
     ws.column_dimensions["B"].width = 48
     ws.column_dimensions["C"].width = 90
-    for row in ws.iter_rows(min_row=2, min_col=3, max_col=3):
-        row[0].alignment = Alignment(vertical="top", wrap_text=True)
+    for worksheet_row in ws.iter_rows(min_row=2, min_col=3, max_col=3):
+        worksheet_row[0].alignment = Alignment(vertical="top", wrap_text=True)
 
 
 def _add_metric_definitions(wb: Workbook, path: Path) -> None:
@@ -198,14 +198,14 @@ def _add_metric_definitions(wb: Workbook, path: Path) -> None:
     ws = _replace_sheet(wb, "Metric_Definitions")
     headers = ["Metric / Contract", "Field", "Value"]
     ws.append(headers)
-    for row in rows:
-        ws.append(row)
+    for definition_row in rows:
+        ws.append(definition_row)
     _style_table_sheet(ws, headers, rows)
     ws.column_dimensions["A"].width = 34
     ws.column_dimensions["B"].width = 34
     ws.column_dimensions["C"].width = 90
-    for row in ws.iter_rows(min_row=2, min_col=3, max_col=3):
-        row[0].alignment = Alignment(vertical="top", wrap_text=True)
+    for worksheet_row in ws.iter_rows(min_row=2, min_col=3, max_col=3):
+        worksheet_row[0].alignment = Alignment(vertical="top", wrap_text=True)
 
 
 def _relabel_snapshot_headers(wb: Workbook) -> None:
