@@ -1,6 +1,6 @@
 """Fail-closed row-level guards discovered from full-universe production evidence.
 
-These checks are deliberately conservative.  They do not manufacture corrected values;
+These checks are deliberately conservative. They do not manufacture corrected values;
 they only stop structurally unsafe evidence from being published until the extractor can
 resolve it unambiguously.
 """
@@ -33,6 +33,8 @@ _UNIT_DECLARATION_RE = re.compile(
     r"(?:mn|millions?|bn|billions?|thousands?|['’]\s*0{3})\s*$)",
     re.I,
 )
+_EUROPEAN_GROUPED_RE = re.compile(r"(?<!\d)\d{1,3}(?:\.\d{3}){2,}(?!\d)")
+_ALNUM_NUMERIC_CHUNK_RE = re.compile(r"[A-Za-z0-9!,'’.]{5,}")
 
 
 def is_positive_price(value: Decimal | None) -> bool:
@@ -54,28 +56,83 @@ def is_narrative_unit_amount(text: str | None) -> bool:
     return bool(_NARRATIVE_AMOUNT_RE.search(compact) and not _UNIT_DECLARATION_RE.search(compact))
 
 
+def source_has_numeric_corruption(text: str | None) -> bool:
+    """Detect OCR/geometry corruption inside a monetary row's numeric cells.
+
+    The failing universe exposed several deterministic corruption shapes: two cells
+    concatenated into one token (``49,215,51849,465,389``), broken comma groups
+    (``153,338156,627``), OCR letters inside a number (``88,81L,406``), and dotted
+    multi-million values that the active numeric parser cannot consume.  A row with
+    any of these shapes is unsafe evidence; the correct response is to retry/review,
+    never to publish a different tiny fragment from that row.
+    """
+
+    if not text:
+        return False
+
+    if _EUROPEAN_GROUPED_RE.search(text):
+        return True
+
+    # Standard comma grouping is 1-3 leading digits followed only by groups of 3.
+    for token in re.findall(r"(?<!\d)\d[\d,]*\d(?!\d)", text):
+        if "," not in token:
+            continue
+        parts = token.split(",")
+        if not (1 <= len(parts[0]) <= 3 and all(len(part) == 3 for part in parts[1:])):
+            return True
+
+    # OCR frequently substitutes letters/punctuation into a digit run.  Require a
+    # substantial numeric-looking chunk so normal words, dates and legal labels do not
+    # trigger this guard.
+    for token in _ALNUM_NUMERIC_CHUNK_RE.findall(text):
+        digit_count = sum(char.isdigit() for char in token)
+        if (
+            digit_count >= 4
+            and ("," in token or "." in token)
+            and (re.search(r"[A-Za-z]", token) or "!" in token)
+        ):
+            return True
+    return False
+
+
+def _small_reference_number(raw_value: Decimal, source_line: str) -> bool:
+    """Reject note/legal identifiers selected as monetary values."""
+
+    if raw_value != raw_value.to_integral() or abs(raw_value) > 99:
+        return False
+    number = re.escape(str(abs(int(raw_value))))
+    patterns = (
+        rf"\b(?:note|section|page)\s*(?:no\.?\s*)?{number}\b",
+        rf"\b(?:act|ordinance|law)\s+no\.?\s*{number}\b",
+        rf"\bno\.?\s*{number}\s+of\s+(?:19|20)\d{{2}}\b",
+    )
+    return any(re.search(pattern, source_line, re.I) for pattern in patterns)
+
+
 def suspicious_selected_numeric(
     metric_code: str,
     raw_value: Decimal | None,
     scale_factor: int | None,
     source_line: str | None,
 ) -> bool:
-    """Detect a tiny OCR fragment selected from a row containing large monetary cells.
+    """Detect an unsafe numeric selection from an absolute-monetary source row.
 
-    This catches cases such as an OCR-corrupted equity row where ``1`` is selected while
-    the same row visibly contains multi-million current/comparative values.  It is only
-    applied to absolute monetary metrics in whole-unit scale, so EPS/NAVPS and note ids
-    are unaffected.
+    This covers both tiny fragments selected from visibly large rows and rows whose
+    numeric cells are themselves OCR-corrupted/concatenated.  EPS/NAVPS are excluded.
     """
 
-    if (
-        metric_code not in _ABSOLUTE_MONETARY
-        or raw_value is None
-        or source_line is None
-        or scale_factor != 1
-        or abs(raw_value) > Decimal("99")
-    ):
+    if metric_code not in _ABSOLUTE_MONETARY or raw_value is None or source_line is None:
         return False
+
+    if source_has_numeric_corruption(source_line):
+        return True
+
+    if _small_reference_number(raw_value, source_line):
+        return True
+
+    if scale_factor != 1 or abs(raw_value) > Decimal("99"):
+        return False
+
     values: list[Decimal] = []
     for match in _NUMBER_RE.finditer(source_line):
         token = match.group(0).strip("()").replace(",", "")
@@ -91,7 +148,7 @@ def ratio_plausibility_issue(metric_code: str, value: Decimal) -> str | None:
     """Catch only catastrophic derived-ratio magnitudes caused by broken inputs.
 
     The limits are intentionally very wide; ordinary distressed/high-growth companies
-    remain publishable.  Breaching them means the source facts need review rather than
+    remain publishable. Breaching them means the source facts need review rather than
     a machine-labelled PASSED derived ratio.
     """
 
