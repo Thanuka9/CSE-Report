@@ -106,13 +106,20 @@ def _sanitize_eps_selected(facts: list[ExtractedFact]) -> list[ExtractedFact]:
     diluted = by_code.get("EPS_DILUTED")
     basic = by_code.get("EPS_BASIC")
     preferred = None
+    # EPS selection is deterministic transformation work performed before human
+    # approval. Use the DRAFT eligibility contract here; OFFICIAL review remains a
+    # publication gate on the selected output rather than an input prerequisite.
     if (
         diluted is not None
-        and is_publishable_fact(diluted)
+        and is_publishable_fact(diluted, release_mode="DRAFT")
         and diluted.validation_status == "PASSED"
     ):
         preferred = diluted
-    elif basic is not None and is_publishable_fact(basic) and basic.validation_status == "PASSED":
+    elif (
+        basic is not None
+        and is_publishable_fact(basic, release_mode="DRAFT")
+        and basic.validation_status == "PASSED"
+    ):
         preferred = basic
 
     if (
@@ -151,7 +158,10 @@ def _index_facts(
 
 
 def _accepted(fact: ExtractedFact | None) -> ExtractedFact | None:
-    if fact is None or not is_publishable_fact(fact):
+    # Ratio derivation belongs to the deterministic transformation layer. Human
+    # approval must gate OFFICIAL publication of the resulting ratio, not prevent
+    # a validated machine fact from participating in the derivation at all.
+    if fact is None or not is_publishable_fact(fact, release_mode="DRAFT"):
         return None
     return fact
 
