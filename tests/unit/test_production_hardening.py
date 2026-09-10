@@ -46,6 +46,7 @@ def _publishable_row(
         "normalized_value": value,
         "review_status": "REVIEW",
         "validation_status": "PASSED",
+        "comparison_role": "CURRENT",
         "duration_months": "3" if metric in {"PAT", "PBT", "TOP_LINE"} else "",
     }
 
