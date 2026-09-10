@@ -39,6 +39,8 @@ def current_release_mode() -> str:
 
 def is_official_release() -> bool:
     return _release_mode == RELEASE_OFFICIAL
+
+
 FLOW_METRIC_CODES = frozenset(
     {
         "PAT",
@@ -71,6 +73,8 @@ class SupportsPublishFields(Protocol):
     def validation_status(self) -> str: ...
     @property
     def duration_months(self) -> int | None: ...
+    @property
+    def comparison_role(self) -> str: ...
     @property
     def metric_type(self) -> str: ...
 
@@ -127,6 +131,7 @@ def publishability_decision(
     review = str(_field(fact, "review_status") or "")
     validation = str(_field(fact, "validation_status") or "")
     duration = _coerce_duration(_field(fact, "duration_months", None))
+    comparison_role = str(_field(fact, "comparison_role") or "").upper()
     metric_type = str(_field(fact, "metric_type") or "")
     metric_code = str(_field(fact, "metric_code") or "")
     basis = period_basis_for_metric(metric_code, metric_type)
@@ -149,6 +154,11 @@ def publishability_decision(
         require_quarter = basis == "FLOW"
 
     if require_quarter and basis == "FLOW":
+        # A three-month value is not enough by itself: the selected table column
+        # must also be proven to be the target/current period.  UNKNOWN and
+        # COMPARATIVE therefore fail closed instead of leaking into ratios/Excel.
+        if comparison_role != "CURRENT":
+            return False, "CURRENT_PERIOD_UNRESOLVED"
         if duration is None:
             return False, "PERIOD_UNRESOLVED"
         if duration != 3:
