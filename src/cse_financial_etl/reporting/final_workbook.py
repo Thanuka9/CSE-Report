@@ -1,7 +1,7 @@
 """Assemble the final human-review workbook from governed run outputs.
 
 The normal snapshot generator is deliberately invoked only after the production/R4
-outputs have been finalised.  Supporting evidence is then embedded as additional
+outputs have been finalised. Supporting evidence is then embedded as additional
 worksheets so a reviewer can inspect a run without opening a dozen separate files.
 """
 from __future__ import annotations
@@ -160,6 +160,9 @@ def _add_run_summary(wb: Workbook, project_root: Path, as_of: date) -> None:
     rows: list[list[Any]] = [
         ["Final Workbook", "assembly_stage", "POST_R4_POST_ROW_SAFETY_POST_ACCEPTANCE_RECHECK"],
         ["Final Workbook", "as_of", date_text],
+        ["Final Workbook", "quarter_flow_policy", "REPORTED_THREE_MONTH_QUARTERS_ONLY"],
+        ["Final Workbook", "quarter_end_price_semantic", "LAST_TRADED_ONLY"],
+        ["Final Workbook", "eps_selected_policy", "DILUTED_IF_VALID_ELSE_BASIC"],
     ]
     for label, path in sources.items():
         payload = _read_json(path)
@@ -205,6 +208,28 @@ def _add_metric_definitions(wb: Workbook, path: Path) -> None:
         row[0].alignment = Alignment(vertical="top", wrap_text=True)
 
 
+def _relabel_snapshot_headers(wb: Workbook) -> None:
+    replacements = {
+        "EPS": "EPS (Selected)",
+        "Qtr-End Price": "Last Traded Price (Qtr End)",
+        "Debt / Equity": "Liabilities / Equity",
+    }
+    for ws in wb.worksheets:
+        if not ws.title.startswith("Snapshot_"):
+            continue
+        for cell in ws[4]:
+            if isinstance(cell.value, str) and cell.value in replacements:
+                cell.value = replacements[cell.value]
+        for column in range(1, ws.max_column + 1):
+            header = ws.cell(4, column).value
+            if header == "Last Traded Price (Qtr End)":
+                ws.column_dimensions[get_column_letter(column)].width = 18
+            elif header == "Liabilities / Equity":
+                ws.column_dimensions[get_column_letter(column)].width = 16
+            elif header == "EPS (Selected)":
+                ws.column_dimensions[get_column_letter(column)].width = 13
+
+
 def _add_output_index(wb: Workbook, project_root: Path, workbook_path: Path) -> None:
     records: list[dict[str, Any]] = []
     outputs = project_root / "outputs"
@@ -241,6 +266,7 @@ def build_final_workbook(project_root: Path, as_of: date) -> Path:
     # already been rewritten by R4, so the visible Snapshot cannot lag hardening.
     workbook_path = generate_excel(root, as_of, periods, run_id)
     wb = load_workbook(workbook_path)
+    _relabel_snapshot_headers(wb)
 
     _add_run_summary(wb, root, as_of)
     _add_csv_sheet(wb, "Facts_Ledger", root / "outputs" / f"normalized_facts_{date_text}.csv")
