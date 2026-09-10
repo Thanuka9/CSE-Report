@@ -294,6 +294,7 @@ def fetch_all_financial_metadata(
                 )
     return results
 
+
 def choose_filing(filings: Iterable[Filing], period_end: date) -> Filing | None:
     matches = [filing for filing in filings if filing.period_end == period_end]
     if not matches:

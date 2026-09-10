@@ -1,0 +1,21 @@
+# Accounting/presentation regimes that materially change metric semantics.
+# The extractor must retain the regime in evidence; it must not collapse unlike concepts.
+insurance:
+  SLFRS4_LEGACY:
+    top_line_aliases:
+      - Gross written premium
+      - Net earned premium
+  SLFRS17:
+    top_line_aliases:
+      - Insurance revenue
+  INSURANCE_REGIME_UNRESOLVED:
+    publish_top_line: false
+    missing_reason: ACCOUNTING_REGIME_AMBIGUOUS
+future_presentation:
+  SLFRS18:
+    effective_annual_periods_beginning_on_or_after: '2027-01-01'
+    parser_action: VERSION_PRESENTATION_ALIASES
+bank:
+  cumulative_income_statement_template: true
+  nil_token_is_semantic_zero_only_in_regulatory_template: true
+  required_operating_profit_semantic: BEFORE_TAXES_ON_FINANCIAL_SERVICES

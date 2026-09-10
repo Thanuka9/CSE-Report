@@ -1,0 +1,73 @@
+schema_version: 1
+
+# R4 deliberately remains file-backed. XBRL is not enabled until an official CSE
+# production interface/taxonomy is available, and no database is required.
+architecture:
+  database_required: false
+  xbrl_enabled: false
+
+quarter_policy:
+  publish_reported_three_month_flows_only: true
+  publish_derived_q4_as_reported_quarter: false
+  cumulative_6m_9m_12m_may_populate_quarter: false
+
+price_policy:
+  required_semantic: LAST_TRADED
+  reject_as_substitutes:
+    - CLOSING_PRICE
+    - CLOSING_MARKET_PRICE
+    - GENERIC_MARKET_PRICE_WITHOUT_LAST_TRADED_EVIDENCE
+  historical_fallback: LAST_TRADE_ON_OR_BEFORE_PERIOD_END
+
+bank_policy:
+  preferred_entity_scope: BANK
+  income_statement_duration_policy: EXACT_THREE_MONTH_FOR_QUARTER_OUTPUT
+  operating_profit_basis: BEFORE_TAXES_ON_FINANCIAL_SERVICES
+  nil_policy:
+    explicit_nil_on_verified_bank_template_is_zero: true
+    blank_is_zero: false
+    dash_is_zero: false
+    cumulative_nil_may_populate_quarter: false
+
+insurance_policy:
+  retain_source_top_line_basis: true
+  transition_2026:
+    allowed_evidence_labels:
+      - INSURANCE_REVENUE
+      - GROSS_WRITTEN_PREMIUM
+      - NET_EARNED_PREMIUM
+    never_treat_labels_as_semantically_identical: true
+    regime_must_follow_source_evidence: true
+  from_2027:
+    require_explicit_regime_evidence_when_mapping_top_line: true
+
+liabilities_policy:
+  publish_explicit_total_liabilities_only: true
+  assets_minus_equity_is_reconciliation_only: true
+
+metric_aliases:
+  DEBT_TO_EQUITY:
+    canonical_code: LIABILITIES_TO_EQUITY
+    display_name: Liabilities / Equity
+    backward_compatible_internal_code: true
+
+# Listing segment may be populated from a CSE source field when available. These
+# overrides are intentionally empty rather than guessing issuer boards from names.
+issuer_listing_segments: {}
+
+disclosure_expectations:
+  MAIN:
+    Q1: {requirement: FULL_INTERIM_REQUIRED, due_days: 45}
+    Q2: {requirement: FULL_INTERIM_REQUIRED, due_days: 45}
+    Q3: {requirement: FULL_INTERIM_REQUIRED, due_days: 45}
+    Q4: {requirement: FULL_INTERIM_REQUIRED, due_months: 2}
+  EMPOWER:
+    Q1: {requirement: SUPPLEMENTARY_DISCLOSURE_REQUIRED, due_days: 45}
+    Q2: {requirement: FULL_INTERIM_REQUIRED, due_months: 2}
+    Q3: {requirement: SUPPLEMENTARY_DISCLOSURE_REQUIRED, due_days: 45}
+    Q4: {requirement: FULL_INTERIM_REQUIRED, due_months: 2}
+
+quarantine_policy:
+  bind_known_timeout_to_filing_id_and_sha256: true
+  legacy_identity_allowlist_migrates_to_first_verified_pin: true
+  changed_filing_id_or_sha256_invalidates_quarantine: true

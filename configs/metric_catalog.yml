@@ -3,7 +3,7 @@ metrics:
     display_name: Revenue / Gross Income
     metric_type: MONETARY_ABSOLUTE
     period_behavior: FLOW
-    q4_derivable: true
+    q4_derivable: false
     aliases:
       GENERAL:
         - Revenue
@@ -18,16 +18,20 @@ metrics:
         - Total income
         - Net operating income
       INSURANCE:
-        - Insurance revenue
-        - Gross written premium
-        - Net earned premium
+        SLFRS17:
+          - Insurance revenue
+        SLFRS4_LEGACY:
+          - Gross written premium
+          - Net earned premium
+    semantic_note: Insurance top-line aliases are accounting-regime specific and must not be mixed.
   OPERATING_PROFIT:
     display_name: Operating Profit
     metric_type: MONETARY_ABSOLUTE
     period_behavior: FLOW
-    q4_derivable: true
+    q4_derivable: false
     prohibited_aliases:
       - EBITDA
+      - Operating profit after taxes on financial services
     aliases:
       GENERAL:
         - Operating profit
@@ -37,11 +41,12 @@ metrics:
         - Results from operations
       BANK:
         - Operating profit before taxes on financial services
+        - Operating profit/(loss) before taxes on financial services
   PBT:
     display_name: Profit Before Tax
     metric_type: MONETARY_ABSOLUTE
     period_behavior: FLOW
-    q4_derivable: true
+    q4_derivable: false
     aliases:
       DEFAULT:
         - Profit before tax
@@ -50,7 +55,7 @@ metrics:
     display_name: Profit After Tax
     metric_type: MONETARY_ABSOLUTE
     period_behavior: FLOW
-    q4_derivable: true
+    q4_derivable: false
     aliases:
       DEFAULT:
         - Profit for the period
@@ -119,20 +124,43 @@ metrics:
     metric_type: MONETARY_ABSOLUTE
     period_behavior: AS_AT
     q4_derivable: false
+    explicit_only: true
     aliases:
       DEFAULT:
         - Total liabilities
         - Total liability
   MARKET_PRICE_QUARTER_END:
-    display_name: Market Price at Quarter End
+    display_name: Last Traded Price at Quarter End
     metric_type: MONETARY_PER_SHARE
     period_behavior: AS_AT
     q4_derivable: false
     grain: SECURITY_SYMBOL
+    price_semantic: LAST_TRADED
+    prohibited_aliases:
+      - Closing market price
+      - Closing price
+  LIABILITIES_TO_EQUITY:
+    display_name: Liabilities / Equity
+    metric_type: RATIO
+    period_behavior: AS_AT
+    derived_from:
+      - TOTAL_LIABILITIES
+      - TOTAL_EQUITY
+    legacy_alias: DEBT_TO_EQUITY
+  DEBT_TO_EQUITY:
+    display_name: Liabilities / Equity
+    metric_type: RATIO
+    period_behavior: AS_AT
+    deprecated: true
+    replacement: LIABILITIES_TO_EQUITY
+    derived_from:
+      - TOTAL_LIABILITIES
+      - TOTAL_EQUITY
   ROE:
     display_name: ROE
     metric_type: RATIO
     period_behavior: FLOW
+    formula_label: Quarter PAT / Closing Equity
     derived_from:
       - PAT
       - TOTAL_EQUITY
@@ -140,6 +168,7 @@ metrics:
     display_name: ROA
     metric_type: RATIO
     period_behavior: FLOW
+    formula_label: Quarter PAT / Closing Assets
     derived_from:
       - PAT
       - TOTAL_ASSETS
@@ -147,6 +176,7 @@ metrics:
     display_name: NPM
     metric_type: RATIO
     period_behavior: FLOW
+    formula_label: Quarter PAT / Quarter Top Line
     derived_from:
       - PAT
       - TOP_LINE

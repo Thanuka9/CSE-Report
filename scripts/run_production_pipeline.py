@@ -1,7 +1,8 @@
 """Governed production entrypoint for the CSE quarterly ETL.
 
-The stable 3/6/9/12-month extraction logic is executed unchanged.  Production-specific
-controls are applied around it and gold is activated only after universe acceptance.
+The stable extraction/compiler remains the core engine. Production-specific controls are
+applied around it, R4 regulatory/semantic policy is applied before acceptance, and gold
+is activated only after the complete candidate generation passes those gates.
 """
 
 from __future__ import annotations
@@ -12,6 +13,10 @@ from datetime import date
 from pathlib import Path
 
 from cse_financial_etl.orchestration.resilient_pipeline import run_resilient_pipeline
+from cse_financial_etl.production.r4_hardening import (
+    apply_r4_hardening,
+    r4_runtime_guards,
+)
 from cse_financial_etl.production.runtime import (
     build_issuer_master,
     production_runtime,
@@ -43,7 +48,7 @@ def _parse_periods(value: str | None, as_of: date) -> tuple[date, ...]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Run the CSE ETL with production source, acceptance and promotion controls."
+        description="Run the CSE ETL with production source, R4 semantic, acceptance and promotion controls."
     )
     parser.add_argument("--project-root", type=Path, default=Path.cwd())
     parser.add_argument("--as-of", required=True, help="Market observation date YYYY-MM-DD")
@@ -64,26 +69,41 @@ def main() -> int:
     periods = _parse_periods(args.periods, as_of)
 
     with production_runtime(root, as_of_date=as_of, offline=args.offline) as capture:
-        result = run_resilient_pipeline(
-            root,
-            as_of_date=as_of,
-            periods=periods,
-            process_timeout_seconds=args.process_timeout_seconds,
-            api_workers=args.api_workers,
-            download_workers=args.download_workers,
-            extraction_workers=args.extraction_workers,
-            issuer_limit=args.issuer_limit,
-            offline=args.offline,
-            skip_excel=args.skip_excel,
-            compile_statements=not args.no_compile,
-            run_tunnel_b_always=args.tunnel_b_always,
-        )
+        # R4 is intentionally installed *inside* the production runtime so its stricter
+        # last-traded, period-title and bank/quarter guards supersede legacy-compatible
+        # helpers for the governed run only.
+        with r4_runtime_guards(root, as_of):
+            result = run_resilient_pipeline(
+                root,
+                as_of_date=as_of,
+                periods=periods,
+                process_timeout_seconds=args.process_timeout_seconds,
+                api_workers=args.api_workers,
+                download_workers=args.download_workers,
+                extraction_workers=args.extraction_workers,
+                issuer_limit=args.issuer_limit,
+                offline=args.offline,
+                skip_excel=args.skip_excel,
+                compile_statements=not args.no_compile,
+                run_tunnel_b_always=args.tunnel_b_always,
+            )
 
         issuer_master = build_issuer_master(root, as_of)
         metric_definitions = write_metric_definitions(root, as_of)
         workbook = result.get("workbook")
         if workbook:
             relabel_workbook_leverage(Path(str(workbook)))
+
+        if capture.repository is None or capture.staging is None:
+            raise RuntimeError("Production pipeline did not produce a staged candidate generation")
+        r4_summary = apply_r4_hardening(
+            root,
+            as_of,
+            periods,
+            capture.repository,
+            run_status=capture.status or "VALIDATION_REQUIRED",
+            statistics=capture.statistics,
+        )
 
         acceptance_path = root / "outputs" / f"universe_acceptance_{as_of.isoformat()}.json"
         acceptance = evaluate_universe_acceptance(
@@ -102,12 +122,20 @@ def main() -> int:
             "source_mode": "OFFLINE_REPLAY" if args.offline else "LIVE_OBSERVATION",
             "issuer_master": str(issuer_master),
             "metric_definitions": str(metric_definitions),
-            "quarter_model": "UNCHANGED_3_6_9_12_MONTH_CONTEXT",
+            "quarter_model": "REPORTED_THREE_MONTH_QUARTERS_ONLY",
+            "r4_hardening": r4_summary,
+            "database_required": False,
+            "xbrl_enabled": False,
             "gold_promotion": promotion,
         }
         acceptance_path.write_text(json.dumps(acceptance, indent=2), encoding="utf-8")
 
-    payload = {**result, "universe_acceptance": acceptance, "gold_promotion": promotion}
+    payload = {
+        **result,
+        "r4_hardening": r4_summary,
+        "universe_acceptance": acceptance,
+        "gold_promotion": promotion,
+    }
     print(json.dumps(payload, indent=2, default=str))
     if acceptance["acceptance"] == "ENGINEERING_FAILURES_PRESENT":
         return 1
