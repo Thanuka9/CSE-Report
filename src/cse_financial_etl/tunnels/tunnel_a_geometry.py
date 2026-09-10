@@ -43,7 +43,9 @@ def run_tunnel_a(
         try:
             entity = infer_entity_scope(issuer_name)
         except Exception:
-            entity = "COMPANY"
+            # Inference/configuration failure is an unresolved dimension, not proof
+            # that the filing is a standalone company statement.
+            entity = "UNKNOWN"
         profile = profile_for_issuer(issuer_name)
         known = build_known_context(
             issuer_name=issuer_name,
@@ -139,6 +141,8 @@ def _seed_layout_assist(ledger: CandidateLedger, facts: list[Any], *, tunnel: st
     contract is responsible for deciding whether a discovered row is semantically
     strong enough to publish; dropping that score here previously allowed weak
     RapidFuzz guesses to bypass LABEL_EVIDENCE_WEAK when they were the only candidate.
+    Missing dimensions stay missing — especially comparison role; this bridge must
+    never manufacture CURRENT merely because an older fact object lacks that field.
     """
 
     for index, fact in enumerate(facts, start=1):
@@ -176,7 +180,7 @@ def _seed_layout_assist(ledger: CandidateLedger, facts: list[Any], *, tunnel: st
             )
 
         period = getattr(fact, "period_end", None)
-        period_s = period.isoformat() if period is not None and hasattr(period, "isoformat") else str(period or "")
+        period_s = period.isoformat() if period is not None and hasattr(period, "isoformat") else (str(period) if period else None)
         semantic_confidence = getattr(fact, "semantic_confidence", None)
         evidence: dict[str, Any] = {
             "candidate_origin": "layout_geometry",
@@ -191,6 +195,10 @@ def _seed_layout_assist(ledger: CandidateLedger, facts: list[Any], *, tunnel: st
             except (TypeError, ValueError):
                 pass
 
+        role = getattr(fact, "comparison_role", None)
+        if role is not None:
+            role = str(role).strip().upper() or None
+
         ledger.add(
             LedgerEntry(
                 entry_id=f"{tunnel}-layout-{index}",
@@ -202,7 +210,7 @@ def _seed_layout_assist(ledger: CandidateLedger, facts: list[Any], *, tunnel: st
                 entity=getattr(fact, "entity_scope", None),
                 period_end=period_s,
                 duration_months=getattr(fact, "duration_months", None),
-                comparison_role=getattr(fact, "comparison_role", "CURRENT"),
+                comparison_role=role,
                 unit=getattr(fact, "currency", None),
                 scale_factor=getattr(fact, "scale_factor", None),
                 page=getattr(fact, "source_page", None),
