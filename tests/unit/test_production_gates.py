@@ -6,6 +6,7 @@ from pathlib import Path
 from cse_financial_etl.extraction.statement_extractor import ExtractedFact, QuarterPrice
 from cse_financial_etl.sources.cse import DownloadedFiling, Filing
 from cse_financial_etl.storage.repository import Repository
+from cse_financial_etl.validation.acceptance import publishability_decision
 from cse_financial_etl.validation.production_gates import (
     evaluate_production_gates,
     run_status_from_gates,
@@ -75,11 +76,22 @@ def test_derived_flow_is_a_hard_stop(tmp_path: Path) -> None:
     assert run_status_from_gates(hits, has_errors=False, has_review=False) == "VALIDATION_REQUIRED"
 
 
-def test_comparative_published_as_current_is_a_hard_stop(tmp_path: Path) -> None:
-    hits = evaluate_production_gates(
-        [(_filing(tmp_path), [_fact(comparison_role="COMPARATIVE")])]
-    )
-    assert [hit.code for hit in hits] == ["CURRENT_COMPARATIVE_MISMATCH"]
+def test_comparative_flow_fails_closed_before_publication_gate(tmp_path: Path) -> None:
+    fact = _fact(comparison_role="COMPARATIVE")
+    publishable, reason = publishability_decision(fact, release_mode="DRAFT")
+    assert publishable is False
+    assert reason == "CURRENT_PERIOD_UNRESOLVED"
+    hits = evaluate_production_gates([(_filing(tmp_path), [fact])])
+    assert [hit.code for hit in hits] == []
+
+
+def test_unknown_flow_fails_closed_before_publication_gate(tmp_path: Path) -> None:
+    fact = _fact(comparison_role="UNKNOWN")
+    publishable, reason = publishability_decision(fact, release_mode="DRAFT")
+    assert publishable is False
+    assert reason == "CURRENT_PERIOD_UNRESOLVED"
+    hits = evaluate_production_gates([(_filing(tmp_path), [fact])])
+    assert [hit.code for hit in hits] == []
 
 
 def test_group_where_standalone_required_is_a_hard_stop(tmp_path: Path) -> None:
@@ -224,6 +236,26 @@ def test_issuer_quarter_coherence_gate(tmp_path: Path) -> None:
         ]
     )
     assert any(hit.code == "ISSUER_QUARTER_CONTEXT_INCONSISTENT" for hit in hits)
+
+
+def test_balance_sheet_unknown_role_does_not_conflict_with_current_flow(tmp_path: Path) -> None:
+    hits = evaluate_production_gates(
+        [
+            (
+                _filing(tmp_path),
+                [
+                    _fact(metric_code="PAT", duration_months=3, comparison_role="CURRENT"),
+                    _fact(
+                        metric_code="TOTAL_ASSETS",
+                        metric_type="MONETARY_ABSOLUTE",
+                        duration_months=None,
+                        comparison_role="UNKNOWN",
+                    ),
+                ],
+            )
+        ]
+    )
+    assert not any(hit.code == "ISSUER_QUARTER_CONTEXT_INCONSISTENT" for hit in hits)
 
 
 def test_coverage_regression_is_a_hard_stop(tmp_path: Path) -> None:
