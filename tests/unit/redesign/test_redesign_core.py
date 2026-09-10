@@ -170,8 +170,8 @@ def test_ratios_never_blank_to_zero() -> None:
         top_line=Decimal("50"),
     )
     by_code = {r.code: r for r in ratios}
-    assert by_code["ROE_Q"].status == "INSUFFICIENT_INPUT"
-    assert by_code["ROE_Q"].value is None
+    assert by_code["ROE"].status == "INSUFFICIENT_INPUT"
+    assert by_code["ROE"].value is None
     assert by_code["DEBT_TO_EQUITY"].value is None
 
 
