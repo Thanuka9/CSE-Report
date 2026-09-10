@@ -11,6 +11,6 @@ EPS output selects diluted EPS when the exact current quarter reports it, otherw
 - ROE: same-quarter PAT divided by that quarter's total equity.
 - ROA: same-quarter PAT divided by that quarter's total assets.
 - NPM: same-quarter PAT divided by that quarter's top line.
-- Debt to equity: total liabilities divided by total equity, expressed as a multiple (`x`).
+- Liabilities / Equity: total liabilities divided by total equity, expressed as a multiple (`x`). The legacy internal code remains `DEBT_TO_EQUITY` for backward compatibility.
 
 No ratio is emitted when required inputs are missing, incompatible or have an invalid denominator. There is no TTM logic.

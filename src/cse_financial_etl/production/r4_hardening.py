@@ -718,6 +718,11 @@ def build_canonical_master(
     previous_securities = [
         row for row in previous.get("securities", []) if isinstance(row, dict)
     ]
+    previous_issuer_by_id = {
+        str(row.get("issuer_id")): row
+        for row in previous_issuers
+        if row.get("issuer_id")
+    }
     issuer_by_security_id: dict[int, str] = {}
     issuer_by_symbol: dict[str, str] = {}
     security_history_by_id: dict[int, dict[str, Any]] = {}
@@ -763,6 +768,7 @@ def build_canonical_master(
             issuer_id = f"CSE-ISSUER-{anchor}"
 
         configured = issuer_profile_for_name(legal_name)
+        old_issuer = previous_issuer_by_id.get(issuer_id, {})
         symbols = sorted(str(row["symbol"]) for row in securities)
         segment = None
         for symbol in symbols:
@@ -780,12 +786,43 @@ def build_canonical_master(
                 segment = _board_from_raw(raw)
                 if segment:
                     break
-        segment = segment or "UNKNOWN"
+        if segment is None:
+            previous_segment = str(old_issuer.get("listing_segment") or "").strip().upper()
+            segment = previous_segment or "UNKNOWN"
+
+        legal_name_history = [
+            str(item)
+            for item in old_issuer.get("legal_name_history", [])
+            if item
+        ]
+        old_legal_name = str(old_issuer.get("legal_name") or "").strip()
+        if old_legal_name and old_legal_name != legal_name and old_legal_name not in legal_name_history:
+            legal_name_history.append(old_legal_name)
+
+        current_currencies = {
+            str(fact.get("currency") or "").strip().upper()
+            for fact in repository.fact_rows
+            if str(fact.get("issuer_name") or "") == legal_name
+            and str(fact.get("currency") or "").strip()
+            and str(fact.get("status") or "") in PUBLISHABLE
+        }
+        reporting_currency = (
+            next(iter(current_currencies))
+            if len(current_currencies) == 1
+            else str(old_issuer.get("reporting_currency") or "").strip().upper() or None
+        )
+        prior_fy_end = old_issuer.get("fiscal_year_end_month")
+        fiscal_year_end_month = (
+            configured.fiscal_year_end_month
+            if configured is not None and configured.fiscal_year_end_month is not None
+            else prior_fy_end
+        )
 
         issuer_rows.append(
             {
                 "issuer_id": issuer_id,
                 "legal_name": legal_name,
+                "legal_name_history": legal_name_history,
                 "issuer_type": (
                     configured.issuer_type if configured is not None else infer_issuer_type(legal_name)
                 ),
@@ -794,12 +831,11 @@ def build_canonical_master(
                     if configured is not None
                     else infer_entity_scope(legal_name)
                 ),
-                "fiscal_year_end_month": (
-                    configured.fiscal_year_end_month if configured is not None else None
-                ),
+                "reporting_currency": reporting_currency,
+                "fiscal_year_end_month": fiscal_year_end_month,
                 "listing_segment": segment,
                 "symbols": symbols,
-                "active_from": as_of.isoformat(),
+                "active_from": str(old_issuer.get("active_from") or as_of.isoformat()),
                 "active_to": None,
             }
         )

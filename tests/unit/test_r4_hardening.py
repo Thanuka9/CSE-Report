@@ -130,6 +130,13 @@ def test_canonical_master_keeps_issuer_id_across_legal_name_change(tmp_path: Pat
             "symbol": "OLD.N0000",
         }
     ]
+    first.fact_rows = [
+        {
+            "issuer_name": "Old Name PLC",
+            "currency": "LKR",
+            "status": "EXTRACTED",
+        }
+    ]
     _path, first_master = build_canonical_master(tmp_path, date(2026, 6, 30), first)
     issuer_id = first_master["issuers"][0]["issuer_id"]
 
@@ -144,6 +151,9 @@ def test_canonical_master_keeps_issuer_id_across_legal_name_change(tmp_path: Pat
     _path, second_master = build_canonical_master(tmp_path, date(2026, 9, 30), second)
     current = [row for row in second_master["issuers"] if not row.get("active_to")]
     assert current[0]["issuer_id"] == issuer_id
+    assert current[0]["active_from"] == "2026-06-30"
+    assert current[0]["reporting_currency"] == "LKR"
+    assert "Old Name PLC" in current[0]["legal_name_history"]
     security = [row for row in second_master["securities"] if not row.get("active_to")][0]
     assert security["security_id"] == 101
     assert "OLD.N0000" in security["symbol_history"]

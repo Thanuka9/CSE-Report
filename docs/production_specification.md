@@ -34,7 +34,7 @@ Excel is a generated report. It is never the master database and must not be man
 - Financial facts are stored once at **issuer + period + entity-scope + filing-version** level.
 - Market data and ranking are stored at **security-symbol + market-as-of-date** level.
 - Flow metrics use the standalone three-month period. Stock metrics use the value as at the period end.
-- Q4 flow metrics prefer an explicit standalone three-month/`4Q` column. When none exists, eligible flows may be derived only from compatible normalized cumulative and preceding standalone quarters with complete lineage; EPS is never derived this way.
+- Q4 flow metrics require an explicitly reported standalone three-month/`4Q` value. Cumulative 6M/9M/YTD/FY values may be retained as audit evidence but are never differenced or published as the reported quarter.
 - The nearest applicable explicit unit wins, with row/metric evidence taking precedence over broader declarations.
 - Currency and scale are separate fields.
 - Only absolute monetary metrics inherit a normal statement scale.
@@ -260,7 +260,7 @@ Use the value as at the reporting date.
 
 ### 7.3 Q4 rule
 
-Q4 flow metrics prefer an explicit standalone three-month/`4Q` column. When none exists, eligible flow metrics (`TOP_LINE`, `OPERATING_PROFIT`, `PBT`, `PAT`) may be derived only from compatible normalized cumulative values and preceding standalone quarters, with complete formula lineage. Do not publish a full-year column as Q4 without that derivation. Never derive Q4 EPS. If the inputs are missing or incompatible, record `EXACT_QUARTER_NOT_REPORTED` or `CUMULATIVE_ONLY`.
+Q4 flow metrics require an explicitly reported standalone three-month/`4Q` column. Annual, 6M, 9M and YTD values are never copied or differenced into a published quarter. Cumulative-only evidence remains available for audit/review; when an exact three-month Q4 is not reported or cannot be resolved, record `EXACT_QUARTER_NOT_REPORTED` or `CUMULATIVE_ONLY` and leave the quarter value unpopulated.
 
 ---
 
@@ -315,7 +315,7 @@ The dictionary is configuration, not hard-coded company logic.
 | `MONETARY_PER_SHARE` | No, unless explicitly local to the metric | EPS, NAVPS, DPS, share price |
 | `COUNT` | No | Issued shares, employees, branches, shareholders |
 | `PERCENTAGE` | No | ROE, ROA, NPM, public holding |
-| `RATIO` | No | Debt/equity, capital ratios |
+| `RATIO` | No | Liabilities/equity, capital ratios |
 | `RANK` | No | Previous rank, current rank, rank change |
 
 For an absolute monetary metric with no reliable unit, set `UNIT_NOT_DETECTED` and send it to review. Never silently default to scale 1.
@@ -347,7 +347,7 @@ For an absolute monetary metric with no reliable unit, set `UNIT_NOT_DETECTED` a
 | `NAVPS` | Monetary per share | As at | Net assets per share | Net asset value per ordinary share, Bank column |
 | `TOTAL_EQUITY` | Monetary absolute | As at | Total equity, Company column | Total equity, Bank column |
 | `TOTAL_ASSETS` | Monetary absolute | As at | Total assets, Company column | Total assets, Bank column |
-| `TOTAL_LIABILITIES` | Monetary absolute | As at | Explicit total, or Assets minus Equity with derived lineage | Explicit total, or Assets minus Equity with derived lineage |
+| `TOTAL_LIABILITIES` | Monetary absolute | As at | Explicit standalone Total Liabilities row only | Explicit standalone Total Liabilities row only |
 | `MARKET_PRICE_QUARTER_END` | Monetary per share | As at | Exact security class, filing price first | Exact security class, filing price first |
 
 `TOP_LINE` retains `source_metric_code` so users can distinguish `REVENUE` from `GROSS_INCOME`.
@@ -357,7 +357,7 @@ For an absolute monetary metric with no reliable unit, set `UNIT_NOT_DETECTED` a
 Do not force them through general-company aliases.
 
 - `FINANCE_COMPANY`: configure top-line and operating-profit aliases from the approved reporting format; retain the exact source definition.
-- `INSURANCE`: prefer IFRS 17 insurance revenue for top line. Accept operating profit only when explicitly presented or when a formally approved mapping exists.
+- `INSURANCE`: retain the filing’s actual top-line basis and accounting-regime evidence. `Insurance revenue`, `Gross written premium`, and `Net earned premium` are not treated as interchangeable; accept operating profit only when explicitly presented or when a formally approved mapping exists.
 - `OTHER_FINANCIAL`: issuer-specific mapping requires documented approval.
 
 Unknown mappings become `METRIC_MAPPING_REQUIRED`, not a guessed value.
