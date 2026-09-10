@@ -9,6 +9,11 @@ from typing import Any
 
 from cse_financial_etl.extraction.statement_extractor import ExtractedFact
 from cse_financial_etl.validation.acceptance import is_publishable_fact
+from cse_financial_etl.validation.row_safety import (
+    is_narrative_unit_amount,
+    ratio_plausibility_issue,
+    suspicious_selected_numeric,
+)
 
 ACCEPTED = {"EXTRACTED", "EXTRACTED_DERIVED"}
 STANDALONE = {"COMPANY", "BANK"}
@@ -36,6 +41,32 @@ def _sanitize_source_fact(fact: ExtractedFact) -> ExtractedFact:
     if fact.status not in ACCEPTED:
         return fact
     evidence = _evidence(fact)
+    if is_narrative_unit_amount(fact.unit_source_text):
+        evidence["row_safety"] = "NARRATIVE_UNIT_EVIDENCE"
+        return replace(
+            fact,
+            status="UNIT_NOT_RESOLVED",
+            normalized_value=None,
+            validation_status="FAILED",
+            overall_certainty=0.0,
+            certainty_band="NONE",
+            confidence="LOW",
+            evidence_json=json.dumps(evidence, separators=(",", ":")),
+        )
+    if suspicious_selected_numeric(
+        fact.metric_code, fact.raw_value, fact.scale_factor, fact.source_line
+    ):
+        evidence["row_safety"] = "SUSPICIOUS_OCR_SELECTED_NUMERIC"
+        return replace(
+            fact,
+            status="VALUE_CONTEXT_UNRESOLVED",
+            normalized_value=None,
+            validation_status="FAILED",
+            overall_certainty=0.0,
+            certainty_band="NONE",
+            confidence="LOW",
+            evidence_json=json.dumps(evidence, separators=(",", ":")),
+        )
     if fact.validation_status in {"FAILED", "REJECTED"}:
         return replace(
             fact,
@@ -64,6 +95,49 @@ def _sanitize_source_fact(fact: ExtractedFact) -> ExtractedFact:
             confidence="LOW",
         )
     return fact
+
+
+def _sanitize_eps_selected(facts: list[ExtractedFact]) -> list[ExtractedFact]:
+    by_code = {fact.metric_code: fact for fact in facts}
+    selected = by_code.get("EPS_SELECTED")
+    if selected is None or selected.status not in ACCEPTED:
+        return facts
+
+    diluted = by_code.get("EPS_DILUTED")
+    basic = by_code.get("EPS_BASIC")
+    preferred = None
+    if (
+        diluted is not None
+        and is_publishable_fact(diluted)
+        and diluted.validation_status == "PASSED"
+    ):
+        preferred = diluted
+    elif basic is not None and is_publishable_fact(basic) and basic.validation_status == "PASSED":
+        preferred = basic
+
+    if (
+        preferred is not None
+        and selected.normalized_value is not None
+        and selected.normalized_value == preferred.normalized_value
+        and selected.entity_scope == preferred.entity_scope
+        and selected.comparison_role == preferred.comparison_role
+    ):
+        return facts
+
+    evidence = _evidence(selected)
+    evidence["row_safety"] = "EPS_SELECTED_SOURCE_NOT_PUBLISHABLE"
+    evidence["preferred_source"] = preferred.metric_code if preferred is not None else None
+    replacement = replace(
+        selected,
+        status="VALIDATION_FAILED",
+        normalized_value=None,
+        validation_status="FAILED",
+        overall_certainty=0.0,
+        certainty_band="NONE",
+        confidence="LOW",
+        evidence_json=json.dumps(evidence, separators=(",", ":")),
+    )
+    return [replacement if fact.metric_code == "EPS_SELECTED" else fact for fact in facts]
 
 
 def _index_facts(
@@ -233,10 +307,14 @@ def _same_quarter_ratio(
             empty_denominator_reason,
             f"{denominator_code} is missing or not positive.",
         )
+    value = numerator.normalized_value / denominator.normalized_value
+    plausibility_issue = ratio_plausibility_issue(ratio_code, value)
+    if plausibility_issue is not None:
+        return _missing_ratio(template, ratio_code, "IMPLAUSIBLE_DERIVED_RATIO", plausibility_issue)
     return _ratio_fact(
         numerator,
         ratio_code,
-        numerator.normalized_value / denominator.normalized_value,
+        value,
         {
             numerator_code: str(numerator.normalized_value),
             denominator_code: str(denominator.normalized_value),
@@ -255,7 +333,7 @@ def derive_ratio_facts[TFiling](
     """Fail-close source rows, then attach same-quarter ratios with exact lineage context."""
 
     sanitized_results = [
-        (item, [_sanitize_source_fact(fact) for fact in facts])
+        (item, _sanitize_eps_selected([_sanitize_source_fact(fact) for fact in facts]))
         for item, facts in extracted_results
     ]
     index = _index_facts(sanitized_results)

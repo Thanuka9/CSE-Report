@@ -8,7 +8,15 @@ from cse_financial_etl.extraction.statement_extractor import ExtractedFact
 from cse_financial_etl.transformation.ratios import derive_ratio_facts
 
 PERIOD = date(2026, 6, 30)
-FLOW_CODES = {"PAT", "PBT", "TOP_LINE", "OPERATING_PROFIT", "EPS_BASIC", "EPS_DILUTED", "EPS_SELECTED"}
+FLOW_CODES = {
+    "PAT",
+    "PBT",
+    "TOP_LINE",
+    "OPERATING_PROFIT",
+    "EPS_BASIC",
+    "EPS_DILUTED",
+    "EPS_SELECTED",
+}
 
 
 def _fact(
@@ -101,3 +109,55 @@ def test_ratio_context_comes_from_compatible_inputs_not_arbitrary_template() -> 
         assert ratio.currency is None
         assert ratio.source_page is None
         assert ratio.review_status == "REVIEW"
+
+
+def test_eps_selected_cannot_publish_failed_source() -> None:
+    basic = _fact("EPS_BASIC", "2.51", validation="FAILED")
+    selected = _fact("EPS_SELECTED", "2.51")
+    [(_, materialized)] = derive_ratio_facts([("filing", [basic, selected])])
+    by_code = _by_code(materialized)
+    assert by_code["EPS_SELECTED"].status == "VALIDATION_FAILED"
+    assert by_code["EPS_SELECTED"].normalized_value is None
+
+
+def test_narrative_unit_evidence_is_withheld() -> None:
+    pat = _fact("PAT", "100")
+    pat = (
+        pat.__class__(
+            **{
+                **pat.__dict__,
+            }
+        )
+        if hasattr(pat, "__dict__")
+        else pat
+    )
+    from dataclasses import replace
+
+    pat = replace(pat, unit_source_text="Corporate guarantee is LKR 25 Mn and USD 2 Mn")
+    [(_, materialized)] = derive_ratio_facts([("filing", [pat, _fact("TOP_LINE", "1000")])])
+    by_code = _by_code(materialized)
+    assert by_code["PAT"].status == "UNIT_NOT_RESOLVED"
+    assert by_code["PAT"].normalized_value is None
+    assert by_code["NPM"].status == "INSUFFICIENT_INPUT"
+
+
+def test_tiny_ocr_fragment_in_large_monetary_row_is_withheld() -> None:
+    from dataclasses import replace
+
+    equity = replace(
+        _fact("TOTAL_EQUITY", "1"),
+        source_line='Total equity 4.335"A3ii97,9:. 2,499,936,009 3,569,255,889',
+    )
+    [(_, materialized)] = derive_ratio_facts([("filing", [equity, _fact("PAT", "100")])])
+    by_code = _by_code(materialized)
+    assert by_code["TOTAL_EQUITY"].status == "VALUE_CONTEXT_UNRESOLVED"
+    assert by_code["ROE"].status == "INSUFFICIENT_INPUT"
+
+
+def test_catastrophic_ratio_is_not_machine_passed() -> None:
+    source = [_fact("PAT", "1000000"), _fact("TOTAL_ASSETS", "1"), _fact("TOTAL_EQUITY", "1")]
+    [(_, materialized)] = derive_ratio_facts([("filing", source)])
+    by_code = _by_code(materialized)
+    assert by_code["ROA"].status == "IMPLAUSIBLE_DERIVED_RATIO"
+    assert by_code["ROA"].normalized_value is None
+    assert by_code["ROE"].status == "IMPLAUSIBLE_DERIVED_RATIO"

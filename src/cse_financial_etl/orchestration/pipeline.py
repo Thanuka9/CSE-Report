@@ -86,6 +86,7 @@ class ValidationOutcomeLike(Protocol):
     @property
     def outcome(self) -> ValidationOutcome: ...
 
+
 # Equation rule -> metric codes whose validation status the rule speaks for.
 RULE_METRICS: dict[str, frozenset[str]] = {
     "BALANCE_SHEET_IDENTITY": frozenset({"TOTAL_ASSETS", "TOTAL_LIABILITIES", "TOTAL_EQUITY"}),
@@ -173,7 +174,10 @@ def stamp_validation_status(
         elif fact.metric_code in passed_metrics:
             evidence = _evidence_dict(fact)
             evidence["equation_passes"] = sorted(
-                r.rule_id for r in results if r.outcome == ValidationOutcome.PASS and fact.metric_code in RULE_METRICS.get(r.rule_id, ())
+                r.rule_id
+                for r in results
+                if r.outcome == ValidationOutcome.PASS
+                and fact.metric_code in RULE_METRICS.get(r.rule_id, ())
             )
             stamped.append(
                 replace(
@@ -212,7 +216,11 @@ def _previous_fact_status_counts(preserved: Path | None) -> dict[str, int] | Non
     counts = payload.get("fact_status_counts")
     if not isinstance(counts, dict):
         return None
-    return {str(key): int(value) for key, value in counts.items() if str(value).isdigit() or isinstance(value, int)}
+    return {
+        str(key): int(value)
+        for key, value in counts.items()
+        if str(value).isdigit() or isinstance(value, int)
+    }
 
 
 class Pipeline:
@@ -459,7 +467,11 @@ class Pipeline:
                     downloaded_item, prices = future.result()
                     filled: list[QuarterPrice] = []
                     for price in prices:
-                        if price.status == "EXTRACTED" and price.value is not None:
+                        if (
+                            price.status == "EXTRACTED"
+                            and price.value is not None
+                            and price.value > 0
+                        ):
                             filled.append(price)
                             continue
                         resolved = resolve_quarter_end_price(
@@ -503,7 +515,9 @@ class Pipeline:
                         elif price.status == "RESOLVED_HISTORICAL":
                             staleness_text = ""
                             if price.source_line and "staleness_days=" in price.source_line:
-                                staleness_text = price.source_line.split("staleness_days=")[1].split(";")[0]
+                                staleness_text = price.source_line.split("staleness_days=")[
+                                    1
+                                ].split(";")[0]
                             try:
                                 stale_days = int(staleness_text)
                             except ValueError:
@@ -546,9 +560,7 @@ class Pipeline:
         refreshed_results: list[tuple[DownloadedFiling, list[ExtractedFact]]] = []
         for item, facts in extracted_results:
             results = _validate_fact_list(facts)
-            failures = [
-                result for result in results if result.outcome == ValidationOutcome.FAIL
-            ]
+            failures = [result for result in results if result.outcome == ValidationOutcome.FAIL]
             gap_triggers = extraction_gap_triggers(facts)
             if failures or gap_triggers:
                 lineage_dir = self.data / "tmp" / run_id / item.sha256[:16]
@@ -636,9 +648,7 @@ class Pipeline:
         ]
         extracted_results = derive_ratio_facts(stripped, display_periods=target_periods)
         self.repository.apply_stamped_facts(extracted_results)
-        status_counts = Counter(
-            fact.status for _item, facts in extracted_results for fact in facts
-        )
+        status_counts = Counter(fact.status for _item, facts in extracted_results for fact in facts)
         for mismatch in flag_cross_filing_mismatches(
             extracted_results,
             current_gold_dir(self.data) / "current_financial_facts.parquet",
@@ -742,8 +752,12 @@ class Pipeline:
             "use_transformer": self.app_config.use_transformer,
             "semantic_model": get_semantic_matcher().model_name,
             "archived_prior_run_files": [str(path) for path in archived],
-            "current_facts_parquet": str(self.data / "gold" / "snapshots" / run_id / "current_financial_facts.parquet"),
-            "current_prices_parquet": str(self.data / "gold" / "snapshots" / run_id / "current_market_prices.parquet"),
+            "current_facts_parquet": str(
+                self.data / "gold" / "snapshots" / run_id / "current_financial_facts.parquet"
+            ),
+            "current_prices_parquet": str(
+                self.data / "gold" / "snapshots" / run_id / "current_market_prices.parquet"
+            ),
         }
         workbook_path: Path | None = None
         if not skip_excel:

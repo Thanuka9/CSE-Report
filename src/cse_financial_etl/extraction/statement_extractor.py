@@ -338,8 +338,7 @@ def _is_exact_quarter_text(text: str) -> bool:
     # Multi-column PDF headers often emit "Three" and "months to" as
     # separate visual lines. Combined Three+Nine pages still have a quarter block.
     has_split_three_months = bool(
-        re.search(r"\bTHREE\b", normalized)
-        and re.search(r"\bMONTHS?\s+(?:ENDED|TO)\b", normalized)
+        re.search(r"\bTHREE\b", normalized) and re.search(r"\bMONTHS?\s+(?:ENDED|TO)\b", normalized)
     )
     return has_split_three_months
 
@@ -530,7 +529,9 @@ def _select_current(
         for phrase in ("SIX MONTHS", "NINE MONTHS", "TWELVE MONTHS", "YEAR TO DATE", " YTD ")
     )
     standalone = next((item for item in ("COMPANY", "BANK") if item in entity_order), None)
-    proven = has_quarter or has_change or bool(re.search(r"\b20\d{2}\b", header)) or len(values) == 1
+    proven = (
+        has_quarter or has_change or bool(re.search(r"\b20\d{2}\b", header)) or len(values) == 1
+    )
 
     def pick(group: list[tuple[str, Decimal | None]]) -> tuple[str, Decimal | None] | None:
         roles = _column_roles(
@@ -703,8 +704,7 @@ def _head_has_split_three_months(page: PageIR, line_count: int = 12) -> bool:
 
     joined = _joined_statement_head(page, line_count)
     return bool(
-        re.search(r"\bTHREE\b", joined)
-        and re.search(r"\bMONTHS?\s+(?:ENDED|TO)\b", joined)
+        re.search(r"\bTHREE\b", joined) and re.search(r"\bMONTHS?\s+(?:ENDED|TO)\b", joined)
     )
 
 
@@ -780,9 +780,7 @@ def _page_has_statement_quarter_heading(page: PageIR) -> bool:
     return False
 
 
-def _page_is_cumulative_only(
-    page: PageIR, *, document_has_quarter_heading: bool = False
-) -> bool:
+def _page_is_cumulative_only(page: PageIR, *, document_has_quarter_heading: bool = False) -> bool:
     if _page_has_statement_quarter_heading(page):
         return False
     cue = _head_duration_cue(page)
@@ -794,9 +792,7 @@ def _page_is_cumulative_only(
 
 
 def _page_is_exact_quarter(page: PageIR, *, document_has_quarter_heading: bool = False) -> bool:
-    if _page_is_cumulative_only(
-        page, document_has_quarter_heading=document_has_quarter_heading
-    ):
+    if _page_is_cumulative_only(page, document_has_quarter_heading=document_has_quarter_heading):
         return False
     cue = _head_duration_cue(page)
     if cue == "QUARTER" or _page_has_statement_quarter_heading(page):
@@ -885,17 +881,14 @@ def _page_fiscal_period_duration(page: PageIR) -> int | None:
     durations = {
         months
         for period in period_dates
-        if (months := _fiscal_months_between(year_end, period)) is not None
-        and period != year_end
+        if (months := _fiscal_months_between(year_end, period)) is not None and period != year_end
     }
     if len(durations) == 1:
         return next(iter(durations))
     return None
 
 
-def _page_flow_duration(
-    page: PageIR, *, document_has_quarter_heading: bool = False
-) -> int | None:
+def _page_flow_duration(page: PageIR, *, document_has_quarter_heading: bool = False) -> int | None:
     cue = _head_duration_cue(page)
     head = _page_head_text(page)
     head_duration = _duration_months(head)
@@ -1017,8 +1010,14 @@ def _header_points(page: PageIR, line: LineIR, pattern: str) -> list[float]:
     return points
 
 
-def _period_header_points(page: PageIR, line: LineIR, period_end: date) -> tuple[list[float], list[float]]:
-    """Return (target date/year points, prior-year points), including phrase dates."""
+def _period_header_points(
+    page: PageIR, line: LineIR, period_end: date
+) -> tuple[list[float], list[float]]:
+    """Return target and comparative date-header x positions.
+
+    Comparatives are not restricted to the prior year.  Financial-position tables
+    commonly compare a June quarter with March/December in the same calendar year.
+    """
 
     months = (
         "january",
@@ -1034,50 +1033,45 @@ def _period_header_points(page: PageIR, line: LineIR, period_end: date) -> tuple
         "november",
         "december",
     )
-    month_name = months[period_end.month - 1]
-    month_abbr = month_name[:3]
-    prior = period_end.year - 1
-    target_phrases = (
-        f"{period_end.day} {month_name} {period_end.year}",
-        f"{period_end.day:02d} {month_name} {period_end.year}",
-        f"{period_end.day} {month_abbr} {period_end.year}",
-        f"{period_end.day:02d} {month_abbr} {period_end.year}",
-        f"{period_end.day:02d}.{period_end.month:02d}.{period_end.year}",
-        f"{period_end.day}.{period_end.month}.{period_end.year}",
-        f"{period_end.day:02d}/{period_end.month:02d}/{period_end.year}",
-    )
-    prior_phrases = (
-        f"31 december {prior}",
-        f"31 dec {prior}",
-        f"31.12.{prior}",
-        f"31/12/{prior}",
-        f"{period_end.day} {month_name} {prior}",
-        f"{period_end.day:02d} {month_name} {prior}",
-        f"{period_end.day} {month_abbr} {prior}",
-        f"{period_end.day:02d} {month_abbr} {prior}",
-        f"{period_end.day:02d}.{period_end.month:02d}.{prior}",
-        f"{period_end.day}.{period_end.month}.{prior}",
-        f"{period_end.day:02d}/{period_end.month:02d}/{prior}",
-        f"{period_end.day:02d}-{period_end.month:02d}-{prior}",
-    )
+
+    def phrases(value: date) -> tuple[str, ...]:
+        month_name = months[value.month - 1]
+        month_abbr = month_name[:3]
+        return (
+            f"{value.day} {month_name} {value.year}",
+            f"{value.day:02d} {month_name} {value.year}",
+            f"{value.day} {month_abbr} {value.year}",
+            f"{value.day:02d} {month_abbr} {value.year}",
+            f"{value.day:02d}.{value.month:02d}.{value.year}",
+            f"{value.day}.{value.month}.{value.year}",
+            f"{value.day:02d}/{value.month:02d}/{value.year}",
+            f"{value.day}/{value.month}/{value.year}",
+            f"{value.day:02d}-{value.month:02d}-{value.year}",
+        )
+
     target_points: list[float] = []
-    prior_points: list[float] = []
-    for header_line in page.lines:
-        if header_line.bbox.y0 >= line.bbox.y0:
-            break
-        for phrase in target_phrases:
-            for _x0, _x1, center in _phrase_occurrences(header_line, phrase):
-                target_points.append(center)
-        for phrase in prior_phrases:
-            for _x0, _x1, center in _phrase_occurrences(header_line, phrase):
-                prior_points.append(center)
-        for token in header_line.tokens:
-            stripped = token.text.strip("():")
-            if stripped == str(period_end.year):
-                target_points.append(token.bbox.center_x)
-            elif stripped == str(prior):
-                prior_points.append(token.bbox.center_x)
-    return target_points, prior_points
+    for phrase in phrases(period_end):
+        target_points.extend(_line_points(page, line, phrase))
+    target_points.extend(_header_points(page, line, rf"{period_end.year}"))
+
+    comparative_points: list[float] = []
+    for year in (period_end.year, period_end.year - 1):
+        for month, day in ((3, 31), (6, 30), (9, 30), (12, 31)):
+            candidate = date(year, month, day)
+            if candidate == period_end:
+                continue
+            for phrase in phrases(candidate):
+                comparative_points.extend(_line_points(page, line, phrase))
+    comparative_points.extend(_header_points(page, line, rf"{period_end.year - 1}"))
+
+    def dedupe(points: list[float]) -> list[float]:
+        result: list[float] = []
+        for point in points:
+            if not any(abs(point - existing) < 1.0 for existing in result):
+                result.append(point)
+        return result
+
+    return dedupe(target_points), dedupe(comparative_points)
 
 
 def _phrase_occurrences(header_line: LineIR, phrase: str) -> list[tuple[float, float, float]]:
@@ -1144,9 +1138,7 @@ def _owned_header_regions(spans: list[_HeaderSpan], page_width: float) -> list[_
     return owned
 
 
-_DATE_TOKEN = re.compile(
-    r"^(?P<d>\d{1,2})[./-](?P<m>\d{1,2})[./-](?P<y>20\d{2})$"
-)
+_DATE_TOKEN = re.compile(r"^(?P<d>\d{1,2})[./-](?P<m>\d{1,2})[./-](?P<y>20\d{2})$")
 
 
 def _dated_header_centers(page: PageIR, line: LineIR) -> list[float]:
@@ -1228,9 +1220,7 @@ def _duration_parent_regions(page: PageIR, line: LineIR) -> list[_HeaderSpan]:
         ]
         kinds = {span.kind for span in spans}
         if "QUARTER" in kinds and "YTD" in kinds and len(spans) >= 2:
-            parent_row = _owned_header_regions(
-                _collapse_nearby_alias_spans(spans), page.width
-            )
+            parent_row = _owned_header_regions(_collapse_nearby_alias_spans(spans), page.width)
     if not parent_row:
         return []
     return _split_regions_by_date_midpoint(
@@ -1569,9 +1559,7 @@ _STOCK_TOTAL_LABEL = re.compile(
 
 def _max_abs_numeric(line: LineIR) -> Decimal:
     values = [
-        abs(value)
-        for token in line.numeric_tokens
-        if (value := _decimal(token.text)) is not None
+        abs(value) for token in line.numeric_tokens if (value := _decimal(token.text)) is not None
     ]
     return max(values) if values else Decimal("0")
 
@@ -1664,7 +1652,9 @@ def _logical_rows(page: PageIR) -> tuple[LineIR, ...]:
                 value_line = lines[index + 2]
                 unit_gap = value_line.bbox.y0 - unit_line.bbox.y1
                 unit_only = bool(
-                    re.fullmatch(r"\s*(?:rs\.?|lkr|usd)\s*(?:'?\s*000|mn|m)?\s*", unit_line.text, re.I)
+                    re.fullmatch(
+                        r"\s*(?:rs\.?|lkr|usd)\s*(?:'?\s*000|mn|m)?\s*", unit_line.text, re.I
+                    )
                     or (
                         not _has_money_tokens(unit_line)
                         and re.search(r"\b(?:rs\.?|lkr)\b", unit_line.text, re.I)
@@ -2173,8 +2163,7 @@ def _unit_for_layout(
             composed = compose_unit_text(candidate_line.text, neighbor)
             probe_texts = [candidate_line.text]
             if (
-                _CURRENCY_FRAGMENT.search(candidate_line.text)
-                and _SCALE_FRAGMENT.search(neighbor)
+                _CURRENCY_FRAGMENT.search(candidate_line.text) and _SCALE_FRAGMENT.search(neighbor)
             ) or (
                 _SCALE_FRAGMENT.search(candidate_line.text)
                 and line_index > 0
@@ -2196,7 +2185,9 @@ def _unit_for_layout(
                     if _SCALE_FRAGMENT.search(other_text):
                         probe_texts.append(compose_unit_text(candidate_line.text, other_text))
                         break
-            if not any(_unit_declaration(text) or _SCALE_FRAGMENT.search(text) for text in probe_texts):
+            if not any(
+                _unit_declaration(text) or _SCALE_FRAGMENT.search(text) for text in probe_texts
+            ):
                 continue
             if "per share" in candidate_line.text.lower():
                 continue
@@ -2405,9 +2396,7 @@ def _layout_candidates(
             page, document_has_quarter_heading=document_has_quarter_heading
         )
         exact_quarter = (not cumulative_only_page) and (
-            _page_is_exact_quarter(
-                page, document_has_quarter_heading=document_has_quarter_heading
-            )
+            _page_is_exact_quarter(page, document_has_quarter_heading=document_has_quarter_heading)
             or bool(
                 document_quarter_context
                 and page_duration not in {6, 9, 12}
@@ -2727,7 +2716,9 @@ def _selected_eps_fact(
         ]
         pool = evidenced or candidates
         # Within the pool, pick the best (lowest) preferred rank; ties prefer basic.
-        selection_source = min(pool, key=lambda fact: (_status_rank(fact.status), 0 if fact is basic else 1))
+        selection_source = min(
+            pool, key=lambda fact: (_status_rank(fact.status), 0 if fact is basic else 1)
+        )
         missing_status = selection_source.status
         if missing_status in {"EXTRACTED", "EXTRACTED_DERIVED", "NOT_REPORTED"}:
             missing_status = next(
@@ -2793,9 +2784,7 @@ def _missing_status_after_search(
     if wrong_scope and not standalone_statement:
         return "CONSOLIDATED_ONLY"
 
-    statement_pages = [
-        page for page in document.pages if _is_statement_page(page, rule.statement)
-    ]
+    statement_pages = [page for page in document.pages if _is_statement_page(page, rule.statement)]
     if not statement_pages:
         return "NOT_FOUND_BY_PARSER"
 
@@ -3037,14 +3026,11 @@ def _assemble_standalone_liabilities(
     sofp_pages = [
         page
         for page in document.pages
-        if _page_title_entity(page) != "GROUP"
-        and _is_sofp_eligible(page, document, statement_map)
+        if _page_title_entity(page) != "GROUP" and _is_sofp_eligible(page, document, statement_map)
     ]
     windows: list[tuple[PageIR, ...]] = [(page,) for page in sofp_pages]
     windows.extend(
-        (left, right)
-        for left, right in pairwise(sofp_pages)
-        if right.number == left.number + 1
+        (left, right) for left, right in pairwise(sofp_pages) if right.number == left.number + 1
     )
     for pages in windows:
         current = None
@@ -3058,7 +3044,9 @@ def _assemble_standalone_liabilities(
                     current = hit
                     current_page = page
             if noncurrent is None:
-                hit = _select_labelled_layout_value(page, _NONCURRENT_LIAB_TOTAL, entity, period_end)
+                hit = _select_labelled_layout_value(
+                    page, _NONCURRENT_LIAB_TOTAL, entity, period_end
+                )
                 if hit is not None:
                     noncurrent = hit
                     ncl_page = page
@@ -3321,12 +3309,12 @@ def _extract_filing_layout(
         if not candidates and rule.code in {"TOP_LINE", "OPERATING_PROFIT", "PBT", "PAT"}:
             cumulative_candidates, _outside, cumulative_wrong_scope, cumulative_unresolved = (
                 _layout_candidates(
-                document,
-                rule,
-                entity,
-                period_end,
-                require_exact_quarter=False,
-                statement_map=statement_map,
+                    document,
+                    rule,
+                    entity,
+                    period_end,
+                    require_exact_quarter=False,
+                    statement_map=statement_map,
                 )
             )
             cumulative_candidates = [
@@ -3335,9 +3323,7 @@ def _extract_filing_layout(
                 if (
                     _page_flow_duration(
                         candidate.page,
-                        document_has_quarter_heading=_document_has_quarter_flow_heading(
-                            document
-                        ),
+                        document_has_quarter_heading=_document_has_quarter_flow_heading(document),
                     )
                     or 0
                 )
@@ -3391,9 +3377,7 @@ def _extract_filing_layout(
                 overall = 0.82 if publishable and status == "EXTRACTED" else 0.72
                 if status == "EXTRACTED" and overall < manual_review_threshold:
                     status = "LOW_CERTAINTY"
-                text_duration = (
-                    _duration_months(page.text) if rule.statement == "FLOW" else None
-                )
+                text_duration = _duration_months(page.text) if rule.statement == "FLOW" else None
                 if rule.statement == "FLOW" and text_duration in {6, 9, 12}:
                     status = "CUMULATIVE_ONLY"
                 facts.append(
@@ -3441,10 +3425,7 @@ def _extract_filing_layout(
             )
             standalone_statement = any(
                 _page_title_entity(page) in {entity, "DUAL"}
-                or (
-                    _page_title_entity(page) is None
-                    and _is_statement_page(page, rule.statement)
-                )
+                or (_page_title_entity(page) is None and _is_statement_page(page, rule.statement))
                 for page in document.pages
             )
             status = _missing_status_after_search(
@@ -3559,9 +3540,7 @@ def _extract_filing_layout(
                 for candidate in candidates[:8]
             ],
             "rejected_raw_values": [
-                str(candidate.raw_value)
-                for candidate in candidates
-                if candidate is not selected
+                str(candidate.raw_value) for candidate in candidates if candidate is not selected
             ][:12],
             "column_raw_values": [
                 str(row.get("raw"))
@@ -3583,9 +3562,7 @@ def _extract_filing_layout(
                 flow_duration = (
                     _page_flow_duration(
                         selected.page,
-                        document_has_quarter_heading=_document_has_quarter_flow_heading(
-                            document
-                        ),
+                        document_has_quarter_heading=_document_has_quarter_flow_heading(document),
                     )
                     or _duration_months(selected.page.text)
                     or 6
@@ -3757,7 +3734,7 @@ def extract_quarter_prices(
                     continue
                 if has_month and value == value.to_integral() and 1 <= abs(value) <= 31:
                     continue
-                if abs(value) > 100_000:
+                if value <= 0 or abs(value) > 100_000:
                     continue
                 numeric.append((token, value))
             if not numeric:

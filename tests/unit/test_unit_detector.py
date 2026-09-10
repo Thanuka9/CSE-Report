@@ -136,3 +136,11 @@ class UnitDetectorTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_narrative_amount_is_not_a_page_unit_declaration() -> None:
+    from cse_financial_etl.domain.enums import UnitScope
+    from cse_financial_etl.extraction.unit_detector import detect_candidates
+
+    text = "Corporate guarantee issued on behalf of a subsidiary is LKR 25 Mn and USD 2 Mn."
+    assert detect_candidates(text, scope=UnitScope.PAGE, page=3) == []

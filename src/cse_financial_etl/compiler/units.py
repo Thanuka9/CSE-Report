@@ -21,6 +21,7 @@ from decimal import Decimal
 from typing import Any
 
 from cse_financial_etl.compiler.structure_normalizer import ParsedUnit, parse_unit_text
+from cse_financial_etl.validation.row_safety import is_narrative_unit_amount
 
 MONETARY = "MONETARY"
 PER_SHARE = "PER_SHARE"
@@ -53,7 +54,10 @@ def label_dimension_hint(label: str) -> str | None:
     lower = label.lower()
     if re.search(r"\bper\s+(?:ordinary\s+)?share\b|\beps\b|\bnavps\b", lower):
         return PER_SHARE
-    if re.search(r"\bnumber\s+of\s+(?:ordinary\s+)?shares\b|\bweighted\s+average\s+(?:number\s+of\s+)?shares\b", lower):
+    if re.search(
+        r"\bnumber\s+of\s+(?:ordinary\s+)?shares\b|\bweighted\s+average\s+(?:number\s+of\s+)?shares\b",
+        lower,
+    ):
         return COUNT
     return None
 
@@ -81,6 +85,8 @@ class UnitDeclaration:
         owner: str,
         page: int | None = None,
     ) -> UnitDeclaration | None:
+        if scope in {SCOPE_TABLE, SCOPE_PAGE} and is_narrative_unit_amount(text):
+            return None
         parsed: ParsedUnit = parse_unit_text(text)
         if parsed.is_empty:
             return None
@@ -176,7 +182,9 @@ def resolve_unit(
         reasons.append("CURRENCY_MISSING")
 
     if dimension == PERCENT:
-        return UnitResolution(dimension, "RESOLVED", None, Decimal("1"), None, "percent_dimension_rule")
+        return UnitResolution(
+            dimension, "RESOLVED", None, Decimal("1"), None, "percent_dimension_rule"
+        )
 
     if dimension == PER_SHARE:
         row_scales = [d for d in scoped[SCOPE_ROW] if d.scale is not None]
@@ -187,7 +195,10 @@ def resolve_unit(
             # Per-share amounts are printed in whole currency units unless the row says cents.
             scale = Decimal("1")
             scale_owner = "per_share_dimension_rule"
-        if any(d.scale_explicit and d.scale is not None and d.scale >= Decimal("1000") for d in row_scales):
+        if any(
+            d.scale_explicit and d.scale is not None and d.scale >= Decimal("1000")
+            for d in row_scales
+        ):
             # "(Rs. '000)" on a per-share row is not a plausible per-share scale.
             reasons.append("PER_SHARE_ROW_SCALE_IMPLAUSIBLE")
     elif dimension == COUNT:
@@ -208,7 +219,8 @@ def resolve_unit(
             reasons.append(f"SCALE_CONFLICT:{conflict}")
         if scale is None:
             bare = {
-                scope: [d for d in decls if d.scale is not None and d.currency] for scope, decls in scoped.items()
+                scope: [d for d in decls if d.scale is not None and d.currency]
+                for scope, decls in scoped.items()
             }
             scale, scale_owner, conflict = _pick(bare, attr="scale")
             if conflict:
@@ -231,7 +243,15 @@ def resolve_unit(
     blocking = [
         r
         for r in reasons
-        if r.startswith(("CURRENCY_CONFLICT", "SCALE_CONFLICT", "SCALE_MISSING", "COUNT_SCALE_MISSING", "PER_SHARE_ROW_SCALE_IMPLAUSIBLE"))
+        if r.startswith(
+            (
+                "CURRENCY_CONFLICT",
+                "SCALE_CONFLICT",
+                "SCALE_MISSING",
+                "COUNT_SCALE_MISSING",
+                "PER_SHARE_ROW_SCALE_IMPLAUSIBLE",
+            )
+        )
         or (r == "CURRENCY_MISSING" and dimension != COUNT)
     ]
     status = "UNRESOLVED" if blocking else "RESOLVED"
