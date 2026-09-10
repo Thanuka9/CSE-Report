@@ -121,6 +121,7 @@ def test_bank_operating_profit_after_financial_services_tax_is_not_substitute(tm
 
 
 def test_canonical_master_keeps_issuer_id_across_legal_name_change(tmp_path: Path) -> None:
+    (tmp_path / "outputs").mkdir()
     first = Repository(tmp_path / "data")
     first.market_rows = [
         {
@@ -149,6 +150,7 @@ def test_canonical_master_keeps_issuer_id_across_legal_name_change(tmp_path: Pat
 
 
 def test_disclosure_calendar_is_listing_segment_aware(tmp_path: Path) -> None:
+    (tmp_path / "outputs").mkdir()
     master = {
         "issuers": [
             {
