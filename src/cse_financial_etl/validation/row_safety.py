@@ -19,6 +19,7 @@ _ABSOLUTE_MONETARY = {
     "TOTAL_EQUITY",
     "TOTAL_LIABILITIES",
 }
+_FLOW_MONETARY = {"TOP_LINE", "OPERATING_PROFIT", "PBT", "PAT"}
 
 _NUMBER_RE = re.compile(r"(?<![A-Za-z])\(?-?\d[\d,]*(?:\.\d+)?\)?(?![A-Za-z])")
 _NARRATIVE_AMOUNT_RE = re.compile(
@@ -35,6 +36,11 @@ _UNIT_DECLARATION_RE = re.compile(
 )
 _EUROPEAN_GROUPED_RE = re.compile(r"(?<!\d)\d{1,3}(?:\.\d{3}){2,}(?!\d)")
 _ALNUM_NUMERIC_CHUNK_RE = re.compile(r"[A-Za-z0-9!,'’.]{5,}")
+_DATE_HEADER_RE = re.compile(
+    r"\b(?:for\s+the\s+)?(?:period|quarter|year)\s+(?:ended|ending|to)\b|"
+    r"\bas\s+(?:at|of)\b",
+    re.I,
+)
 
 
 def is_positive_price(value: Decimal | None) -> bool:
@@ -62,7 +68,7 @@ def source_has_numeric_corruption(text: str | None) -> bool:
     The failing universe exposed several deterministic corruption shapes: two cells
     concatenated into one token (``49,215,51849,465,389``), broken comma groups
     (``153,338156,627``), OCR letters inside a number (``88,81L,406``), and dotted
-    multi-million values that the active numeric parser cannot consume.  A row with
+    multi-million values that the active numeric parser cannot consume. A row with
     any of these shapes is unsafe evidence; the correct response is to retry/review,
     never to publish a different tiny fragment from that row.
     """
@@ -81,7 +87,7 @@ def source_has_numeric_corruption(text: str | None) -> bool:
         if not (1 <= len(parts[0]) <= 3 and all(len(part) == 3 for part in parts[1:])):
             return True
 
-    # OCR frequently substitutes letters/punctuation into a digit run.  Require a
+    # OCR frequently substitutes letters/punctuation into a digit run. Require a
     # substantial numeric-looking chunk so normal words, dates and legal labels do not
     # trigger this guard.
     for token in _ALNUM_NUMERIC_CHUNK_RE.findall(text):
@@ -109,6 +115,45 @@ def _small_reference_number(raw_value: Decimal, source_line: str) -> bool:
     return any(re.search(pattern, source_line, re.I) for pattern in patterns)
 
 
+def _structural_context_mismatch(
+    metric_code: str, raw_value: Decimal, source_line: str
+) -> bool:
+    """Reject headers/per-share/narrative note text masquerading as monetary rows."""
+
+    compact = " ".join(source_line.split())
+    absolute = abs(raw_value)
+
+    # A reporting year extracted from a period/date heading is metadata, not money.
+    if (
+        raw_value == raw_value.to_integral()
+        and Decimal("1900") <= absolute <= Decimal("2100")
+        and _DATE_HEADER_RE.search(compact)
+    ):
+        return True
+
+    # ``Total`` alone has no accounting concept and must never stand in for top line.
+    if metric_code == "TOP_LINE" and re.fullmatch(r"total[.:]?", compact, re.I):
+        return True
+
+    # Basic/diluted labels denote per-share context, never absolute flow amounts.
+    if metric_code in _FLOW_MONETARY and re.match(r"^(?:basic|diluted)\b", compact, re.I):
+        return True
+
+    # Note prose that happens to contain "income"/"revenue" must not be promoted by
+    # fuzzy label matching. These are structural note cues, not issuer-specific values.
+    if metric_code == "TOP_LINE":
+        if re.search(r"\bfair\s+value\b.{0,100}\b(?:level|land|property)\b", compact, re.I):
+            return True
+        if re.search(
+            r"\bcorresponding\s+quarter\b.{0,120}\b(?:previous\s+year|composition\s+of)\b",
+            compact,
+            re.I,
+        ):
+            return True
+
+    return False
+
+
 def suspicious_selected_numeric(
     metric_code: str,
     raw_value: Decimal | None,
@@ -117,8 +162,8 @@ def suspicious_selected_numeric(
 ) -> bool:
     """Detect an unsafe numeric selection from an absolute-monetary source row.
 
-    This covers both tiny fragments selected from visibly large rows and rows whose
-    numeric cells are themselves OCR-corrupted/concatenated.  EPS/NAVPS are excluded.
+    This covers corrupted numeric cells, structural headers/note prose, tiny reference
+    numbers, and tiny fragments selected from visibly large rows. EPS/NAVPS are excluded.
     """
 
     if metric_code not in _ABSOLUTE_MONETARY or raw_value is None or source_line is None:
@@ -128,6 +173,9 @@ def suspicious_selected_numeric(
         return True
 
     if _small_reference_number(raw_value, source_line):
+        return True
+
+    if _structural_context_mismatch(metric_code, raw_value, source_line):
         return True
 
     if scale_factor != 1 or abs(raw_value) > Decimal("99"):
