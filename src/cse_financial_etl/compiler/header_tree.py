@@ -331,7 +331,9 @@ def compile_header(
         )
 
     compiled = _derive_period_ended_durations(compiled)
-    compiled = _assign_roles(compiled)
+    compiled = _assign_roles(
+        compiled, target_period_end=known.target_period_end if known is not None else None
+    )
     compiled = _period_starts(compiled)
 
     if known is not None:
@@ -545,7 +547,9 @@ def _derive_period_ended_durations(columns: list[CompiledHeaderColumn]) -> list[
     return out
 
 
-def _assign_roles(columns: list[CompiledHeaderColumn]) -> list[CompiledHeaderColumn]:
+def _assign_roles(
+    columns: list[CompiledHeaderColumn], *, target_period_end: date | None = None
+) -> list[CompiledHeaderColumn]:
     groups: dict[tuple[Any, ...], list[CompiledHeaderColumn]] = {}
     for col in columns:
         if col.kind != "VALUE":
@@ -555,6 +559,20 @@ def _assign_roles(columns: list[CompiledHeaderColumn]) -> list[CompiledHeaderCol
     for members in groups.values():
         dated = [c for c in members if c.period_end is not None]
         if not dated:
+            continue
+        if target_period_end is not None:
+            # Known context is a validation target, not a value to copy into headers.
+            # It may, however, prevent a prior-only block from being promoted to
+            # CURRENT merely because it is the latest date the OCR managed to read.
+            for col in members:
+                if col.period_end is None:
+                    role_by_id[col.column_id] = None
+                elif col.period_end == target_period_end:
+                    role_by_id[col.column_id] = "CURRENT"
+                elif col.period_end < target_period_end:
+                    role_by_id[col.column_id] = "COMPARATIVE"
+                else:
+                    role_by_id[col.column_id] = None
             continue
         latest = max(c.period_end for c in dated)  # type: ignore[type-var]
         for col in members:
