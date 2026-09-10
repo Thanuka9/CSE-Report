@@ -161,6 +161,7 @@ def test_gold_mismatch_is_wrong_populated() -> None:
                 {
                     "status": "FAIL",
                     "issuer_name": "Acme PLC",
+                    "symbol": "ACM.N0000",
                     "period_end": "2025-06-30",
                     "metric_code": "PAT",
                     "expected": "100",
@@ -229,8 +230,8 @@ def test_issuer_quarter_coherence_gate(tmp_path: Path) -> None:
             (
                 _filing(tmp_path),
                 [
-                    _fact(metric_code="PAT", duration_months=3, comparison_role="CURRENT"),
-                    _fact(metric_code="PBT", duration_months=6, comparison_role="CURRENT"),
+                    _fact(metric_code="PAT", entity_scope="COMPANY"),
+                    _fact(metric_code="PBT", entity_scope="BANK"),
                 ],
             )
         ]
