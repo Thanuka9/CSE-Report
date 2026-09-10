@@ -113,8 +113,6 @@ def evaluate_production_gates(
                         f"gold sample_size={sample} below required {min_gold}",
                     )
                 )
-            # Issuer breadth is a new, explicit contract. Legacy/unit-test payloads that
-            # do not configure it keep their historical semantics.
             if coverage_baseline.get("min_gold_issuers") is not None:
                 min_gold_issuers = int(coverage_baseline["min_gold_issuers"])
                 if manual_issuers < min_gold_issuers:
@@ -152,7 +150,8 @@ def evaluate_production_gates(
             if fact.status not in PUBLISHED:
                 continue
             extracted_status_count += 1
-            if is_publishable_fact(fact, release_mode="DRAFT"):
+            draft_eligible = is_publishable_fact(fact, release_mode="DRAFT")
+            if draft_eligible:
                 draft_publishable_count += 1
 
             evidence: dict[str, Any] = {}
@@ -197,7 +196,14 @@ def evaluate_production_gates(
                         f"liabilities published via {fact.extraction_method}",
                     )
                 )
-            if fact.metric_code in FLOW_CODES and fact.comparison_role != "CURRENT":
+            # A non-current reported flow is now rejected centrally by
+            # publishability_decision. Only a row that somehow remains draft-eligible
+            # despite a bad role is an engineering hard stop here.
+            if (
+                fact.metric_code in FLOW_CODES
+                and fact.comparison_role != "CURRENT"
+                and draft_eligible
+            ):
                 hits.append(
                     GateHit(
                         "CURRENT_COMPARATIVE_MISMATCH",
@@ -287,14 +293,22 @@ def evaluate_production_gates(
                     )
                 )
 
-        published_facts = [fact for fact in facts if fact.status in PUBLISHED]
+        # Cross-row coherence must compare like-for-like contexts. Balance-sheet
+        # facts legitimately have comparison_role=UNKNOWN, so including them in a
+        # flow role set caused false CURRENT/UNKNOWN issuer-quarter alarms.
+        published_facts = [
+            fact
+            for fact in facts
+            if fact.status in PUBLISHED and is_publishable_fact(fact, release_mode="DRAFT")
+        ]
         if len(published_facts) >= 2:
             entity_scopes = {fact.entity_scope for fact in published_facts}
-            roles = {fact.comparison_role for fact in published_facts}
+            flow_facts = [fact for fact in published_facts if fact.metric_code in FLOW_CODES]
+            roles = {fact.comparison_role for fact in flow_facts}
             flow_durations = {
                 fact.duration_months
-                for fact in published_facts
-                if fact.metric_code in FLOW_CODES and fact.duration_months is not None
+                for fact in flow_facts
+                if fact.duration_months is not None
             }
             if len(entity_scopes) > 1 or len(roles) > 1 or len(flow_durations) > 1:
                 hits.append(
@@ -322,7 +336,6 @@ def evaluate_production_gates(
     previous_extracted = _published_count(previous_status_counts)
     extracted_floor = max(min_extracted, previous_extracted)
     if extracted_floor and extracted_status_count < extracted_floor:
-        # Keep the established public gate code for compatibility with dashboards/tests.
         hits.append(
             GateHit(
                 "COVERAGE_REGRESSION",
