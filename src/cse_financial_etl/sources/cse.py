@@ -11,7 +11,6 @@ from collections.abc import Iterable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import asdict, dataclass
 from datetime import UTC, date, datetime
-from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
 
@@ -28,24 +27,15 @@ def configure_http(*, timeout_seconds: int, max_retries: int) -> None:
     HTTP_MAX_RETRIES = max(1, max_retries)
 
 
-def _decimal(value: Any) -> Decimal | None:
-    if value in (None, ""):
-        return None
-    try:
-        return Decimal(str(value).replace(",", ""))
-    except (InvalidOperation, ValueError):
-        return None
-
-
 @dataclass(frozen=True, slots=True)
 class Security:
     security_id: int
     company_name: str
     symbol: str
-    price: Decimal | None
+    price: float | None
     issued_quantity: int | None
-    market_capitalization: Decimal | None
-    market_cap_percentage: Decimal | None
+    market_capitalization: float | None
+    market_cap_percentage: float | None
     logo_path: str | None
 
 
@@ -114,10 +104,16 @@ def fetch_market_capitalization() -> list[Security]:
             security_id=int(row["id"]),
             company_name=str(row["name"]).strip(),
             symbol=str(row["symbol"]).strip(),
-            price=_decimal(row.get("price")),
+            price=float(row["price"]) if row.get("price") is not None else None,
             issued_quantity=int(row["issuedQTY"]) if row.get("issuedQTY") is not None else None,
-            market_capitalization=_decimal(row.get("marketCap")),
-            market_cap_percentage=_decimal(row.get("marketCapPercentage")),
+            market_capitalization=(
+                float(row["marketCap"]) if row.get("marketCap") is not None else None
+            ),
+            market_cap_percentage=(
+                float(row["marketCapPercentage"])
+                if row.get("marketCapPercentage") is not None
+                else None
+            ),
             logo_path=row.get("logoUrl"),
         )
         for row in rows
@@ -131,12 +127,20 @@ def load_market_capitalization_cache(cache_path: Path) -> list[Security]:
             security_id=int(row["security_id"]),
             company_name=str(row["company_name"]),
             symbol=str(row["symbol"]),
-            price=_decimal(row.get("price")),
+            price=float(row["price"]) if row.get("price") is not None else None,
             issued_quantity=(
                 int(row["issued_quantity"]) if row.get("issued_quantity") is not None else None
             ),
-            market_capitalization=_decimal(row.get("market_capitalization")),
-            market_cap_percentage=_decimal(row.get("market_cap_percentage")),
+            market_capitalization=(
+                float(row["market_capitalization"])
+                if row.get("market_capitalization") is not None
+                else None
+            ),
+            market_cap_percentage=(
+                float(row["market_cap_percentage"])
+                if row.get("market_cap_percentage") is not None
+                else None
+            ),
             logo_path=row.get("logo_path"),
         )
         for row in rows
@@ -160,8 +164,6 @@ MONTHS = {
 
 
 def parse_period_end(title: str) -> date | None:
-    """Parse common CSE filing-title date shapes without guessing ambiguous dates."""
-
     match = re.search(
         r"(?:ended|as\s*@|as\s+at|at)\s+(\d{1,2})(?:st|nd|rd|th)?\s+"
         r"(January|February|March|April|May|June|July|August|September|October|November|December)"
@@ -169,29 +171,9 @@ def parse_period_end(title: str) -> date | None:
         title,
         flags=re.IGNORECASE,
     )
-    if match:
-        return date(int(match.group(3)), MONTHS[match.group(2).lower()], int(match.group(1)))
-
-    numeric = re.search(
-        r"(?:ended|as\s*@|as\s+at|at)?\s*(\d{1,2})[./-](\d{1,2})[./-]((?:19|20)\d{2})\b",
-        title,
-        flags=re.IGNORECASE,
-    )
-    if numeric:
-        day, month, year = map(int, numeric.groups())
-        try:
-            return date(year, month, day)
-        except ValueError:
-            return None
-
-    iso = re.search(r"\b((?:19|20)\d{2})-(\d{2})-(\d{2})\b", title)
-    if iso:
-        year, month, day = map(int, iso.groups())
-        try:
-            return date(year, month, day)
-        except ValueError:
-            return None
-    return None
+    if not match:
+        return None
+    return date(int(match.group(3)), MONTHS[match.group(2).lower()], int(match.group(1)))
 
 
 def _cdn_url(path: str) -> str:
@@ -240,7 +222,7 @@ def issuer_representatives(securities: Iterable[Security]) -> dict[str, Security
     representatives: dict[str, Security] = {}
     for security in securities:
         current = representatives.get(security.company_name)
-        if current is None or (current.price in (None, Decimal("0")) and security.price not in (None, Decimal("0"))):
+        if current is None or (current.price in (None, 0) and security.price not in (None, 0)):
             representatives[security.company_name] = security
     return representatives
 
@@ -380,9 +362,4 @@ def download_filing(
 
 
 def serialize_security(security: Security) -> dict[str, Any]:
-    row = asdict(security)
-    for key in ("price", "market_capitalization", "market_cap_percentage"):
-        value = row.get(key)
-        if isinstance(value, Decimal):
-            row[key] = str(value)
-    return row
+    return asdict(security)
