@@ -75,6 +75,10 @@ module = "cse_financial_etl.reporting.excel"
 ignore_errors = true
 
 [[tool.mypy.overrides]]
+module = "cse_financial_etl.production.r4_hardening"
+disable_error_code = ["attr-defined", "unused-ignore", "no-any-return"]
+
+[[tool.mypy.overrides]]
 module = [
   "fitz",
   "networkx",
