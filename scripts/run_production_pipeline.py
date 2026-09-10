@@ -24,6 +24,7 @@ from cse_financial_etl.production.runtime import (
     relabel_workbook_leverage,
     write_metric_definitions,
 )
+from cse_financial_etl.reporting.excel import generate_excel
 from cse_financial_etl.validation.universe_acceptance import evaluate_universe_acceptance
 
 
@@ -69,9 +70,9 @@ def main() -> int:
     periods = _parse_periods(args.periods, as_of)
 
     with production_runtime(root, as_of_date=as_of, offline=args.offline) as capture:
-        # R4 is intentionally installed *inside* the production runtime so its stricter
-        # last-traded, period-title and bank/quarter guards supersede legacy-compatible
-        # helpers for the governed run only.
+        # The governed workbook must never be built from pre-R4 rows.  The core pipeline
+        # therefore always skips Excel here; a requested workbook is generated only after
+        # R4 has rewritten the public CSVs and acceptance has been evaluated below.
         with r4_runtime_guards(root, as_of):
             result = run_resilient_pipeline(
                 root,
@@ -83,16 +84,13 @@ def main() -> int:
                 extraction_workers=args.extraction_workers,
                 issuer_limit=args.issuer_limit,
                 offline=args.offline,
-                skip_excel=args.skip_excel,
+                skip_excel=True,
                 compile_statements=not args.no_compile,
                 run_tunnel_b_always=args.tunnel_b_always,
             )
 
         issuer_master = build_issuer_master(root, as_of)
         metric_definitions = write_metric_definitions(root, as_of)
-        workbook = result.get("workbook")
-        if workbook:
-            relabel_workbook_leverage(Path(str(workbook)))
 
         if capture.repository is None or capture.staging is None:
             raise RuntimeError("Production pipeline did not produce a staged candidate generation")
@@ -129,6 +127,16 @@ def main() -> int:
             "gold_promotion": promotion,
         }
         acceptance_path.write_text(json.dumps(acceptance, indent=2), encoding="utf-8")
+
+        if not args.skip_excel:
+            workbook_path = generate_excel(
+                root,
+                as_of,
+                periods,
+                str(result.get("run_id") or "UNKNOWN"),
+            )
+            relabel_workbook_leverage(workbook_path)
+            result["workbook"] = str(workbook_path)
 
     payload = {
         **result,
