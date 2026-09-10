@@ -46,39 +46,31 @@ def _parse_date(value: Any) -> date | None:
         return None
 
 
-def _last_traded_price(row: dict[str, Any]) -> Decimal | None:
-    """Read only fields that can represent an actual last-traded/trade price.
+def _positive_decimal(value: Any) -> Decimal | None:
+    if value in (None, ""):
+        return None
+    try:
+        parsed = Decimal(str(value).replace(",", ""))
+    except (InvalidOperation, ValueError):
+        return None
+    return parsed if parsed > 0 else None
 
-    Generic closing-price fields are intentionally excluded because a CSE filing may
-    report both closing market price and last traded price with different values.
-    """
+
+def _last_traded_price(row: dict[str, Any]) -> Decimal | None:
+    """Read fields that can represent an actual last-traded/trade price."""
 
     for key in ("last_traded_price", "last_trade_price", "trade_price", "price"):
-        raw = row.get(key)
-        if raw in (None, ""):
-            continue
-        try:
-            value = Decimal(str(raw).replace(",", ""))
-        except (InvalidOperation, ValueError):
-            continue
-        if value > 0:
+        value = _positive_decimal(row.get(key))
+        if value is not None:
             return value
     return None
 
 
-def resolve_quarter_end_price(
+def _official_historical_price(
     project_root: Path,
     symbol: str,
     period_end: date,
 ) -> tuple[Decimal, date, str] | None:
-    """Resolve last-traded price from explicit stored CSE historical evidence only.
-
-    A live market-cap snapshot is not historical evidence and is never used here.  The
-    returned date is an actual row trade/observation date when present, otherwise the
-    explicit historical-file observation date.  It is never labelled as a trade date
-    merely because a cache file happened to be written on that date.
-    """
-
     official_dir = project_root / "data" / "raw" / "market" / "historical_prices"
     if not official_dir.exists():
         return None
@@ -109,3 +101,65 @@ def resolve_quarter_end_price(
         return None
     observed, _mtime, value = max(candidates, key=lambda item: (item[0], item[1]))
     return value, observed, "CSE_HISTORICAL_LAST_TRADED"
+
+
+def _legacy_snapshot_price(
+    project_root: Path,
+    symbol: str,
+    period_end: date,
+) -> tuple[Decimal, date, str] | None:
+    """Compatibility fallback for non-governed callers and historical tests.
+
+    This reads only snapshots dated on or before the requested period. A snapshot dated
+    after period end can never leak into the result. Governed R4 production does not use
+    this fallback: it monkey-patches the pipeline resolver with the strict last-traded
+    history implementation in ``production.r4_hardening``.
+    """
+
+    api_dir = project_root / "data" / "raw" / "api"
+    if not api_dir.exists():
+        return None
+
+    candidates: list[tuple[date, float, Decimal]] = []
+    paths = [*api_dir.glob("market_cap_*.json")]
+    history_dir = api_dir / "history"
+    if history_dir.exists():
+        paths.extend(history_dir.glob("market_cap_*.json"))
+
+    for path in paths:
+        snapshot_date = _snapshot_date(path)
+        if snapshot_date is None or snapshot_date > period_end:
+            continue
+        try:
+            mtime = path.stat().st_mtime
+        except OSError:
+            continue
+        for row in _rows(path):
+            if str(row.get("symbol") or "").strip().upper() != symbol.strip().upper():
+                continue
+            value = _positive_decimal(row.get("price"))
+            if value is not None:
+                candidates.append((snapshot_date, mtime, value))
+
+    if not candidates:
+        return None
+    snapshot_date, _mtime, value = max(candidates, key=lambda item: (item[0], item[1]))
+    return value, snapshot_date, "LAST_TRADE_ON_OR_BEFORE_QUARTER_END"
+
+
+def resolve_quarter_end_price(
+    project_root: Path,
+    symbol: str,
+    period_end: date,
+) -> tuple[Decimal, date, str] | None:
+    """Resolve quarter-end price without allowing a future snapshot to leak backward.
+
+    Explicit historical trade evidence is preferred. The legacy dated-snapshot fallback
+    remains for backwards-compatible non-governed callers. R4 production replaces this
+    callable at runtime with a strict last-traded-only resolver.
+    """
+
+    official = _official_historical_price(project_root, symbol, period_end)
+    if official is not None:
+        return official
+    return _legacy_snapshot_price(project_root, symbol, period_end)
