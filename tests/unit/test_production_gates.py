@@ -59,12 +59,9 @@ def test_gates_pass_on_clean_quarter_fact(tmp_path: Path) -> None:
     assert run_status_from_gates(hits, has_errors=False, has_review=False) == "COMPLETED"
 
 
-def test_cumulative_published_as_quarter_is_a_hard_stop(tmp_path: Path) -> None:
-    hits = evaluate_production_gates(
-        [(_filing(tmp_path), [_fact(duration_months=6)])]
-    )
-    assert [hit.code for hit in hits] == ["CUMULATIVE_PUBLISHED_AS_QUARTER"]
-    assert run_status_from_gates(hits, has_errors=False, has_review=False) == "VALIDATION_REQUIRED"
+def test_cumulative_fact_is_safely_withheld_not_a_publication_failure(tmp_path: Path) -> None:
+    hits = evaluate_production_gates([(_filing(tmp_path), [_fact(duration_months=6)])])
+    assert hits == []
 
 
 def test_derived_flow_is_a_hard_stop(tmp_path: Path) -> None:
@@ -75,11 +72,11 @@ def test_derived_flow_is_a_hard_stop(tmp_path: Path) -> None:
     assert run_status_from_gates(hits, has_errors=False, has_review=False) == "VALIDATION_REQUIRED"
 
 
-def test_comparative_published_as_current_is_a_hard_stop(tmp_path: Path) -> None:
+def test_comparative_flow_is_safely_withheld_not_a_publication_failure(tmp_path: Path) -> None:
     hits = evaluate_production_gates(
         [(_filing(tmp_path), [_fact(comparison_role="COMPARATIVE")])]
     )
-    assert [hit.code for hit in hits] == ["CURRENT_COMPARATIVE_MISMATCH"]
+    assert hits == []
 
 
 def test_group_where_standalone_required_is_a_hard_stop(tmp_path: Path) -> None:
@@ -118,11 +115,11 @@ def test_unit_assumed_without_evidence_is_a_hard_stop(tmp_path: Path) -> None:
     assert [hit.code for hit in hits] == ["UNIT_ASSUMED_WITHOUT_EVIDENCE"]
 
 
-def test_unresolved_candidate_published_is_a_hard_stop(tmp_path: Path) -> None:
+def test_failed_validation_is_safely_withheld_not_a_publication_failure(tmp_path: Path) -> None:
     hits = evaluate_production_gates(
         [(_filing(tmp_path), [_fact(validation_status="FAILED")])]
     )
-    assert [hit.code for hit in hits] == ["UNRESOLVED_CANDIDATE_PUBLISHED"]
+    assert hits == []
 
 
 def test_later_historical_price_is_a_hard_stop() -> None:
@@ -177,7 +174,7 @@ def test_pipeline_seeded_gold_mismatch_is_not_a_hard_stop() -> None:
                     "actual": "90",
                     "verification_status": "PIPELINE_SEEDED",
                 }
-            ]
+            ],
         },
         coverage_baseline={"min_gold_sample": 100, "min_extracted_plus_derived": 0},
     )
@@ -211,19 +208,39 @@ def test_derived_liabilities_without_explicit_row_is_a_hard_stop(tmp_path: Path)
     assert any(hit.code == "DERIVED_LIABILITIES_WITHOUT_EXPLICIT_ROW" for hit in hits)
 
 
-def test_issuer_quarter_coherence_gate(tmp_path: Path) -> None:
+def test_issuer_quarter_coherence_gate_uses_publishable_facts(tmp_path: Path) -> None:
     hits = evaluate_production_gates(
         [
             (
                 _filing(tmp_path),
                 [
-                    _fact(metric_code="PAT", duration_months=3, comparison_role="CURRENT"),
-                    _fact(metric_code="PBT", duration_months=6, comparison_role="CURRENT"),
+                    _fact(metric_code="PAT", entity_scope="COMPANY"),
+                    _fact(metric_code="PBT", entity_scope="BANK"),
                 ],
             )
         ]
     )
-    assert any(hit.code == "ISSUER_QUARTER_CONTEXT_INCONSISTENT" for hit in hits)
+    assert [hit.code for hit in hits] == ["ISSUER_QUARTER_CONTEXT_INCONSISTENT"]
+
+
+def test_stock_unknown_role_does_not_poison_quarter_coherence(tmp_path: Path) -> None:
+    hits = evaluate_production_gates(
+        [
+            (
+                _filing(tmp_path),
+                [
+                    _fact(metric_code="PAT", comparison_role="CURRENT", duration_months=3),
+                    _fact(
+                        metric_code="NAVPS",
+                        metric_type="MONETARY_PER_SHARE",
+                        comparison_role="UNKNOWN",
+                        duration_months=None,
+                    ),
+                ],
+            )
+        ]
+    )
+    assert hits == []
 
 
 def test_coverage_regression_is_a_hard_stop(tmp_path: Path) -> None:
