@@ -1,8 +1,6 @@
 name: Full universe acceptance
 
 on:
-  push:
-    branches: [chatgpt/full-universe-run-20260910]
   workflow_dispatch:
     inputs:
       as_of:

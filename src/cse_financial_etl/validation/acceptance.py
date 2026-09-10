@@ -39,6 +39,8 @@ def current_release_mode() -> str:
 
 def is_official_release() -> bool:
     return _release_mode == RELEASE_OFFICIAL
+
+
 FLOW_METRIC_CODES = frozenset(
     {
         "PAT",
@@ -63,16 +65,24 @@ STOCK_METRIC_CODES = frozenset(
 class SupportsPublishFields(Protocol):
     @property
     def status(self) -> str: ...
+
     @property
     def normalized_value(self) -> Any: ...
+
     @property
     def review_status(self) -> str: ...
+
     @property
     def validation_status(self) -> str: ...
+
     @property
     def duration_months(self) -> int | None: ...
+
     @property
     def metric_type(self) -> str: ...
+
+    @property
+    def comparison_role(self) -> str: ...
 
 
 def _field(fact: SupportsPublishFields | Mapping[str, Any], name: str, default: Any = "") -> Any:
@@ -118,6 +128,11 @@ def publishability_decision(
     ``release_mode`` defaults to the configured process-wide mode. In OFFICIAL
     mode only APPROVED/CURATED rows publish; in DRAFT mode validated rows that
     are still pending review are displayed as draft candidates.
+
+    A flow value is never publishable unless it is explicitly resolved to the
+    CURRENT column. ``UNKNOWN`` and ``COMPARATIVE`` are fail-closed even in DRAFT;
+    this prevents a successful extraction status from being mistaken for a safe
+    current-quarter publication decision.
     """
 
     mode = (release_mode or _release_mode).upper()
@@ -129,6 +144,7 @@ def publishability_decision(
     duration = _coerce_duration(_field(fact, "duration_months", None))
     metric_type = str(_field(fact, "metric_type") or "")
     metric_code = str(_field(fact, "metric_code") or "")
+    comparison_role = str(_field(fact, "comparison_role") or "").upper()
     basis = period_basis_for_metric(metric_code, metric_type)
 
     if status not in PUBLISHABLE_STATUSES:
@@ -153,6 +169,9 @@ def publishability_decision(
             return False, "PERIOD_UNRESOLVED"
         if duration != 3:
             return False, "NON_QUARTER_DURATION"
+
+    if basis == "FLOW" and comparison_role != "CURRENT":
+        return False, "NON_CURRENT_COMPARISON_ROLE"
 
     if (
         require_quarter_flow is True

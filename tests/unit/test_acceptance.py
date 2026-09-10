@@ -26,6 +26,7 @@ def _fact(**overrides: object) -> ExtractedFact:
         unit_source_text="Rs.",
         confidence="HIGH",
         status="EXTRACTED",
+        comparison_role="CURRENT",
         duration_months=3,
         validation_status="PASSED",
         review_status="APPROVED",
@@ -79,6 +80,7 @@ def test_six_month_flow_is_not_publishable_by_default() -> None:
         "normalized_value": "100",
         "review_status": "APPROVED",
         "validation_status": "PASSED",
+        "comparison_role": "CURRENT",
         "duration_months": "6",
         "metric_type": "MONETARY_ABSOLUTE",
         "metric_code": "PAT",
@@ -87,12 +89,23 @@ def test_six_month_flow_is_not_publishable_by_default() -> None:
     assert publishability_decision(row)[1] == "NON_QUARTER_DURATION"
 
 
+def test_unresolved_flow_comparison_role_is_not_publishable_even_in_draft() -> None:
+    for role in ("UNKNOWN", "COMPARATIVE", ""):
+        fact = _fact(comparison_role=role, review_status="REVIEW")
+        assert not is_publishable_fact(fact, release_mode="DRAFT")
+        assert (
+            publishability_decision(fact, release_mode="DRAFT")[1]
+            == "NON_CURRENT_COMPARISON_ROLE"
+        )
+
+
 def test_mapping_rows_use_same_predicate() -> None:
     row = {
         "status": "EXTRACTED",
         "normalized_value": "100",
         "review_status": "APPROVED",
         "validation_status": "FAILED",
+        "comparison_role": "CURRENT",
         "duration_months": 3,
         "metric_type": "MONETARY_ABSOLUTE",
         "metric_code": "PAT",
