@@ -59,6 +59,13 @@ jobs:
             --process-timeout-seconds "${{ steps.inputs.outputs.timeout }}" \
             --skip-excel \
             --tunnel-b-always
+      - name: Audit row-level safety invariants
+        if: always()
+        run: |
+          uv run python scripts/audit_row_safety.py \
+            --facts "outputs/normalized_facts_${{ steps.inputs.outputs.as_of }}.csv" \
+            --prices "outputs/quarter_end_prices_${{ steps.inputs.outputs.as_of }}.csv" \
+            --output "outputs/row_safety_${{ steps.inputs.outputs.as_of }}.json"
       - name: Build 100-issuer adjudication packet
         if: always()
         run: uv run cse-etl prepare-adjudication --as-of "${{ steps.inputs.outputs.as_of }}" --target-issuers 100
