@@ -20,6 +20,8 @@ _ABSOLUTE_MONETARY = {
     "TOTAL_LIABILITIES",
 }
 _FLOW_MONETARY = {"TOP_LINE", "OPERATING_PROFIT", "PBT", "PAT"}
+_STOCK_MONETARY = {"TOTAL_ASSETS", "TOTAL_EQUITY", "TOTAL_LIABILITIES"}
+_PER_SHARE_MONETARY = {"EPS_BASIC", "EPS_DILUTED", "EPS_SELECTED", "NAVPS"}
 
 _NUMBER_RE = re.compile(r"(?<![A-Za-z])\(?-?\d[\d,]*(?:\.\d+)?\)?(?![A-Za-z])")
 _NARRATIVE_AMOUNT_RE = re.compile(
@@ -35,6 +37,7 @@ _UNIT_DECLARATION_RE = re.compile(
     re.I,
 )
 _EUROPEAN_GROUPED_RE = re.compile(r"(?<!\d)\d{1,3}(?:\.\d{3}){2,}(?!\d)")
+_BROKEN_LEADING_GROUP_RE = re.compile(r"(?<![\d,]),\d{3}(?!\d)")
 _ALNUM_NUMERIC_CHUNK_RE = re.compile(r"[A-Za-z0-9!,'’.]{5,}")
 _DATE_HEADER_RE = re.compile(
     r"\b(?:for\s+the\s+)?(?:period|quarter|year)\s+(?:ended|ending|to)\b|"
@@ -63,20 +66,21 @@ def is_narrative_unit_amount(text: str | None) -> bool:
 
 
 def source_has_numeric_corruption(text: str | None) -> bool:
-    """Detect OCR/geometry corruption inside a monetary row's numeric cells.
+    """Detect OCR/geometry corruption inside a financial row's numeric cells.
 
     The failing universe exposed several deterministic corruption shapes: two cells
-    concatenated into one token (``49,215,51849,465,389``), broken comma groups
-    (``153,338156,627``), OCR letters inside a number (``88,81L,406``), and dotted
-    multi-million values that the active numeric parser cannot consume. A row with
-    any of these shapes is unsafe evidence; the correct response is to retry/review,
-    never to publish a different tiny fragment from that row.
+    concatenated into one token (``49,215,51849,465,389``), a missing leading digit
+    group (``,874``), broken comma groups (``153,338156,627``), OCR letters inside a
+    number (``88,81L,406``), and dotted multi-million values that the active numeric
+    parser cannot consume. A row with any of these shapes is unsafe evidence; the
+    correct response is to retry/review, never to publish another clean-looking token
+    from the same row.
     """
 
     if not text:
         return False
 
-    if _EUROPEAN_GROUPED_RE.search(text):
+    if _EUROPEAN_GROUPED_RE.search(text) or _BROKEN_LEADING_GROUP_RE.search(text):
         return True
 
     # Standard comma grouping is 1-3 leading digits followed only by groups of 3.
@@ -99,6 +103,18 @@ def source_has_numeric_corruption(text: str | None) -> bool:
         ):
             return True
     return False
+
+
+def per_share_source_is_unsafe(metric_code: str, source_line: str | None) -> bool:
+    """Do not select a clean comparative EPS/NAVPS token from a corrupted value row.
+
+    Per-share values are intentionally excluded from absolute-value magnitude checks,
+    but column selection is still unsafe when another numeric cell on the same row is
+    visibly OCR-corrupted. This is the failure shape that allowed a prior-year NAVPS to
+    masquerade as CURRENT when the true current cell was damaged.
+    """
+
+    return metric_code in _PER_SHARE_MONETARY and source_has_numeric_corruption(source_line)
 
 
 def _small_reference_number(raw_value: Decimal, source_line: str) -> bool:
@@ -163,7 +179,8 @@ def suspicious_selected_numeric(
     """Detect an unsafe numeric selection from an absolute-monetary source row.
 
     This covers corrupted numeric cells, structural headers/note prose, tiny reference
-    numbers, and tiny fragments selected from visibly large rows. EPS/NAVPS are excluded.
+    numbers, and tiny fragments selected from visibly large rows. EPS/NAVPS use the
+    separate per-share corruption guard because their magnitudes are naturally small.
     """
 
     if metric_code not in _ABSOLUTE_MONETARY or raw_value is None or source_line is None:
@@ -192,6 +209,88 @@ def suspicious_selected_numeric(
     return any(value >= threshold for value in values)
 
 
+def inconsistent_scale_metrics(
+    values: dict[str, tuple[Decimal | None, int | None]],
+) -> set[str]:
+    """Return absolute metrics that cannot safely retain their inferred scale.
+
+    We never rescale a value here. Within one statement family, core absolute metrics
+    must not silently alternate between whole units and thousands/millions. Across the
+    profit/loss and balance-sheet statements, different printed scales are allowed, but
+    a 1000x+ scale split becomes blocking when it also creates an economically
+    catastrophic relationship (quarter PAT > assets/equity, or quarterly top line >
+    10x assets). In that cross-statement case the implicit lower/whole-unit side is
+    withheld while the explicit scaled side is retained for reviewable provenance.
+    """
+
+    usable = {
+        code: (value, scale)
+        for code, (value, scale) in values.items()
+        if code in _ABSOLUTE_MONETARY
+        and value is not None
+        and scale is not None
+        and scale > 0
+    }
+    unsafe: set[str] = set()
+
+    def family_conflicts(codes: set[str]) -> None:
+        members = [(code, usable[code]) for code in codes if code in usable]
+        scales = [scale for _code, (_value, scale) in members]
+        if len(scales) < 2:
+            return
+        low = min(scales)
+        high = max(scales)
+        if high >= low * 1000:
+            # Same P&L / balance-sheet family but incompatible scale ownership. We
+            # cannot know which side is right, so all conflicting family values wait
+            # for stronger unit evidence.
+            unsafe.update(code for code, _pair in members)
+
+    family_conflicts(_FLOW_MONETARY)
+    family_conflicts(_STOCK_MONETARY)
+
+    def cross_contradiction(
+        numerator_code: str,
+        denominator_code: str,
+        *,
+        threshold: Decimal,
+    ) -> None:
+        if numerator_code in unsafe or denominator_code in unsafe:
+            return
+        numerator = usable.get(numerator_code)
+        denominator = usable.get(denominator_code)
+        if numerator is None or denominator is None:
+            return
+        numerator_value, numerator_scale = numerator
+        denominator_value, denominator_scale = denominator
+        assert numerator_value is not None and denominator_value is not None
+        assert numerator_scale is not None and denominator_scale is not None
+        if denominator_value <= 0:
+            return
+        low_scale = min(numerator_scale, denominator_scale)
+        high_scale = max(numerator_scale, denominator_scale)
+        if high_scale < low_scale * 1000:
+            return
+        if abs(numerator_value / denominator_value) <= threshold:
+            return
+        # A scale of 1000/1e6 has explicit magnitude evidence. A scale of 1 is often
+        # only a bare-currency fallback; with a catastrophic cross-statement
+        # contradiction, that implicit side is no longer safe to publish.
+        if low_scale == 1:
+            unsafe.update(
+                code
+                for code, (_value, scale) in usable.items()
+                if scale == low_scale
+            )
+        else:
+            unsafe.update({numerator_code, denominator_code})
+
+    cross_contradiction("PAT", "TOTAL_ASSETS", threshold=Decimal("1"))
+    cross_contradiction("PAT", "TOTAL_EQUITY", threshold=Decimal("1"))
+    cross_contradiction("TOP_LINE", "TOTAL_ASSETS", threshold=Decimal("10"))
+    return unsafe
+
+
 def ratio_plausibility_issue(metric_code: str, value: Decimal) -> str | None:
     """Catch only catastrophic derived-ratio magnitudes caused by broken inputs.
 
@@ -204,7 +303,7 @@ def ratio_plausibility_issue(metric_code: str, value: Decimal) -> str | None:
     limits = {
         "ROA": Decimal("10"),
         "ROE": Decimal("100"),
-        "NPM": Decimal("1000"),
+        "NPM": Decimal("100"),
         "DEBT_TO_EQUITY": Decimal("1000"),
     }
     limit = limits.get(metric_code)
