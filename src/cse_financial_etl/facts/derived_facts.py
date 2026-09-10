@@ -24,9 +24,9 @@ def compute_quarter_ratios(
 ) -> list[DerivedRatio]:
     return [
         _ratio("DEBT_TO_EQUITY", liabilities, equity, "Total Liabilities / Total Equity"),
-        _ratio("ROE_Q", pat, equity, "quarter PAT / quarter-end Total Equity"),
-        _ratio("ROA_Q", pat, assets, "quarter PAT / quarter-end Total Assets"),
-        _ratio("NPM_Q", pat, top_line, "quarter PAT / quarter top line"),
+        _ratio("ROE", pat, equity, "quarter PAT / quarter-end Total Equity"),
+        _ratio("ROA", pat, assets, "quarter PAT / quarter-end Total Assets"),
+        _ratio("NPM", pat, top_line, "quarter PAT / quarter top line"),
     ]
 
 

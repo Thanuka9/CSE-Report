@@ -8,18 +8,18 @@ from datetime import date
 TARGET_METRIC_CODES: tuple[str, ...] = (
     "PAT",
     "PBT",
-    "EPS",  # diluted if valid else basic
+    "EPS_SELECTED",  # diluted when valid/reported, otherwise basic
     "NAVPS",
     "OPERATING_PROFIT",
     "TOTAL_EQUITY",
     "TOTAL_ASSETS",
     "TOTAL_LIABILITIES",
     "TOP_LINE",
-    "MARKET_PRICE",
-    "DEBT_TO_EQUITY",
-    "ROE_Q",
-    "ROA_Q",
-    "NPM_Q",
+    "MARKET_PRICE_QUARTER_END",
+    "DEBT_TO_EQUITY",  # legacy internal code; canonical semantic is LIABILITIES_TO_EQUITY
+    "ROE",
+    "ROA",
+    "NPM",
 )
 
 
