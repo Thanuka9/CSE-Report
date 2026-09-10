@@ -4,13 +4,65 @@ from datetime import date
 from decimal import Decimal
 
 from cse_financial_etl.compiler.header_tree import CompiledHeaderColumn, _assign_roles
+from cse_financial_etl.documents.document_ir import BBox, LineIR, PageIR, TokenIR
 from cse_financial_etl.extraction.statement_extractor import (
     METRIC_RULES,
     _comparison_from_layout,
     _select_layout_value,
 )
 
-from .synthetic_pages import make_page, right_aligned, words
+from .synthetic_pages import right_aligned, words
+
+TokenSpec = tuple[str, float, float]
+
+
+def _make_layout_page(
+    line_specs: list[list[TokenSpec]],
+    *,
+    width: float,
+    height: float = 840.0,
+    y_start: float = 60.0,
+    y_step: float = 14.0,
+) -> PageIR:
+    """Build the extractor's native IR rather than the compiler-only synthetic IR."""
+
+    lines: list[LineIR] = []
+    for idx, spec in enumerate(line_specs):
+        y0 = y_start + idx * y_step
+        y1 = y0 + 10.0
+        tokens = tuple(
+            TokenIR(
+                text=text,
+                bbox=BBox(x0, y0, x1, y1),
+                block_no=0,
+                line_no=idx,
+                word_no=word_no,
+            )
+            for word_no, (text, x0, x1) in enumerate(spec)
+        )
+        if not tokens:
+            continue
+        lines.append(
+            LineIR(
+                page=1,
+                line_id=f"p1-l{idx}",
+                text=" ".join(token.text for token in tokens),
+                bbox=BBox(
+                    min(token.bbox.x0 for token in tokens),
+                    y0,
+                    max(token.bbox.x1 for token in tokens),
+                    y1,
+                ),
+                tokens=tokens,
+            )
+        )
+    return PageIR(
+        number=1,
+        width=width,
+        height=height,
+        lines=tuple(lines),
+        text="\n".join(line.text for line in lines),
+    )
 
 
 def _column(column_id: str, period_end: date) -> CompiledHeaderColumn:
@@ -52,7 +104,7 @@ def test_known_target_marks_only_exact_observed_target_current() -> None:
 def test_stock_layout_rejects_company_comparative_when_company_current_is_corrupt() -> None:
     """Sathosa-shaped Group/Company table: clean prior Company NAVPS cannot fill current."""
 
-    page = make_page(
+    page = _make_layout_page(
         [
             words("STATEMENT OF FINANCIAL POSITION", 40),
             [("Group", 290, 360), ("Company", 470, 560)],
@@ -83,7 +135,7 @@ def test_stock_layout_rejects_company_comparative_when_company_current_is_corrup
 
 
 def test_stock_layout_still_selects_clean_current_company_value() -> None:
-    page = make_page(
+    page = _make_layout_page(
         [
             words("STATEMENT OF FINANCIAL POSITION", 40),
             [("Group", 290, 360), ("Company", 470, 600)],
