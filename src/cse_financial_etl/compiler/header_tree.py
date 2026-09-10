@@ -338,17 +338,24 @@ def compile_header(
 
     if known is not None:
         for compiled_col in compiled:
-            if compiled_col.kind != "VALUE" or compiled_col.comparison_role != "CURRENT":
+            if compiled_col.kind != "VALUE":
+                continue
+            if compiled_col.period_end is None or known.target_period_end is None:
+                continue
+            duration_compatible = (
+                compiled_col.duration_months == known.target_duration_months
+                or compiled_col.duration_months is None
+            )
+            if not duration_compatible or compiled_col.period_end == known.target_period_end:
                 continue
             if (
-                compiled_col.period_end is not None
-                and known.target_period_end
-                and compiled_col.period_end != known.target_period_end
-                and (compiled_col.duration_months == known.target_duration_months or compiled_col.duration_months is None)
+                compiled_col.period_end < known.target_period_end
+                and compiled_col.comparison_role == "COMPARATIVE"
             ):
-                conflicts.append(
-                    f"PERIOD_END_MISMATCH:{compiled_col.column_id}:{compiled_col.period_end.isoformat()}!={known.target_period_end.isoformat()}"
-                )
+                continue
+            conflicts.append(
+                f"PERIOD_END_MISMATCH:{compiled_col.column_id}:{compiled_col.period_end.isoformat()}!={known.target_period_end.isoformat()}"
+            )
     for compiled_col in compiled:
         conflicts.extend(f"{compiled_col.column_id}:{c}" for c in compiled_col.conflicts)
 
