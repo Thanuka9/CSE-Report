@@ -9,7 +9,9 @@ from pathlib import Path
 from typing import Any
 
 from cse_financial_etl.validation.row_safety import (
+    inconsistent_scale_metrics,
     is_narrative_unit_amount,
+    per_share_source_is_unsafe,
     ratio_plausibility_issue,
     suspicious_selected_numeric,
 )
@@ -25,6 +27,7 @@ ABSOLUTE_MONETARY = {
     "TOTAL_EQUITY",
     "TOTAL_LIABILITIES",
 }
+PER_SHARE_MONETARY = {"EPS_BASIC", "EPS_DILUTED", "EPS_SELECTED", "NAVPS"}
 
 
 def _decimal(value: object) -> Decimal | None:
@@ -104,6 +107,14 @@ def audit(facts_path: Path, prices_path: Path) -> dict[str, Any]:
                     "source_line": row.get("source_line"),
                 }
             )
+        if (
+            status in PUBLISHABLE
+            and metric in PER_SHARE_MONETARY
+            and per_share_source_is_unsafe(metric, row.get("source_line"))
+        ):
+            violations["corrupted_per_share_source_published"].append(
+                {"key": key, "source_line": row.get("source_line")}
+            )
         if status in PUBLISHABLE and metric in {"ROA", "ROE", "NPM", "DEBT_TO_EQUITY"}:
             if normalized is not None:
                 issue = ratio_plausibility_issue(metric, normalized)
@@ -118,33 +129,47 @@ def audit(facts_path: Path, prices_path: Path) -> dict[str, Any]:
 
     for slot, metrics in by_slot.items():
         selected = metrics.get("EPS_SELECTED")
-        if selected is None or selected.get("status") not in PUBLISHABLE:
-            continue
-        preferred: dict[str, str] | None = None
-        for code in SOURCE_EPS:
-            candidate = metrics.get(code)
+        if selected is not None and selected.get("status") in PUBLISHABLE:
+            preferred: dict[str, str] | None = None
+            for code in SOURCE_EPS:
+                candidate = metrics.get(code)
+                if (
+                    candidate is not None
+                    and candidate.get("status") in PUBLISHABLE
+                    and candidate.get("validation_status") == "PASSED"
+                    and _decimal(candidate.get("normalized_value")) is not None
+                ):
+                    preferred = candidate
+                    break
+            selected_value = _decimal(selected.get("normalized_value"))
             if (
-                candidate is not None
-                and candidate.get("status") in PUBLISHABLE
-                and candidate.get("validation_status") == "PASSED"
-                and _decimal(candidate.get("normalized_value")) is not None
+                preferred is None
+                or selected_value != _decimal(preferred.get("normalized_value"))
+                or selected.get("entity_scope") != preferred.get("entity_scope")
+                or selected.get("comparison_role") != preferred.get("comparison_role")
             ):
-                preferred = candidate
-                break
-        selected_value = _decimal(selected.get("normalized_value"))
-        if (
-            preferred is None
-            or selected_value != _decimal(preferred.get("normalized_value"))
-            or selected.get("entity_scope") != preferred.get("entity_scope")
-            or selected.get("comparison_role") != preferred.get("comparison_role")
-        ):
-            violations["eps_selected_invalid_lineage"].append(
-                {
-                    "slot": slot,
-                    "selected_value": str(selected_value) if selected_value is not None else None,
-                    "preferred_source": preferred.get("metric_code") if preferred is not None else None,
-                    "preferred_value": preferred.get("normalized_value") if preferred is not None else None,
-                }
+                violations["eps_selected_invalid_lineage"].append(
+                    {
+                        "slot": slot,
+                        "selected_value": str(selected_value) if selected_value is not None else None,
+                        "preferred_source": preferred.get("metric_code") if preferred is not None else None,
+                        "preferred_value": preferred.get("normalized_value") if preferred is not None else None,
+                    }
+                )
+
+        scale_values: dict[str, tuple[Decimal | None, int | None]] = {}
+        for code, row in metrics.items():
+            if code not in ABSOLUTE_MONETARY or row.get("status") not in PUBLISHABLE:
+                continue
+            scale = _decimal(row.get("scale_factor"))
+            scale_values[code] = (
+                _decimal(row.get("normalized_value")),
+                int(scale) if scale is not None and scale == scale.to_integral() else None,
+            )
+        unsafe_scale_metrics = inconsistent_scale_metrics(scale_values)
+        if unsafe_scale_metrics:
+            violations["inconsistent_scale_published"].append(
+                {"slot": slot, "metrics": sorted(unsafe_scale_metrics)}
             )
 
     for row in prices:
