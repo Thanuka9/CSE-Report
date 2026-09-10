@@ -154,10 +154,10 @@ def publishability_decision(
         require_quarter = basis == "FLOW"
 
     if require_quarter and basis == "FLOW":
-        # A three-month value is not enough by itself: the selected table column
-        # must also be proven to be the target/current period.  UNKNOWN and
-        # COMPARATIVE therefore fail closed instead of leaking into ratios/Excel.
-        if comparison_role != "CURRENT":
+        # Reported statement flows must be proven to come from the target/current
+        # column. Derived ratios inherit their validated source periods and do not
+        # need a raw table comparison role of their own.
+        if metric_code.upper() in FLOW_METRIC_CODES and comparison_role != "CURRENT":
             return False, "CURRENT_PERIOD_UNRESOLVED"
         if duration is None:
             return False, "PERIOD_UNRESOLVED"
