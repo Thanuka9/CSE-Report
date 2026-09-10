@@ -1,0 +1,53 @@
+name: Converge PR25 fixes
+on:
+  push:
+    branches: [chatgpt/final-comparative-fix-20260910]
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: chatgpt/final-comparative-fix-20260910
+      - name: Patch comparative semantics and ratio derivation
+        shell: python
+        run: |
+          from pathlib import Path
+
+          statement = Path('src/cse_financial_etl/extraction/statement_extractor.py')
+          s = statement.read_text(encoding='utf-8')
+          old = '''    if target_points or prior_points:\n        target_near = _closeness(x, target_points, page.width) if target_points else 0.0\n        prior_near = _closeness(x, prior_points, page.width) if prior_points else 0.0\n        if prior_points and prior_near >= 0.65 and prior_near > target_near:\n            return "COMPARATIVE", period_end.year - 1\n        if target_points and target_near >= 0.65 and target_near > prior_near:\n            return "CURRENT", period_end.year\n        # Temporal evidence exists but does not prove which column owns the value.\n        return "UNKNOWN", period_end.year\n    # A genuinely single-column/no-comparative statement may rely on the page period.\n    return "CURRENT", period_end.year\n'''
+          new = '''    # A page carrying only the target period has no comparative column to confuse\n    # with the value. The period caption therefore establishes CURRENT even when\n    # it is not horizontally aligned with the numeric cell. Conversely, a\n    # prior-only page/required-entity region is comparative and must never be\n    # promoted merely because it is the only surviving clean date.\n    if target_points and not prior_points:\n        return "CURRENT", period_end.year\n    if prior_points and not target_points:\n        return "COMPARATIVE", period_end.year - 1\n    if target_points and prior_points:\n        target_near = _closeness(x, target_points, page.width)\n        prior_near = _closeness(x, prior_points, page.width)\n        if prior_near >= 0.65 and prior_near > target_near:\n            return "COMPARATIVE", period_end.year - 1\n        if target_near >= 0.65 and target_near > prior_near:\n            return "CURRENT", period_end.year\n        return "UNKNOWN", period_end.year\n    return "CURRENT", period_end.year\n'''
+          if old in s:
+              s = s.replace(old, new, 1)
+          elif new not in s:
+              raise SystemExit('statement comparison block not found')
+          statement.write_text(s, encoding='utf-8')
+
+          header = Path('src/cse_financial_etl/compiler/header_tree.py')
+          h = header.read_text(encoding='utf-8')
+          old = '''    if known is not None:\n        for compiled_col in compiled:\n            if compiled_col.kind != "VALUE" or compiled_col.comparison_role != "CURRENT":\n                continue\n            if (\n                compiled_col.period_end is not None\n                and known.target_period_end\n                and compiled_col.period_end != known.target_period_end\n                and (compiled_col.duration_months == known.target_duration_months or compiled_col.duration_months is None)\n            ):\n                conflicts.append(\n                    f"PERIOD_END_MISMATCH:{compiled_col.column_id}:{compiled_col.period_end.isoformat()}!={known.target_period_end.isoformat()}"\n                )\n'''
+          new = '''    if known is not None:\n        for compiled_col in compiled:\n            if compiled_col.kind != "VALUE":\n                continue\n            if compiled_col.period_end is None or known.target_period_end is None:\n                continue\n            duration_compatible = (\n                compiled_col.duration_months == known.target_duration_months\n                or compiled_col.duration_months is None\n            )\n            if not duration_compatible or compiled_col.period_end == known.target_period_end:\n                continue\n            if (\n                compiled_col.period_end < known.target_period_end\n                and compiled_col.comparison_role == "COMPARATIVE"\n            ):\n                continue\n            conflicts.append(\n                f"PERIOD_END_MISMATCH:{compiled_col.column_id}:{compiled_col.period_end.isoformat()}!={known.target_period_end.isoformat()}"\n            )\n'''
+          if old in h:
+              h = h.replace(old, new, 1)
+          elif new not in h:
+              raise SystemExit('header conflict block not found')
+          header.write_text(h, encoding='utf-8')
+
+          ratios = Path('src/cse_financial_etl/transformation/ratios.py')
+          r = ratios.read_text(encoding='utf-8')
+          r = r.replace('and is_publishable_fact(diluted)\n', 'and is_publishable_fact(diluted, release_mode="DRAFT")\n', 1)
+          r = r.replace('elif basic is not None and is_publishable_fact(basic) and basic.validation_status == "PASSED":\n', 'elif (\n        basic is not None\n        and is_publishable_fact(basic, release_mode="DRAFT")\n        and basic.validation_status == "PASSED"\n    ):\n', 1)
+          r = r.replace('if fact is None or not is_publishable_fact(fact):\n', 'if fact is None or not is_publishable_fact(fact, release_mode="DRAFT"):\n', 1)
+          ratios.write_text(r, encoding='utf-8')
+      - name: Commit fixes
+        shell: bash
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/cse_financial_etl/compiler/header_tree.py src/cse_financial_etl/extraction/statement_extractor.py src/cse_financial_etl/transformation/ratios.py
+          git commit -m "Converge comparative and ratio safety fixes"
+          git push origin HEAD:chatgpt/final-comparative-fix-20260910
