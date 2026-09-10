@@ -38,7 +38,7 @@ _PER_SHARE_CONCEPTS = {"EPS_BASIC", "EPS_DILUTED", "NAVPS", "DPS", "DIVIDEND_PER
 _COUNT_CONCEPTS = {"WEIGHTED_AVG_SHARES", "ORDINARY_SHARES", "NUMBER_OF_SHARES"}
 _LABEL_UNIT_RE = re.compile(r"\(([^()]{1,40})\)")
 _TRAILING_UNIT_RE = re.compile(
-    r"(?:\s|^)(rs\.?|lkr|usd|cents?|'000|rs\.?\s*'000|rs\.?\s*mn)\.?\s*$", re.I
+    r"(?:\s|^)(rs\.?|lkr|usd|cents?|'000|rs\.?\s*'000|rs\.?\s*0{3}|rs\.?\s*mn)\.?\s*$", re.I
 )
 
 

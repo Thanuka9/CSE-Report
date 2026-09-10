@@ -144,3 +144,11 @@ def test_narrative_amount_is_not_a_page_unit_declaration() -> None:
 
     text = "Corporate guarantee issued on behalf of a subsidiary is LKR 25 Mn and USD 2 Mn."
     assert detect_candidates(text, scope=UnitScope.PAGE, page=3) == []
+
+
+def test_rs_dot_000_detects_thousands() -> None:
+    from cse_financial_etl.domain.enums import UnitScope
+    from cse_financial_etl.extraction.unit_detector import detect_candidates
+
+    candidates = detect_candidates("Rs.000", scope=UnitScope.TABLE, page=1)
+    assert any(item.currency == "LKR" and item.scale_factor == 1000 for item in candidates)

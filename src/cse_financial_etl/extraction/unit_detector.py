@@ -56,7 +56,7 @@ PATTERNS: tuple[UnitPattern, ...] = (
     ),
     UnitPattern(
         "lkr_rs_space_thousand",
-        re.compile(r"\b(?:rs\.?|lkr)\s+0{3}s?\b", re.I),
+        re.compile(r"\b(?:rs|lkr)\.?\s*0{3}s?\b", re.I),
         "LKR",
         1_000,
     ),
