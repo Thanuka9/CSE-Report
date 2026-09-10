@@ -7,7 +7,9 @@ from typing import Any, Protocol
 
 PUBLISHABLE_STATUSES = frozenset({"EXTRACTED", "EXTRACTED_DERIVED"})
 BLOCKED_REVIEW = frozenset({"REJECTED", "FAILED"})
-PASSED_VALIDATION = frozenset({"PASSED", "APPROVED", "CURATED"})
+# Validation and review are independent dimensions.  A reviewer approval never
+# substitutes for a machine/source validation pass.
+PASSED_VALIDATION = frozenset({"PASSED"})
 # Official release: only an authenticated reviewer approval (or a curated
 # correction) makes a numeric cell publishable. ``REVIEW`` / blank never do
 # (gap A4, audit finding 6).
@@ -60,6 +62,7 @@ STOCK_METRIC_CODES = frozenset(
         "NAVPS",
     }
 )
+DERIVED_RATIO_CODES = frozenset({"DEBT_TO_EQUITY", "ROE", "ROA", "NPM"})
 
 
 class SupportsPublishFields(Protocol):
@@ -95,20 +98,22 @@ def _coerce_duration(value: Any) -> int | None:
 
 
 def period_basis_for_metric(metric_code: str, metric_type: str = "") -> str:
-    """Classify whether a metric is a period FLOW or an AS_AT stock/balance."""
+    """Classify a known output metric as FLOW or AS_AT; unknown stays UNKNOWN.
+
+    This function is deliberately fail closed.  A misspelled/new metric must not
+    inherit AS_AT semantics merely because its code is non-empty, otherwise it can
+    bypass the CURRENT/three-month checks that protect reported flows.
+    """
 
     code = (metric_code or "").upper()
+    kind = (metric_type or "").upper()
     if code in FLOW_METRIC_CODES:
         return "FLOW"
     if code in STOCK_METRIC_CODES:
         return "AS_AT"
-    if (metric_type or "").upper() == "RATIO":
+    if code in DERIVED_RATIO_CODES and kind == "RATIO":
         return "FLOW"
-    if (metric_type or "").upper() == "MONETARY_PER_SHARE" and "NAV" in code:
-        return "AS_AT"
-    if (metric_type or "").upper() == "MONETARY_PER_SHARE":
-        return "FLOW"
-    return "AS_AT" if code else "UNKNOWN"
+    return "UNKNOWN"
 
 
 def publishability_decision(
@@ -125,6 +130,8 @@ def publishability_decision(
     """
 
     mode = (release_mode or _release_mode).upper()
+    if mode not in RELEASE_MODES:
+        return False, "UNKNOWN_RELEASE_MODE"
     allowed_review = DRAFT_ALLOWED_REVIEW if mode == RELEASE_DRAFT else ALLOWED_REVIEW
     status = str(_field(fact, "status") or "")
     value = _field(fact, "normalized_value", None)
@@ -140,6 +147,8 @@ def publishability_decision(
         return False, status or "NOT_REPORTED"
     if value in (None, ""):
         return False, "NOT_REPORTED"
+    if basis == "UNKNOWN":
+        return False, "UNKNOWN_METRIC_SEMANTICS"
     if review in BLOCKED_REVIEW:
         return False, "REVIEW_REJECTED"
     if validation in {"FAILED", "REJECTED"}:
