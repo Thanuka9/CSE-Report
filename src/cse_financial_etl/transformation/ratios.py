@@ -153,11 +153,15 @@ def _sanitize_eps_selected(facts: list[ExtractedFact]) -> list[ExtractedFact]:
     preferred = None
     if (
         diluted is not None
-        and is_publishable_fact(diluted)
+        and is_publishable_fact(diluted, release_mode="DRAFT")
         and diluted.validation_status == "PASSED"
     ):
         preferred = diluted
-    elif basic is not None and is_publishable_fact(basic) and basic.validation_status == "PASSED":
+    elif (
+        basic is not None
+        and is_publishable_fact(basic, release_mode="DRAFT")
+        and basic.validation_status == "PASSED"
+    ):
         preferred = basic
 
     if (
@@ -196,7 +200,7 @@ def _index_facts(
 
 
 def _accepted(fact: ExtractedFact | None) -> ExtractedFact | None:
-    if fact is None or not is_publishable_fact(fact):
+    if fact is None or not is_publishable_fact(fact, release_mode="DRAFT"):
         return None
     return fact
 

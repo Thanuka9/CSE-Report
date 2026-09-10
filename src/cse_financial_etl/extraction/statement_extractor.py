@@ -1398,16 +1398,23 @@ def _comparison_from_layout(
                 if (span := _parent_kind_at(point, regions)) is not None and span.kind == entity
             ]
     x = token.bbox.center_x
-    if target_points or prior_points:
-        target_near = _closeness(x, target_points, page.width) if target_points else 0.0
-        prior_near = _closeness(x, prior_points, page.width) if prior_points else 0.0
-        if prior_points and prior_near >= 0.65 and prior_near > target_near:
+    # A page carrying only the target period has no comparative column to confuse
+    # with the value. The period caption therefore establishes CURRENT even when
+    # it is not horizontally aligned with the numeric cell. Conversely, a
+    # prior-only page/required-entity region is comparative and must never be
+    # promoted merely because it is the only surviving clean date.
+    if target_points and not prior_points:
+        return "CURRENT", period_end.year
+    if prior_points and not target_points:
+        return "COMPARATIVE", period_end.year - 1
+    if target_points and prior_points:
+        target_near = _closeness(x, target_points, page.width)
+        prior_near = _closeness(x, prior_points, page.width)
+        if prior_near >= 0.65 and prior_near > target_near:
             return "COMPARATIVE", period_end.year - 1
-        if target_points and target_near >= 0.65 and target_near > prior_near:
+        if target_near >= 0.65 and target_near > prior_near:
             return "CURRENT", period_end.year
-        # Temporal evidence exists but does not prove which column owns the value.
         return "UNKNOWN", period_end.year
-    # A genuinely single-column/no-comparative statement may rely on the page period.
     return "CURRENT", period_end.year
 
 
