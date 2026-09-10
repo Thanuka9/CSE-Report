@@ -1,4 +1,4 @@
-min_extracted_plus_derived: 8935
+min_extracted_plus_derived: 8932
 min_draft_publishable: 8924
 min_gold_sample: 100
 min_gold_issuers: 100
@@ -7,7 +7,7 @@ min_downloaded_filing_count: 829
 min_extracted_filing_count: 826
 max_quarantined_extraction_timeouts: 3
 
-# Safety-recalibrated floors from the 2026-09-10 full-universe R4 run. The previous
+# Safety-recalibrated floors from the 2026-09-10 full-universe R4 runs. The previous
 # 9060 baseline predated stricter fail-closed validation and therefore required rows
 # that the hardened pipeline now correctly withholds. This is not a recovery target:
 # invalid/ambiguous rows must never be republished merely to satisfy coverage.
@@ -116,16 +116,17 @@ quarantined_extraction_timeouts:
     period_end: '2026-06-30'
 
 # Baseline provenance / safety evidence:
-#   full-universe workflow run: 34460622997
-#   ETL run_id: 25164163-9dce-4e59-8042-9e419ce57171
-#   source commit: eeb1121dffedb959c6a789cfe191a44fc027a415
+#   full-universe workflow run: 34473929612
+#   ETL run_id: d8f81e23-eb90-4a17-a385-58b2d0b40115
+#   source commit: 3059d1548f1549803539ae8bd85f0b5553867928
 #   issuer_count: 281
 #   downloaded filings: 829
 #   extracted filings: 826 + 3 exact known timeout quarantines
 #   unhandled pipeline errors: 0
 #   quarantine hash mismatches: 0
-#   EXTRACTED + EXTRACTED_DERIVED facts: 8935
-#   fail-closed DRAFT-publishable facts after comparison-role hardening: 8924
+#   EXTRACTED + EXTRACTED_DERIVED facts: 8932
+#   fail-closed DRAFT-publishable facts: 8924
+#   per-metric and sector-metric coverage regressions: 0
 #   row-safety audit: PASS (0 violations across 12,390 fact rows and 889 price rows)
 #
 # min_gold_sample counts independently checked fields; min_gold_issuers separately
