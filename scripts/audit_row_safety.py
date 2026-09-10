@@ -11,6 +11,7 @@ from typing import Any
 from cse_financial_etl.validation.row_safety import (
     is_narrative_unit_amount,
     ratio_plausibility_issue,
+    suspicious_selected_numeric,
 )
 
 PUBLISHABLE = {"EXTRACTED", "EXTRACTED_DERIVED"}
@@ -66,6 +67,8 @@ def audit(facts_path: Path, prices_path: Path) -> dict[str, Any]:
         status = row.get("status", "")
         validation = row.get("validation_status", "")
         normalized = _decimal(row.get("normalized_value"))
+        raw_value = _decimal(row.get("raw_value"))
+        scale = _decimal(row.get("scale_factor"))
         metric = row.get("metric_code", "")
 
         if status in PUBLISHABLE and validation != "PASSED":
@@ -83,6 +86,23 @@ def audit(facts_path: Path, prices_path: Path) -> dict[str, Any]:
         ):
             violations["narrative_unit_published"].append(
                 {"key": key, "unit_source_text": row.get("unit_source_text")}
+            )
+        if (
+            status in PUBLISHABLE
+            and metric in ABSOLUTE_MONETARY
+            and suspicious_selected_numeric(
+                metric,
+                raw_value,
+                int(scale) if scale is not None and scale == scale.to_integral() else None,
+                row.get("source_line"),
+            )
+        ):
+            violations["unsafe_numeric_source_published"].append(
+                {
+                    "key": key,
+                    "raw_value": row.get("raw_value"),
+                    "source_line": row.get("source_line"),
+                }
             )
         if status in PUBLISHABLE and metric in {"ROA", "ROE", "NPM", "DEBT_TO_EQUITY"}:
             if normalized is not None:
