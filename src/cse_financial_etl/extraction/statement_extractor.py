@@ -1378,18 +1378,36 @@ def _comparison_from_layout(
     line: LineIR,
     token: TokenIR,
     period_end: date,
+    *,
+    entity: str | None = None,
 ) -> tuple[str, int]:
-    """Infer comparison_role and source header year from spatial year/date headers."""
+    """Infer comparison role from column-local temporal evidence, never page captions."""
 
     target_points, prior_points = _period_header_points(page, line, period_end)
+    if entity in {"COMPANY", "BANK"}:
+        regions = _entity_parent_regions(page, line)
+        if regions:
+            target_points = [
+                point
+                for point in target_points
+                if (span := _parent_kind_at(point, regions)) is not None and span.kind == entity
+            ]
+            prior_points = [
+                point
+                for point in prior_points
+                if (span := _parent_kind_at(point, regions)) is not None and span.kind == entity
+            ]
     x = token.bbox.center_x
     if target_points or prior_points:
         target_near = _closeness(x, target_points, page.width) if target_points else 0.0
         prior_near = _closeness(x, prior_points, page.width) if prior_points else 0.0
-        if prior_points and prior_near > target_near:
+        if prior_points and prior_near >= 0.65 and prior_near > target_near:
             return "COMPARATIVE", period_end.year - 1
-        if target_points and target_near >= prior_near:
+        if target_points and target_near >= 0.65 and target_near > prior_near:
             return "CURRENT", period_end.year
+        # Temporal evidence exists but does not prove which column owns the value.
+        return "UNKNOWN", period_end.year
+    # A genuinely single-column/no-comparative statement may rely on the page period.
     return "CURRENT", period_end.year
 
 
@@ -1926,12 +1944,36 @@ def _select_layout_value(
         left_bias = max(0.0, 1.0 - index / max(len(candidates), 1))
         cluster_component = _closeness(x, list(cluster_centers), page.width)
         parent = _parent_kind_at(x, duration_regions)
-        # Reject prior-year / comparative columns for FLOW and STOCK.
+        # Reject a geometrically proven comparative even when the current header is
+        # missing/corrupted. Requiring both target and comparative header evidence
+        # let a clean prior-period cell masquerade as CURRENT when OCR destroyed the
+        # current header/value. Scope date evidence to the required entity so a Group
+        # date cannot validate a Company value (and vice versa).
+        entity_target_points = target_date_points
+        entity_prior_points = prior_year_points
+        if entity_regions and entity in {"COMPANY", "BANK"}:
+            entity_target_points = [
+                point
+                for point in target_date_points
+                if (span := _parent_kind_at(point, entity_regions)) is not None
+                and span.kind == entity
+            ]
+            entity_prior_points = [
+                point
+                for point in prior_year_points
+                if (span := _parent_kind_at(point, entity_regions)) is not None
+                and span.kind == entity
+            ]
+            # In a multi-entity stock table, a clean comparative header plus no
+            # current header for the required entity is unresolved, not CURRENT.
+            if rule.statement == "STOCK" and entity_prior_points and not entity_target_points:
+                continue
+        target_period_near = _closeness(x, entity_target_points, page.width)
+        comparative_near = _closeness(x, entity_prior_points, page.width)
         if (
-            target_year_points
-            and prior_year_points
-            and _closeness(x, prior_year_points, page.width)
-            > _closeness(x, target_year_points, page.width)
+            entity_prior_points
+            and comparative_near >= 0.65
+            and comparative_near > target_period_near
         ):
             continue
         if rule.statement == "FLOW" and parent is not None:
@@ -1972,12 +2014,21 @@ def _select_layout_value(
 
     scored.sort(key=lambda item: item[0], reverse=True)
     if not scored:
+        # The single-company-value fallback must obey the same temporal guard as the
+        # scored path. Otherwise rejecting a comparative above simply reintroduces it
+        # here as the only surviving-looking Company amount.
         company_money = [
             (token, value)
             for token, value in candidates
             if value is not None
             and (parent := _parent_kind_at(token.bbox.center_x, entity_regions)) is not None
             and parent.kind == entity
+            and not (
+                prior_year_points
+                and _closeness(token.bbox.center_x, prior_year_points, page.width) >= 0.65
+                and _closeness(token.bbox.center_x, prior_year_points, page.width)
+                > _closeness(token.bbox.center_x, target_date_points, page.width)
+            )
         ]
         if entity in {"COMPANY", "BANK"} and len(company_money) == 1:
             token, value = company_money[0]
@@ -3509,7 +3560,7 @@ def _extract_filing_layout(
             else selected.graph
         )
         comparison_role, header_year = _comparison_from_layout(
-            selected.page, selected.line, selected.token, period_end
+            selected.page, selected.line, selected.token, period_end, entity=entity
         )
         column_duration = (
             _column_duration_months(
