@@ -119,10 +119,18 @@ def evaluate_eligibility(
             reasons.append(DURATION_UNKNOWN)
         elif target_duration is not None and entry.duration_months != target_duration:
             reasons.append(YTD_CANNOT_SATISFY_3M)
-    if entry.comparison_role is None:
-        reasons.append(ROLE_UNKNOWN)
-    elif entry.comparison_role == "COMPARATIVE":
-        reasons.append(COMPARATIVE_NOT_CURRENT)
+
+        # For a reported three-month flow, CURRENT is part of the truth contract,
+        # not merely a ranking hint. Compiler/header recovery sometimes represents an
+        # unresolved role as the literal string "UNKNOWN" rather than None. Treat any
+        # unresolved/blank role as unknown and any non-current resolved role as a
+        # comparative. Instant stock facts do not need this role gate because their
+        # exact period_end already identifies the as-at column.
+        role = str(entry.comparison_role or "").strip().upper()
+        if role in {"", "UNKNOWN", "UNRESOLVED", "NONE"}:
+            reasons.append(ROLE_UNKNOWN)
+        elif role != "CURRENT":
+            reasons.append(COMPARATIVE_NOT_CURRENT)
 
     # 4. Applicable unit for the concept's dimension.
     dimension = concept_dimension(concept)
