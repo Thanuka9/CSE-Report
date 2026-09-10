@@ -1,0 +1,36 @@
+# CSE disclosure expectations used for coverage governance.
+# Unknown listing-segment metadata is never guessed; it remains UNKNOWN and auditable.
+segments:
+  MAIN:
+    Q1:
+      statement_requirement: FULL_INTERIM_REQUIRED
+      due_days: 45
+    Q2:
+      statement_requirement: FULL_INTERIM_REQUIRED
+      due_days: 45
+    Q3:
+      statement_requirement: FULL_INTERIM_REQUIRED
+      due_days: 45
+    Q4:
+      statement_requirement: FULL_INTERIM_REQUIRED
+      due_days: 60
+  EMPOWER:
+    Q1:
+      statement_requirement: SUPPLEMENTARY_ONLY
+      due_days: 45
+    Q2:
+      statement_requirement: FULL_INTERIM_REQUIRED
+      due_days: 45
+    Q3:
+      statement_requirement: SUPPLEMENTARY_ONLY
+      due_days: 45
+    Q4:
+      statement_requirement: FULL_INTERIM_REQUIRED
+      due_days: 60
+coverage_states:
+  - REQUIRED
+  - SUPPLEMENTARY_ONLY
+  - NOT_REQUIRED
+  - NOT_YET_DUE
+  - OVERDUE
+  - UNKNOWN_SEGMENT
