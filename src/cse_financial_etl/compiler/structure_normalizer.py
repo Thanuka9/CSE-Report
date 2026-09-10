@@ -16,18 +16,30 @@ _PAREN_RE = re.compile(r"^\((.+)\)$")
 _WS_NUM_RE = re.compile(r"(?<=\d)\s+(?=\d)")
 
 _MONTHS = {
-    "jan": 1, "january": 1,
-    "feb": 2, "february": 2,
-    "mar": 3, "march": 3,
-    "apr": 4, "april": 4,
+    "jan": 1,
+    "january": 1,
+    "feb": 2,
+    "february": 2,
+    "mar": 3,
+    "march": 3,
+    "apr": 4,
+    "april": 4,
     "may": 5,
-    "jun": 6, "june": 6,
-    "jul": 7, "july": 7,
-    "aug": 8, "august": 8,
-    "sep": 9, "sept": 9, "september": 9,
-    "oct": 10, "october": 10,
-    "nov": 11, "november": 11,
-    "dec": 12, "december": 12,
+    "jun": 6,
+    "june": 6,
+    "jul": 7,
+    "july": 7,
+    "aug": 8,
+    "august": 8,
+    "sep": 9,
+    "sept": 9,
+    "september": 9,
+    "oct": 10,
+    "october": 10,
+    "nov": 11,
+    "november": 11,
+    "dec": 12,
+    "december": 12,
 }
 _MONTH_ALT = "|".join(sorted(_MONTHS, key=len, reverse=True))
 _LONG_DATE_RE = re.compile(
@@ -38,13 +50,20 @@ _MONTH_FIRST_DATE_RE = re.compile(
     rf"\b({_MONTH_ALT})\.?\s+(\d{{1,2}})(?:st|nd|rd|th)?,?\s+((?:19|20)\d{{2}})\b",
     re.I,
 )
-_DAY_MONTH_RE = re.compile(rf"\b(\d{{1,2}})(?:st|nd|rd|th)?[\s,.-]*({_MONTH_ALT})\b\.?(?!\s*(?:19|20)\d{{2}})", re.I)
+_DAY_MONTH_RE = re.compile(
+    rf"\b(\d{{1,2}})(?:st|nd|rd|th)?[\s,.-]*({_MONTH_ALT})\b\.?(?!\s*(?:19|20)\d{{2}})", re.I
+)
 _NUMERIC_DATE_RE = re.compile(r"\b(\d{1,2})[./-](\d{1,2})[./-]((?:19|20)\d{2}|\d{2})\b")
 _ISO_DATE_RE = re.compile(r"\b((?:19|20)\d{2})-(\d{2})-(\d{2})\b")
 _YEAR_RE = re.compile(r"\b((?:19|20)\d{2})\b")
 
 _CURRENCY_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
-    ("LKR", re.compile(r"(?<![a-z])(?:rs|lkr|slr)(?![a-z])\.?|\brupees?\b|\bsri\s+lankan?\s+rupees?\b", re.I)),
+    (
+        "LKR",
+        re.compile(
+            r"(?<![a-z])(?:rs|lkr|slr)(?![a-z])\.?|\brupees?\b|\bsri\s+lankan?\s+rupees?\b", re.I
+        ),
+    ),
     ("USD", re.compile(r"(?<![a-z])(?:usd|us\$|us\s+dollars?)(?![a-z])|(?<![a-z])\$", re.I)),
     ("EUR", re.compile(r"(?<![a-z])eur(?![a-z])|€", re.I)),
     ("GBP", re.compile(r"(?<![a-z])gbp(?![a-z])|£", re.I)),
@@ -52,7 +71,15 @@ _CURRENCY_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
 _SCALE_PATTERNS: tuple[tuple[Decimal, re.Pattern[str]], ...] = (
     (Decimal("1000000000"), re.compile(r"(?<![a-z])(?:bn|billions?)(?![a-z])", re.I)),
     (Decimal("1000000"), re.compile(r"(?<![a-z])(?:mn|mio|millions?)(?![a-z])", re.I)),
-    (Decimal("1000"), re.compile(r"['’‘]\s?000s?(?!\d)|(?<![\d,.])000s?(?![\d,])|(?<![a-z])thousands?(?![a-z])", re.I)),
+    (
+        Decimal("1000"),
+        re.compile(
+            r"(?:(?<![a-z])(?:rs|lkr)\.?\s*0{3}s?(?!\d)|"
+            r"['’‘]\s?0{3}s?(?!\d)|(?<![\d,.])0{3}s?(?![\d,])|"
+            r"(?<![a-z])thousands?(?![a-z]))",
+            re.I,
+        ),
+    ),
 )
 _PER_SHARE_RE = re.compile(r"\bper\s+(?:ordinary\s+)?share\b|\bcents?\b", re.I)
 _CENTS_RE = re.compile(r"\bcents?\b", re.I)
@@ -97,7 +124,10 @@ def normalize_duration_phrase(text: str) -> int | None:
         return 6
     if re.search(r"\b(?:nine|9)\s*months?\b", lower):
         return 9
-    if re.search(r"\b(?:twelve|12)\s*months?\b|\byear\s+(?:ended|ending|to)\b|\bfy\b|\bfinancial\s+year\b", lower):
+    if re.search(
+        r"\b(?:twelve|12)\s*months?\b|\byear\s+(?:ended|ending|to)\b|\bfy\b|\bfinancial\s+year\b",
+        lower,
+    ):
         return 12
     return None
 
@@ -171,7 +201,9 @@ class ParsedUnit:
 
     @property
     def is_empty(self) -> bool:
-        return self.currency is None and self.scale is None and not self.per_share and not self.percent
+        return (
+            self.currency is None and self.scale is None and not self.per_share and not self.percent
+        )
 
 
 def parse_unit_text(text: str) -> ParsedUnit:

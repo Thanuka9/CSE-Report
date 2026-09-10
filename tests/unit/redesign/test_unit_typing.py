@@ -72,7 +72,14 @@ def test_missing_declaration_is_unresolved_not_defaulted() -> None:
 
 
 def test_page_footnote_thousands_owns_the_scale() -> None:
-    page = [UnitDeclaration.from_text("Note : All values are in Rs '000s, unless otherwise stated.", scope=SCOPE_PAGE, owner="page:17:l0", page=17)]
+    page = [
+        UnitDeclaration.from_text(
+            "Note : All values are in Rs '000s, unless otherwise stated.",
+            scope=SCOPE_PAGE,
+            owner="page:17:l0",
+            page=17,
+        )
+    ]
     res = resolve_unit(MONETARY, row=[], column=[], table=[], page=page)
     assert res.resolved and res.scale == Decimal("1000") and res.currency == "LKR"
     assert res.scale_owner == "page:17:l0"
@@ -86,8 +93,15 @@ def _compile_page(page, statement_type="PROFIT_LOSS"):
         source_path="synthetic.pdf",
     )
     doc = reconstruct_tables(doc)
-    known = build_known_context(issuer_name="X PLC", symbol="X.N0000", period_end=date(2026, 6, 30), required_entity="COMPANY")
-    region = StatementRegion(statement_type=statement_type, page_start=1, page_end=1, confidence=1.0, evidence={})
+    known = build_known_context(
+        issuer_name="X PLC",
+        symbol="X.N0000",
+        period_end=date(2026, 6, 30),
+        required_entity="COMPANY",
+    )
+    region = StatementRegion(
+        statement_type=statement_type, page_start=1, page_end=1, confidence=1.0, evidence={}
+    )
     return compile_statements(doc, [region], known)
 
 
@@ -102,9 +116,21 @@ def test_eps_in_rupees_inside_thousands_table_is_not_scaled() -> None:
             [*words("Company for the quarter ended 30 June 2026", 300)],
             [("2026", 318, 340), ("2025", 398, 420)],
             [("Rs.'000", 300, 340), ("Rs.'000", 380, 420)],
-            [*words("Revenue", 40), right_aligned("37,231,246", C1_X), right_aligned("30,000,000", C2_X)],
-            [*words("Profit for the period", 40), right_aligned("8,187,022", C1_X), right_aligned("6,000,000", C2_X)],
-            [*words("Earnings per share (Rs.)", 40), right_aligned("0.89", C1_X), right_aligned("0.65", C2_X)],
+            [
+                *words("Revenue", 40),
+                right_aligned("37,231,246", C1_X),
+                right_aligned("30,000,000", C2_X),
+            ],
+            [
+                *words("Profit for the period", 40),
+                right_aligned("8,187,022", C1_X),
+                right_aligned("6,000,000", C2_X),
+            ],
+            [
+                *words("Earnings per share (Rs.)", 40),
+                right_aligned("0.89", C1_X),
+                right_aligned("0.65", C2_X),
+            ],
         ]
     )
     statements = _compile_page(page)
@@ -127,7 +153,11 @@ def test_mixed_unit_table_keeps_each_column_scale_separate() -> None:
             [("2026", 318, 340), ("2025", 398, 420)],
             [("Rs.'000", 300, 340), ("USD Mn", 380, 420)],
             [*words("Revenue", 40), right_aligned("1,000", C1_X), right_aligned("2", C2_X)],
-            [*words("Profit for the period", 40), right_aligned("100", C1_X), right_aligned("1", C2_X)],
+            [
+                *words("Profit for the period", 40),
+                right_aligned("100", C1_X),
+                right_aligned("1", C2_X),
+            ],
         ]
     )
     statement = _compile_page(page)[0]
@@ -144,10 +174,25 @@ def test_table_without_any_unit_declaration_has_unresolved_cells() -> None:
             [*words("Company for the quarter ended 30 June 2026", 300)],
             [("2026", 318, 340), ("2025", 398, 420)],
             [*words("Revenue", 40), right_aligned("1,000", C1_X), right_aligned("900", C2_X)],
-            [*words("Profit for the period", 40), right_aligned("100", C1_X), right_aligned("90", C2_X)],
+            [
+                *words("Profit for the period", 40),
+                right_aligned("100", C1_X),
+                right_aligned("90", C2_X),
+            ],
         ]
     )
     statement = _compile_page(page)[0]
     pat = _row(statement, "profit for the period")
     assert pat.cells["c1"].value_for(MONETARY) is None
     assert pat.cells["c1"].unit_for(MONETARY)["status"] == "UNRESOLVED"
+
+
+def test_rs_dot_000_is_explicit_thousands() -> None:
+    from decimal import Decimal
+
+    from cse_financial_etl.compiler.structure_normalizer import parse_unit_text
+
+    parsed = parse_unit_text("Rs.000")
+    assert parsed.currency == "LKR"
+    assert parsed.scale == Decimal("1000")
+    assert parsed.scale_explicit is True

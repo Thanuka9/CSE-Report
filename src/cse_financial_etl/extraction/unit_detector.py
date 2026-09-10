@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 from cse_financial_etl.domain.enums import UnitScope
 from cse_financial_etl.domain.models import UnitCandidate
+from cse_financial_etl.validation.row_safety import is_narrative_unit_amount
 
 
 class UnitDetectionError(ValueError):
@@ -55,7 +56,7 @@ PATTERNS: tuple[UnitPattern, ...] = (
     ),
     UnitPattern(
         "lkr_rs_space_thousand",
-        re.compile(r"\b(?:rs\.?|lkr)\s+0{3}s?\b", re.I),
+        re.compile(r"\b(?:rs|lkr)\.?\s*0{3}s?\b", re.I),
         "LKR",
         1_000,
     ),
@@ -164,6 +165,13 @@ def detect_candidates(
     distance: float = 0.0,
 ) -> list[UnitCandidate]:
     """Return the most specific non-overlapping unit matches in one text block."""
+
+    if scope in {
+        UnitScope.STATEMENT,
+        UnitScope.PAGE,
+        UnitScope.REPORT,
+    } and is_narrative_unit_amount(text):
+        return []
 
     candidates: list[UnitCandidate] = []
     occupied: list[tuple[int, int]] = []

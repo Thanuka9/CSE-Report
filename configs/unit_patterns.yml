@@ -12,7 +12,7 @@ patterns:
     currency: LKR
     scale_factor: 1000000
   - id: lkr_rs_space_thousand
-    regex: '(?i)\b(?:rs\.?|lkr)\s+0{3}s?\b'
+    regex: '(?i)\b(?:rs|lkr)\.?\s*0{3}s?\b'
     currency: LKR
     scale_factor: 1000
   - id: lkr_in_rs_thousands
