@@ -133,7 +133,13 @@ def _empty_document(pdf_path: Path) -> CanonicalDocumentIR:
 
 
 def _seed_layout_assist(ledger: CandidateLedger, facts: list[Any], *, tunnel: str) -> None:
-    """Inject layout discoveries as unresolved candidates (not pre-published)."""
+    """Inject layout discoveries as unresolved candidates (not pre-published).
+
+    Preserve the layout extractor's semantic evidence.  The shared eligibility
+    contract is responsible for deciding whether a discovered row is semantically
+    strong enough to publish; dropping that score here previously allowed weak
+    RapidFuzz guesses to bypass LABEL_EVIDENCE_WEAK when they were the only candidate.
+    """
 
     for index, fact in enumerate(facts, start=1):
         status = getattr(fact, "status", "")
@@ -171,6 +177,20 @@ def _seed_layout_assist(ledger: CandidateLedger, facts: list[Any], *, tunnel: st
 
         period = getattr(fact, "period_end", None)
         period_s = period.isoformat() if period is not None and hasattr(period, "isoformat") else str(period or "")
+        semantic_confidence = getattr(fact, "semantic_confidence", None)
+        evidence: dict[str, Any] = {
+            "candidate_origin": "layout_geometry",
+            "extraction_method": getattr(fact, "extraction_method", "LAYOUT_TEXT"),
+            "layout_status": status,
+            "semantic_model": getattr(fact, "semantic_model", ""),
+            "overall_certainty": getattr(fact, "overall_certainty", 0.0),
+        }
+        if semantic_confidence is not None:
+            try:
+                evidence["semantic_score"] = float(semantic_confidence)
+            except (TypeError, ValueError):
+                pass
+
         ledger.add(
             LedgerEntry(
                 entry_id=f"{tunnel}-layout-{index}",
@@ -190,10 +210,6 @@ def _seed_layout_assist(ledger: CandidateLedger, facts: list[Any], *, tunnel: st
                 label=getattr(fact, "raw_label", None) or getattr(fact, "source_line", None),
                 score=score,
                 reasons=[f"legacy_status:{status}", "layout_assist"],
-                evidence={
-                    "candidate_origin": "layout_geometry",
-                    "extraction_method": getattr(fact, "extraction_method", "LAYOUT_TEXT"),
-                    "layout_status": status,
-                },
+                evidence=evidence,
             )
         )
