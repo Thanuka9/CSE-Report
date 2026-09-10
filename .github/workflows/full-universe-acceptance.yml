@@ -2,7 +2,7 @@ name: Full universe acceptance
 
 on:
   push:
-    branches: [chatgpt/full-universe-run-20260910]
+    branches: [chatgpt/fix-universe-gates-baseline-20260910]
   workflow_dispatch:
     inputs:
       as_of:
