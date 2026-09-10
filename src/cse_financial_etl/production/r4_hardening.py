@@ -22,9 +22,9 @@ from typing import Any
 
 import polars as pl
 
+import cse_financial_etl.extraction.statement_extractor as statement_extractor
 import cse_financial_etl.orchestration.pipeline as pipeline_module
 import cse_financial_etl.sources.cse as cse_source
-import cse_financial_etl.extraction.statement_extractor as statement_extractor
 from cse_financial_etl.config import (
     infer_entity_scope,
     infer_issuer_type,
@@ -46,6 +46,14 @@ BASE_FLOW_METRICS = {
     "EPS_BASIC",
     "EPS_DILUTED",
     "EPS_SELECTED",
+}
+Q4_REPORTED_ONLY_METRICS = {
+    "TOP_LINE",
+    "OPERATING_PROFIT",
+    "PBT",
+    "PAT",
+    "EPS_BASIC",
+    "EPS_DILUTED",
 }
 RATIO_DEFINITIONS = {
     "DEBT_TO_EQUITY": {
@@ -557,7 +565,7 @@ def _harden_extracted_facts(
                     )
                 )
                 continue
-            if fact.status == "EXTRACTED_DERIVED":
+            if fact.metric_code in Q4_REPORTED_ONLY_METRICS and fact.status == "EXTRACTED_DERIVED":
                 result.append(
                     replace(
                         fact,
@@ -983,6 +991,39 @@ def write_fact_semantics(
     return path
 
 
+def write_metric_definition_contract(project_root: Path, as_of: date) -> Path:
+    """Write the authoritative R4 human-facing metric semantics."""
+
+    path = project_root / "outputs" / f"metric_definitions_{as_of.isoformat()}.json"
+    payload = {
+        "schema_version": 2,
+        "DEBT_TO_EQUITY": RATIO_DEFINITIONS["DEBT_TO_EQUITY"],
+        "LIABILITIES_TO_EQUITY": {
+            **RATIO_DEFINITIONS["DEBT_TO_EQUITY"],
+            "alias_of_legacy_internal_code": "DEBT_TO_EQUITY",
+        },
+        "ROE": RATIO_DEFINITIONS["ROE"],
+        "ROA": RATIO_DEFINITIONS["ROA"],
+        "NPM": RATIO_DEFINITIONS["NPM"],
+        "TOTAL_LIABILITIES": {
+            "display_name": "Total Liabilities",
+            "publication_rule": "explicit standalone Total Liabilities source row only",
+            "reconciliation_only": "Total assets - Total equity",
+        },
+        "MARKET_PRICE_QUARTER_END": {
+            "display_name": "Last Traded Price for the Interim Period",
+            "publication_rule": "filing-disclosed last traded price or official trade history on/before period end",
+            "not_equivalent_to": ["closing price", "closing market price", "generic market price"],
+        },
+        "QUARTER_FLOW_POLICY": {
+            "publication_rule": "explicitly reported standalone three-month value only",
+            "derived_q4": "analytic/audit use only; not publishable as the reported quarter",
+        },
+    }
+    path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    return path
+
+
 def _rewrite_csv(path: Path, rows: list[dict[str, Any]]) -> None:
     fieldnames: list[str] = []
     if path.exists():
@@ -1022,7 +1063,7 @@ def _harden_repository_rows(repository: Repository) -> dict[str, int]:
                 counts["non_quarter_flow_withheld"] += 1
                 reviews.append((row, "NON_QUARTER_FLOW_WITHHELD", "Published flow must be an explicitly reported three-month quarter."))
                 continue
-            if status == "EXTRACTED_DERIVED":
+            if metric in Q4_REPORTED_ONLY_METRICS and status == "EXTRACTED_DERIVED":
                 row["normalized_value"] = None
                 row["status"] = "DERIVED_Q4_NOT_PUBLISHABLE"
                 row["validation_status"] = "REVIEW"
@@ -1269,6 +1310,7 @@ def apply_r4_hardening(
     master_path, master = build_canonical_master(project_root, as_of, repository)
     disclosure_path = build_disclosure_calendar(project_root, as_of, periods, master)
     semantics_path = write_fact_semantics(project_root, as_of, repository)
+    metric_definitions_path = write_metric_definition_contract(project_root, as_of)
     quarantine = enforce_hash_bound_quarantines(project_root, as_of)
 
     facts_csv = project_root / "outputs" / f"normalized_facts_{as_of.isoformat()}.csv"
@@ -1286,6 +1328,7 @@ def apply_r4_hardening(
         "canonical_master": str(master_path),
         "expected_disclosures": str(disclosure_path),
         "fact_semantics": str(semantics_path),
+        "metric_definitions": str(metric_definitions_path),
         "quarantine_integrity": quarantine,
         "reported_q4_only": True,
         "price_semantic": "LAST_TRADED_ONLY",
@@ -1294,7 +1337,12 @@ def apply_r4_hardening(
 
     # Re-write the candidate generation after semantic withholding, then replace its
     # issuer table with stable canonical IDs.  This keeps gold fail-closed.
-    staging = repository._write_staging(run_status, statistics)
+    hardened_statistics = dict(statistics)
+    hardened_statistics["fact_status_counts"] = dict(
+        Counter(str(row.get("status") or "UNKNOWN") for row in repository.fact_rows)
+    )
+    hardened_statistics["review_count"] = len(repository.review_rows)
+    staging = repository._write_staging(run_status, hardened_statistics)
     _write_canonical_issuers_to_staging(staging, master)
 
     _rewrite_manifest(project_root, as_of, repository, summary)
