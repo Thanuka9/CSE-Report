@@ -24,6 +24,26 @@ from cse_financial_etl.resolution.candidate_ledger import CandidateLedger, Ledge
 FLOW_STATEMENTS = {"PROFIT_LOSS", "COMPREHENSIVE_INCOME", "SHARE_INFORMATION", "FINANCIAL_HIGHLIGHTS", "NOTES"}
 
 
+def _column_header_conflicts(
+    statement: CanonicalFinancialStatement,
+    column_id: str,
+) -> list[str]:
+    """Return statement-level header conflicts owned by one numeric column.
+
+    Header compilation records some known-context mismatches (for example a CURRENT
+    column resolving to the wrong period end) on the statement rather than the column.
+    Those conflicts must still travel into the ledger reason list; leaving them only in
+    diagnostic evidence allows the arbiter/final validator to miss a hard contradiction.
+    """
+
+    owned: list[str] = []
+    for conflict in statement.header_conflicts:
+        text = str(conflict)
+        if text.startswith(f"{column_id}:") or f":{column_id}:" in text:
+            owned.append(text)
+    return owned
+
+
 def apply_financial_engine(
     document: CanonicalDocumentIR,
     known: KnownContext,
@@ -67,6 +87,8 @@ def apply_financial_engine(
                     if statement.statement_type in FLOW_STATEMENTS and col.duration_months is None:
                         reasons.append("DURATION_UNKNOWN")
                     for conflict in col.conflicts:
+                        reasons.append(f"HEADER_CONFLICT:{conflict}")
+                    for conflict in _column_header_conflicts(statement, col.column_id):
                         reasons.append(f"HEADER_CONFLICT:{conflict}")
                     ledger.add(
                         LedgerEntry(
