@@ -161,3 +161,31 @@ def test_catastrophic_ratio_is_not_machine_passed() -> None:
     assert by_code["ROA"].status == "IMPLAUSIBLE_DERIVED_RATIO"
     assert by_code["ROA"].normalized_value is None
     assert by_code["ROE"].status == "IMPLAUSIBLE_DERIVED_RATIO"
+
+
+def test_concatenated_ocr_monetary_cells_are_withheld() -> None:
+    from dataclasses import replace
+
+    pat = replace(
+        _fact("PAT", "153338156627"),
+        source_line="Profit For the Period 153,338156,627 271,500 2",
+    )
+    [(_, materialized)] = derive_ratio_facts([("filing", [pat, _fact("TOP_LINE", "1000000")])])
+    by_code = _by_code(materialized)
+    assert by_code["PAT"].status == "VALUE_CONTEXT_UNRESOLVED"
+    assert by_code["PAT"].normalized_value is None
+    assert by_code["NPM"].status == "INSUFFICIENT_INPUT"
+
+
+def test_legal_reference_number_cannot_become_top_line() -> None:
+    from dataclasses import replace
+
+    revenue = replace(
+        _fact("TOP_LINE", "7"),
+        source_line="Income Profit After Taxation compliance with the Companies Act No.7 of 2007.",
+    )
+    [(_, materialized)] = derive_ratio_facts([("filing", [revenue, _fact("PAT", "100")])])
+    by_code = _by_code(materialized)
+    assert by_code["TOP_LINE"].status == "VALUE_CONTEXT_UNRESOLVED"
+    assert by_code["TOP_LINE"].normalized_value is None
+    assert by_code["NPM"].status == "INSUFFICIENT_INPUT"
