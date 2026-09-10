@@ -63,6 +63,7 @@ ignore = ["B008", "E501", "RUF001"]
 
 [tool.ruff.lint.per-file-ignores]
 "src/cse_financial_etl/production/r4_hardening.py" = ["I001"]
+"src/cse_financial_etl/validation/adjudication.py" = ["RUF002"]
 
 [tool.mypy]
 python_version = "3.12"
