@@ -11,9 +11,6 @@ on:
         description: Hard per-PDF extraction/OCR timeout
         required: true
         default: '480'
-  push:
-    branches:
-      - chatgpt/fix-universe-gates-baseline-20260910
 
 permissions:
   contents: read
