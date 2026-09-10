@@ -1,0 +1,74 @@
+name: Audited baseline full-universe reproof
+
+on:
+  push:
+    branches: [chatgpt/recalibrate-safe-baseline-20260910]
+
+permissions:
+  contents: read
+
+jobs:
+  universe:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+        with:
+          version: '0.12.11'
+          python-version: '3.12'
+          enable-cache: true
+      - name: Install OCR system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ghostscript tesseract-ocr
+      - name: Install locked environment with OCR support
+        run: uv sync --locked --group dev --extra ocr
+      - name: Restore resumable CSE run cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: |
+            data/raw
+            data/cache/resilient
+            data/bronze
+          key: cse-universe-2026-09-10-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            cse-universe-2026-09-10-
+      - name: Run governed complete CSE universe
+        run: |
+          uv run python scripts/run_production_pipeline.py \
+            --as-of 2026-09-10 \
+            --process-timeout-seconds 480 \
+            --skip-excel \
+            --tunnel-b-always
+      - name: Audit row-level safety invariants
+        if: always()
+        run: |
+          uv run python scripts/audit_row_safety.py \
+            --facts outputs/normalized_facts_2026-09-10.csv \
+            --prices outputs/quarter_end_prices_2026-09-10.csv \
+            --output outputs/row_safety_2026-09-10.json
+      - name: Build adjudication packet
+        if: always()
+        run: uv run cse-etl prepare-adjudication --as-of 2026-09-10 --target-issuers 100
+      - name: Independently recheck universe acceptance
+        if: always()
+        run: |
+          uv run python scripts/check_universe_acceptance.py \
+            --manifest outputs/manifests/run_manifest_2026-09-10.json \
+            --review outputs/review_queue_2026-09-10.csv \
+            --facts outputs/normalized_facts_2026-09-10.csv \
+            --errors outputs/pipeline_errors_2026-09-10.json \
+            --baseline configs/coverage_baseline.yml \
+            --output outputs/universe_acceptance_recheck_2026-09-10.json
+      - name: Upload reproof evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: audited-baseline-reproof-2026-09-10
+          path: |
+            outputs/*.json
+            outputs/*.csv
+            outputs/manifests/*.json
+          if-no-files-found: error
