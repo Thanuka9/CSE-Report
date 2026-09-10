@@ -161,6 +161,19 @@ def evaluate_eligibility(
             reasons.append(reason)
         elif reason == "VALIDATION_FAILED":
             reasons.append(VALIDATION_FAILED_PRESERVED)
+
+    # Statement compilation can record a known-context mismatch globally rather than
+    # in ``col.conflicts``. Treat a conflict owned by this entry's column as blocking
+    # even if an upstream caller forgot to copy it into ``entry.reasons``.
+    evidence = entry.evidence if isinstance(entry.evidence, dict) else {}
+    column_id = evidence.get("column_id")
+    if isinstance(column_id, str) and column_id:
+        for conflict in evidence.get("header_conflicts") or []:
+            text = str(conflict)
+            if text.startswith(f"{column_id}:") or f":{column_id}:" in text:
+                reasons.append(HEADER_CONFLICT)
+                break
+
     if concept == "TOTAL_LIABILITIES" and _derived_from_assets_minus_equity(entry):
         reasons.append(DERIVED_LIABILITIES_FORBIDDEN)
 

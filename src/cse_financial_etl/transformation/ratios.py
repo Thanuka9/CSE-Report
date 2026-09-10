@@ -10,7 +10,9 @@ from typing import Any
 from cse_financial_etl.extraction.statement_extractor import ExtractedFact
 from cse_financial_etl.validation.acceptance import is_publishable_fact
 from cse_financial_etl.validation.row_safety import (
+    inconsistent_scale_metrics,
     is_narrative_unit_amount,
+    per_share_source_is_unsafe,
     ratio_plausibility_issue,
     suspicious_selected_numeric,
 )
@@ -29,6 +31,26 @@ def _evidence(fact: ExtractedFact) -> dict[str, Any]:
     return parsed if isinstance(parsed, dict) else {}
 
 
+def _withhold_source_fact(
+    fact: ExtractedFact,
+    *,
+    status: str,
+    reason: str,
+) -> ExtractedFact:
+    evidence = _evidence(fact)
+    evidence["row_safety"] = reason
+    return replace(
+        fact,
+        status=status,
+        normalized_value=None,
+        validation_status="FAILED",
+        overall_certainty=0.0,
+        certainty_band="NONE",
+        confidence="LOW",
+        evidence_json=json.dumps(evidence, separators=(",", ":")),
+    )
+
+
 def _sanitize_source_fact(fact: ExtractedFact) -> ExtractedFact:
     """Make the final materialized fact set fail closed before derivation.
 
@@ -42,30 +64,24 @@ def _sanitize_source_fact(fact: ExtractedFact) -> ExtractedFact:
         return fact
     evidence = _evidence(fact)
     if is_narrative_unit_amount(fact.unit_source_text):
-        evidence["row_safety"] = "NARRATIVE_UNIT_EVIDENCE"
-        return replace(
+        return _withhold_source_fact(
             fact,
             status="UNIT_NOT_RESOLVED",
-            normalized_value=None,
-            validation_status="FAILED",
-            overall_certainty=0.0,
-            certainty_band="NONE",
-            confidence="LOW",
-            evidence_json=json.dumps(evidence, separators=(",", ":")),
+            reason="NARRATIVE_UNIT_EVIDENCE",
+        )
+    if per_share_source_is_unsafe(fact.metric_code, fact.source_line):
+        return _withhold_source_fact(
+            fact,
+            status="VALUE_CONTEXT_UNRESOLVED",
+            reason="CORRUPTED_PER_SHARE_VALUE_ROW",
         )
     if suspicious_selected_numeric(
         fact.metric_code, fact.raw_value, fact.scale_factor, fact.source_line
     ):
-        evidence["row_safety"] = "SUSPICIOUS_OCR_SELECTED_NUMERIC"
-        return replace(
+        return _withhold_source_fact(
             fact,
             status="VALUE_CONTEXT_UNRESOLVED",
-            normalized_value=None,
-            validation_status="FAILED",
-            overall_certainty=0.0,
-            certainty_band="NONE",
-            confidence="LOW",
-            evidence_json=json.dumps(evidence, separators=(",", ":")),
+            reason="SUSPICIOUS_OCR_SELECTED_NUMERIC",
         )
     if fact.validation_status in {"FAILED", "REJECTED"}:
         return replace(
@@ -95,6 +111,35 @@ def _sanitize_source_fact(fact: ExtractedFact) -> ExtractedFact:
             confidence="LOW",
         )
     return fact
+
+
+def _sanitize_cross_statement_scales(facts: list[ExtractedFact]) -> list[ExtractedFact]:
+    """Withhold source rows whose unit scale conflicts with same-filing evidence.
+
+    This is intentionally a safety gate, not a scale inference engine: it never changes
+    a value or guesses a multiplier. The shared validator identifies only contradictions
+    strong enough to make publication unsafe; those rows stay reviewable with raw
+    evidence intact.
+    """
+
+    values = {
+        fact.metric_code: (fact.normalized_value, fact.scale_factor)
+        for fact in facts
+        if fact.status in ACCEPTED and fact.validation_status == "PASSED"
+    }
+    unsafe = inconsistent_scale_metrics(values)
+    if not unsafe:
+        return facts
+    return [
+        _withhold_source_fact(
+            fact,
+            status="UNIT_NOT_RESOLVED",
+            reason="CROSS_STATEMENT_SCALE_CONFLICT",
+        )
+        if fact.metric_code in unsafe and fact.status in ACCEPTED
+        else fact
+        for fact in facts
+    ]
 
 
 def _sanitize_eps_selected(facts: list[ExtractedFact]) -> list[ExtractedFact]:
@@ -332,10 +377,13 @@ def derive_ratio_facts[TFiling](
 ) -> list[tuple[TFiling, list[ExtractedFact]]]:
     """Fail-close source rows, then attach same-quarter ratios with exact lineage context."""
 
-    sanitized_results = [
-        (item, _sanitize_eps_selected([_sanitize_source_fact(fact) for fact in facts]))
-        for item, facts in extracted_results
-    ]
+    sanitized_results: list[tuple[TFiling, list[ExtractedFact]]] = []
+    for item, facts in extracted_results:
+        sanitized = [_sanitize_source_fact(fact) for fact in facts]
+        sanitized = _sanitize_cross_statement_scales(sanitized)
+        sanitized = _sanitize_eps_selected(sanitized)
+        sanitized_results.append((item, sanitized))
+
     index = _index_facts(sanitized_results)
     allowed = set(display_periods) if display_periods is not None else None
     derived_results: list[tuple[TFiling, list[ExtractedFact]]] = []
