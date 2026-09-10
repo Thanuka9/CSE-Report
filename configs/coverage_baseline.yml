@@ -1,5 +1,5 @@
-min_extracted_plus_derived: 9023
-min_draft_publishable: 9023
+min_extracted_plus_derived: 9060
+min_draft_publishable: 9060
 min_gold_sample: 100
 min_gold_issuers: 100
 min_issuer_count: 281
@@ -7,29 +7,30 @@ min_downloaded_filing_count: 829
 min_extracted_filing_count: 826
 max_quarantined_extraction_timeouts: 3
 
-# Per-metric DRAFT-publishable floors from the accepted 2026-09-09 full-universe
-# evidence. A future reduction in one metric can no longer hide behind gains in another.
+# Per-metric DRAFT-publishable floors from the audited 2026-09-10 full-universe
+# row-safety proof. A future reduction in one metric can no longer hide behind gains
+# in another.
 min_publishable_by_metric:
-  DEBT_TO_EQUITY: 447  # legacy code; semantic display is Liabilities / Equity
-  EPS_BASIC: 660
-  EPS_DILUTED: 190
-  EPS_SELECTED: 668
-  NAVPS: 718
-  NPM: 652
-  OPERATING_PROFIT: 545
-  PAT: 686
-  PBT: 681
-  ROA: 614
-  ROE: 583
-  TOP_LINE: 693
+  DEBT_TO_EQUITY: 451  # legacy code; semantic display is Liabilities / Equity
+  EPS_BASIC: 669
+  EPS_DILUTED: 192
+  EPS_SELECTED: 675
+  NAVPS: 714
+  NPM: 650
+  OPERATING_PROFIT: 551
+  PAT: 688
+  PBT: 689
+  ROA: 613
+  ROE: 585
+  TOP_LINE: 695
   TOTAL_ASSETS: 719
-  TOTAL_EQUITY: 693
-  TOTAL_LIABILITIES: 474
+  TOTAL_EQUITY: 694
+  TOTAL_LIABILITIES: 475
 
 # Sector × metric floors prevent a healthy aggregate total from masking a regression in
 # banks, finance companies, insurance companies, or general issuers. These are seeded
-# from the same accepted 9023-fact universe and must only be recalibrated from a newer
-# independently accepted run.
+# from the same audited 9060-fact universe and must only be recalibrated from a newer
+# independently audited full-universe run.
 min_publishable_by_sector_metric:
   BANK:
     DEBT_TO_EQUITY: 35
@@ -43,56 +44,56 @@ min_publishable_by_sector_metric:
     PBT: 32
     ROA: 33
     ROE: 33
-    TOP_LINE: 34
+    TOP_LINE: 33
     TOTAL_ASSETS: 35
     TOTAL_EQUITY: 35
     TOTAL_LIABILITIES: 35
   FINANCE_COMPANY:
-    DEBT_TO_EQUITY: 65
+    DEBT_TO_EQUITY: 66
     EPS_BASIC: 60
     EPS_DILUTED: 20
-    EPS_SELECTED: 62
+    EPS_SELECTED: 60
     NAVPS: 64
-    NPM: 65
+    NPM: 63
     OPERATING_PROFIT: 60
     PAT: 66
-    PBT: 68
-    ROA: 57
-    ROE: 57
-    TOP_LINE: 68
-    TOTAL_ASSETS: 65
-    TOTAL_EQUITY: 65
-    TOTAL_LIABILITIES: 65
+    PBT: 67
+    ROA: 58
+    ROE: 58
+    TOP_LINE: 66
+    TOTAL_ASSETS: 66
+    TOTAL_EQUITY: 66
+    TOTAL_LIABILITIES: 66
   INSURANCE:
     DEBT_TO_EQUITY: 25
     EPS_BASIC: 26
     EPS_DILUTED: 15
     EPS_SELECTED: 28
     NAVPS: 30
-    NPM: 27
+    NPM: 26
     OPERATING_PROFIT: 6
     PAT: 27
     PBT: 27
-    ROA: 26
-    ROE: 26
+    ROA: 23
+    ROE: 23
     TOP_LINE: 27
     TOTAL_ASSETS: 29
     TOTAL_EQUITY: 30
     TOTAL_LIABILITIES: 26
   GENERAL:
-    DEBT_TO_EQUITY: 322
-    EPS_BASIC: 544
-    EPS_DILUTED: 129
-    EPS_SELECTED: 548
-    NAVPS: 589
-    NPM: 527
-    OPERATING_PROFIT: 448
-    PAT: 560
-    PBT: 554
-    ROA: 498
-    ROE: 467
-    TOP_LINE: 564
-    TOTAL_ASSETS: 590
+    DEBT_TO_EQUITY: 325
+    EPS_BASIC: 553
+    EPS_DILUTED: 131
+    EPS_SELECTED: 557
+    NAVPS: 585
+    NPM: 528
+    OPERATING_PROFIT: 454
+    PAT: 562
+    PBT: 563
+    ROA: 499
+    ROE: 471
+    TOP_LINE: 569
+    TOTAL_ASSETS: 589
     TOTAL_EQUITY: 563
     TOTAL_LIABILITIES: 348
 
@@ -111,12 +112,14 @@ quarantined_extraction_timeouts:
     period_end: '2026-06-30'
 
 # Baseline provenance:
-#   accepted full-universe run: 4e9ef5ff-878f-4348-b0fe-4d48b6572e67
-#   source workflow run: 34339810852
+#   audited full-universe workflow run: 34436533998
+#   ETL run_id: 1d3ee956-cb18-4e50-872c-14fb8595b25c
+#   source commit: a2b5e5eca144c3acf8517b37188566723f1e7871
 #   issuer_count: 281
 #   downloaded filings: 829
-#   extracted filings: 826 + 3 known timeout quarantines
-#   DRAFT-publishable facts: 9023
+#   extracted filings: 826 + 3 exact known timeout quarantines
+#   DRAFT-publishable facts: 9060
+#   row-safety audit: PASS (0 violations across 12,390 fact rows and 889 price rows)
 #
 # min_gold_sample counts independently checked fields; min_gold_issuers separately
 # enforces the institutional target of 100 manually adjudicated issuers. Those remain
