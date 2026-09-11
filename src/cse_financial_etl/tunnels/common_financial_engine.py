@@ -1,9 +1,10 @@
 """Shared financial intelligence applied after independent structural readings.
 
-Ledger candidates carry exactly what the document says.  Missing entity, period,
-duration or role stays ``None`` — the arbiter's eligibility contract then rejects
-the candidate with a concrete unresolved-dimension reason instead of this module
-silently filling the gap from the expected context (audit finding 3).
+Ledger candidates carry exactly what the document says. Missing entity, period,
+duration or role stays ``None`` — the arbiter's eligibility contract rejects the
+candidate instead of silently filling the gap from expected context. Statement-region
+classification confidence is also preserved so a numeric-density guess can aid
+discovery without independently authorizing publication.
 """
 
 from __future__ import annotations
@@ -28,13 +29,7 @@ def _column_header_conflicts(
     statement: CanonicalFinancialStatement,
     column_id: str,
 ) -> list[str]:
-    """Return statement-level header conflicts owned by one numeric column.
-
-    Header compilation records some known-context mismatches (for example a CURRENT
-    column resolving to the wrong period end) on the statement rather than the column.
-    Those conflicts must still travel into the ledger reason list; leaving them only in
-    diagnostic evidence allows the arbiter/final validator to miss a hard contradiction.
-    """
+    """Return statement-level header conflicts owned by one numeric column."""
 
     owned: list[str] = []
     for conflict in statement.header_conflicts:
@@ -42,6 +37,16 @@ def _column_header_conflicts(
         if text.startswith(f"{column_id}:") or f":{column_id}:" in text:
             owned.append(text)
     return owned
+
+
+def _statement_confidence(statement: CanonicalFinancialStatement) -> float | None:
+    """Return the detector confidence that established the statement region."""
+
+    raw = statement.compilation_evidence.get("region_confidence")
+    try:
+        return float(raw) if raw is not None else None
+    except (TypeError, ValueError):
+        return None
 
 
 def apply_financial_engine(
@@ -58,7 +63,8 @@ def apply_financial_engine(
     ledger = CandidateLedger()
     entry_i = 0
     for statement in statements:
-        _ = discover_subtotals(statement)  # evidence retained; concepts from row hypotheses
+        _ = discover_subtotals(statement)
+        region_confidence = _statement_confidence(statement)
         for row in statement.rows:
             if not row.hypotheses:
                 continue
@@ -86,6 +92,10 @@ def apply_financial_engine(
                         reasons.append("ROLE_UNKNOWN")
                     if statement.statement_type in FLOW_STATEMENTS and col.duration_months is None:
                         reasons.append("DURATION_UNKNOWN")
+                    if region_confidence is None:
+                        reasons.append("STATEMENT_REGION_CONFIDENCE_UNKNOWN")
+                    elif region_confidence < 0.80:
+                        reasons.append(f"STATEMENT_REGION_WEAK:{region_confidence:.3f}")
                     for conflict in col.conflicts:
                         reasons.append(f"HEADER_CONFLICT:{conflict}")
                     for conflict in _column_header_conflicts(statement, col.column_id):
@@ -100,9 +110,7 @@ def apply_financial_engine(
                             normalized_value=value,
                             entity=col.entity,
                             period_end=col.period_end.isoformat() if col.period_end else None,
-                            duration_months=(
-                                col.duration_months if statement.statement_type in FLOW_STATEMENTS else None
-                            ),
+                            duration_months=(col.duration_months if statement.statement_type in FLOW_STATEMENTS else None),
                             comparison_role=col.comparison_role,
                             unit=unit.get("currency"),
                             scale_factor=_scale_int(unit.get("scale")),
@@ -114,6 +122,9 @@ def apply_financial_engine(
                             evidence={
                                 "candidate_origin": "compiler_geometry",
                                 "statement_type": statement.statement_type,
+                                "statement_region_confidence": region_confidence,
+                                "statement_region_evidence": statement.compilation_evidence.get("region_evidence"),
+                                "statement_region_type": statement.compilation_evidence.get("region_statement_type"),
                                 "table_index": statement.table_index,
                                 "row_id": row.row_id,
                                 "column_id": col.column_id,
