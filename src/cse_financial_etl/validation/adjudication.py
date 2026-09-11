@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any
 
 from cse_financial_etl.config import infer_issuer_type
+from cse_financial_etl.contracts.release import fact_fingerprint
 
 CORE_METRICS = (
     "PAT",
@@ -179,6 +180,7 @@ def prepare_adjudication_packet(
                 "machine_source_page": row.get("source_page"),
                 "machine_certainty": row.get("overall_certainty"),
                 "machine_extraction_method": row.get("extraction_method"),
+                "machine_fact_fingerprint": fact_fingerprint(row),
                 "filing_sha256": row.get("filing_sha256"),
                 "source_url": row.get("source_url"),
                 "local_path": row.get("local_path"),
