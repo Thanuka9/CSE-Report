@@ -14,6 +14,13 @@ on:
         required: true
         default: '480'
 
+# During branch hardening, only the newest universe result is authoritative. A newer
+# commit cancels any stale run for the same branch instead of spending hours validating
+# code that can no longer be merged. Manual runs use their own ref/run grouping.
+concurrency:
+  group: full-universe-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
