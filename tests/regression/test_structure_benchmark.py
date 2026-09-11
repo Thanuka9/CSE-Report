@@ -775,6 +775,7 @@ def test_statement_unit_is_inherited_when_away_from_row(tmp_path: Path) -> None:
         tmp_path / "units.pdf",
         "Statement of profit or loss - Company\n"
         "For the three months ended 30 June 2025\n"
+        "30 June 2025 30 June 2024\n"
         "Rs.'000\n"
         "Revenue 1,000 900\n"
         "Profit for the period 250 180\n",
