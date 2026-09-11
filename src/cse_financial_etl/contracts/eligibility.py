@@ -1,9 +1,9 @@
-"""Shared publication-eligibility contract (audit finding 5).
+"""Shared publication-eligibility contract.
 
-One rule set decides whether a ledger candidate *can* be published for a target
-query.  The arbiter uses it to filter candidates, the final validator re-runs it
-independently on the chosen evidence, and the release gate consumes its result.
-Every failure is a concrete unresolved dimension code — never a soft score.
+One rule set decides whether a ledger candidate can be published for a target query.
+The arbiter uses it to filter candidates and the final validator re-runs it independently
+on chosen evidence. Missing or weak evidence stays unresolved; scoring never converts an
+unproven dimension into a fact.
 """
 
 from __future__ import annotations
@@ -18,7 +18,6 @@ from cse_financial_etl.accounting.concept_rules import (
 )
 from cse_financial_etl.compiler.units import COUNT, PER_SHARE, concept_dimension
 
-# Reason codes (stable, surfaced to review views and Excel).
 VALUE_MISSING = "VALUE_MISSING"
 ENTITY_UNKNOWN = "ENTITY_UNKNOWN"
 GROUP_CANNOT_SATISFY_COMPANY = "GROUP_CANNOT_SATISFY_COMPANY"
@@ -37,11 +36,11 @@ HEADER_CONFLICT = "HEADER_CONFLICT"
 DERIVED_LIABILITIES_FORBIDDEN = "DERIVED_LIABILITIES_FORBIDDEN"
 VALIDATION_FAILED_PRESERVED = "VALIDATION_FAILED_PRESERVED"
 LABEL_EVIDENCE_WEAK = "LABEL_EVIDENCE_WEAK"
+STATEMENT_REGION_UNKNOWN = "STATEMENT_REGION_UNKNOWN"
+STATEMENT_REGION_WEAK = "STATEMENT_REGION_WEAK"
 
-# Minimum semantic (regex / RapidFuzz) label score that may be *published*.  Weaker
-# hypotheses stay in the ledger for review but never become selections: an anchored
-# regex hit scores 1.0, an alias prefix >= 0.86, a fuzzy alias at most 0.85.
 MIN_PUBLISHABLE_SEMANTIC_SCORE = 0.80
+MIN_PUBLISHABLE_REGION_CONFIDENCE = 0.80
 
 
 @runtime_checkable
@@ -73,10 +72,8 @@ class EligibilityResult:
 
 @dataclass(frozen=True, slots=True)
 class FinalCheck:
-    """Result of independently re-validating the *chosen* evidence."""
-
     metric_code: str
-    status: str  # PASS | FAIL | UNTESTED | NOT_APPLICABLE
+    status: str
     detail: str
     reasons: tuple[str, ...] = ()
 
@@ -89,18 +86,17 @@ def evaluate_eligibility(
     target_period_end: str | None,
     concept: str | None = None,
 ) -> EligibilityResult:
-    """Full eligibility contract for one candidate against one target query."""
+    """Full fail-closed eligibility contract for one candidate and target query."""
 
     if entry is None:
         return EligibilityResult(False, (VALUE_MISSING,), concept or "UNKNOWN")
     concept = concept or entry.concept
     reasons: list[str] = []
+    evidence = entry.evidence if isinstance(entry.evidence, dict) else {}
 
-    # 1. A value must exist (absence rows are never publishable selections).
     if entry.normalized_value is None:
         reasons.append(VALUE_MISSING)
 
-    # 2. Required scope: the observed entity must be known and compatible.
     entity = entry.entity
     if entity is None:
         reasons.append(ENTITY_UNKNOWN)
@@ -109,7 +105,6 @@ def evaluate_eligibility(
     elif entity != required_entity and not _entity_alias_ok(required_entity, entity):
         reasons.append(ENTITY_MISMATCH)
 
-    # 3. Actual period / duration / role from the document.
     if entry.period_end is None:
         reasons.append(PERIOD_UNKNOWN)
     elif target_period_end and entry.period_end != target_period_end:
@@ -119,45 +114,42 @@ def evaluate_eligibility(
             reasons.append(DURATION_UNKNOWN)
         elif target_duration is not None and entry.duration_months != target_duration:
             reasons.append(YTD_CANNOT_SATISFY_3M)
-
-        # For a reported three-month flow, CURRENT is part of the truth contract,
-        # not merely a ranking hint. Compiler/header recovery sometimes represents an
-        # unresolved role as the literal string "UNKNOWN" rather than None. Treat any
-        # unresolved/blank role as unknown and any non-current resolved role as a
-        # comparative. Instant stock facts do not need this role gate because their
-        # exact period_end already identifies the as-at column.
         role = str(entry.comparison_role or "").strip().upper()
         if role in {"", "UNKNOWN", "UNRESOLVED", "NONE"}:
             reasons.append(ROLE_UNKNOWN)
         elif role != "CURRENT":
             reasons.append(COMPARATIVE_NOT_CURRENT)
 
-    # 4. Applicable unit for the concept's dimension.
     dimension = concept_dimension(concept)
     if dimension != COUNT and not entry.unit:
         reasons.append(UNIT_UNRESOLVED)
-    if (
-        entry.scale_factor is None
-        and entry.normalized_value is not None
-        and not _cents_declared(entry)
-    ):
+    if entry.scale_factor is None and entry.normalized_value is not None and not _cents_declared(entry):
         reasons.append(SCALE_UNRESOLVED)
     if dimension == PER_SHARE and entry.scale_factor not in {None, 1}:
         reasons.append(SCALE_UNRESOLVED)
-    observed_dimension = (
-        entry.evidence.get("dimension") if isinstance(entry.evidence, dict) else None
-    )
+    observed_dimension = evidence.get("dimension")
     if observed_dimension and observed_dimension != dimension:
         reasons.append(DIMENSION_MISMATCH)
 
-    # 5. Source evidence ownership and label evidence strength.
     if entry.page is None or not entry.label:
         reasons.append(SOURCE_EVIDENCE_MISSING)
-    semantic = entry.evidence.get("semantic_score") if isinstance(entry.evidence, dict) else None
-    if isinstance(semantic, (int, float)) and semantic < MIN_PUBLISHABLE_SEMANTIC_SCORE:
+    semantic = evidence.get("semantic_score")
+    if not isinstance(semantic, (int, float)):
+        reasons.append(LABEL_EVIDENCE_WEAK)
+    elif semantic < MIN_PUBLISHABLE_SEMANTIC_SCORE:
         reasons.append(LABEL_EVIDENCE_WEAK)
 
-    # 6. Unresolved dimensions recorded upstream stay blocking.
+    # Native compiler candidates must own credible statement-region provenance.
+    # Layout-assist candidates are already blocked on source-owned context; recovery and
+    # hand-built test candidates that do not claim compiler origin are not retroactively
+    # required to possess a detector score.
+    if evidence.get("candidate_origin") == "compiler_geometry":
+        region_confidence = evidence.get("statement_region_confidence")
+        if not isinstance(region_confidence, (int, float)):
+            reasons.append(STATEMENT_REGION_UNKNOWN)
+        elif region_confidence < MIN_PUBLISHABLE_REGION_CONFIDENCE:
+            reasons.append(STATEMENT_REGION_WEAK)
+
     for reason in entry.reasons or []:
         if reason.startswith("UNIT_UNRESOLVED") and UNIT_UNRESOLVED not in reasons:
             reasons.append(UNIT_UNRESOLVED)
@@ -165,15 +157,15 @@ def evaluate_eligibility(
             ("ENTITY_CONFLICT", "PERIOD_CONFLICT", "DURATION_CONFLICT")
         ):
             reasons.append(HEADER_CONFLICT)
+        elif reason.startswith("STATEMENT_REGION_WEAK"):
+            reasons.append(STATEMENT_REGION_WEAK)
+        elif reason == "STATEMENT_REGION_CONFIDENCE_UNKNOWN":
+            reasons.append(STATEMENT_REGION_UNKNOWN)
         elif reason == "SEARCH_BUDGET_EXHAUSTED":
             reasons.append(reason)
         elif reason == "VALIDATION_FAILED":
             reasons.append(VALIDATION_FAILED_PRESERVED)
 
-    # Statement compilation can record a known-context mismatch globally rather than
-    # in ``col.conflicts``. Treat a conflict owned by this entry's column as blocking
-    # even if an upstream caller forgot to copy it into ``entry.reasons``.
-    evidence = entry.evidence if isinstance(entry.evidence, dict) else {}
     column_id = evidence.get("column_id")
     if isinstance(column_id, str) and column_id:
         for conflict in evidence.get("header_conflicts") or []:
@@ -190,7 +182,6 @@ def evaluate_eligibility(
 
 
 def _entity_alias_ok(required_entity: str, entity: str) -> bool:
-    # BANK and COMPANY are both standalone scopes; a bank filing labels its own column "Bank".
     standalone = {"COMPANY", "BANK"}
     return required_entity in standalone and entity in standalone
 
