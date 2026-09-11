@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from contextlib import suppress
 from datetime import date
 from pathlib import Path
 from typing import Any
@@ -180,6 +181,7 @@ def _seed_layout_assist(ledger: CandidateLedger, facts: list[Any], *, tunnel: st
             )
 
         semantic_confidence = getattr(fact, "semantic_confidence", None)
+        fact_period = getattr(fact, "period_end", None)
         evidence: dict[str, Any] = {
             "candidate_origin": "layout_geometry",
             "extraction_method": getattr(fact, "extraction_method", "LAYOUT_TEXT"),
@@ -187,10 +189,9 @@ def _seed_layout_assist(ledger: CandidateLedger, facts: list[Any], *, tunnel: st
             "semantic_model": getattr(fact, "semantic_model", ""),
             "overall_certainty": getattr(fact, "overall_certainty", 0.0),
             "legacy_target_period": (
-                getattr(fact, "period_end").isoformat()
-                if getattr(fact, "period_end", None) is not None
-                and hasattr(getattr(fact, "period_end"), "isoformat")
-                else str(getattr(fact, "period_end", "") or "")
+                fact_period.isoformat()
+                if fact_period is not None and hasattr(fact_period, "isoformat")
+                else str(fact_period or "")
             ),
             "legacy_entity_scope": getattr(fact, "entity_scope", None),
             "legacy_comparison_role": getattr(fact, "comparison_role", None),
@@ -198,10 +199,8 @@ def _seed_layout_assist(ledger: CandidateLedger, facts: list[Any], *, tunnel: st
             "context_not_source_owned": True,
         }
         if semantic_confidence is not None:
-            try:
+            with suppress(TypeError, ValueError):
                 evidence["semantic_score"] = float(semantic_confidence)
-            except (TypeError, ValueError):
-                pass
 
         reasons = [
             f"legacy_status:{status}",
