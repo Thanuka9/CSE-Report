@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from datetime import date
 from decimal import Decimal
 
@@ -17,8 +18,11 @@ def test_commercial_bank_operating_profit_candidate_survives_extraction() -> Non
         ocr_enabled=False,
     )
     candidates = [fact for fact in facts if fact.metric_code == "OPERATING_PROFIT"]
-    assert any(
+    if not any(
         fact.normalized_value == Decimal("29495553000")
         and fact.status == "EXTRACTED"
         for fact in candidates
-    ), [fact.as_json() for fact in candidates]
+    ):
+        raise AssertionError(
+            json.dumps([fact.as_json() for fact in candidates], indent=2, default=str)
+        )
