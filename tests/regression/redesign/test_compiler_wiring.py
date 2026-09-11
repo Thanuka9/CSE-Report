@@ -8,14 +8,13 @@ from decimal import Decimal
 from pathlib import Path
 
 from cse_financial_etl.extraction.statement_extractor import ExtractedFact, extract_filing
-from cse_financial_etl.facts.publisher import publish_from_compiler
 from cse_financial_etl.storage.stage_cache import StageCache, cache_key, default_version_vector
 from cse_financial_etl.tunnels.extraction_compiler import compile_filing
 from cse_financial_etl.validation.eval_harness import run_offline_eval
 from tests.fixture_paths import real_pdf
 
 
-def test_compiler_layout_assist_mode(tmp_path: Path) -> None:
+def test_compiler_layout_assist_mode_is_discovery_only(tmp_path: Path) -> None:
     fact = ExtractedFact(
         issuer_name="Acme PLC",
         symbol="ACME.N0000",
@@ -49,29 +48,21 @@ def test_compiler_layout_assist_mode(tmp_path: Path) -> None:
     )
     mode = result["report"]["tunnel_a"]["mode"]
     assert mode in {"layout_assist_compiler", "full_compiler_with_layout_assist"}
-    assert result["ledger"].accepted()
+    assert not result["ledger"].accepted()
     assert result["report"]["filing_sha"] is not None
-    published, stats = publish_from_compiler(
-        queried=result["queried"],
-        layout_facts=[fact],
-        report=result["report"],
-        issuer_name="Acme PLC",
-        symbol="ACME.N0000",
-        period_end=date(2026, 6, 30),
-        required_entity="COMPANY",
+
+    entries = result["ledger"].entries
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.evidence["candidate_origin"] == "layout_geometry"
+    assert entry.evidence["context_not_source_owned"] is True
+    assert entry.entity is None
+    assert entry.period_end is None
+    assert entry.comparison_role is None
+    assert not any(
+        queried.selected is not None and queried.metric_code == "PAT"
+        for queried in result["queried"]
     )
-    pat = next(f for f in published if f.metric_code == "PAT")
-    assert pat.status == "EXTRACTED"
-    assert pat.extraction_method == "COMPILER_QUERY"
-    assert pat.normalized_value == Decimal("100000")
-    evidence = json.loads(pat.evidence_json or "{}")
-    # With the compiler disabled the row is honestly routed layout-assist-only and
-    # never labelled as a statement-compiler publication (audit finding 2).
-    assert evidence["publication_routing"] == "layout_assist_only"
-    assert evidence["native_compiler_success"] is False
-    assert evidence["explicit_fallback"] == "COMPILER_DISABLED"
-    assert evidence["extraction_origin"] == "layout_geometry"
-    assert stats["explicit_layout_fallback"] == 0
 
 
 def test_extract_filing_publishes_via_compiler() -> None:
