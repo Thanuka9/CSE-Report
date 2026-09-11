@@ -8,6 +8,7 @@ from pathlib import Path
 
 from cse_financial_etl.contracts.release import (
     apply_review_decisions,
+    fact_fingerprint,
     make_decision,
     sign_decision,
     verify_decision_signature,
@@ -76,6 +77,7 @@ def test_unsigned_review_name_cannot_authenticate_official_decision() -> None:
         period_end=fact.period_end.isoformat(),
         metric_code=fact.metric_code,
         filing_sha256="abc123",
+        fact_fingerprint=fact_fingerprint(fact),
         reviewer_id="reviewer@example.org",
         decision="APPROVED",
     )
@@ -92,6 +94,7 @@ def test_signed_review_decision_applies_and_tampering_fails(monkeypatch) -> None
         period_end=fact.period_end.isoformat(),
         metric_code=fact.metric_code,
         filing_sha256="abc123",
+        fact_fingerprint=fact_fingerprint(fact),
         reviewer_id="reviewer@example.org",
         decision="APPROVED",
     )
@@ -104,6 +107,48 @@ def test_signed_review_decision_applies_and_tampering_fails(monkeypatch) -> None
 
     tampered = replace(signed, note="changed after signature")
     assert verify_decision_signature(tampered)[0] is False
+
+
+def test_signed_approval_does_not_transfer_to_changed_fact(monkeypatch) -> None:
+    fact = _fact()
+    decision = make_decision(
+        issuer_name=fact.issuer_name,
+        symbol=fact.symbol,
+        period_end=fact.period_end.isoformat(),
+        metric_code=fact.metric_code,
+        filing_sha256="same-pdf-sha",
+        fact_fingerprint=fact_fingerprint(fact),
+        reviewer_id="reviewer@example.org",
+        decision="APPROVED",
+    )
+    signed = sign_decision(decision, secret="institution-secret", key_id="BSD-REVIEW-1")
+    monkeypatch.setenv("CSE_REVIEW_KEY_BSD_REVIEW_1", "institution-secret")
+
+    changed = replace(
+        fact,
+        raw_text="101",
+        raw_value=Decimal("101"),
+        normalized_value=Decimal("101"),
+    )
+    updated, summary = apply_review_decisions(
+        [changed], [signed], filing_sha256="same-pdf-sha"
+    )
+    assert updated[0].review_status == "REVIEW"
+    assert summary.approved_applied == 0
+    assert summary.stale_fact_fingerprint == 1
+
+
+def test_fact_fingerprint_changes_with_material_provenance() -> None:
+    fact = _fact()
+    assert fact_fingerprint(fact) != fact_fingerprint(
+        replace(fact, source_page=2)
+    )
+    assert fact_fingerprint(fact) != fact_fingerprint(
+        replace(fact, comparison_role="COMPARATIVE")
+    )
+    assert fact_fingerprint(fact) != fact_fingerprint(
+        replace(fact, scale_factor=1000)
+    )
 
 
 def test_adjudication_packet_requires_100_explicit_human_issuers(tmp_path: Path) -> None:
