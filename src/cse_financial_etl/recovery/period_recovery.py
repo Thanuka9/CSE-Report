@@ -1,4 +1,4 @@
-"""Period/duration recovery — never relax exact 3M into cumulative YTD (§33.6)."""
+"""Period/duration recovery — never invent a target duration or relax 3M into YTD (§33.6)."""
 
 from __future__ import annotations
 
@@ -14,7 +14,16 @@ def recover_period(
     *,
     context: dict[str, Any],
 ) -> dict[str, Any]:
-    target_duration = int(context.get("target_duration") or 3)
+    raw_duration = context.get("target_duration")
+    if raw_duration is None or str(raw_duration).strip() == "":
+        return {"status": "SKIPPED", "reason": "missing_target_duration"}
+    try:
+        target_duration = int(raw_duration)
+    except (TypeError, ValueError):
+        return {"status": "SKIPPED", "reason": "invalid_target_duration"}
+    if target_duration <= 0:
+        return {"status": "SKIPPED", "reason": "invalid_target_duration"}
+
     exact = [
         e
         for e in ledger.for_concept(ticket.concept)
@@ -23,10 +32,12 @@ def recover_period(
     if exact:
         best = max(exact, key=lambda e: e.score)
         best.status = "unresolved"
-        best.reasons.append("period_recovery_exact_duration")
+        if "period_recovery_exact_duration" not in best.reasons:
+            best.reasons.append("period_recovery_exact_duration")
         for entry in ledger.for_concept(ticket.concept):
             if entry.duration_months and entry.duration_months != target_duration:
                 entry.status = "rejected"
-                entry.reasons.append("period_recovery_rejects_ytd_substitution")
+                if "period_recovery_rejects_ytd_substitution" not in entry.reasons:
+                    entry.reasons.append("period_recovery_rejects_ytd_substitution")
         return {"status": "RECOVERED", "entry_id": best.entry_id}
     return {"status": "NO_CHANGE", "reason": "no_exact_duration_candidate"}
