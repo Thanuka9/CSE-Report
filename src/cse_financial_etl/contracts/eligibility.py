@@ -134,9 +134,7 @@ def evaluate_eligibility(
     if entry.page is None or not entry.label:
         reasons.append(SOURCE_EVIDENCE_MISSING)
     semantic = evidence.get("semantic_score")
-    if not isinstance(semantic, (int, float)):
-        reasons.append(LABEL_EVIDENCE_WEAK)
-    elif semantic < MIN_PUBLISHABLE_SEMANTIC_SCORE:
+    if not isinstance(semantic, (int, float)) or semantic < MIN_PUBLISHABLE_SEMANTIC_SCORE:
         reasons.append(LABEL_EVIDENCE_WEAK)
 
     # Native compiler candidates must own credible statement-region provenance.
