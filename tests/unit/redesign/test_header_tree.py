@@ -87,6 +87,47 @@ def test_missing_entity_stays_none_and_expected_context_only_flags_conflicts() -
     assert any("PERIOD_END_MISMATCH" in c for c in compilation.conflicts), compilation.conflicts
 
 
+def test_known_target_cannot_change_source_comparison_roles() -> None:
+    page = make_page(
+        [
+            [*words("Company for the three months ended 30 June 2026", 300)],
+            [("2026", 318, 340), ("2025", 398, 420)],
+            [*words("Revenue", 40), right_aligned("100", C1_X), right_aligned("90", C2_X)],
+            [*words("Profit for the period", 40), right_aligned("10", C1_X), right_aligned("9", C2_X)],
+        ]
+    )
+    known_matching = build_known_context(
+        issuer_name="X PLC", symbol="X.N0000", period_end=date(2026, 6, 30), required_entity="COMPANY"
+    )
+    known_different = build_known_context(
+        issuer_name="X PLC", symbol="X.N0000", period_end=date(2027, 6, 30), required_entity="COMPANY"
+    )
+    matching = _cols(_compile(page, known=known_matching))
+    different = _cols(_compile(page, known=known_different))
+    assert [matching[i].comparison_role for i in (1, 2)] == ["CURRENT", "COMPARATIVE"]
+    assert [different[i].comparison_role for i in (1, 2)] == ["CURRENT", "COMPARATIVE"]
+    assert matching[1].evidence["comparison_role"]["source"] == "source_header_date_order"
+    assert different[1].evidence["comparison_role"]["source"] == "source_header_date_order"
+
+
+def test_incomplete_sibling_dates_do_not_promote_surviving_date_to_current() -> None:
+    page = make_page(
+        [
+            [*words("Statement of profit or loss", 40)],
+            [*words("For the three months ended", 300)],
+            [("30.06.2025", 300, 340)],
+            [*words("Revenue", 40), right_aligned("100", C1_X), right_aligned("90", C2_X)],
+            [*words("Profit for the period", 40), right_aligned("10", C1_X), right_aligned("9", C2_X)],
+        ]
+    )
+    cols = _cols(_compile(page))
+    assert len(cols) == 2
+    assert cols[1].period_end == date(2025, 6, 30)
+    assert cols[2].period_end is None
+    assert cols[1].comparison_role is None
+    assert cols[2].comparison_role is None
+
+
 def test_year_ended_and_as_at_and_bare_year_do_not_become_31_december() -> None:
     assert normalize_date("three months ended 30 June 2026") == date(2026, 6, 30)
     assert normalize_date("year ended 31 March 2026") == date(2026, 3, 31)
