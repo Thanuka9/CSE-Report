@@ -29,7 +29,9 @@ DEFAULT_MIN_GOLD_SAMPLE = 100
 def _published_count(status_counts: dict[str, int] | None) -> int:
     if not status_counts:
         return 0
-    return int(status_counts.get("EXTRACTED") or 0) + int(status_counts.get("EXTRACTED_DERIVED") or 0)
+    return int(status_counts.get("EXTRACTED") or 0) + int(
+        status_counts.get("EXTRACTED_DERIVED") or 0
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -64,6 +66,16 @@ def _parent_header_kind(evidence: dict[str, Any]) -> str | None:
     return None
 
 
+def _fact_evidence(fact: ExtractedFact) -> dict[str, Any]:
+    if not fact.evidence_json:
+        return {}
+    try:
+        parsed = json.loads(fact.evidence_json)
+    except json.JSONDecodeError:
+        return {}
+    return parsed if isinstance(parsed, dict) else {}
+
+
 def evaluate_production_gates(
     extracted_results: Iterable[tuple[DownloadedFiling, list[ExtractedFact]]],
     prices: Iterable[QuarterPrice] = (),
@@ -75,10 +87,10 @@ def evaluate_production_gates(
 ) -> list[GateHit]:
     """Hard stops for a universe run.
 
-    Extraction status and publication eligibility are deliberately separate. Rows that
-    the shared publishability predicate safely withholds must remain review evidence,
-    but they must not make the complete universe look like an engineering failure.
-    Publication-specific gates therefore inspect only DRAFT-publishable candidates.
+    Extraction status and publication eligibility are deliberately separate. Safely
+    withheld rows remain review evidence. Provenance failures such as an explicit layout
+    fallback are still surfaced as engineering gates even though the shared publication
+    contract correctly prevents them from becoming numeric output.
     """
 
     hits: list[GateHit] = []
@@ -86,7 +98,11 @@ def evaluate_production_gates(
     draft_publishable_count = 0
 
     if golden_validation:
-        all_failed = [row for row in golden_validation.get("results", []) if row.get("status") == "FAIL"]
+        all_failed = [
+            row
+            for row in golden_validation.get("results", [])
+            if row.get("status") == "FAIL"
+        ]
         failed = [
             row
             for row in all_failed
@@ -98,7 +114,9 @@ def evaluate_production_gates(
                     "GOLD_WRONG_POPULATED",
                     str(row.get("issuer_name") or ""),
                     str(row.get("symbol") or ""),
-                    date.fromisoformat(row["period_end"]) if row.get("period_end") else None,
+                    date.fromisoformat(row["period_end"])
+                    if row.get("period_end")
+                    else None,
                     str(row.get("metric_code") or ""),
                     f"expected {row.get('expected')} actual {row.get('actual')}",
                 )
@@ -107,7 +125,9 @@ def evaluate_production_gates(
         passed = int(golden_validation.get("passed") or 0)
         manual_issuers = int(golden_validation.get("manual_issuer_count") or 0)
         if coverage_baseline:
-            min_gold = int(coverage_baseline.get("min_gold_sample") or DEFAULT_MIN_GOLD_SAMPLE)
+            min_gold = int(
+                coverage_baseline.get("min_gold_sample") or DEFAULT_MIN_GOLD_SAMPLE
+            )
             if sample < min_gold:
                 hits.append(
                     GateHit(
@@ -146,28 +166,19 @@ def evaluate_production_gates(
 
     issuer_scope_map: dict[str, str] = {}
     if isinstance(required_scope, dict):
-        issuer_scope_map = {str(key): str(value) for key, value in required_scope.items()}
+        issuer_scope_map = {
+            str(key): str(value) for key, value in required_scope.items()
+        }
 
     for downloaded, facts in extracted_results:
-        required = issuer_scope_map.get(downloaded.filing.issuer_name) or issuer_scope_map.get(
-            downloaded.filing.issuer_name.casefold()
-        )
+        required = issuer_scope_map.get(
+            downloaded.filing.issuer_name
+        ) or issuer_scope_map.get(downloaded.filing.issuer_name.casefold())
         for fact in facts:
             if fact.status not in PUBLISHED:
                 continue
             extracted_status_count += 1
-            draft_publishable = is_publishable_fact(fact, release_mode="DRAFT")
-            if not draft_publishable:
-                continue
-            draft_publishable_count += 1
-
-            evidence: dict[str, Any] = {}
-            if fact.evidence_json:
-                try:
-                    parsed = json.loads(fact.evidence_json)
-                    evidence = parsed if isinstance(parsed, dict) else {}
-                except json.JSONDecodeError:
-                    evidence = {}
+            evidence = _fact_evidence(fact)
 
             explicit_fallback = evidence.get("explicit_fallback")
             if explicit_fallback:
@@ -181,6 +192,12 @@ def evaluate_production_gates(
                         f"publication required explicit fallback {explicit_fallback}",
                     )
                 )
+
+            draft_publishable = is_publishable_fact(fact, release_mode="DRAFT")
+            if not draft_publishable:
+                continue
+            draft_publishable_count += 1
+
             if fact.metric_code in FLOW_CODES and fact.status == "EXTRACTED_DERIVED":
                 hits.append(
                     GateHit(
@@ -192,7 +209,10 @@ def evaluate_production_gates(
                         f"flow fact published with extraction_method={fact.extraction_method}",
                     )
                 )
-            if fact.metric_code == "TOTAL_LIABILITIES" and fact.status == "EXTRACTED_DERIVED":
+            if (
+                fact.metric_code == "TOTAL_LIABILITIES"
+                and fact.status == "EXTRACTED_DERIVED"
+            ):
                 hits.append(
                     GateHit(
                         "DERIVED_LIABILITIES_WITHOUT_EXPLICIT_ROW",
@@ -228,7 +248,10 @@ def evaluate_production_gates(
             expected_scope = required or (
                 fact.entity_scope if fact.entity_scope in STANDALONE else "COMPANY"
             )
-            if expected_scope in STANDALONE and fact.entity_scope in {"GROUP", "CONSOLIDATED"}:
+            if (
+                expected_scope in STANDALONE
+                and fact.entity_scope in {"GROUP", "CONSOLIDATED"}
+            ):
                 hits.append(
                     GateHit(
                         "GROUP_WHERE_STANDALONE_REQUIRED",
@@ -357,7 +380,10 @@ def evaluate_production_gates(
         )
 
     for price in prices:
-        if price.status not in {"EXTRACTED", "RESOLVED_HISTORICAL"} or price.value is None:
+        if (
+            price.status not in {"EXTRACTED", "RESOLVED_HISTORICAL"}
+            or price.value is None
+        ):
             continue
         observed = _price_date(price)
         if observed is not None and observed > price.period_end:
@@ -374,7 +400,9 @@ def evaluate_production_gates(
     return hits
 
 
-def run_status_from_gates(hits: list[GateHit], *, has_errors: bool, has_review: bool) -> str:
+def run_status_from_gates(
+    hits: list[GateHit], *, has_errors: bool, has_review: bool
+) -> str:
     if hits:
         return "VALIDATION_REQUIRED"
     if has_errors or has_review:
