@@ -46,6 +46,7 @@ def _entry(**kwargs: object) -> LedgerEntry:
         bbox=None,
         label="Profit for the period",
         score=0.9,
+        evidence={"semantic_score": 1.0},
     )
     base.update(kwargs)
     return LedgerEntry(**base)  # type: ignore[arg-type]
