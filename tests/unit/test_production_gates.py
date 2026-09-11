@@ -77,7 +77,7 @@ def test_comparative_flow_fails_closed_before_publication_gate(tmp_path: Path) -
     fact = _fact(comparison_role="COMPARATIVE")
     publishable, reason = publishability_decision(fact, release_mode="DRAFT")
     assert publishable is False
-    assert reason == "CURRENT_PERIOD_UNRESOLVED"
+    assert reason == "NON_CURRENT_COMPARISON_ROLE"
     hits = evaluate_production_gates([(_filing(tmp_path), [fact])])
     assert hits == []
 
@@ -86,7 +86,7 @@ def test_unknown_flow_fails_closed_before_publication_gate(tmp_path: Path) -> No
     fact = _fact(comparison_role="UNKNOWN")
     publishable, reason = publishability_decision(fact, release_mode="DRAFT")
     assert publishable is False
-    assert reason == "CURRENT_PERIOD_UNRESOLVED"
+    assert reason == "NON_CURRENT_COMPARISON_ROLE"
     hits = evaluate_production_gates([(_filing(tmp_path), [fact])])
     assert hits == []
 
