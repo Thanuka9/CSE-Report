@@ -57,7 +57,12 @@ def _entry(**kwargs: object) -> LedgerEntry:
         score=0.9,
         evidence={"semantic_score": 1.0},
     )
+    evidence_override = kwargs.pop("evidence", None)
     base.update(kwargs)
+    if isinstance(evidence_override, dict):
+        evidence = {"semantic_score": 1.0}
+        evidence.update(evidence_override)
+        base["evidence"] = evidence
     return LedgerEntry(**base)  # type: ignore[arg-type]
 
 
@@ -91,7 +96,11 @@ def _layout_fact(**kwargs: object) -> ExtractedFact:
 def _report(statements: int, *, requested: bool = True) -> dict:
     return {
         "filing_sha": "abc",
-        "tunnel_a": {"statements": statements, "compile_requested": requested, "native_compiler_success": statements > 0},
+        "tunnel_a": {
+            "statements": statements,
+            "compile_requested": requested,
+            "native_compiler_success": statements > 0,
+        },
         "tunnel_b": {"invoked": False},
         "resolver_c": {},
     }
@@ -101,12 +110,28 @@ def _report(statements: int, *, requested: bool = True) -> dict:
 
 
 def test_eligibility_requires_unit_duration_period_entity() -> None:
-    bare = _entry(unit=None, duration_months=None, period_end=None, entity=None, scale_factor=None)
-    result = evaluate_eligibility(bare, required_entity="COMPANY", target_duration=3, target_period_end="2026-06-30")
+    bare = _entry(
+        unit=None,
+        duration_months=None,
+        period_end=None,
+        entity=None,
+        scale_factor=None,
+    )
+    result = evaluate_eligibility(
+        bare,
+        required_entity="COMPANY",
+        target_duration=3,
+        target_period_end="2026-06-30",
+    )
     assert not result.eligible
     for code in (UNIT_UNRESOLVED, DURATION_UNKNOWN, PERIOD_UNKNOWN, ENTITY_UNKNOWN):
         assert code in result.reasons
-    good = evaluate_eligibility(_entry(), required_entity="COMPANY", target_duration=3, target_period_end="2026-06-30")
+    good = evaluate_eligibility(
+        _entry(),
+        required_entity="COMPANY",
+        target_duration=3,
+        target_period_end="2026-06-30",
+    )
     assert good.eligible and good.reasons == ()
 
 
@@ -124,9 +149,20 @@ def test_final_validator_fails_pat_without_unit() -> None:
 
 def test_arbiter_abstains_on_equal_score_conflicting_values() -> None:
     ledger = CandidateLedger()
-    ledger.add(_entry(entry_id="layout", normalized_value=Decimal("100"), evidence={"candidate_origin": "layout_geometry"}))
+    ledger.add(
+        _entry(
+            entry_id="layout",
+            normalized_value=Decimal("100"),
+            evidence={"candidate_origin": "layout_geometry"},
+        )
+    )
     ledger.add(_entry(entry_id="compiled", normalized_value=Decimal("999")))
-    decisions = arbitrate_candidates(ledger, required_entity="COMPANY", target_duration=3, target_period_end="2026-06-30")
+    decisions = arbitrate_candidates(
+        ledger,
+        required_entity="COMPANY",
+        target_duration=3,
+        target_period_end="2026-06-30",
+    )
     pat = next(d for d in decisions if d.concept == "PAT")
     assert pat.status == "UNRESOLVED"
     assert pat.selected is None
@@ -139,16 +175,26 @@ def test_arbiter_treats_equal_values_as_corroboration() -> None:
     ledger = CandidateLedger()
     ledger.add(_entry(entry_id="a", normalized_value=Decimal("100")))
     ledger.add(_entry(entry_id="b", normalized_value=Decimal("100"), page=2))
-    decisions = arbitrate_candidates(ledger, required_entity="COMPANY", target_duration=3, target_period_end="2026-06-30")
+    decisions = arbitrate_candidates(
+        ledger,
+        required_entity="COMPANY",
+        target_duration=3,
+        target_period_end="2026-06-30",
+    )
     pat = next(d for d in decisions if d.concept == "PAT")
     assert pat.status == "SELECTED" and pat.selected is not None
-    assert pat.selected.evidence["corroborated_by"] == ["b"] or pat.selected.evidence["corroborated_by"] == ["a"]
+    assert pat.selected.evidence["corroborated_by"] in (["b"], ["a"])
 
 
 def test_arbiter_keeps_unresolved_dimensions_unresolved_not_rejected() -> None:
     ledger = CandidateLedger()
     ledger.add(_entry(entry_id="nounit", unit=None))
-    arbitrate_candidates(ledger, required_entity="COMPANY", target_duration=3, target_period_end="2026-06-30")
+    arbitrate_candidates(
+        ledger,
+        required_entity="COMPANY",
+        target_duration=3,
+        target_period_end="2026-06-30",
+    )
     entry = ledger.for_concept("PAT")[0]
     assert entry.status == "unresolved"
     assert UNIT_UNRESOLVED in entry.reasons
@@ -159,7 +205,10 @@ def test_arbiter_keeps_unresolved_dimensions_unresolved_not_rejected() -> None:
 
 def test_publisher_preserves_failed_validation_from_layout_evidence() -> None:
     layout = _layout_fact(validation_status="FAILED")
-    entry = _entry(status="accepted", evidence={"candidate_origin": "layout_geometry", "semantic_score": 1.0})
+    entry = _entry(
+        status="accepted",
+        evidence={"candidate_origin": "layout_geometry", "semantic_score": 1.0},
+    )
     queried = [QueriedFact("PAT", "PAT", entry, "EXTRACTED")]
     published, stats = publish_from_compiler(
         queried=queried,
@@ -224,8 +273,16 @@ def test_publisher_fails_and_withholds_value_when_final_check_fails() -> None:
 
 
 def test_compiler_routing_never_labels_zero_statements_as_compiler() -> None:
-    assert compiler_routing(_report(0)) == ("layout_assist_only", False, COMPILER_NO_STATEMENTS)
-    assert compiler_routing(_report(0, requested=False)) == ("layout_assist_only", False, COMPILER_DISABLED)
+    assert compiler_routing(_report(0)) == (
+        "layout_assist_only",
+        False,
+        COMPILER_NO_STATEMENTS,
+    )
+    assert compiler_routing(_report(0, requested=False)) == (
+        "layout_assist_only",
+        False,
+        COMPILER_DISABLED,
+    )
     assert compiler_routing(_report(2)) == ("statement_compiler", True, None)
 
 
@@ -234,17 +291,38 @@ def test_compiler_routing_never_labels_zero_statements_as_compiler() -> None:
 
 def test_query_engine_emits_metric_specific_absence_codes() -> None:
     ledger = CandidateLedger()
-    ledger.add(_entry(entry_id="ytd", status="rejected", duration_months=6, reasons=["YTD_CANNOT_SATISFY_3M"]))
-    queried = {q.metric_code: q for q in query_target_facts(ledger, entity="COMPANY", period_end=date(2026, 6, 30))}
+    ledger.add(
+        _entry(
+            entry_id="ytd",
+            status="rejected",
+            duration_months=6,
+            reasons=["YTD_CANNOT_SATISFY_3M"],
+        )
+    )
+    queried = {
+        q.metric_code: q
+        for q in query_target_facts(
+            ledger,
+            entity="COMPANY",
+            period_end=date(2026, 6, 30),
+        )
+    }
     assert queried["PAT"].status == str(MissingReason.ONLY_CUMULATIVE_CANDIDATES_LOCATED)
     assert queried["PAT"].trace is not None and queried["PAT"].trace.candidates_seen == 1
     assert queried["PBT"].status == str(MissingReason.SEARCH_INCOMPLETE)
 
     after_recovery = {
         q.metric_code: q
-        for q in query_target_facts(ledger, entity="COMPANY", period_end=date(2026, 6, 30), recovery_attempted=True)
+        for q in query_target_facts(
+            ledger,
+            entity="COMPANY",
+            period_end=date(2026, 6, 30),
+            recovery_attempted=True,
+        )
     }
-    assert after_recovery["PBT"].status == str(MissingReason.NOT_LOCATED_AFTER_CONFIGURED_RECOVERY)
+    assert after_recovery["PBT"].status == str(
+        MissingReason.NOT_LOCATED_AFTER_CONFIGURED_RECOVERY
+    )
     for fact in list(queried.values()) + list(after_recovery.values()):
         assert fact.status != "SOURCE_CONFIRMED_NOT_REPORTED"
         assert fact.status != "CUMULATIVE_ONLY"
@@ -256,8 +334,20 @@ def test_query_engine_reports_ambiguity_not_absence() -> None:
     ledger = CandidateLedger()
     ledger.add(_entry(entry_id="a", normalized_value=Decimal("100")))
     ledger.add(_entry(entry_id="b", normalized_value=Decimal("999")))
-    arbitrate_candidates(ledger, required_entity="COMPANY", target_duration=3, target_period_end="2026-06-30")
-    queried = {q.metric_code: q for q in query_target_facts(ledger, entity="COMPANY", period_end=date(2026, 6, 30))}
+    arbitrate_candidates(
+        ledger,
+        required_entity="COMPANY",
+        target_duration=3,
+        target_period_end="2026-06-30",
+    )
+    queried = {
+        q.metric_code: q
+        for q in query_target_facts(
+            ledger,
+            entity="COMPANY",
+            period_end=date(2026, 6, 30),
+        )
+    }
     assert queried["PAT"].status == str(MissingReason.AMBIGUOUS_CANDIDATES)
 
 
@@ -283,7 +373,7 @@ def test_final_validator_imports_first_in_fresh_process() -> None:
         proc = subprocess.run(
             [sys.executable, "-c", f"import {module}"],
             cwd=ROOT,
-            env={**__import__('os').environ, "PYTHONPATH": str(ROOT / "src")},
+            env={**__import__("os").environ, "PYTHONPATH": str(ROOT / "src")},
             capture_output=True,
             text=True,
             timeout=120,
@@ -295,6 +385,11 @@ def test_contracts_package_is_dependency_neutral() -> None:
     src = (ROOT / "src" / "cse_financial_etl" / "contracts").rglob("*.py")
     for path in src:
         text = path.read_text(encoding="utf-8")
-        for forbidden in ("cse_financial_etl.facts", "cse_financial_etl.validation", "cse_financial_etl.extraction",
-                          "cse_financial_etl.reporting", "cse_financial_etl.tunnels"):
+        for forbidden in (
+            "cse_financial_etl.facts",
+            "cse_financial_etl.validation",
+            "cse_financial_etl.extraction",
+            "cse_financial_etl.reporting",
+            "cse_financial_etl.tunnels",
+        ):
             assert forbidden not in text, f"{path.name} imports {forbidden}"
