@@ -79,26 +79,30 @@ def _column(column_id: str, period_end: date) -> CompiledHeaderColumn:
     )
 
 
-def test_prior_only_compiler_column_is_not_promoted_to_current() -> None:
-    """OCR loss of the target column must not make the latest surviving prior date CURRENT."""
+def test_single_source_column_role_is_not_rewritten_by_query_context() -> None:
+    """A query target cannot relabel a source column as comparative.
 
-    [prior] = _assign_roles(
-        [_column("c1", date(2025, 3, 31))],
-        target_period_end=date(2026, 3, 31),
-    )
-    assert prior.comparison_role == "COMPARATIVE"
+    If OCR removes a sibling column, later period/eligibility conflict checks must
+    reject the filing mismatch.  The header compiler itself must remain a pure
+    function of source evidence.
+    """
+
+    [source_column] = _assign_roles([_column("c1", date(2025, 3, 31))])
+    assert source_column.comparison_role == "CURRENT"
+    assert source_column.evidence["comparison_role"]["source_owned"] is True
 
 
-def test_known_target_marks_only_exact_observed_target_current() -> None:
+def test_source_date_order_marks_relative_roles_without_known_target() -> None:
     prior, current = _assign_roles(
         [
             _column("c1", date(2025, 3, 31)),
             _column("c2", date(2026, 3, 31)),
-        ],
-        target_period_end=date(2026, 3, 31),
+        ]
     )
     assert prior.comparison_role == "COMPARATIVE"
     assert current.comparison_role == "CURRENT"
+    assert prior.evidence["comparison_role"]["source_owned"] is True
+    assert current.evidence["comparison_role"]["source_owned"] is True
 
 
 def test_stock_layout_rejects_company_comparative_when_company_current_is_corrupt() -> None:
@@ -117,7 +121,7 @@ def test_stock_layout_rejects_company_comparative_when_company_current_is_corrup
                 *words("Net assets per share", 40),
                 right_aligned("649.11", 350),
                 right_aligned("330.32", 430),
-                ("591i56", 470, 510),  # OCR-corrupted current Company value
+                ("591i56", 470, 510),
                 right_aligned("323.36", 590),
             ],
         ],
