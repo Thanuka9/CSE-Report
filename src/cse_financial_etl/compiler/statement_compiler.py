@@ -1,6 +1,6 @@
 """Compile CanonicalFinancialStatement objects from reconstructed tables (sections 13-14).
 
-One statement is compiled per stable table (header region).  Every body cell is
+One statement is compiled per stable table (header region). Every body cell is
 bound to a compiled column; unit typing (currency and scale) is resolved per cell
 and per metric *dimension* with explicit evidence ownership before any value is
 normalized (audit finding 4).
@@ -9,6 +9,7 @@ normalized (audit finding 4).
 from __future__ import annotations
 
 import re
+from dataclasses import replace
 from decimal import Decimal
 from typing import Any
 
@@ -29,7 +30,11 @@ from cse_financial_etl.compiler.column_compiler import (
     compile_column_schema,
 )
 from cse_financial_etl.compiler.known_context import KnownContext
-from cse_financial_etl.compiler.structure_normalizer import normalize_search_text, parse_numeric
+from cse_financial_etl.compiler.structure_normalizer import (
+    normalize_entity_term,
+    normalize_search_text,
+    parse_numeric,
+)
 from cse_financial_etl.compiler.units import (
     MONETARY,
     PERCENT,
@@ -40,14 +45,27 @@ from cse_financial_etl.compiler.units import (
     label_dimension_hint,
     resolve_unit,
 )
+from cse_financial_etl.document.continuation import ContinuationLink, detect_continuations
 from cse_financial_etl.document.document_ir import CanonicalDocumentIR, PageIR, TableIR
 from cse_financial_etl.document.region_detector import StatementRegion
 from cse_financial_etl.document.table_reconstructor import reconstruct_tables
 
 _SKIP_REGIONS = {"COVER", "OTHER", "RELATED_PARTY"}
 _NO_CONCEPT_STATEMENTS = {"CASH_FLOW", "CHANGES_IN_EQUITY"}
-_PER_SHARE_ONLY_STATEMENTS = {"NOTES", "SHARE_INFORMATION", "FINANCIAL_HIGHLIGHTS", "SEGMENT_INFORMATION"}
-_PER_SHARE_CONCEPTS = {"EPS_BASIC", "EPS_DILUTED", "NAVPS", "DPS", "WEIGHTED_AVG_SHARES", "ORDINARY_SHARES"}
+_PER_SHARE_ONLY_STATEMENTS = {
+    "NOTES",
+    "SHARE_INFORMATION",
+    "FINANCIAL_HIGHLIGHTS",
+    "SEGMENT_INFORMATION",
+}
+_PER_SHARE_CONCEPTS = {
+    "EPS_BASIC",
+    "EPS_DILUTED",
+    "NAVPS",
+    "DPS",
+    "WEIGHTED_AVG_SHARES",
+    "ORDINARY_SHARES",
+}
 _TITLE_RULES: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("PROFIT_LOSS", re.compile(r"statement of (?:profit|income)|income statement|profit or loss", re.I)),
     ("COMPREHENSIVE_INCOME", re.compile(r"comprehensive income", re.I)),
@@ -67,9 +85,16 @@ def compile_statements(
         document = reconstruct_tables(document)
     statements: list[CanonicalFinancialStatement] = []
     pages = {p.page_number: p for p in document.pages}
+    continuation_links = {
+        (link.to_page, link.statement_type): link
+        for link in detect_continuations(document, regions)
+        if link.evidenced
+    }
+
     for region in regions:
         if region.statement_type in _SKIP_REGIONS:
             continue
+        previous_schemas: dict[tuple[str, int], ColumnSchema] = {}
         for page_no in range(region.page_start, region.page_end + 1):
             page = pages.get(page_no)
             if page is None or not page.tables:
@@ -78,6 +103,15 @@ def compile_statements(
             for table_index, table in enumerate(page.tables):
                 statement_type = _table_statement_type(table, region.statement_type)
                 schema = compile_column_schema(table, statement_type=statement_type, known=known)
+                link = continuation_links.get((page_no, region.statement_type))
+                prior_schema = previous_schemas.get((statement_type, table_index))
+                if link is not None and prior_schema is not None:
+                    schema = _bridge_evidenced_continuation_context(
+                        schema,
+                        prior_schema,
+                        page,
+                        link,
+                    )
                 rows = _rows_from_table(
                     table,
                     page_no,
@@ -85,9 +119,12 @@ def compile_statements(
                     schema,
                     page_units=page_units,
                 )
+                previous_schemas[(statement_type, table_index)] = schema
                 if not rows:
                     continue
-                unit_evidence = [d.as_dict() for d in schema.table_units] + [d.as_dict() for d in page_units]
+                unit_evidence = [d.as_dict() for d in schema.table_units] + [
+                    d.as_dict() for d in page_units
+                ]
                 for col in schema.columns:
                     unit_evidence.extend(d.as_dict() for d in col.unit_declarations)
                 statements.append(
@@ -105,7 +142,11 @@ def compile_statements(
                             "table_index": table_index,
                             "table_entity": schema.table_entity,
                             "table_duration_months": schema.table_duration_months,
-                            "table_period_end": schema.table_period_end.isoformat() if schema.table_period_end else None,
+                            "table_period_end": (
+                                schema.table_period_end.isoformat()
+                                if schema.table_period_end
+                                else None
+                            ),
                             "header": schema.evidence,
                             "columns": [
                                 {
@@ -133,6 +174,122 @@ def compile_statements(
     return statements
 
 
+def _bridge_evidenced_continuation_context(
+    schema: ColumnSchema,
+    previous: ColumnSchema,
+    page: PageIR,
+    link: ContinuationLink,
+) -> ColumnSchema:
+    """Bridge only source-owned entity context across an evidenced page boundary.
+
+    The continuation detector has already established adjacency, statement identity,
+    numeric structure and repeated source-header evidence. Entity inheritance is
+    narrower still: the continuation page must explicitly print exactly one entity
+    cue, the preceding source schema must have exactly one matching entity, and the
+    VALUE columns must have compatible source dates/durations. Query/KnownContext
+    values are never consulted. Any ambiguity or conflict leaves the schema unchanged.
+    """
+
+    current_entity = _single_page_entity(page)
+    if current_entity is None:
+        return schema
+
+    previous_entities = {
+        col.entity for col in previous.columns if col.kind == "VALUE" and col.entity is not None
+    }
+    if previous.table_entity is not None:
+        previous_entities.add(previous.table_entity)
+    if previous_entities != {current_entity}:
+        return schema
+
+    current_explicit = {
+        col.entity for col in schema.columns if col.kind == "VALUE" and col.entity is not None
+    }
+    if current_explicit and current_explicit != {current_entity}:
+        return schema
+    if not _continuation_columns_compatible(previous, schema):
+        return schema
+
+    changed = False
+    columns: list[StatementColumn] = []
+    for col in schema.columns:
+        if col.kind != "VALUE" or col.entity is not None:
+            columns.append(col)
+            continue
+        evidence = dict(col.evidence)
+        evidence["entity"] = {
+            "text": current_entity,
+            "source": "evidenced_cross_page_continuation",
+            "source_owned": True,
+            "from_page": link.from_page,
+            "to_page": link.to_page,
+            "continuation_reason": link.reason,
+            "compatibility": "matching_source_header_dates",
+        }
+        columns.append(replace(col, entity=current_entity, evidence=evidence))
+        changed = True
+
+    if not changed:
+        return schema
+
+    header_evidence = dict(schema.evidence)
+    header_evidence["continuation_context"] = {
+        "source": "evidenced_cross_page_continuation",
+        "source_owned": True,
+        "from_page": link.from_page,
+        "to_page": link.to_page,
+        "statement_type": link.statement_type,
+        "entity": current_entity,
+        "reason": link.reason,
+    }
+    return ColumnSchema(
+        columns=columns,
+        table_entity=current_entity,
+        table_duration_months=schema.table_duration_months,
+        table_period_end=schema.table_period_end,
+        table_units=schema.table_units,
+        conflicts=schema.conflicts,
+        evidence=header_evidence,
+    )
+
+
+def _single_page_entity(page: PageIR) -> str | None:
+    entities = {
+        entity
+        for line in page.lines[:10]
+        if (entity := normalize_entity_term(line.text)) is not None
+    }
+    if len(entities) != 1:
+        return None
+    return next(iter(entities))
+
+
+def _continuation_columns_compatible(previous: ColumnSchema, current: ColumnSchema) -> bool:
+    """Require source-header alignment before any continuation inheritance."""
+
+    previous_values = {col.col_idx: col for col in previous.columns if col.kind == "VALUE"}
+    current_values = {col.col_idx: col for col in current.columns if col.kind == "VALUE"}
+    common = sorted(previous_values.keys() & current_values.keys())
+    if not common:
+        return False
+
+    matching_dates = 0
+    for col_idx in common:
+        before = previous_values[col_idx]
+        after = current_values[col_idx]
+        if before.period_end is not None and after.period_end is not None:
+            if before.period_end != after.period_end:
+                return False
+            matching_dates += 1
+        if (
+            before.duration_months is not None
+            and after.duration_months is not None
+            and before.duration_months != after.duration_months
+        ):
+            return False
+    return matching_dates > 0
+
+
 def _table_statement_type(table: TableIR, region_type: str) -> str:
     blob = " ".join(table.title_texts)
     for statement_type, pattern in _TITLE_RULES:
@@ -153,7 +310,10 @@ def _page_unit_declarations(page: PageIR) -> list[UnitDeclaration]:
                 continue
             seen.add(text)
             decl = UnitDeclaration.from_text(
-                text, scope=SCOPE_PAGE, owner=f"page:{page.page_number}:t{t_idx}:l{i}", page=page.page_number
+                text,
+                scope=SCOPE_PAGE,
+                owner=f"page:{page.page_number}:t{t_idx}:l{i}",
+                page=page.page_number,
             )
             if decl is not None and (decl.currency or decl.scale_explicit) and not decl.per_share:
                 decls.append(decl)
@@ -179,7 +339,9 @@ def _rows_from_table(
         label_cell = next((c for c in by_row[row_idx] if c.col_idx == 0), None)
         label = label_cell.raw_text if label_cell else ""
         labels[row_idx] = label
-        meta.append((f"p{page_no}-t{table_index_of(table)}-r{row_idx}", normalize_search_text(label), 0))
+        meta.append(
+            (f"p{page_no}-t{table_index_of(table)}-r{row_idx}", normalize_search_text(label), 0)
+        )
 
     unit_lines = sorted(table.unit_lines, key=lambda u: u.row_idx)
     rows: list[StatementRow] = []
@@ -191,7 +353,6 @@ def _rows_from_table(
         hyps = _hypotheses(match_label, statement_type, ctx)
         row_id = meta[position][0]
 
-        # Row-scoped unit evidence: label parentheticals + the nearest preceding unit-only line.
         row_decls = _row_declarations(label, row_id=row_id, page=page_no)
         active_unit_line = None
         for unit_line in unit_lines:
@@ -241,7 +402,11 @@ def _rows_from_table(
                         dimension_values[dimension] = None
             elif col.kind == "PERCENT" and value is not None:
                 dimension_values[PERCENT] = value
-                unit_resolutions[PERCENT] = {"dimension": PERCENT, "status": "RESOLVED", "scale": "1"}
+                unit_resolutions[PERCENT] = {
+                    "dimension": PERCENT,
+                    "status": "RESOLVED",
+                    "scale": "1",
+                }
             normalized = dimension_values.get(primary) if col.kind == "VALUE" else None
             cell_map[col_id] = StatementCell(
                 raw_text=cell.raw_text,
@@ -251,11 +416,17 @@ def _rows_from_table(
                 source_bbox=cell.bbox,
                 column_id=col_id,
                 effective_unit_evidence_ids=tuple(
-                    unit_resolutions.get(primary, {}).get("evidence_ids", []) if col.kind == "VALUE" else ()
+                    unit_resolutions.get(primary, {}).get("evidence_ids", [])
+                    if col.kind == "VALUE"
+                    else ()
                 ),
                 dimension_values=dimension_values,
                 unit_resolutions=unit_resolutions,
-                primary_dimension=primary if col.kind == "VALUE" else (PERCENT if col.kind == "PERCENT" else None),
+                primary_dimension=(
+                    primary
+                    if col.kind == "VALUE"
+                    else (PERCENT if col.kind == "PERCENT" else None)
+                ),
             )
         rows.append(
             StatementRow(
@@ -278,7 +449,12 @@ def table_index_of(table: TableIR) -> int:
     return round(table.bbox.y0)
 
 
-def _label_for_matching(label: str, row_indices: list[int], position: int, labels: dict[int, str]) -> str:
+def _label_for_matching(
+    label: str,
+    row_indices: list[int],
+    position: int,
+    labels: dict[int, str],
+) -> str:
     normalized = normalize_label(label)
     if _EPS_CONTINUATION_RE.match(normalized):
         for back in range(1, 4):
@@ -298,7 +474,11 @@ def _hypotheses(label: str, statement_type: str, ctx: Any) -> list[ConceptHypoth
     for hyp in generate_concept_hypotheses(label, statement_type=statement_type):
         boost = structural_boost(ctx, hyp.concept) if ctx else 0.0
         if boost:
-            boosted = generate_concept_hypotheses(label, statement_type=statement_type, structural_score=boost)
+            boosted = generate_concept_hypotheses(
+                label,
+                statement_type=statement_type,
+                structural_score=boost,
+            )
             match = next((h for h in boosted if h.concept == hyp.concept), None)
             if match is not None:
                 hyp = match
