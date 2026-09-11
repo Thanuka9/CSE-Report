@@ -1,9 +1,10 @@
 """High-recall semantic candidate generation — regex + RapidFuzz only (§17).
 
-No language model is involved anywhere in this module.  Anchored regex patterns
-are the primary channel (score 1.0); RapidFuzz similarity is a bounded fallback
-that is always subject to per-concept exclusion patterns, so ``Income tax expense``
-can never become a revenue hypothesis because it shares the token ``income``.
+No language model is involved anywhere in this module. Anchored regex patterns
+are the primary channel (score 1.0). Curated exact regex matches are authoritative
+for semantic identity; exclusion patterns guard the fuzzy alias fallback so a
+broad similarity such as ``Income tax expense`` can never become revenue merely
+because it shares the token ``income``.
 """
 
 from __future__ import annotations
@@ -72,7 +73,7 @@ def generate_concept_hypotheses(
     accounting_score: float = 0.0,
     min_keep: float = 0.55,
 ) -> list[ConceptHypothesis]:
-    """Retain uncertain candidates above ``min_keep``; exclusions are hard."""
+    """Retain uncertain candidates above ``min_keep``; fuzzy exclusions fail closed."""
 
     normalized = normalize_label(label)
     if not normalized:
@@ -83,8 +84,12 @@ def generate_concept_hypotheses(
             continue
         if statement_type in {"PROFIT_LOSS", "COMPREHENSIVE_INCOME"} and concept in _STOCK_ONLY:
             continue
-        if any(p.search(normalized) for p in CONCEPT_EXCLUSIONS.get(concept, ())):
-            continue
+
+        # A curated anchored regex is the strongest semantic evidence and must be
+        # evaluated before broad fuzzy exclusions. This prevents the ontology
+        # from contradicting itself when a deliberately supported label contains
+        # a token (for example ``before tax``) that is unsafe only for fuzzy
+        # matching. Exclusions still fail closed for every fallback candidate.
         best = 0.0
         best_evidence = ""
         for pattern in CONCEPT_PATTERNS.get(concept, ()):
@@ -92,7 +97,10 @@ def generate_concept_hypotheses(
                 best = 1.0
                 best_evidence = f"regex:{pattern.pattern}"
                 break
+
         if best < 1.0:
+            if any(p.search(normalized) for p in CONCEPT_EXCLUSIONS.get(concept, ())):
+                continue
             for alias in CONCEPT_ALIASES.get(concept, ()):
                 if normalized == alias:
                     score = 1.0
