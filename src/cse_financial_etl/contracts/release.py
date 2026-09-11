@@ -12,6 +12,7 @@ import hmac
 import json
 import os
 import re
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass, replace
 from datetime import UTC, datetime
 from pathlib import Path
@@ -30,38 +31,85 @@ def fact_identity(issuer_name: str, symbol: str, period_end: str, metric_code: s
     return "fact:" + hashlib.sha256(payload.encode("utf-8")).hexdigest()[:24]
 
 
-def fact_fingerprint(fact: Any) -> str:
-    """Hash the exact reviewed value and its material source/context provenance."""
+def _fact_field(fact: Any, name: str) -> Any:
+    if isinstance(fact, Mapping):
+        return fact.get(name)
+    return getattr(fact, name, None)
 
-    period = fact.period_end.isoformat() if hasattr(fact.period_end, "isoformat") else str(fact.period_end)
-    evidence_raw = getattr(fact, "evidence_json", None)
-    evidence: Any = evidence_raw
-    if isinstance(evidence_raw, str) and evidence_raw.strip():
+
+def _canonical_scalar(value: Any) -> str | None:
+    if value in (None, ""):
+        return None
+    return str(value).strip()
+
+
+def _canonical_period(value: Any) -> str:
+    if hasattr(value, "isoformat"):
+        return str(value.isoformat())
+    return str(value or "").strip()
+
+
+def _material_evidence(fact: Any) -> dict[str, Any]:
+    """Return only stable evidence that materially defines the reviewed fact.
+
+    Run summaries, search traces and counters are deliberately excluded: rerunning the
+    same extraction must not invalidate an approval merely because diagnostics changed.
+    """
+
+    raw = _fact_field(fact, "evidence_json")
+    if isinstance(raw, Mapping):
+        parsed: Any = dict(raw)
+    elif isinstance(raw, str) and raw.strip():
         try:
-            evidence = json.loads(evidence_raw)
+            parsed = json.loads(raw)
         except json.JSONDecodeError:
-            evidence = evidence_raw
+            parsed = {}
+    else:
+        parsed = {}
+    if not isinstance(parsed, Mapping):
+        return {}
+    stable_keys = (
+        "source_evidence",
+        "extraction_origin",
+        "publication_routing",
+        "eligibility_reasons",
+        "final_check",
+        "formula",
+        "inputs",
+        "derived_value",
+        "entity_scope",
+        "comparison_role",
+        "period_end",
+        "row_safety",
+        "preferred_source",
+    )
+    return {key: parsed[key] for key in stable_keys if key in parsed}
+
+
+def fact_fingerprint(fact: Any) -> str:
+    """Hash exact value/context/source provenance identically for objects and CSV rows."""
+
     payload = {
-        "issuer_name": str(getattr(fact, "issuer_name", "")).strip().casefold(),
-        "symbol": str(getattr(fact, "symbol", "")).strip().upper(),
-        "period_end": period,
-        "metric_code": str(getattr(fact, "metric_code", "")).strip().upper(),
-        "metric_type": str(getattr(fact, "metric_type", "")),
-        "raw_text": getattr(fact, "raw_text", None),
-        "raw_value": str(getattr(fact, "raw_value", None)) if getattr(fact, "raw_value", None) is not None else None,
-        "normalized_value": str(getattr(fact, "normalized_value", None)) if getattr(fact, "normalized_value", None) is not None else None,
-        "currency": getattr(fact, "currency", None),
-        "scale_factor": getattr(fact, "scale_factor", None),
-        "entity_scope": getattr(fact, "entity_scope", None),
-        "comparison_role": getattr(fact, "comparison_role", None),
-        "duration_months": getattr(fact, "duration_months", None),
-        "source_page": getattr(fact, "source_page", None),
-        "source_line": getattr(fact, "source_line", None),
-        "raw_label": getattr(fact, "raw_label", None),
-        "source_bbox": getattr(fact, "source_bbox", None),
-        "extraction_method": getattr(fact, "extraction_method", None),
-        "semantic_model": getattr(fact, "semantic_model", None),
-        "evidence": evidence,
+        "issuer_name": str(_fact_field(fact, "issuer_name") or "").strip().casefold(),
+        "symbol": str(_fact_field(fact, "symbol") or "").strip().upper(),
+        "period_end": _canonical_period(_fact_field(fact, "period_end")),
+        "metric_code": str(_fact_field(fact, "metric_code") or "").strip().upper(),
+        "metric_type": _canonical_scalar(_fact_field(fact, "metric_type")),
+        "raw_text": _canonical_scalar(_fact_field(fact, "raw_text")),
+        "raw_value": _canonical_scalar(_fact_field(fact, "raw_value")),
+        "normalized_value": _canonical_scalar(_fact_field(fact, "normalized_value")),
+        "currency": _canonical_scalar(_fact_field(fact, "currency")),
+        "scale_factor": _canonical_scalar(_fact_field(fact, "scale_factor")),
+        "entity_scope": _canonical_scalar(_fact_field(fact, "entity_scope")),
+        "comparison_role": _canonical_scalar(_fact_field(fact, "comparison_role")),
+        "duration_months": _canonical_scalar(_fact_field(fact, "duration_months")),
+        "source_page": _canonical_scalar(_fact_field(fact, "source_page")),
+        "source_line": _canonical_scalar(_fact_field(fact, "source_line")),
+        "raw_label": _canonical_scalar(_fact_field(fact, "raw_label")),
+        "source_bbox": _canonical_scalar(_fact_field(fact, "source_bbox")),
+        "extraction_method": _canonical_scalar(_fact_field(fact, "extraction_method")),
+        "semantic_model": _canonical_scalar(_fact_field(fact, "semantic_model")),
+        "evidence": _material_evidence(fact),
     }
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False, default=str)
     return "factfp:" + hashlib.sha256(encoded.encode("utf-8")).hexdigest()
@@ -237,32 +285,50 @@ def apply_review_decisions(
     updated: list[Any] = []
     matched: set[str] = set()
     for fact in facts:
-        period = fact.period_end.isoformat() if hasattr(fact.period_end, "isoformat") else str(fact.period_end)
-        identity = fact_identity(fact.issuer_name, fact.symbol, period, fact.metric_code)
+        period = _canonical_period(_fact_field(fact, "period_end"))
+        identity = fact_identity(
+            str(_fact_field(fact, "issuer_name") or ""),
+            str(_fact_field(fact, "symbol") or ""),
+            period,
+            str(_fact_field(fact, "metric_code") or ""),
+        )
         decision = by_identity.get(identity)
         if decision is None:
-            updated.append(fact); continue
+            updated.append(fact)
+            continue
         matched.add(identity)
         if not decision.reviewer_id:
-            summary.unauthenticated += 1; updated.append(fact); continue
+            summary.unauthenticated += 1
+            updated.append(fact)
+            continue
         authenticated, auth_reason = verify_decision_signature(decision)
         if not authenticated:
             summary.unauthenticated += 1
-            if auth_reason == "SIGNATURE_INVALID": summary.invalid_signature += 1
-            if auth_reason.startswith("SIGNING_KEY_UNAVAILABLE"): summary.signing_key_unavailable += 1
-            updated.append(fact); continue
+            if auth_reason == "SIGNATURE_INVALID":
+                summary.invalid_signature += 1
+            if auth_reason.startswith("SIGNING_KEY_UNAVAILABLE"):
+                summary.signing_key_unavailable += 1
+            updated.append(fact)
+            continue
         if decision.policy_version != policy_version:
-            summary.policy_mismatch += 1; updated.append(fact); continue
+            summary.policy_mismatch += 1
+            updated.append(fact)
+            continue
         if decision.filing_sha256 != filing_sha256:
-            summary.stale_source_hash += 1; updated.append(fact); continue
+            summary.stale_source_hash += 1
+            updated.append(fact)
+            continue
         if decision.fact_fingerprint != fact_fingerprint(fact):
-            summary.stale_fact_fingerprint += 1; updated.append(fact); continue
+            summary.stale_fact_fingerprint += 1
+            updated.append(fact)
+            continue
         if decision.decision == DECISION_APPROVED:
             summary.approved_applied += 1
         elif decision.decision == DECISION_REJECTED:
             summary.rejected_applied += 1
         else:
-            updated.append(fact); continue
+            updated.append(fact)
+            continue
         updated.append(replace(fact, review_status=decision.decision))
     summary.unmatched = len([identity for identity in by_identity if identity not in matched])
     return updated, summary

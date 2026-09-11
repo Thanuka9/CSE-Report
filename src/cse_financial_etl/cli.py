@@ -185,20 +185,27 @@ def sign_review_decision_command(
     period_end: str = typer.Option(...),
     metric_code: str = typer.Option(...),
     filing_sha256: str = typer.Option(...),
+    fact_fingerprint: str = typer.Option(
+        ...,
+        help="Exact factfp:... fingerprint from the machine fact that was reviewed",
+    ),
     reviewer_id: str = typer.Option(...),
     decision: str = typer.Option(..., help="APPROVED or REJECTED"),
     key_id: str = typer.Option(..., help="Key id; secret must exist in CSE_REVIEW_KEY_<KEY_ID>"),
     note: str = typer.Option(""),
     project_root: Path = typer.Option(Path.cwd(), help="Repository root"),
 ) -> None:
-    """Append a cryptographically signed, source-bound human review decision."""
+    """Append a signed review decision bound to the exact source and fact fingerprint."""
 
+    if not fact_fingerprint.startswith("factfp:"):
+        raise typer.BadParameter("fact-fingerprint must be a machine-generated factfp:... value")
     signed = make_decision(
         issuer_name=issuer_name,
         symbol=symbol,
         period_end=period_end,
         metric_code=metric_code,
         filing_sha256=filing_sha256,
+        fact_fingerprint=fact_fingerprint,
         reviewer_id=reviewer_id,
         decision=decision,
         note=note,
@@ -206,7 +213,16 @@ def sign_review_decision_command(
     )
     destination = project_root.resolve() / DEFAULT_DECISIONS_RELATIVE_PATH
     append_decision(destination, signed)
-    typer.echo(json.dumps({"status": "SIGNED_AND_APPENDED", "path": str(destination), "decision": signed.as_dict()}, indent=2))
+    typer.echo(
+        json.dumps(
+            {
+                "status": "SIGNED_AND_APPENDED",
+                "path": str(destination),
+                "decision": signed.as_dict(),
+            },
+            indent=2,
+        )
+    )
 
 
 if __name__ == "__main__":
