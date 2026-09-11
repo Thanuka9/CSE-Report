@@ -21,19 +21,19 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
+          import textwrap
 
           header_path = Path("src/cse_financial_etl/compiler/header_tree.py")
           text = header_path.read_text(encoding="utf-8")
-
           old_call = '''    compiled = _assign_roles(\n        compiled,\n        target_period_end=known.target_period_end if known is not None else None,\n    )'''
-          new_call = '''    compiled = _assign_roles(compiled)'''
           if old_call not in text:
               raise SystemExit("expected _assign_roles call not found")
-          text = text.replace(old_call, new_call, 1)
+          text = text.replace(old_call, "    compiled = _assign_roles(compiled)", 1)
 
           start = text.index("def _assign_roles(\n")
           end = text.index("\n\ndef _period_starts(", start)
-          replacement = '''def _assign_roles(columns: list[CompiledHeaderColumn]) -> list[CompiledHeaderColumn]:
+          replacement = textwrap.dedent('''
+          def _assign_roles(columns: list[CompiledHeaderColumn]) -> list[CompiledHeaderColumn]:
               """Derive CURRENT/COMPARATIVE only from source-owned header dates.
 
               Query/target context is deliberately absent. Every sibling VALUE
@@ -65,14 +65,14 @@ jobs:
                       if col.period_end is None:
                           role_by_id[col.column_id] = None
                           continue
-                      role = "CURRENT" if col.period_end == latest else "COMPARATIVE"
-                      role_by_id[col.column_id] = role
+                      derived_role = "CURRENT" if col.period_end == latest else "COMPARATIVE"
+                      role_by_id[col.column_id] = derived_role
                       role_evidence_by_id[col.column_id] = {
                           "source": "source_header_date_order",
                           "source_owned": True,
                           "observed_dates": observed_dates,
                           "selected_date": col.period_end.isoformat(),
-                          "role": role,
+                          "role": derived_role,
                       }
 
               out: list[CompiledHeaderColumn] = []
@@ -84,20 +84,19 @@ jobs:
                       evidence["comparison_role"] = role_evidence
                   out.append(_replace(col, comparison_role=role, evidence=evidence))
               return out
-          '''
-          # The triple-quoted block above is indented inside this script. Normalize it.
-          import textwrap
-          replacement = textwrap.dedent(replacement).rstrip()
+          ''').strip("\n")
           text = text[:start] + replacement + text[end:]
           header_path.write_text(text, encoding="utf-8")
 
           publisher_path = Path("src/cse_financial_etl/facts/publisher.py")
           publisher = publisher_path.read_text(encoding="utf-8")
           old_publisher = "        comparison_role=entry.comparison_role,"
-          new_publisher = '        comparison_role=entry.comparison_role or "UNKNOWN",'
           if old_publisher not in publisher:
               raise SystemExit("expected publisher comparison_role assignment not found")
-          publisher_path.write_text(publisher.replace(old_publisher, new_publisher, 1), encoding="utf-8")
+          publisher_path.write_text(
+              publisher.replace(old_publisher, '        comparison_role=entry.comparison_role or "UNKNOWN",', 1),
+              encoding="utf-8",
+          )
 
           test_path = Path("tests/unit/redesign/test_header_tree.py")
           tests = test_path.read_text(encoding="utf-8")
