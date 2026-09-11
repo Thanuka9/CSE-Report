@@ -27,10 +27,10 @@ from cse_financial_etl.domain.models import UnitCandidate
 from cse_financial_etl.extraction.evidence_graph import build_value_graph, summarize_graph
 from cse_financial_etl.extraction.semantic_matcher import get_semantic_matcher
 from cse_financial_etl.extraction.unit_detector import (
+    UnitDetectionError,
     compose_unit_text,
     detect_candidates,
     resolve_unit,
-    UnitDetectionError,
 )
 from cse_financial_etl.transformation.normalizer import normalize_value
 
