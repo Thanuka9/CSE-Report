@@ -16,31 +16,25 @@ jobs:
         with:
           version: '0.12.11'
           python-version: '3.12'
-      - name: Remove query-context role mutation and add invariant
+      - name: Harden source ownership and publisher typing
         shell: bash
         run: |
           python - <<'PY'
           from pathlib import Path
-          import textwrap
 
-          path = Path("src/cse_financial_etl/compiler/header_tree.py")
-          text = path.read_text(encoding="utf-8")
-          old_call = textwrap.dedent("""
-              compiled = _assign_roles(
-                  compiled,
-                  target_period_end=known.target_period_end if known is not None else None,
-              )
-          """).strip("\n")
-          new_call = "    compiled = _assign_roles(compiled)"
+          header_path = Path("src/cse_financial_etl/compiler/header_tree.py")
+          text = header_path.read_text(encoding="utf-8")
+
+          old_call = '''    compiled = _assign_roles(\n        compiled,\n        target_period_end=known.target_period_end if known is not None else None,\n    )'''
+          new_call = '''    compiled = _assign_roles(compiled)'''
           if old_call not in text:
               raise SystemExit("expected _assign_roles call not found")
           text = text.replace(old_call, new_call, 1)
 
           start = text.index("def _assign_roles(\n")
           end = text.index("\n\ndef _period_starts(", start)
-          replacement = textwrap.dedent("""
-          def _assign_roles(columns: list[CompiledHeaderColumn]) -> list[CompiledHeaderColumn]:
-              """Derive roles only from source-owned header dates.
+          replacement = '''def _assign_roles(columns: list[CompiledHeaderColumn]) -> list[CompiledHeaderColumn]:
+              """Derive CURRENT/COMPARATIVE only from source-owned header dates.
 
               Query/target context is deliberately absent. Every sibling VALUE
               column in a multi-column source block must have a parsed date before
@@ -84,53 +78,39 @@ jobs:
               out: list[CompiledHeaderColumn] = []
               for col in columns:
                   evidence = dict(col.evidence)
-                  role = role_by_id.get(col.column_id)
+                  role: str | None = role_by_id.get(col.column_id)
                   role_evidence = role_evidence_by_id.get(col.column_id)
                   if role_evidence is not None:
                       evidence["comparison_role"] = role_evidence
                   out.append(_replace(col, comparison_role=role, evidence=evidence))
               return out
-          """).lstrip("\n")
-          text = text[:start] + replacement.rstrip() + text[end:]
-          path.write_text(text, encoding="utf-8")
+          '''
+          # The triple-quoted block above is indented inside this script. Normalize it.
+          import textwrap
+          replacement = textwrap.dedent(replacement).rstrip()
+          text = text[:start] + replacement + text[end:]
+          header_path.write_text(text, encoding="utf-8")
+
+          publisher_path = Path("src/cse_financial_etl/facts/publisher.py")
+          publisher = publisher_path.read_text(encoding="utf-8")
+          old_publisher = "        comparison_role=entry.comparison_role,"
+          new_publisher = '        comparison_role=entry.comparison_role or "UNKNOWN",'
+          if old_publisher not in publisher:
+              raise SystemExit("expected publisher comparison_role assignment not found")
+          publisher_path.write_text(publisher.replace(old_publisher, new_publisher, 1), encoding="utf-8")
 
           test_path = Path("tests/unit/redesign/test_header_tree.py")
           tests = test_path.read_text(encoding="utf-8")
           marker = "def test_single_source_column_role_is_query_invariant() -> None:"
           if marker not in tests:
-              test_block = textwrap.dedent("""
-
-
-              def test_single_source_column_role_is_query_invariant() -> None:
-                  page = make_page(
-                      [
-                          [*words("Statement of profit or loss - Company", 40)],
-                          [*words("For the three months ended 30 June 2026", 300)],
-                          [("30.06.2026", 300, 340)],
-                          [*words("Revenue", 40), right_aligned("100", C1_X)],
-                          [*words("Profit for the period", 40), right_aligned("10", C1_X)],
-                      ]
-                  )
-                  known_matching = build_known_context(
-                      issuer_name="X PLC", symbol="X.N0000", period_end=date(2026, 6, 30), required_entity="COMPANY"
-                  )
-                  known_other = build_known_context(
-                      issuer_name="X PLC", symbol="X.N0000", period_end=date(2027, 6, 30), required_entity="COMPANY"
-                  )
-                  matching = _cols(_compile(page, known=known_matching))
-                  other = _cols(_compile(page, known=known_other))
-                  assert matching[1].period_end == other[1].period_end == date(2026, 6, 30)
-                  assert matching[1].comparison_role == other[1].comparison_role == "CURRENT"
-                  assert matching[1].evidence["comparison_role"]["source_owned"] is True
-                  assert other[1].evidence["comparison_role"]["source_owned"] is True
-              """)
-              test_path.write_text(tests + test_block, encoding="utf-8")
+              tests += '''\n\ndef test_single_source_column_role_is_query_invariant() -> None:\n    page = make_page(\n        [\n            [*words("Statement of profit or loss - Company", 40)],\n            [*words("For the three months ended 30 June 2026", 300)],\n            [("30.06.2026", 300, 340)],\n            [*words("Revenue", 40), right_aligned("100", C1_X)],\n            [*words("Profit for the period", 40), right_aligned("10", C1_X)],\n        ]\n    )\n    known_matching = build_known_context(\n        issuer_name="X PLC", symbol="X.N0000", period_end=date(2026, 6, 30), required_entity="COMPANY"\n    )\n    known_other = build_known_context(\n        issuer_name="X PLC", symbol="X.N0000", period_end=date(2027, 6, 30), required_entity="COMPANY"\n    )\n    matching = _cols(_compile(page, known=known_matching))\n    other = _cols(_compile(page, known=known_other))\n    assert matching[1].period_end == other[1].period_end == date(2026, 6, 30)\n    assert matching[1].comparison_role == other[1].comparison_role == "CURRENT"\n    assert matching[1].evidence["comparison_role"]["source_owned"] is True\n    assert other[1].evidence["comparison_role"]["source_owned"] is True\n'''
+              test_path.write_text(tests, encoding="utf-8")
           PY
       - run: uv sync --locked --group dev
-      - run: uv run ruff check src/cse_financial_etl/compiler/header_tree.py tests/unit/redesign/test_header_tree.py
+      - run: uv run ruff check src/cse_financial_etl/compiler/header_tree.py src/cse_financial_etl/facts/publisher.py tests/unit/redesign/test_header_tree.py
       - run: uv run mypy src
       - run: uv run pytest tests/unit/redesign/test_header_tree.py
-      - name: Commit hardened compiler
+      - name: Commit hardened source and remove temporary workflow
         shell: bash
         run: |
           rm .github/workflows/apply-source-owned-role-fix.yml
