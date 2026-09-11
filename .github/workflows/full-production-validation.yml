@@ -23,6 +23,8 @@ jobs:
       - run: uv sync --locked --group dev
       - run: uv run ruff check src scripts/run_production_pipeline.py scripts/check_universe_acceptance.py
       - run: uv run mypy src
+      - name: Adversarial synthetic PDF gauntlet is mandatory
+        run: uv run pytest tests/regression/redesign/test_synthetic_pdf_gauntlet.py --junitxml=outputs/synthetic-gauntlet.xml
       - run: uv run pytest --junitxml=outputs/tests.xml
       - name: Production hardening contract is mandatory
         run: uv run pytest tests/unit/test_production_hardening.py --junitxml=outputs/production-hardening.xml
