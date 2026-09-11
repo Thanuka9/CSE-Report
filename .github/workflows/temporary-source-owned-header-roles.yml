@@ -1,0 +1,46 @@
+name: Temporary source-owned header-role hardening
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/temporary-source-owned-header-roles.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Remove target-context role assignment
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('src/cse_financial_etl/compiler/header_tree.py')
+          text = path.read_text()
+
+          old_call = '''    compiled = _assign_roles(\n        compiled, target_period_end=known.target_period_end if known is not None else None\n    )\n'''
+          new_call = '''    # Comparison roles are facts about the source table, never about the query.\n    # KnownContext is deliberately excluded here and used only for conflict validation below.\n    compiled = _assign_roles(compiled)\n'''
+          if old_call not in text:
+              raise SystemExit('expected _assign_roles call not found')
+          text = text.replace(old_call, new_call, 1)
+
+          start = text.index('def _assign_roles(\n')
+          end = text.index('\n\ndef _period_starts(', start)
+          new_fn = '''def _assign_roles(columns: list[CompiledHeaderColumn]) -> list[CompiledHeaderColumn]:\n    \"\"\"Derive CURRENT/COMPARATIVE exclusively from source-owned header dates.\n\n    A query target must never create a comparison role.  For a multi-column\n    source block, every sibling VALUE column must have a parsed date before\n    relative roles are inferred; otherwise the block is incomplete and roles\n    remain unknown.  A single explicitly dated VALUE column is CURRENT because\n    the source itself presents no competing period.\n    \"\"\"\n\n    groups: dict[tuple[Any, ...], list[CompiledHeaderColumn]] = {}\n    for col in columns:\n        if col.kind != \"VALUE\":\n            continue\n        groups.setdefault((col.entity, col.duration_months, col.temporal_type), []).append(col)\n\n    role_by_id: dict[str, str | None] = {}\n    role_evidence_by_id: dict[str, dict[str, Any]] = {}\n    for members in groups.values():\n        dated = [c for c in members if c.period_end is not None]\n        if not dated:\n            continue\n\n        # With multiple value columns, a missing sibling date is structural\n        # ambiguity (for example OCR may have lost the actual current header).\n        # Do not promote the latest surviving date to CURRENT.\n        if len(members) > 1 and len(dated) != len(members):\n            for col in members:\n                role_by_id[col.column_id] = None\n            continue\n\n        latest = max(c.period_end for c in dated)  # type: ignore[type-var]\n        observed_dates = sorted({c.period_end.isoformat() for c in dated if c.period_end is not None})\n        for col in members:\n            if col.period_end is None:\n                role_by_id[col.column_id] = None\n                continue\n            role = \"CURRENT\" if col.period_end == latest else \"COMPARATIVE\"\n            role_by_id[col.column_id] = role\n            role_evidence_by_id[col.column_id] = {\n                \"source\": \"source_header_date_order\",\n                \"observed_dates\": observed_dates,\n                \"selected_date\": col.period_end.isoformat(),\n                \"role\": role,\n            }\n\n    out: list[CompiledHeaderColumn] = []\n    for col in columns:\n        evidence = dict(col.evidence)\n        role_evidence = role_evidence_by_id.get(col.column_id)\n        if role_evidence is not None:\n            evidence[\"comparison_role\"] = role_evidence\n        out.append(\n            _replace(\n                col,\n                comparison_role=role_by_id.get(col.column_id),\n                evidence=evidence,\n            )\n        )\n    return out\n'''
+          text = text[:start] + new_fn + text[end:]
+          path.write_text(text)
+          PY
+      - name: Remove temporary workflow and commit patch
+        run: |
+          rm .github/workflows/temporary-source-owned-header-roles.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add src/cse_financial_etl/compiler/header_tree.py .github/workflows/temporary-source-owned-header-roles.yml
+          git commit -m "Make comparison roles source-owned"
+          git push origin HEAD:main
