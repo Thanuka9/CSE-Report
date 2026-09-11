@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import date
 from decimal import Decimal
 
@@ -67,5 +68,8 @@ def test_run_level_diagnostics_do_not_invalidate_same_fact() -> None:
         review_status="REVIEW",
         evidence_json='{"extraction_origin":"compiler_geometry","source_evidence":{"page":4,"label":"Profit for the period"},"compiler_report_summary":{"run_id":"one"}}',
     )
-    rerun = ExtractedFact(**{**base.__dict__, "evidence_json": '{"extraction_origin":"compiler_geometry","source_evidence":{"page":4,"label":"Profit for the period"},"compiler_report_summary":{"run_id":"two"}}'})
+    rerun = replace(
+        base,
+        evidence_json='{"extraction_origin":"compiler_geometry","source_evidence":{"page":4,"label":"Profit for the period"},"compiler_report_summary":{"run_id":"two"}}',
+    )
     assert fact_fingerprint(base) == fact_fingerprint(rerun)
