@@ -60,7 +60,7 @@ def test_compiler_layout_assist_mode_is_discovery_only(tmp_path: Path) -> None:
     assert entry.period_end is None
     assert entry.comparison_role is None
     assert not any(
-        queried.selected is not None and queried.metric_code == "PAT"
+        queried.entry is not None and queried.metric_code == "PAT"
         for queried in result["queried"]
     )
 
