@@ -27,6 +27,7 @@ def statement_page(
     unit_line: str | None,
     headers: Sequence[ValueCell],
     rows: Sequence[RowSpec],
+    header_rows: Sequence[Sequence[ValueCell]] | None = None,
     title_x: float = 48.0,
     label_x: float = 48.0,
     extra_top_lines: Iterable[str] = (),
@@ -49,9 +50,12 @@ def statement_page(
     if unit_line:
         ops.append((title_x, y, unit_line))
         y += 18.0
-    for x, text in headers:
-        ops.append((x, y, text))
-    y += 20.0
+    owned_header_rows = header_rows if header_rows is not None else (headers,)
+    for header_row in owned_header_rows:
+        for x, text in header_row:
+            ops.append((x, y, text))
+        y += 18.0
+    y += 2.0
     for label, values in rows:
         ops.append((label_x, y, label))
         for x, text in values:

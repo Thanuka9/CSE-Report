@@ -613,14 +613,15 @@ def _assign_roles(
         role = role_by_id.get(col.column_id)
         role_evidence = role_evidence_by_id.get(col.column_id)
 
-        # Known target context may only *remove* a false CURRENT classification.
-        # It never creates CURRENT.  This protects prior-only OCR survivors from
-        # being promoted merely because they are the latest date still visible.
+        # Known target context may only *remove* a false CURRENT classification
+        # from a single surviving source column. It never creates CURRENT and never
+        # rewrites the relative roles of a complete multi-column source table.
         if (
             target_period_end is not None
             and role == "CURRENT"
             and col.period_end is not None
             and col.period_end != target_period_end
+            and len(groups.get((col.entity, col.duration_months, col.temporal_type), ())) == 1
         ):
             if col.period_end < target_period_end:
                 role = "COMPARATIVE"

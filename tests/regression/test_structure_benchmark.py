@@ -38,6 +38,7 @@ from cse_financial_etl.validation.benchmark import (
     write_dashboard,
 )
 from cse_financial_etl.validation.cross_filing import flag_cross_filing_mismatches
+from tests.regression.redesign.synthetic_pdf_factory import statement_page, write_pdf
 
 PERIOD = date(2025, 6, 30)
 RESULTS: list = []
@@ -771,15 +772,20 @@ def test_eps_continuation_prefers_diluted() -> None:
 
 
 def test_statement_unit_is_inherited_when_away_from_row(tmp_path: Path) -> None:
-    pdf = _write_pdf(
-        tmp_path / "units.pdf",
-        "Statement of profit or loss - Company\n"
-        "For the three months ended 30 June 2025\n"
-        "30 June 2025 30 June 2024\n"
-        "Rs.'000\n"
-        "Revenue 1,000 900\n"
-        "Profit for the period 250 180\n",
+    # This benchmark isolates statement-scoped unit inheritance.  Use explicit
+    # geometric value columns so the test does not accidentally ask a coordinate
+    # parser to invent column ownership from a prose text box.
+    page = statement_page(
+        title="Statement of profit or loss - Company",
+        period_line="For the three months ended 30 June 2025",
+        unit_line="Rs.'000",
+        headers=[(380.0, "30 June 2025"), (480.0, "30 June 2024")],
+        rows=[
+            ("Revenue", [(380.0, "1,000"), (480.0, "900")]),
+            ("Profit for the period", [(380.0, "250"), (480.0, "180")]),
+        ],
     )
+    pdf = write_pdf(tmp_path / "units.pdf", [page])
     facts = facts_by_code(extract_filing(pdf, "Acme PLC", "ACM.N0000", PERIOD, ocr_enabled=False))
     pat = facts.get("PAT")
     _record(

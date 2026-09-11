@@ -360,13 +360,15 @@ def test_dual_group_company_columns_choose_source_owned_company_current(tmp_path
         title="STATEMENT OF PROFIT OR LOSS",
         period_line="For the three months ended 30 June 2026",
         unit_line="Rs.'000",
-        headers=[
-            (288.0, "GROUP"),
-            (438.0, "COMPANY"),
-            (270.0, "30 Jun 2026"),
-            (345.0, "30 Jun 2025"),
-            (430.0, "30 Jun 2026"),
-            (505.0, "30 Jun 2025"),
+        headers=[],
+        header_rows=[
+            [(288.0, "GROUP"), (438.0, "COMPANY")],
+            [
+                (270.0, "30 Jun 2026"),
+                (345.0, "30 Jun 2025"),
+                (430.0, "30 Jun 2026"),
+                (505.0, "30 Jun 2025"),
+            ],
         ],
         rows=[
             (
