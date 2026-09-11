@@ -81,6 +81,34 @@ def _strong_profit_page() -> PageIR:
     )
 
 
+def _strong_company_profit_page() -> PageIR:
+    return _page(
+        1,
+        [
+            "Statement of Profit or Loss - Company",
+            "For the three months ended 30 June 2026",
+            "Rs. 000",
+            "30 June 2026 30 June 2025",
+            "Revenue 100 90",
+            "Operating profit 20 18",
+        ],
+    )
+
+
+def _untitled_company_continuation(*, marker: bool = True, year: int = 2026) -> PageIR:
+    lines = [
+        "Company",
+        f"For the three months ended 30 June {year}",
+        "Rs. 000",
+        f"30 June {year} 30 June {year - 1}",
+        "Profit before tax 20 18",
+        "Profit for the period 16 14",
+    ]
+    if marker:
+        lines.append("Continued from the preceding statement page")
+    return _page(2, lines)
+
+
 def test_weak_adjacent_page_cannot_borrow_strong_region_confidence() -> None:
     weak = _page(
         2,
@@ -115,6 +143,44 @@ def test_source_evidenced_continuation_can_be_promoted_but_not_to_heading_confid
     assert regions[0].page_end == 2
     assert regions[0].confidence == 0.8
     assert "continuation:" in regions[0].evidence
+
+
+def test_explicit_marker_can_promote_an_other_page_to_prior_statement_identity() -> None:
+    regions = detect_regions(
+        _document(_strong_company_profit_page(), _untitled_company_continuation())
+    )
+
+    assert len(regions) == 1
+    assert regions[0].statement_type == "PROFIT_LOSS"
+    assert regions[0].page_start == 1
+    assert regions[0].page_end == 2
+    assert regions[0].confidence == 0.8
+    assert "continuation:DATE+ENTITY+UNIT" in regions[0].evidence
+
+
+def test_unclassified_page_without_marker_cannot_borrow_statement_identity() -> None:
+    regions = detect_regions(
+        _document(
+            _strong_company_profit_page(),
+            _untitled_company_continuation(marker=False),
+        )
+    )
+
+    assert len(regions) == 2
+    assert regions[1].statement_type == "OTHER"
+    assert regions[1].confidence == 0.2
+
+
+def test_continuation_marker_cannot_override_conflicting_source_dates() -> None:
+    regions = detect_regions(
+        _document(
+            _strong_company_profit_page(),
+            _untitled_company_continuation(year=2024),
+        )
+    )
+
+    assert len(regions) == 2
+    assert regions[1].statement_type == "OTHER"
 
 
 def test_low_confidence_is_not_continuation_evidence() -> None:
