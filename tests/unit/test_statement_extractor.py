@@ -301,15 +301,29 @@ def test_untitled_continuation_page_keeps_profit_or_loss_context() -> None:
     continuation = _page(
         2,
         [
+            _line(2, 20, [_token("Company", 40, 20, 60), _token("Rs.", 120, 20, 25)]),
+            _line(
+                2,
+                40,
+                [
+                    _token("Three", 40, 40, 40),
+                    _token("months", 90, 40, 45),
+                    _token("ended", 145, 40, 40),
+                    _token("30", 195, 40, 20),
+                    _token("June", 225, 40, 35),
+                    _token("2026", 270, 40, 35),
+                    _token("2025", 320, 40, 35),
+                ],
+            ),
             _line(
                 2,
                 80,
                 [
                     _token("Revenue", 40, 80, 70),
-                    _token("100", 200, 80, 40),
-                    _token("90", 280, 80, 40),
+                    _token("100", 270, 80, 40),
+                    _token("90", 320, 80, 40),
                 ],
-            )
+            ),
         ],
     )
     document = _document([titled, continuation])

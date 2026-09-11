@@ -30,6 +30,7 @@ from cse_financial_etl.extraction.unit_detector import (
     compose_unit_text,
     detect_candidates,
     resolve_unit,
+    UnitDetectionError,
 )
 from cse_financial_etl.transformation.normalizer import normalize_value
 
@@ -81,7 +82,7 @@ class ExtractedFact:
     validation_confidence: float = 0.0
     overall_certainty: float = 0.0
     certainty_band: str = "NONE"
-    comparison_role: str = "CURRENT"
+    comparison_role: str = "UNKNOWN"
     duration_months: int | None = None
     validation_status: str = "NOT_VALIDATED"
     review_status: str = "REVIEW"
@@ -529,9 +530,7 @@ def _select_current(
         for phrase in ("SIX MONTHS", "NINE MONTHS", "TWELVE MONTHS", "YEAR TO DATE", " YTD ")
     )
     standalone = next((item for item in ("COMPANY", "BANK") if item in entity_order), None)
-    proven = (
-        has_quarter or has_change or bool(re.search(r"\b20\d{2}\b", header)) or len(values) == 1
-    )
+    proven = has_quarter or has_change or bool(re.search(r"\b20\d{2}\b", header))
 
     def pick(group: list[tuple[str, Decimal | None]]) -> tuple[str, Decimal | None] | None:
         roles = _column_roles(
@@ -943,24 +942,55 @@ def _classify_page_statement(page: PageIR) -> str | None:
     return None
 
 
+def _legacy_continuation_evidenced(previous: PageIR, current: PageIR) -> bool:
+    """Require positive repeated source evidence before context crosses a page."""
+
+    previous_head = " ".join(line.text for line in previous.lines[:12]).upper()
+    current_head = " ".join(line.text for line in current.lines[:12]).upper()
+    previous_scope = bool(
+        re.search(r"\b(?:GROUP|COMPANY|BANK|RS\.?|LKR|RUPEES?)\b", previous_head)
+    )
+    current_scope = bool(
+        re.search(r"\b(?:GROUP|COMPANY|BANK|RS\.?|LKR|RUPEES?)\b", current_head)
+    )
+    temporal = bool(
+        re.search(
+            r"\b(?:THREE|SIX|NINE|TWELVE|3|6|9|12)\s+MONTHS?\b|"
+            r"\b(?:PERIOD|QUARTER|YEAR)\s+ENDED\b|\bAS\s+AT\b|"
+            r"\b(?:31|30|29|28)\s+(?:MAR|MARCH|JUN|JUNE|SEP|SEPTEMBER|DEC|DECEMBER)\s+20\d{2}\b",
+            current_head,
+        )
+    )
+    return previous_scope and current_scope and temporal
+
+
 def _page_statement_map(document: DocumentIR) -> dict[int, str | None]:
-    """Carry P&L / balance-sheet context onto untitled continuation pages."""
+    """Map statement type without unevidenced continuation carry-forward."""
 
     current: str | None = None
+    previous: PageIR | None = None
     mapping: dict[int, str | None] = {}
     for page in document.pages:
         if _is_notes_heading(page):
             current = None
             mapping[page.number] = None
+            previous = page
             continue
         classified = _classify_page_statement(page)
-        if classified == "OTHER" or (_is_notes_heading(page) and classified is None):
+        if classified == "OTHER":
             current = None
         elif classified is not None:
             current = classified
+        elif not (
+            current is not None
+            and previous is not None
+            and page.number == previous.number + 1
+            and _legacy_continuation_evidenced(previous, page)
+        ):
+            current = None
         mapping[page.number] = current
+        previous = page
     return mapping
-
 
 def _page_has_eps(page: PageIR) -> bool:
     return bool(
@@ -1415,7 +1445,7 @@ def _comparison_from_layout(
         if target_near >= 0.65 and target_near > prior_near:
             return "CURRENT", period_end.year
         return "UNKNOWN", period_end.year
-    return "CURRENT", period_end.year
+    return "UNKNOWN", period_end.year
 
 
 def _is_related_party_page(page: PageIR) -> bool:
@@ -2186,7 +2216,7 @@ def _unit_for_layout(
     if metric_type == "MONETARY_PER_SHARE":
         row_candidates = detect_candidates(line.text, scope=UnitScope.ROW, page=page.number)
         if force_rescan and not row_candidates:
-            # Look at immediate neighbors for detached "Rs." unit lines.
+            # Look only near the metric row for detached currency/unit evidence.
             page_lines = list(page.lines)
             for index, candidate in enumerate(page_lines):
                 if candidate is line or abs(candidate.bbox.center_y - line.bbox.center_y) > 24:
@@ -2203,9 +2233,33 @@ def _unit_for_layout(
                     )
                     if row_candidates:
                         break
-        currency = row_candidates[0].currency if row_candidates else "LKR"
-        source = row_candidates[0].source_text if row_candidates else "Per-share amount"
-        return currency, 1, source, 0.98 if row_candidates else (0.9 if force_rescan else 0.85)
+        if row_candidates:
+            try:
+                winner = resolve_unit(row_candidates)
+            except UnitDetectionError:
+                return None, None, None, 0.0
+            return winner.currency, 1, winner.source_text, 0.98
+
+        # Per-share scale is one, but currency must still be source-owned. Use only
+        # declarations on this statement page; never invent LKR or borrow a report unit.
+        statement_candidates: list[UnitCandidate] = []
+        for candidate_line in page.lines:
+            if not _unit_declaration(candidate_line.text):
+                continue
+            statement_candidates.extend(
+                detect_candidates(
+                    candidate_line.text,
+                    scope=UnitScope.STATEMENT,
+                    page=page.number,
+                )
+            )
+        if not statement_candidates:
+            return None, None, None, 0.0
+        try:
+            winner = resolve_unit(statement_candidates)
+        except UnitDetectionError:
+            return None, None, None, 0.0
+        return winner.currency, 1, winner.source_text, 0.9
 
     collected: list[UnitCandidate] = []
     ranked: list[tuple[float, str, int, str]] = []
@@ -2283,8 +2337,9 @@ def _unit_for_layout(
         try:
             winner = resolve_unit(collected)
             return winner.currency, winner.scale_factor, winner.source_text, 0.92
-        except Exception:
-            pass
+        except UnitDetectionError:
+            # A source-unit conflict is ambiguity, not permission to pick a ranked fallback.
+            return None, None, None, 0.0
     if not ranked:
         return None, None, None, 0.0
     ranked.sort(key=lambda item: item[0], reverse=True)
@@ -2330,7 +2385,7 @@ def _missing_fact(
         unit_source_text=None,
         confidence="NONE",
         status=status,
-        duration_months=3 if rule.statement == "FLOW" else None,
+        duration_months=None,
         validation_status="FAILED",
         review_status="REVIEW",
     )
@@ -3470,7 +3525,7 @@ def _extract_filing_layout(
                         duration_months=(
                             text_duration
                             if rule.statement == "FLOW" and text_duration is not None
-                            else (3 if rule.statement == "FLOW" else None)
+                            else None
                         ),
                         validation_status="PASSED" if status == "EXTRACTED" else "REVIEW",
                         review_status="REVIEW",
@@ -3623,7 +3678,6 @@ def _extract_filing_layout(
                         document_has_quarter_heading=_document_has_quarter_flow_heading(document),
                     )
                     or _duration_months(selected.page.text)
-                    or 6
                 )
             evidence["duration_months"] = flow_duration
         elif rule.statement == "FLOW":
@@ -3635,8 +3689,9 @@ def _extract_filing_layout(
                 review_status = "REVIEW"
                 evidence["duration_months"] = flow_duration
             elif flow_duration is None:
-                flow_duration = 3 if not cumulative_only else 6
-                evidence["duration_months"] = flow_duration
+                status = "VALUE_CONTEXT_UNRESOLVED"
+                review_status = "REVIEW"
+                evidence["duration_months"] = None
             else:
                 evidence["duration_months"] = flow_duration
         if status == "EXTRACTED" and comparison_role != "CURRENT":
@@ -3890,4 +3945,16 @@ def extract_quarter_prices(
 
 
 def facts_by_code(facts: Iterable[ExtractedFact]) -> dict[str, ExtractedFact]:
-    return {fact.metric_code: fact for fact in facts}
+    """Return only unique metric facts; duplicate evidence is ambiguous."""
+
+    unique: dict[str, ExtractedFact] = {}
+    ambiguous: set[str] = set()
+    for fact in facts:
+        code = fact.metric_code
+        if code in unique:
+            ambiguous.add(code)
+        else:
+            unique[code] = fact
+    for code in ambiguous:
+        unique.pop(code, None)
+    return unique
