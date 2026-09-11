@@ -21,33 +21,55 @@ def detect_continuations(
     document: CanonicalDocumentIR,
     regions: list[StatementRegion],
 ) -> list[ContinuationLink]:
+    """Detect adjacent statement continuations from positive source evidence only.
+
+    Classifier uncertainty is deliberately not treated as continuation evidence.
+    Regions spanning multiple pages are expanded back to page membership so this
+    detector remains useful after conservative region merging.
+    """
+
     links: list[ContinuationLink] = []
-    by_page = {r.page_start: r for r in regions}
-    pages = {p.page_number: p for p in document.pages}
+    by_page: dict[int, StatementRegion] = {}
+    for region in regions:
+        for page_number in range(region.page_start, region.page_end + 1):
+            by_page[page_number] = region
+    pages = {page.page_number: page for page in document.pages}
     for page_no in sorted(pages):
         nxt = page_no + 1
         if nxt not in pages or page_no not in by_page or nxt not in by_page:
             continue
-        a = by_page[page_no]
-        b = by_page[nxt]
-        if a.statement_type != b.statement_type or a.statement_type == "OTHER":
+        previous = by_page[page_no]
+        current = by_page[nxt]
+        if previous.statement_type != current.statement_type or previous.statement_type == "OTHER":
             continue
-        evidenced = _has_repeated_header(pages[nxt]) or b.confidence < 0.5
+        evidenced = _has_repeated_header(pages[nxt])
         links.append(
             ContinuationLink(
                 from_page=page_no,
                 to_page=nxt,
-                statement_type=a.statement_type,
+                statement_type=previous.statement_type,
                 evidenced=evidenced,
-                reason="same_statement_type_adjacent"
-                if evidenced
-                else "adjacent_same_type_unconfirmed",
+                reason="repeated_source_header" if evidenced else "adjacent_same_type_unconfirmed",
             )
         )
     return links
 
 
 def _has_repeated_header(page: PageIR) -> bool:
-    blob = " ".join(line.text.lower() for line in page.lines[:5])
-    cues = ("company", "group", "rs", "three months", "period ended", "as at")
-    return sum(1 for cue in cues if cue in blob) >= 2
+    blob = " ".join(line.text.lower() for line in page.lines[:8])
+    entity = any(cue in blob for cue in ("company", "group", "bank"))
+    unit = any(cue in blob for cue in ("rs", "lkr", "rupees"))
+    temporal = any(
+        cue in blob
+        for cue in (
+            "three months",
+            "six months",
+            "nine months",
+            "twelve months",
+            "period ended",
+            "quarter ended",
+            "year ended",
+            "as at",
+        )
+    )
+    return temporal and (entity or unit)
