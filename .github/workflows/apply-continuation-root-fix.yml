@@ -1,0 +1,64 @@
+name: Apply continuation root hardening
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Apply fail-closed continuation fixes
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path("src/cse_financial_etl/compiler/statement_compiler.py")
+          text = path.read_text(encoding="utf-8")
+
+          old = '''    for region in regions:\n        if region.statement_type in _SKIP_REGIONS:\n            continue\n        previous_schemas: dict[tuple[str, int], ColumnSchema] = {}\n'''
+          new = '''    # Continuation links may cross detector-region boundaries. Keep only schema state\n    # tied to its source page, then require exact adjacency before it can be reused.\n    previous_schemas: dict[tuple[str, int], tuple[int, ColumnSchema]] = {}\n    for region in regions:\n        if region.statement_type in _SKIP_REGIONS:\n            continue\n'''
+          assert old in text, "compile_statements region-state block changed"
+          text = text.replace(old, new, 1)
+
+          old = '''                prior_schema = previous_schemas.get((statement_type, table_index))\n                if link is not None and prior_schema is not None:\n                    schema = _bridge_evidenced_continuation_context(\n                        schema,\n                        prior_schema,\n                        page,\n                        link,\n                    )\n'''
+          new = '''                prior_record = previous_schemas.get((statement_type, table_index))\n                if (\n                    link is not None\n                    and prior_record is not None\n                    and prior_record[0] == link.from_page\n                ):\n                    schema = _bridge_evidenced_continuation_context(\n                        schema,\n                        prior_record[1],\n                        page,\n                        link,\n                    )\n'''
+          assert old in text, "continuation prior-schema block changed"
+          text = text.replace(old, new, 1)
+
+          old = '''                previous_schemas[(statement_type, table_index)] = schema\n'''
+          new = '''                previous_schemas[(statement_type, table_index)] = (page_no, schema)\n'''
+          assert old in text, "continuation schema store changed"
+          text = text.replace(old, new, 1)
+
+          old = '''def _single_page_entity(page: PageIR) -> str | None:\n    entities = {\n        entity\n        for line in page.lines[:10]\n        if (entity := normalize_entity_term(line.text)) is not None\n    }\n    if len(entities) != 1:\n        return None\n    return next(iter(entities))\n\n\ndef _continuation_columns_compatible(previous: ColumnSchema, current: ColumnSchema) -> bool:\n    \"\"\"Require source-header alignment before any continuation inheritance.\"\"\"\n\n    previous_values = {col.col_idx: col for col in previous.columns if col.kind == \"VALUE\"}\n    current_values = {col.col_idx: col for col in current.columns if col.kind == \"VALUE\"}\n    common = sorted(previous_values.keys() & current_values.keys())\n    if not common:\n        return False\n\n    matching_dates = 0\n    for col_idx in common:\n        before = previous_values[col_idx]\n        after = current_values[col_idx]\n        if before.period_end is not None and after.period_end is not None:\n            if before.period_end != after.period_end:\n                return False\n            matching_dates += 1\n        if (\n            before.duration_months is not None\n            and after.duration_months is not None\n            and before.duration_months != after.duration_months\n        ):\n            return False\n    return matching_dates > 0\n'''
+          new = '''def _single_page_entity(page: PageIR) -> str | None:\n    # Extract every entity term independently. A compound cue such as \"GROUP COMPANY\"\n    # is ambiguous and must never collapse to whichever regex branch happens to win.\n    entities: set[str] = set()\n    for line in page.lines[:10]:\n        for match in re.finditer(r\"\\b(group|company|bank|consolidated|separate)\\b\", line.text, re.I):\n            entity = normalize_entity_term(match.group(1))\n            if entity is not None:\n                entities.add(entity)\n    if len(entities) != 1:\n        return None\n    return next(iter(entities))\n\n\ndef _continuation_columns_compatible(previous: ColumnSchema, current: ColumnSchema) -> bool:\n    \"\"\"Require one-to-one source-header alignment, independent of local column indexes.\n\n    Physical column numbering is page-local: adding or removing a NOTE/PERCENT column can\n    shift every VALUE index on a continuation page. Compatibility therefore uses printed\n    period/duration/role evidence and rejects duplicate or conflicting matches.\n    \"\"\"\n\n    previous_values = [col for col in previous.columns if col.kind == \"VALUE\"]\n    current_values = [col for col in current.columns if col.kind == \"VALUE\"]\n    if not previous_values or not current_values:\n        return False\n\n    matched = 0\n    used_previous: set[str] = set()\n    for after in current_values:\n        if after.period_end is None:\n            continue\n        candidates: list[StatementColumn] = []\n        for before in previous_values:\n            if before.period_end != after.period_end:\n                continue\n            if (\n                before.duration_months is not None\n                and after.duration_months is not None\n                and before.duration_months != after.duration_months\n            ):\n                continue\n            if (\n                before.comparison_role is not None\n                and after.comparison_role is not None\n                and before.comparison_role != after.comparison_role\n            ):\n                continue\n            candidates.append(before)\n        if len(candidates) != 1:\n            return False\n        before = candidates[0]\n        if before.column_id in used_previous:\n            return False\n        used_previous.add(before.column_id)\n        matched += 1\n    return matched > 0\n'''
+          assert old in text, "continuation helper block changed"
+          text = text.replace(old, new, 1)
+          path.write_text(text, encoding="utf-8")
+
+          path = Path("src/cse_financial_etl/tunnels/extraction_compiler.py")
+          text = path.read_text(encoding="utf-8")
+          old = '''    try:\n        entity = infer_entity_scope(issuer_name)\n    except Exception:\n        entity = \"COMPANY\"\n'''
+          new = '''    # Expected scope may constrain selection, but failure to determine it must never\n    # silently manufacture COMPANY. infer_entity_scope is deterministic and should\n    # surface configuration/programming failures rather than fail open.\n    entity = infer_entity_scope(issuer_name)\n'''
+          assert old in text, "entity fallback block changed"
+          text = text.replace(old, new, 1)
+          path.write_text(text, encoding="utf-8")
+
+          workflow = Path(".github/workflows/apply-continuation-root-fix.yml")
+          workflow.unlink()
+      - name: Commit patched sources
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --check
+          git commit -m "Harden continuation context ownership"
+          git push
