@@ -270,17 +270,15 @@ def apply_review_decisions(
 
 
 def official_release_allowed(fact: Any) -> tuple[bool, str | None]:
-    """The governed official-release predicate for one fact (independent of Excel)."""
+    """Governed official-release predicate using the single shared rule set.
 
-    status = str(getattr(fact, "status", "") or "")
-    if status not in {"EXTRACTED", "EXTRACTED_DERIVED"}:
-        return False, status or "NOT_REPORTED"
-    if getattr(fact, "normalized_value", None) is None:
-        return False, "NOT_REPORTED"
-    validation = str(getattr(fact, "validation_status", "") or "")
-    if validation != "PASSED":
-        return False, "NOT_VALIDATED" if validation != "FAILED" else "VALIDATION_FAILED"
-    review = str(getattr(fact, "review_status", "") or "")
-    if review not in {DECISION_APPROVED, "CURATED"}:
-        return False, "REVIEW_REQUIRED"
-    return True, None
+    Review authentication is applied before this call by ``apply_review_decisions``.
+    Duration, current/comparative ownership, metric basis, source validation and review
+    status must all be evaluated by the same predicate used by storage, ratios, gates
+    and Excel. Keeping a second weaker predicate here previously allowed direct callers
+    to bypass quarter/current checks.
+    """
+
+    from cse_financial_etl.validation.acceptance import publishability_decision
+
+    return publishability_decision(fact, release_mode="OFFICIAL")
