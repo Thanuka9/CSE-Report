@@ -2,20 +2,16 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Mapping
 from typing import Any, Protocol
 
 PUBLISHABLE_STATUSES = frozenset({"EXTRACTED", "EXTRACTED_DERIVED"})
 BLOCKED_REVIEW = frozenset({"REJECTED", "FAILED"})
-# Validation and review are independent dimensions.  A reviewer approval never
+# Validation and review are independent dimensions. A reviewer approval never
 # substitutes for a machine/source validation pass.
 PASSED_VALIDATION = frozenset({"PASSED"})
-# Official release: only an authenticated reviewer approval (or a curated
-# correction) makes a numeric cell publishable. ``REVIEW`` / blank never do
-# (gap A4, audit finding 6).
 ALLOWED_REVIEW = frozenset({"APPROVED", "CURATED"})
-# Machine-eligible but unreviewed rows may be *displayed* only in an explicitly
-# labelled DRAFT release; they are never part of the governed official release.
 DRAFT_ALLOWED_REVIEW = frozenset({"APPROVED", "CURATED", "REVIEW"})
 
 RELEASE_OFFICIAL = "OFFICIAL"
@@ -97,13 +93,23 @@ def _coerce_duration(value: Any) -> int | None:
         return None
 
 
-def period_basis_for_metric(metric_code: str, metric_type: str = "") -> str:
-    """Classify a known output metric as FLOW or AS_AT; unknown stays UNKNOWN.
+def _evidence(fact: SupportsPublishFields | Mapping[str, Any]) -> dict[str, Any]:
+    """Best-effort provenance decode. Malformed/absent evidence never grants trust."""
 
-    This function is deliberately fail closed.  A misspelled/new metric must not
-    inherit AS_AT semantics merely because its code is non-empty, otherwise it can
-    bypass the CURRENT/three-month checks that protect reported flows.
-    """
+    raw = _field(fact, "evidence_json", None)
+    if isinstance(raw, Mapping):
+        return dict(raw)
+    if not isinstance(raw, str) or not raw.strip():
+        return {}
+    try:
+        parsed = json.loads(raw)
+    except json.JSONDecodeError:
+        return {}
+    return parsed if isinstance(parsed, dict) else {}
+
+
+def period_basis_for_metric(metric_code: str, metric_type: str = "") -> str:
+    """Classify a known output metric as FLOW or AS_AT; unknown stays UNKNOWN."""
 
     code = (metric_code or "").upper()
     kind = (metric_type or "").upper()
@@ -122,11 +128,12 @@ def publishability_decision(
     require_quarter_flow: bool | None = None,
     release_mode: str | None = None,
 ) -> tuple[bool, str | None]:
-    """Return (publishable?, reason_code). reason_code is set when rejected.
+    """Return one governed publication decision for every output surface.
 
-    ``release_mode`` defaults to the configured process-wide mode. In OFFICIAL
-    mode only APPROVED/CURATED rows publish; in DRAFT mode validated rows that
-    are still pending review are displayed as draft candidates.
+    The predicate is deliberately fail closed. Review approval cannot replace source
+    validation; unknown metric semantics cannot inherit stock semantics; and explicit
+    fallback / query-context-only evidence can never become numeric output even if a
+    caller accidentally bypasses an earlier sanitizer.
     """
 
     mode = (release_mode or _release_mode).upper()
@@ -142,6 +149,7 @@ def publishability_decision(
     metric_type = str(_field(fact, "metric_type") or "")
     metric_code = str(_field(fact, "metric_code") or "")
     basis = period_basis_for_metric(metric_code, metric_type)
+    evidence = _evidence(fact)
 
     if status not in PUBLISHABLE_STATUSES:
         return False, status or "NOT_REPORTED"
@@ -149,6 +157,12 @@ def publishability_decision(
         return False, "NOT_REPORTED"
     if basis == "UNKNOWN":
         return False, "UNKNOWN_METRIC_SEMANTICS"
+    if evidence.get("explicit_fallback"):
+        return False, "EXPLICIT_FALLBACK_NOT_PUBLISHABLE"
+    if evidence.get("context_not_source_owned"):
+        return False, "SOURCE_CONTEXT_NOT_OWNED"
+    if evidence.get("unresolved"):
+        return False, "SOURCE_CONTEXT_UNRESOLVED"
     if review in BLOCKED_REVIEW:
         return False, "REVIEW_REJECTED"
     if validation in {"FAILED", "REJECTED"}:
@@ -163,9 +177,6 @@ def publishability_decision(
         require_quarter = basis == "FLOW"
 
     if require_quarter and basis == "FLOW":
-        # Reported statement flows must be proven to come from the target/current
-        # column. Derived ratios inherit their validated source periods and do not
-        # need a raw table comparison role of their own.
         if metric_code.upper() in FLOW_METRIC_CODES and comparison_role != "CURRENT":
             return False, "CURRENT_PERIOD_UNRESOLVED"
         if duration is None:
