@@ -96,11 +96,15 @@ def _strong_company_profit_page() -> PageIR:
 
 
 def _untitled_company_continuation(*, marker: bool = True, year: int = 2026) -> PageIR:
+    # The prose line deliberately keeps this fixture below the weak numeric-density
+    # classifier threshold while still above the continuation table-likeness floor.
+    # That lets tests exercise the genuine OTHER -> prior-statement promotion path.
     lines = [
         "Company",
         f"For the three months ended 30 June {year}",
         "Rs. 000",
         f"30 June {year} 30 June {year - 1}",
+        "Standalone quarterly statement values shown below",
         "Profit before tax 20 18",
         "Profit for the period 16 14",
     ]
