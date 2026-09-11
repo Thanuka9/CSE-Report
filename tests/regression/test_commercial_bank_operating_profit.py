@@ -7,7 +7,7 @@ from decimal import Decimal
 from cse_financial_etl.document.region_detector import detect_regions
 from cse_financial_etl.extraction.statement_extractor import extract_filing
 from cse_financial_etl.ingestion.quality_router import route_document_ingestion
-from cse_financial_etl.tunnels.extraction_compiler import compile_filing
+from cse_financial_etl.tunnels.tunnel_a_geometry import run_tunnel_a
 from tests.fixture_paths import real_pdf
 
 
@@ -99,23 +99,24 @@ def test_commercial_bank_operating_profit_candidate_survives_extraction() -> Non
         for region in detect_regions(document)
         if region.page_start <= 7 <= region.page_end
     ]
-    compiled = compile_filing(
+    tunnel = run_tunnel_a(
         pdf,
         issuer_name="COMMERCIAL BANK OF CEYLON PLC",
         symbol="COMB.N0000",
         period_end=date(2026, 6, 30),
+        ocr_enabled=False,
         legacy_facts=None,
+        document=document,
         compile_statements=True,
-        run_tunnel_b_always=True,
     )
     native = [
         _entry_debug(entry)
-        for entry in compiled["ledger"].for_concept("OPERATING_PROFIT")
+        for entry in tunnel["ledger"].for_concept("OPERATING_PROFIT")
         if getattr(entry, "evidence", {}).get("candidate_origin") == "compiler_geometry"
     ]
     statements = [
         _statement_debug(statement)
-        for statement in compiled["statements"]
+        for statement in tunnel["statements"]
         if getattr(statement, "page_start", None) == 7
         or any(
             "operat" in str(getattr(row, "raw_label", "")).casefold()
