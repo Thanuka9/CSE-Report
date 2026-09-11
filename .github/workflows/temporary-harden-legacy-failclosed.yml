@@ -1,0 +1,184 @@
+name: Temporary harden legacy fail-closed semantics
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/temporary-harden-legacy-failclosed.yml
+
+permissions:
+  contents: write
+
+jobs:
+  harden:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Apply source-owned context hardening
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path("src/cse_financial_etl/extraction/statement_extractor.py")
+          text = path.read_text(encoding="utf-8")
+
+          def replace_once(old: str, new: str) -> None:
+              global text
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"Expected exactly one match, found {count}: {old[:100]!r}")
+              text = text.replace(old, new, 1)
+
+          replace_once(
+              "    resolve_unit,\n)",
+              "    resolve_unit,\n    UnitDetectionError,\n)",
+          )
+          replace_once(
+              '    comparison_role: str = "CURRENT"',
+              '    comparison_role: str = "UNKNOWN"',
+          )
+          replace_once(
+              '    proven = (\n        has_quarter or has_change or bool(re.search(r"\\b20\\d{2}\\b", header)) or len(values) == 1\n    )',
+              '    proven = has_quarter or has_change or bool(re.search(r"\\b20\\d{2}\\b", header))',
+          )
+          replace_once(
+              '    if target_points and prior_points:\n        target_near = _closeness(x, target_points, page.width)\n        prior_near = _closeness(x, prior_points, page.width)\n        if prior_near >= 0.65 and prior_near > target_near:\n            return "COMPARATIVE", period_end.year - 1\n        if target_near >= 0.65 and target_near > prior_near:\n            return "CURRENT", period_end.year\n        return "UNKNOWN", period_end.year\n    return "CURRENT", period_end.year',
+              '    if target_points and prior_points:\n        target_near = _closeness(x, target_points, page.width)\n        prior_near = _closeness(x, prior_points, page.width)\n        if prior_near >= 0.65 and prior_near > target_near:\n            return "COMPARATIVE", period_end.year - 1\n        if target_near >= 0.65 and target_near > prior_near:\n            return "CURRENT", period_end.year\n        return "UNKNOWN", period_end.year\n    return "UNKNOWN", period_end.year',
+          )
+          replace_once(
+              '        duration_months=3 if rule.statement == "FLOW" else None,',
+              '        duration_months=None,',
+          )
+          replace_once(
+              '                        duration_months=(\n                            text_duration\n                            if rule.statement == "FLOW" and text_duration is not None\n                            else (3 if rule.statement == "FLOW" else None)\n                        ),',
+              '                        duration_months=(\n                            text_duration\n                            if rule.statement == "FLOW" and text_duration is not None\n                            else None\n                        ),',
+          )
+          replace_once(
+              '            elif flow_duration is None:\n                flow_duration = 3 if not cumulative_only else 6\n                evidence["duration_months"] = flow_duration',
+              '            elif flow_duration is None:\n                status = "VALUE_CONTEXT_UNRESOLVED"\n                review_status = "REVIEW"\n                evidence["duration_months"] = None',
+          )
+          replace_once(
+              '        if cumulative_only and rule.statement == "FLOW":\n            # Cumulative-only path: keep real duration, never pretend it is 3M.\n            if flow_duration not in {6, 9, 12}:\n                flow_duration = (\n                    _page_flow_duration(\n                        selected.page,\n                        document_has_quarter_heading=_document_has_quarter_flow_heading(document),\n                    )\n                    or _duration_months(selected.page.text)\n                    or 6\n                )\n            evidence["duration_months"] = flow_duration',
+              '        if cumulative_only and rule.statement == "FLOW":\n            # Cumulative-only path: preserve only source-derived duration.\n            if flow_duration not in {6, 9, 12}:\n                flow_duration = (\n                    _page_flow_duration(\n                        selected.page,\n                        document_has_quarter_heading=_document_has_quarter_flow_heading(document),\n                    )\n                    or _duration_months(selected.page.text)\n                )\n            evidence["duration_months"] = flow_duration',
+          )
+
+          old_unit = '''    if metric_type == "MONETARY_PER_SHARE":\n        row_candidates = detect_candidates(line.text, scope=UnitScope.ROW, page=page.number)\n        if force_rescan and not row_candidates:\n            # Look at immediate neighbors for detached "Rs." unit lines.\n            page_lines = list(page.lines)\n            for index, candidate in enumerate(page_lines):\n                if candidate is line or abs(candidate.bbox.center_y - line.bbox.center_y) > 24:\n                    continue\n                row_candidates = detect_candidates(\n                    candidate.text, scope=UnitScope.ROW, page=page.number\n                )\n                if row_candidates:\n                    break\n                if index + 1 < len(page_lines):\n                    composed = compose_unit_text(candidate.text, page_lines[index + 1].text)\n                    row_candidates = detect_candidates(\n                        composed, scope=UnitScope.ROW, page=page.number\n                    )\n                    if row_candidates:\n                        break\n        currency = row_candidates[0].currency if row_candidates else "LKR"\n        source = row_candidates[0].source_text if row_candidates else "Per-share amount"\n        return currency, 1, source, 0.98 if row_candidates else (0.9 if force_rescan else 0.85)\n'''
+          new_unit = '''    if metric_type == "MONETARY_PER_SHARE":\n        row_candidates = detect_candidates(line.text, scope=UnitScope.ROW, page=page.number)\n        if force_rescan and not row_candidates:\n            # Look at immediate neighbors for detached currency/unit lines.\n            page_lines = list(page.lines)\n            for index, candidate in enumerate(page_lines):\n                if candidate is line or abs(candidate.bbox.center_y - line.bbox.center_y) > 24:\n                    continue\n                row_candidates = detect_candidates(\n                    candidate.text, scope=UnitScope.ROW, page=page.number\n                )\n                if row_candidates:\n                    break\n                if index + 1 < len(page_lines):\n                    composed = compose_unit_text(candidate.text, page_lines[index + 1].text)\n                    row_candidates = detect_candidates(\n                        composed, scope=UnitScope.ROW, page=page.number\n                    )\n                    if row_candidates:\n                        break\n        if row_candidates:\n            try:\n                winner = resolve_unit(row_candidates)\n            except UnitDetectionError:\n                return None, None, None, 0.0\n            return winner.currency, 1, winner.source_text, 0.98\n\n        # Per-share scale is one, but currency must still be source-owned.  Use only\n        # declarations on this statement page; never invent LKR or borrow a filing-wide unit.\n        statement_candidates: list[UnitCandidate] = []\n        for candidate_line in page.lines:\n            if not _unit_declaration(candidate_line.text):\n                continue\n            statement_candidates.extend(\n                detect_candidates(\n                    candidate_line.text,\n                    scope=UnitScope.STATEMENT,\n                    page=page.number,\n                )\n            )\n        if not statement_candidates:\n            return None, None, None, 0.0\n        try:\n            winner = resolve_unit(statement_candidates)\n        except UnitDetectionError:\n            return None, None, None, 0.0\n        return winner.currency, 1, winner.source_text, 0.9\n'''
+          replace_once(old_unit, new_unit)
+
+          replace_once(
+              '        try:\n            winner = resolve_unit(collected)\n            return winner.currency, winner.scale_factor, winner.source_text, 0.92\n        except Exception:\n            pass',
+              '        try:\n            winner = resolve_unit(collected)\n            return winner.currency, winner.scale_factor, winner.source_text, 0.92\n        except UnitDetectionError:\n            # Ambiguous/conflicting source units fail closed. Do not select a ranked fallback.\n            return None, None, None, 0.0',
+          )
+
+          old_map = '''def _page_statement_map(document: DocumentIR) -> dict[int, str | None]:\n    """Carry P&L / balance-sheet context onto untitled continuation pages."""\n\n    current: str | None = None\n    mapping: dict[int, str | None] = {}\n    for page in document.pages:\n        if _is_notes_heading(page):\n            current = None\n            mapping[page.number] = None\n            continue\n        classified = _classify_page_statement(page)\n        if classified == "OTHER" or (_is_notes_heading(page) and classified is None):\n            current = None\n        elif classified is not None:\n            current = classified\n        mapping[page.number] = current\n    return mapping\n'''
+          new_map = '''def _legacy_continuation_evidenced(previous: PageIR, current: PageIR) -> bool:\n    """Positive source evidence required before legacy statement context crosses a page."""\n\n    previous_head = " ".join(line.text for line in previous.lines[:12]).upper()\n    current_head = " ".join(line.text for line in current.lines[:12]).upper()\n    entity = any(cue in current_head for cue in ("GROUP", "COMPANY", "BANK"))\n    unit = bool(re.search(r"\\b(?:RS\\.?|LKR|RUPEES?)\\b", current_head))\n    temporal = bool(\n        re.search(\n            r"\\b(?:THREE|SIX|NINE|TWELVE|3|6|9|12)\\s+MONTHS?\\b|"\n            r"\\b(?:PERIOD|QUARTER|YEAR)\\s+ENDED\\b|\\bAS\\s+AT\\b|"\n            r"\\b(?:31|30|29|28)\\s+(?:MAR|MARCH|JUN|JUNE|SEP|SEPTEMBER|DEC|DECEMBER)\\s+20\\d{2}\\b",\n            current_head,\n        )\n    )\n    repeated_scope = (\n        entity\n        and any(cue in previous_head for cue in ("GROUP", "COMPANY", "BANK"))\n    ) or (\n        unit and bool(re.search(r"\\b(?:RS\\.?|LKR|RUPEES?)\\b", previous_head))\n    )\n    return repeated_scope and temporal\n\n\ndef _page_statement_map(document: DocumentIR) -> dict[int, str | None]:\n    """Map statement type without propagating context across unevidenced pages."""\n\n    current: str | None = None\n    previous: PageIR | None = None\n    mapping: dict[int, str | None] = {}\n    for page in document.pages:\n        if _is_notes_heading(page):\n            current = None\n            mapping[page.number] = None\n            previous = page\n            continue\n        classified = _classify_page_statement(page)\n        if classified == "OTHER":\n            current = None\n        elif classified is not None:\n            current = classified\n        elif not (\n            current is not None\n            and previous is not None\n            and page.number == previous.number + 1\n            and _legacy_continuation_evidenced(previous, page)\n        ):\n            current = None\n        mapping[page.number] = current\n        previous = page\n    return mapping\n'''
+          replace_once(old_map, new_map)
+
+          replace_once(
+              'def facts_by_code(facts: Iterable[ExtractedFact]) -> dict[str, ExtractedFact]:\n    return {fact.metric_code: fact for fact in facts}\n',
+              '''def facts_by_code(facts: Iterable[ExtractedFact]) -> dict[str, ExtractedFact]:\n    """Return only uniquely identified metric facts; duplicates are ambiguous, not last-write-wins."""\n\n    unique: dict[str, ExtractedFact] = {}\n    ambiguous: set[str] = set()\n    for fact in facts:\n        code = fact.metric_code\n        if code in unique:\n            ambiguous.add(code)\n            continue\n        unique[code] = fact\n    for code in ambiguous:\n        unique.pop(code, None)\n    return unique\n''',
+          )
+
+          path.write_text(text, encoding="utf-8")
+
+          test_path = Path("tests/unit/test_statement_extractor.py")
+          tests = test_path.read_text(encoding="utf-8")
+          old_continuation = '''    continuation = _page(\n        2,\n        [\n            _line(\n                2,\n                80,\n                [\n                    _token("Revenue", 40, 80, 70),\n                    _token("100", 200, 80, 40),\n                    _token("90", 280, 80, 40),\n                ],\n            )\n        ],\n    )\n'''
+          new_continuation = '''    continuation = _page(\n        2,\n        [\n            _line(2, 20, [_token("Company", 40, 20, 60), _token("Rs.", 120, 20, 25)]),\n            _line(\n                2,\n                40,\n                [\n                    _token("Three", 40, 40, 40),\n                    _token("months", 90, 40, 45),\n                    _token("ended", 145, 40, 40),\n                    _token("30", 195, 40, 20),\n                    _token("June", 225, 40, 35),\n                    _token("2026", 270, 40, 35),\n                    _token("2025", 320, 40, 35),\n                ],\n            ),\n            _line(\n                2,\n                80,\n                [\n                    _token("Revenue", 40, 80, 70),\n                    _token("100", 270, 80, 40),\n                    _token("90", 320, 80, 40),\n                ],\n            ),\n        ],\n    )\n'''
+          if tests.count(old_continuation) != 1:
+              raise SystemExit("Continuation regression fixture not found exactly once")
+          test_path.write_text(tests.replace(old_continuation, new_continuation, 1), encoding="utf-8")
+
+          invariant = Path("tests/unit/test_legacy_fail_closed_invariants.py")
+          invariant.write_text(r'''from __future__ import annotations
+
+from datetime import date
+from decimal import Decimal
+
+from cse_financial_etl.documents.document_ir import BBox, DocumentIR, DocumentQuality, LineIR, PageIR, TokenIR
+from cse_financial_etl.documents.pdf_text import PdfPage
+from cse_financial_etl.extraction.statement_extractor import (
+    ExtractedFact,
+    _comparison_from_layout,
+    _page_statement_map,
+    _select_current,
+    _unit_for_layout,
+    facts_by_code,
+)
+
+
+def _token(text: str, x: float, y: float) -> TokenIR:
+    return TokenIR(text, BBox(x, y, x + 40, y + 10), 0, 0, 0)
+
+
+def _line(page: int, y: float, *tokens: TokenIR) -> LineIR:
+    return LineIR(page, f"p{page}-{y}", " ".join(t.text for t in tokens), BBox(10, y, 500, y + 10), tuple(tokens))
+
+
+def _page(number: int, *lines: LineIR) -> PageIR:
+    return PageIR(number, 600, 800, tuple(lines), "\n".join(line.text for line in lines))
+
+
+def _doc(*pages: PageIR) -> DocumentIR:
+    return DocumentIR("memory.pdf", tuple(pages), DocumentQuality(len(pages), 10, 3, 1.0, "TEST", False))
+
+
+def _fact(code: str, value: str) -> ExtractedFact:
+    amount = Decimal(value)
+    return ExtractedFact(
+        issuer_name="Example PLC", symbol="EX.N0000", period_end=date(2026, 6, 30),
+        metric_code=code, metric_type="MONETARY_ABSOLUTE", raw_text=value,
+        raw_value=amount, normalized_value=amount, currency="LKR", scale_factor=1,
+        entity_scope="COMPANY", source_page=1, source_line=code, unit_source_text="Rs.",
+        confidence="HIGH", status="EXTRACTED",
+    )
+
+
+def test_extracted_fact_has_no_implicit_current_role() -> None:
+    assert _fact("PAT", "10").comparison_role == "UNKNOWN"
+
+
+def test_layout_comparison_role_is_unknown_without_source_date_headers() -> None:
+    value = _token("100", 300, 100)
+    row = _line(1, 100, _token("Revenue", 20, 100), value)
+    page = _page(1, row)
+    role, _year = _comparison_from_layout(page, row, value, date(2026, 6, 30), entity="COMPANY")
+    assert role == "UNKNOWN"
+
+
+def test_single_value_is_not_current_without_period_evidence() -> None:
+    page = PdfPage(1, "Statement of profit or loss\nRevenue 100")
+    assert _select_current([("100", Decimal("100"))], page, "FLOW") is None
+
+
+def test_untitled_page_without_repeated_header_does_not_inherit_statement_type() -> None:
+    first = _page(1, _line(1, 20, _token("Statement", 20, 20), _token("of", 70, 20), _token("profit", 100, 20), _token("or", 160, 20), _token("loss", 190, 20)))
+    second = _page(2, _line(2, 80, _token("Revenue", 20, 80), _token("100", 300, 80)))
+    assert _page_statement_map(_doc(first, second))[2] is None
+
+
+def test_per_share_currency_is_not_invented_when_source_has_no_unit() -> None:
+    row = _line(1, 100, _token("Basic", 20, 100), _token("EPS", 70, 100), _token("1.25", 300, 100))
+    page = _page(1, row)
+    currency, scale, source, confidence = _unit_for_layout(_doc(page), page, row, "MONETARY_PER_SHARE")
+    assert (currency, scale, source, confidence) == (None, None, None, 0.0)
+
+
+def test_duplicate_metric_facts_do_not_use_last_write_wins() -> None:
+    mapping = facts_by_code([_fact("PAT", "10"), _fact("PAT", "11"), _fact("PBT", "12")])
+    assert "PAT" not in mapping
+    assert mapping["PBT"].raw_value == Decimal("12")
+''', encoding="utf-8")
+
+          workflow = Path(".github/workflows/temporary-harden-legacy-failclosed.yml")
+          workflow.unlink()
+      - name: Commit hardening
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Harden legacy extraction context ownership"
+          git push origin HEAD:main
