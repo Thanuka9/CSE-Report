@@ -1,0 +1,140 @@
+name: Apply source-owned comparison-role hardening
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: main
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e
+        with:
+          version: '0.12.11'
+          python-version: '3.12'
+      - name: Remove query-context role mutation and add invariant
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path('src/cse_financial_etl/compiler/header_tree.py')
+          text = path.read_text(encoding='utf-8')
+          old_call = '''    compiled = _assign_roles(
+              compiled,
+              target_period_end=known.target_period_end if known is not None else None,
+          )'''
+          new_call = '''    compiled = _assign_roles(compiled)'''
+          if old_call not in text:
+              raise SystemExit('expected _assign_roles call not found')
+          text = text.replace(old_call, new_call, 1)
+
+          start = text.index('def _assign_roles(\n')
+          end = text.index('\n\ndef _period_starts(', start)
+          replacement = '''def _assign_roles(columns: list[CompiledHeaderColumn]) -> list[CompiledHeaderColumn]:
+              """Derive CURRENT/COMPARATIVE exclusively from source-owned header dates.
+
+              Query/target context is deliberately absent from this function. For a
+              multi-column source block, every sibling VALUE column must have a parsed
+              date before relative roles are inferred; otherwise the block is incomplete
+              and roles remain unknown. A single explicitly dated VALUE column is CURRENT
+              because the source itself presents no competing period. Target-period
+              mismatches are handled later as validation conflicts, never by mutating the
+              source-owned role.
+              """
+
+              groups: dict[tuple[Any, ...], list[CompiledHeaderColumn]] = {}
+              for col in columns:
+                  if col.kind != "VALUE":
+                      continue
+                  groups.setdefault((col.entity, col.duration_months, col.temporal_type), []).append(col)
+
+              role_by_id: dict[str, str | None] = {}
+              role_evidence_by_id: dict[str, dict[str, Any]] = {}
+              for members in groups.values():
+                  dated = [c for c in members if c.period_end is not None]
+                  if not dated:
+                      continue
+                  if len(members) > 1 and len(dated) != len(members):
+                      for col in members:
+                          role_by_id[col.column_id] = None
+                      continue
+
+                  observed_date_values = [c.period_end for c in dated if c.period_end is not None]
+                  latest = max(observed_date_values)
+                  observed_dates = sorted({value.isoformat() for value in observed_date_values})
+                  for col in members:
+                      if col.period_end is None:
+                          role_by_id[col.column_id] = None
+                          continue
+                      role = "CURRENT" if col.period_end == latest else "COMPARATIVE"
+                      role_by_id[col.column_id] = role
+                      role_evidence_by_id[col.column_id] = {
+                          "source": "source_header_date_order",
+                          "source_owned": True,
+                          "observed_dates": observed_dates,
+                          "selected_date": col.period_end.isoformat(),
+                          "role": role,
+                      }
+
+              out: list[CompiledHeaderColumn] = []
+              for col in columns:
+                  evidence = dict(col.evidence)
+                  role = role_by_id.get(col.column_id)
+                  role_evidence = role_evidence_by_id.get(col.column_id)
+                  if role_evidence is not None:
+                      evidence["comparison_role"] = role_evidence
+                  out.append(_replace(col, comparison_role=role, evidence=evidence))
+              return out
+          '''
+          # Dedent the replacement while preserving normal module indentation.
+          import textwrap
+          replacement = textwrap.dedent(replacement)
+          text = text[:start] + replacement.rstrip() + text[end:]
+          path.write_text(text, encoding='utf-8')
+
+          test_path = Path('tests/unit/redesign/test_header_tree.py')
+          tests = test_path.read_text(encoding='utf-8')
+          marker = 'def test_single_source_column_role_is_query_invariant() -> None:'
+          if marker not in tests:
+              tests += '''\n\n
+def test_single_source_column_role_is_query_invariant() -> None:
+    page = make_page(
+        [
+            [*words("Statement of profit or loss - Company", 40)],
+            [*words("For the three months ended 30 June 2026", 300)],
+            [("30.06.2026", 300, 340)],
+            [*words("Revenue", 40), right_aligned("100", C1_X)],
+            [*words("Profit for the period", 40), right_aligned("10", C1_X)],
+        ]
+    )
+    known_matching = build_known_context(
+        issuer_name="X PLC", symbol="X.N0000", period_end=date(2026, 6, 30), required_entity="COMPANY"
+    )
+    known_other = build_known_context(
+        issuer_name="X PLC", symbol="X.N0000", period_end=date(2027, 6, 30), required_entity="COMPANY"
+    )
+    matching = _cols(_compile(page, known=known_matching))
+    other = _cols(_compile(page, known=known_other))
+    assert matching[1].period_end == other[1].period_end == date(2026, 6, 30)
+    assert matching[1].comparison_role == other[1].comparison_role == "CURRENT"
+    assert matching[1].evidence["comparison_role"]["source_owned"] is True
+    assert other[1].evidence["comparison_role"]["source_owned"] is True
+'''
+              test_path.write_text(tests, encoding='utf-8')
+      - run: uv sync --locked --group dev
+      - run: uv run ruff check src/cse_financial_etl/compiler/header_tree.py tests/unit/redesign/test_header_tree.py
+      - run: uv run mypy src
+      - run: uv run pytest tests/unit/redesign/test_header_tree.py
+      - name: Commit hardened compiler
+        shell: bash
+        run: |
+          rm .github/workflows/apply-source-owned-role-fix.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/cse_financial_etl/compiler/header_tree.py tests/unit/redesign/test_header_tree.py .github/workflows/apply-source-owned-role-fix.yml
+          git commit -m "Make comparison roles fully source-owned"
+          git push origin main
