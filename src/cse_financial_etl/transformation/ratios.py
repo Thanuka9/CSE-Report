@@ -52,76 +52,25 @@ def _withhold_source_fact(
 
 
 def _sanitize_source_fact(fact: ExtractedFact) -> ExtractedFact:
-    """Make the final materialized fact set fail closed before derivation.
-
-    ``EXTRACTED`` records are machine extraction candidates, but validation failures,
-    unresolved evidence and the explicitly bounded layout fallback must never retain a
-    publishable status in the normalized output. Raw source evidence is preserved while
-    the normalized value is withheld.
-    """
-
     if fact.status not in ACCEPTED:
         return fact
     evidence = _evidence(fact)
     if is_narrative_unit_amount(fact.unit_source_text):
-        return _withhold_source_fact(
-            fact,
-            status="UNIT_NOT_RESOLVED",
-            reason="NARRATIVE_UNIT_EVIDENCE",
-        )
+        return _withhold_source_fact(fact, status="UNIT_NOT_RESOLVED", reason="NARRATIVE_UNIT_EVIDENCE")
     if per_share_source_is_unsafe(fact.metric_code, fact.source_line):
-        return _withhold_source_fact(
-            fact,
-            status="VALUE_CONTEXT_UNRESOLVED",
-            reason="CORRUPTED_PER_SHARE_VALUE_ROW",
-        )
-    if suspicious_selected_numeric(
-        fact.metric_code, fact.raw_value, fact.scale_factor, fact.source_line
-    ):
-        return _withhold_source_fact(
-            fact,
-            status="VALUE_CONTEXT_UNRESOLVED",
-            reason="SUSPICIOUS_OCR_SELECTED_NUMERIC",
-        )
+        return _withhold_source_fact(fact, status="VALUE_CONTEXT_UNRESOLVED", reason="CORRUPTED_PER_SHARE_VALUE_ROW")
+    if suspicious_selected_numeric(fact.metric_code, fact.raw_value, fact.scale_factor, fact.source_line):
+        return _withhold_source_fact(fact, status="VALUE_CONTEXT_UNRESOLVED", reason="SUSPICIOUS_OCR_SELECTED_NUMERIC")
     if fact.validation_status in {"FAILED", "REJECTED"}:
-        return replace(
-            fact,
-            status="VALIDATION_FAILED",
-            normalized_value=None,
-            overall_certainty=0.0,
-            certainty_band="NONE",
-            confidence="LOW",
-        )
+        return replace(fact, status="VALIDATION_FAILED", normalized_value=None, overall_certainty=0.0, certainty_band="NONE", confidence="LOW")
     if evidence.get("explicit_fallback"):
-        return replace(
-            fact,
-            status="EXPLICIT_LAYOUT_FALLBACK_REQUIRED",
-            normalized_value=None,
-            overall_certainty=0.0,
-            certainty_band="NONE",
-            confidence="LOW",
-        )
+        return replace(fact, status="EXPLICIT_LAYOUT_FALLBACK_REQUIRED", normalized_value=None, overall_certainty=0.0, certainty_band="NONE", confidence="LOW")
     if evidence.get("unresolved"):
-        return replace(
-            fact,
-            status="VALUE_CONTEXT_UNRESOLVED",
-            normalized_value=None,
-            overall_certainty=0.0,
-            certainty_band="NONE",
-            confidence="LOW",
-        )
+        return replace(fact, status="VALUE_CONTEXT_UNRESOLVED", normalized_value=None, overall_certainty=0.0, certainty_band="NONE", confidence="LOW")
     return fact
 
 
 def _sanitize_cross_statement_scales(facts: list[ExtractedFact]) -> list[ExtractedFact]:
-    """Withhold source rows whose unit scale conflicts with same-filing evidence.
-
-    This is intentionally a safety gate, not a scale inference engine: it never changes
-    a value or guesses a multiplier. The shared validator identifies only contradictions
-    strong enough to make publication unsafe; those rows stay reviewable with raw
-    evidence intact.
-    """
-
     values = {
         fact.metric_code: (fact.normalized_value, fact.scale_factor)
         for fact in facts
@@ -131,11 +80,7 @@ def _sanitize_cross_statement_scales(facts: list[ExtractedFact]) -> list[Extract
     if not unsafe:
         return facts
     return [
-        _withhold_source_fact(
-            fact,
-            status="UNIT_NOT_RESOLVED",
-            reason="CROSS_STATEMENT_SCALE_CONFLICT",
-        )
+        _withhold_source_fact(fact, status="UNIT_NOT_RESOLVED", reason="CROSS_STATEMENT_SCALE_CONFLICT")
         if fact.metric_code in unsafe and fact.status in ACCEPTED
         else fact
         for fact in facts
@@ -147,23 +92,13 @@ def _sanitize_eps_selected(facts: list[ExtractedFact]) -> list[ExtractedFact]:
     selected = by_code.get("EPS_SELECTED")
     if selected is None or selected.status not in ACCEPTED:
         return facts
-
     diluted = by_code.get("EPS_DILUTED")
     basic = by_code.get("EPS_BASIC")
     preferred = None
-    if (
-        diluted is not None
-        and is_publishable_fact(diluted, release_mode="DRAFT")
-        and diluted.validation_status == "PASSED"
-    ):
+    if diluted is not None and is_publishable_fact(diluted, release_mode="DRAFT") and diluted.validation_status == "PASSED":
         preferred = diluted
-    elif (
-        basic is not None
-        and is_publishable_fact(basic, release_mode="DRAFT")
-        and basic.validation_status == "PASSED"
-    ):
+    elif basic is not None and is_publishable_fact(basic, release_mode="DRAFT") and basic.validation_status == "PASSED":
         preferred = basic
-
     if (
         preferred is not None
         and selected.normalized_value is not None
@@ -172,7 +107,6 @@ def _sanitize_eps_selected(facts: list[ExtractedFact]) -> list[ExtractedFact]:
         and selected.comparison_role == preferred.comparison_role
     ):
         return facts
-
     evidence = _evidence(selected)
     evidence["row_safety"] = "EPS_SELECTED_SOURCE_NOT_PUBLISHABLE"
     evidence["preferred_source"] = preferred.metric_code if preferred is not None else None
@@ -191,12 +125,24 @@ def _sanitize_eps_selected(facts: list[ExtractedFact]) -> list[ExtractedFact]:
 
 def _index_facts(
     facts_by_filing: Iterable[tuple[object, list[ExtractedFact]]],
-) -> dict[tuple[str, date, str], ExtractedFact]:
-    return {
-        (fact.issuer_name, fact.period_end, fact.metric_code): fact
-        for _item, facts in facts_by_filing
-        for fact in facts
-    }
+) -> dict[tuple[str, date, str], ExtractedFact | None]:
+    """Index ratio inputs without arbitrary last-write-wins on duplicate facts.
+
+    A duplicate issuer/period/metric key can arise from an amended/duplicate filing or
+    an upstream materialization bug.  Either way, silently selecting whichever row was
+    iterated last makes derived ratios non-deterministic.  Mark the key ambiguous so
+    derivation abstains until upstream filing identity resolves it.
+    """
+
+    index: dict[tuple[str, date, str], ExtractedFact | None] = {}
+    for _item, facts in facts_by_filing:
+        for fact in facts:
+            key = (fact.issuer_name, fact.period_end, fact.metric_code)
+            if key in index:
+                index[key] = None
+            else:
+                index[key] = fact
+    return index
 
 
 def _accepted(fact: ExtractedFact | None) -> ExtractedFact | None:
@@ -205,12 +151,7 @@ def _accepted(fact: ExtractedFact | None) -> ExtractedFact | None:
     return fact
 
 
-def _missing_ratio(
-    template: ExtractedFact,
-    metric_code: str,
-    status: str,
-    detail: str,
-) -> ExtractedFact:
+def _missing_ratio(template: ExtractedFact, metric_code: str, status: str, detail: str) -> ExtractedFact:
     return replace(
         template,
         metric_code=metric_code,
@@ -297,7 +238,7 @@ def _ratio_fact(
 
 def _same_quarter_ratio(
     *,
-    index: dict[tuple[str, date, str], ExtractedFact],
+    index: dict[tuple[str, date, str], ExtractedFact | None],
     template: ExtractedFact,
     issuer_name: str,
     period_end: date,
@@ -307,55 +248,29 @@ def _same_quarter_ratio(
     formula: str,
     empty_denominator_reason: str,
 ) -> ExtractedFact:
-    """Compute a ratio from compatible, current facts in the same filing period only."""
-
-    numerator = _accepted(index.get((issuer_name, period_end, numerator_code)))
-    denominator = _accepted(index.get((issuer_name, period_end, denominator_code)))
+    numerator_key = (issuer_name, period_end, numerator_code)
+    denominator_key = (issuer_name, period_end, denominator_code)
+    if numerator_key in index and index[numerator_key] is None:
+        return _missing_ratio(template, ratio_code, "AMBIGUOUS_INPUT", f"{ratio_code} has duplicate {numerator_code} inputs for the same issuer/period.")
+    if denominator_key in index and index[denominator_key] is None:
+        return _missing_ratio(template, ratio_code, "AMBIGUOUS_INPUT", f"{ratio_code} has duplicate {denominator_code} inputs for the same issuer/period.")
+    numerator = _accepted(index.get(numerator_key))
+    denominator = _accepted(index.get(denominator_key))
     if numerator is None or denominator is None:
         missing = denominator_code if denominator is None else numerator_code
-        return _missing_ratio(
-            template,
-            ratio_code,
-            "INSUFFICIENT_INPUT",
-            f"{ratio_code} needs approved same-quarter {missing}.",
-        )
+        return _missing_ratio(template, ratio_code, "INSUFFICIENT_INPUT", f"{ratio_code} needs approved same-quarter {missing}.")
     if numerator.currency != denominator.currency:
-        return _missing_ratio(
-            template,
-            ratio_code,
-            "INCOMPATIBLE_CURRENCY",
-            f"{numerator_code} and {denominator_code} currencies differ.",
-        )
+        return _missing_ratio(template, ratio_code, "INCOMPATIBLE_CURRENCY", f"{numerator_code} and {denominator_code} currencies differ.")
     if numerator.entity_scope != denominator.entity_scope:
-        return _missing_ratio(
-            template,
-            ratio_code,
-            "INCOMPATIBLE_SCOPE",
-            f"{numerator_code} and {denominator_code} entity scopes differ.",
-        )
+        return _missing_ratio(template, ratio_code, "INCOMPATIBLE_SCOPE", f"{numerator_code} and {denominator_code} entity scopes differ.")
     if numerator.entity_scope not in STANDALONE:
-        return _missing_ratio(
-            template,
-            ratio_code,
-            "INCOMPATIBLE_SCOPE",
-            f"{ratio_code} requires standalone COMPANY/BANK inputs.",
-        )
+        return _missing_ratio(template, ratio_code, "INCOMPATIBLE_SCOPE", f"{ratio_code} requires standalone COMPANY/BANK inputs.")
     if numerator.comparison_role != "CURRENT" or denominator.comparison_role != "CURRENT":
-        return _missing_ratio(
-            template,
-            ratio_code,
-            "INCOMPATIBLE_PERIOD_CONTEXT",
-            f"{ratio_code} requires CURRENT numerator and denominator facts.",
-        )
+        return _missing_ratio(template, ratio_code, "INCOMPATIBLE_PERIOD_CONTEXT", f"{ratio_code} requires CURRENT numerator and denominator facts.")
     assert numerator.normalized_value is not None
     assert denominator.normalized_value is not None
     if denominator.normalized_value <= 0:
-        return _missing_ratio(
-            template,
-            ratio_code,
-            empty_denominator_reason,
-            f"{denominator_code} is missing or not positive.",
-        )
+        return _missing_ratio(template, ratio_code, empty_denominator_reason, f"{denominator_code} is missing or not positive.")
     value = numerator.normalized_value / denominator.normalized_value
     plausibility_issue = ratio_plausibility_issue(ratio_code, value)
     if plausibility_issue is not None:
@@ -379,8 +294,6 @@ def derive_ratio_facts[TFiling](
     extracted_results: Sequence[tuple[TFiling, list[ExtractedFact]]],
     display_periods: Iterable[date] | None = None,
 ) -> list[tuple[TFiling, list[ExtractedFact]]]:
-    """Fail-close source rows, then attach same-quarter ratios with exact lineage context."""
-
     sanitized_results: list[tuple[TFiling, list[ExtractedFact]]] = []
     for item, facts in extracted_results:
         sanitized = [_sanitize_source_fact(fact) for fact in facts]
@@ -402,50 +315,10 @@ def derive_ratio_facts[TFiling](
             derived_results.append((item, facts))
             continue
         extra = [
-            _same_quarter_ratio(
-                index=index,
-                template=template,
-                issuer_name=issuer_name,
-                period_end=period_end,
-                numerator_code="TOTAL_LIABILITIES",
-                denominator_code="TOTAL_EQUITY",
-                ratio_code="DEBT_TO_EQUITY",
-                formula="TOTAL_LIABILITIES / TOTAL_EQUITY",
-                empty_denominator_reason="ZERO_EQUITY",
-            ),
-            _same_quarter_ratio(
-                index=index,
-                template=template,
-                issuer_name=issuer_name,
-                period_end=period_end,
-                numerator_code="PAT",
-                denominator_code="TOTAL_EQUITY",
-                ratio_code="ROE",
-                formula="PAT / TOTAL_EQUITY",
-                empty_denominator_reason="ZERO_EQUITY",
-            ),
-            _same_quarter_ratio(
-                index=index,
-                template=template,
-                issuer_name=issuer_name,
-                period_end=period_end,
-                numerator_code="PAT",
-                denominator_code="TOTAL_ASSETS",
-                ratio_code="ROA",
-                formula="PAT / TOTAL_ASSETS",
-                empty_denominator_reason="NON_POSITIVE_DENOMINATOR",
-            ),
-            _same_quarter_ratio(
-                index=index,
-                template=template,
-                issuer_name=issuer_name,
-                period_end=period_end,
-                numerator_code="PAT",
-                denominator_code="TOP_LINE",
-                ratio_code="NPM",
-                formula="PAT / TOP_LINE",
-                empty_denominator_reason="NON_POSITIVE_DENOMINATOR",
-            ),
+            _same_quarter_ratio(index=index, template=template, issuer_name=issuer_name, period_end=period_end, numerator_code="TOTAL_LIABILITIES", denominator_code="TOTAL_EQUITY", ratio_code="DEBT_TO_EQUITY", formula="TOTAL_LIABILITIES / TOTAL_EQUITY", empty_denominator_reason="ZERO_EQUITY"),
+            _same_quarter_ratio(index=index, template=template, issuer_name=issuer_name, period_end=period_end, numerator_code="PAT", denominator_code="TOTAL_EQUITY", ratio_code="ROE", formula="PAT / TOTAL_EQUITY", empty_denominator_reason="ZERO_EQUITY"),
+            _same_quarter_ratio(index=index, template=template, issuer_name=issuer_name, period_end=period_end, numerator_code="PAT", denominator_code="TOTAL_ASSETS", ratio_code="ROA", formula="PAT / TOTAL_ASSETS", empty_denominator_reason="NON_POSITIVE_DENOMINATOR"),
+            _same_quarter_ratio(index=index, template=template, issuer_name=issuer_name, period_end=period_end, numerator_code="PAT", denominator_code="TOP_LINE", ratio_code="NPM", formula="PAT / TOP_LINE", empty_denominator_reason="NON_POSITIVE_DENOMINATOR"),
         ]
         derived_results.append((item, [*facts, *extra]))
     return derived_results
