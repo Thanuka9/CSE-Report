@@ -18,6 +18,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from cse_financial_etl.contracts.publication import publishability_decision
+
 REVIEW_POLICY_VERSION = "R2-2026-09-FACTBOUND"
 DECISION_APPROVED = "APPROVED"
 DECISION_REJECTED = "REJECTED"
@@ -50,11 +52,7 @@ def _canonical_period(value: Any) -> str:
 
 
 def _material_evidence(fact: Any) -> dict[str, Any]:
-    """Return only stable evidence that materially defines the reviewed fact.
-
-    Run summaries, search traces and counters are deliberately excluded: rerunning the
-    same extraction must not invalidate an approval merely because diagnostics changed.
-    """
+    """Return only stable evidence that materially defines the reviewed fact."""
 
     raw = _fact_field(fact, "evidence_json")
     if isinstance(raw, Mapping):
@@ -111,7 +109,13 @@ def fact_fingerprint(fact: Any) -> str:
         "semantic_model": _canonical_scalar(_fact_field(fact, "semantic_model")),
         "evidence": _material_evidence(fact),
     }
-    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False, default=str)
+    encoded = json.dumps(
+        payload,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+        default=str,
+    )
     return "factfp:" + hashlib.sha256(encoded.encode("utf-8")).hexdigest()
 
 
@@ -163,7 +167,12 @@ def _signing_payload(decision: ReviewDecision) -> bytes:
         "auth_provider": AUTH_PROVIDER_HMAC,
         "key_id": decision.key_id,
     }
-    return json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    return json.dumps(
+        payload,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    ).encode("utf-8")
 
 
 def sign_decision(decision: ReviewDecision, *, secret: str, key_id: str) -> ReviewDecision:
@@ -171,8 +180,17 @@ def sign_decision(decision: ReviewDecision, *, secret: str, key_id: str) -> Revi
         raise ValueError("review signing secret is empty")
     if not decision.fact_fingerprint:
         raise ValueError("fact_fingerprint is required before signing")
-    unsigned = replace(decision, auth_provider=AUTH_PROVIDER_HMAC, key_id=key_id.strip(), signature="")
-    signature = hmac.new(secret.encode("utf-8"), _signing_payload(unsigned), hashlib.sha256).hexdigest()
+    unsigned = replace(
+        decision,
+        auth_provider=AUTH_PROVIDER_HMAC,
+        key_id=key_id.strip(),
+        signature="",
+    )
+    signature = hmac.new(
+        secret.encode("utf-8"),
+        _signing_payload(unsigned),
+        hashlib.sha256,
+    ).hexdigest()
     return replace(unsigned, signature=signature)
 
 
@@ -187,16 +205,28 @@ def verify_decision_signature(decision: ReviewDecision) -> tuple[bool, str]:
     secret = os.environ.get(env_name)
     if not secret:
         return False, f"SIGNING_KEY_UNAVAILABLE:{env_name}"
-    expected = hmac.new(secret.encode("utf-8"), _signing_payload(decision), hashlib.sha256).hexdigest()
+    expected = hmac.new(
+        secret.encode("utf-8"),
+        _signing_payload(decision),
+        hashlib.sha256,
+    ).hexdigest()
     if not hmac.compare_digest(expected, decision.signature):
         return False, "SIGNATURE_INVALID"
     return True, "AUTHENTICATED"
 
 
 def make_decision(
-    *, issuer_name: str, symbol: str, period_end: str, metric_code: str,
-    filing_sha256: str, reviewer_id: str, decision: str,
-    fact_fingerprint: str, note: str = "", policy_version: str = REVIEW_POLICY_VERSION,
+    *,
+    issuer_name: str,
+    symbol: str,
+    period_end: str,
+    metric_code: str,
+    filing_sha256: str,
+    reviewer_id: str,
+    decision: str,
+    fact_fingerprint: str,
+    note: str = "",
+    policy_version: str = REVIEW_POLICY_VERSION,
     key_id: str | None = None,
 ) -> ReviewDecision:
     normalized = decision.strip().upper()
@@ -209,10 +239,17 @@ def make_decision(
     if not fact_fingerprint.strip():
         raise ValueError("fact_fingerprint is required to bind the decision to the reviewed fact")
     created = ReviewDecision(
-        issuer_name=issuer_name, symbol=symbol, period_end=period_end, metric_code=metric_code,
-        filing_sha256=filing_sha256, fact_fingerprint=fact_fingerprint,
-        policy_version=policy_version, reviewer_id=reviewer_id.strip(), decision=normalized,
-        decided_at=datetime.now(UTC).isoformat(), note=note,
+        issuer_name=issuer_name,
+        symbol=symbol,
+        period_end=period_end,
+        metric_code=metric_code,
+        filing_sha256=filing_sha256,
+        fact_fingerprint=fact_fingerprint,
+        policy_version=policy_version,
+        reviewer_id=reviewer_id.strip(),
+        decision=normalized,
+        decided_at=datetime.now(UTC).isoformat(),
+        note=note,
     )
     if key_id is None:
         return created
@@ -242,17 +279,24 @@ def load_review_decisions(path: Path) -> list[ReviewDecision]:
         except json.JSONDecodeError:
             continue
         try:
-            decisions.append(ReviewDecision(
-                issuer_name=str(raw["issuer_name"]), symbol=str(raw["symbol"]),
-                period_end=str(raw["period_end"]), metric_code=str(raw["metric_code"]),
-                filing_sha256=str(raw["filing_sha256"]),
-                fact_fingerprint=str(raw.get("fact_fingerprint") or ""),
-                policy_version=str(raw.get("policy_version") or ""),
-                reviewer_id=str(raw.get("reviewer_id") or ""),
-                decision=str(raw.get("decision") or "").upper(), decided_at=str(raw.get("decided_at") or ""),
-                note=str(raw.get("note") or ""), auth_provider=str(raw.get("auth_provider") or ""),
-                key_id=str(raw.get("key_id") or ""), signature=str(raw.get("signature") or ""),
-            ))
+            decisions.append(
+                ReviewDecision(
+                    issuer_name=str(raw["issuer_name"]),
+                    symbol=str(raw["symbol"]),
+                    period_end=str(raw["period_end"]),
+                    metric_code=str(raw["metric_code"]),
+                    filing_sha256=str(raw["filing_sha256"]),
+                    fact_fingerprint=str(raw.get("fact_fingerprint") or ""),
+                    policy_version=str(raw.get("policy_version") or ""),
+                    reviewer_id=str(raw.get("reviewer_id") or ""),
+                    decision=str(raw.get("decision") or "").upper(),
+                    decided_at=str(raw.get("decided_at") or ""),
+                    note=str(raw.get("note") or ""),
+                    auth_provider=str(raw.get("auth_provider") or ""),
+                    key_id=str(raw.get("key_id") or ""),
+                    signature=str(raw.get("signature") or ""),
+                )
+            )
         except KeyError:
             continue
     return decisions
@@ -277,11 +321,19 @@ class ReleaseSummary:
 
 
 def apply_review_decisions(
-    facts: list[Any], decisions: list[ReviewDecision], *, filing_sha256: str,
+    facts: list[Any],
+    decisions: list[ReviewDecision],
+    *,
+    filing_sha256: str,
     policy_version: str = REVIEW_POLICY_VERSION,
 ) -> tuple[list[Any], ReleaseSummary]:
-    summary = ReleaseSummary(policy_version=policy_version, decisions_loaded=len(decisions))
-    by_identity: dict[str, ReviewDecision] = {decision.identity: decision for decision in decisions}
+    summary = ReleaseSummary(
+        policy_version=policy_version,
+        decisions_loaded=len(decisions),
+    )
+    by_identity: dict[str, ReviewDecision] = {
+        decision.identity: decision for decision in decisions
+    }
     updated: list[Any] = []
     matched: set[str] = set()
     for fact in facts:
@@ -330,10 +382,11 @@ def apply_review_decisions(
             updated.append(fact)
             continue
         updated.append(replace(fact, review_status=decision.decision))
-    summary.unmatched = len([identity for identity in by_identity if identity not in matched])
+    summary.unmatched = len(
+        [identity for identity in by_identity if identity not in matched]
+    )
     return updated, summary
 
 
 def official_release_allowed(fact: Any) -> tuple[bool, str | None]:
-    from cse_financial_etl.validation.acceptance import publishability_decision
     return publishability_decision(fact, release_mode="OFFICIAL")
