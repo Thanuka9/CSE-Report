@@ -91,10 +91,12 @@ def compile_statements(
         if link.evidenced
     }
 
+    # Continuation links may cross detector-region boundaries. Keep only schema state
+    # tied to its source page, then require exact adjacency before it can be reused.
+    previous_schemas: dict[tuple[str, int], tuple[int, ColumnSchema]] = {}
     for region in regions:
         if region.statement_type in _SKIP_REGIONS:
             continue
-        previous_schemas: dict[tuple[str, int], ColumnSchema] = {}
         for page_no in range(region.page_start, region.page_end + 1):
             page = pages.get(page_no)
             if page is None or not page.tables:
@@ -104,11 +106,15 @@ def compile_statements(
                 statement_type = _table_statement_type(table, region.statement_type)
                 schema = compile_column_schema(table, statement_type=statement_type, known=known)
                 link = continuation_links.get((page_no, region.statement_type))
-                prior_schema = previous_schemas.get((statement_type, table_index))
-                if link is not None and prior_schema is not None:
+                prior_record = previous_schemas.get((statement_type, table_index))
+                if (
+                    link is not None
+                    and prior_record is not None
+                    and prior_record[0] == link.from_page
+                ):
                     schema = _bridge_evidenced_continuation_context(
                         schema,
-                        prior_schema,
+                        prior_record[1],
                         page,
                         link,
                     )
@@ -119,7 +125,7 @@ def compile_statements(
                     schema,
                     page_units=page_units,
                 )
-                previous_schemas[(statement_type, table_index)] = schema
+                previous_schemas[(statement_type, table_index)] = (page_no, schema)
                 if not rows:
                     continue
                 unit_evidence = [d.as_dict() for d in schema.table_units] + [
@@ -254,40 +260,62 @@ def _bridge_evidenced_continuation_context(
 
 
 def _single_page_entity(page: PageIR) -> str | None:
-    entities = {
-        entity
-        for line in page.lines[:10]
-        if (entity := normalize_entity_term(line.text)) is not None
-    }
+    # Extract every entity term independently. A compound cue such as "GROUP COMPANY"
+    # is ambiguous and must never collapse to whichever regex branch happens to win.
+    entities: set[str] = set()
+    for line in page.lines[:10]:
+        for match in re.finditer(r"\b(group|company|bank|consolidated|separate)\b", line.text, re.I):
+            entity = normalize_entity_term(match.group(1))
+            if entity is not None:
+                entities.add(entity)
     if len(entities) != 1:
         return None
     return next(iter(entities))
 
 
 def _continuation_columns_compatible(previous: ColumnSchema, current: ColumnSchema) -> bool:
-    """Require source-header alignment before any continuation inheritance."""
+    """Require one-to-one source-header alignment, independent of local column indexes.
 
-    previous_values = {col.col_idx: col for col in previous.columns if col.kind == "VALUE"}
-    current_values = {col.col_idx: col for col in current.columns if col.kind == "VALUE"}
-    common = sorted(previous_values.keys() & current_values.keys())
-    if not common:
+    Physical column numbering is page-local: adding or removing a NOTE/PERCENT column can
+    shift every VALUE index on a continuation page. Compatibility therefore uses printed
+    period/duration/role evidence and rejects duplicate or conflicting matches.
+    """
+
+    previous_values = [col for col in previous.columns if col.kind == "VALUE"]
+    current_values = [col for col in current.columns if col.kind == "VALUE"]
+    if not previous_values or not current_values:
         return False
 
-    matching_dates = 0
-    for col_idx in common:
-        before = previous_values[col_idx]
-        after = current_values[col_idx]
-        if before.period_end is not None and after.period_end is not None:
+    matched = 0
+    used_previous: set[str] = set()
+    for after in current_values:
+        if after.period_end is None:
+            continue
+        candidates: list[StatementColumn] = []
+        for before in previous_values:
             if before.period_end != after.period_end:
-                return False
-            matching_dates += 1
-        if (
-            before.duration_months is not None
-            and after.duration_months is not None
-            and before.duration_months != after.duration_months
-        ):
+                continue
+            if (
+                before.duration_months is not None
+                and after.duration_months is not None
+                and before.duration_months != after.duration_months
+            ):
+                continue
+            if (
+                before.comparison_role is not None
+                and after.comparison_role is not None
+                and before.comparison_role != after.comparison_role
+            ):
+                continue
+            candidates.append(before)
+        if len(candidates) != 1:
             return False
-    return matching_dates > 0
+        before = candidates[0]
+        if before.column_id in used_previous:
+            return False
+        used_previous.add(before.column_id)
+        matched += 1
+    return matched > 0
 
 
 def _table_statement_type(table: TableIR, region_type: str) -> str:

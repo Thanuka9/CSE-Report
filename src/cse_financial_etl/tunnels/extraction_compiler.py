@@ -54,10 +54,10 @@ def compile_filing(
     """
 
     budget = ResourceBudget()
-    try:
-        entity = infer_entity_scope(issuer_name)
-    except Exception:
-        entity = "COMPANY"
+    # Expected scope may constrain selection, but failure to determine it must never
+    # silently manufacture COMPANY. infer_entity_scope is deterministic and should
+    # surface configuration/programming failures rather than fail open.
+    entity = infer_entity_scope(issuer_name)
     profile = profile_for_issuer(issuer_name)
     known = build_known_context(
         issuer_name=issuer_name,
