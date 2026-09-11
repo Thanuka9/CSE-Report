@@ -28,6 +28,7 @@ jobs:
           uv run pytest
           tests/regression/redesign/test_synthetic_pdf_gauntlet.py
           tests/regression/redesign/test_synthetic_pdf_structural_gauntlet.py
+          tests/regression/redesign/test_synthetic_pdf_continuation_variants.py
           --junitxml=outputs/synthetic-gauntlet.xml
       - run: uv run pytest --junitxml=outputs/tests.xml
       - name: Production hardening contract is mandatory
