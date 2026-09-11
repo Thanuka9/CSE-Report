@@ -467,7 +467,7 @@ def _from_accepted_entry(
         validation_confidence=1.0 if check.status == "PASS" else 0.0,
         overall_certainty=float(entry.score),
         certainty_band=layout.certainty_band if layout and origin == "layout_geometry" else "HIGH",
-        comparison_role=entry.comparison_role,
+        comparison_role=entry.comparison_role or "UNKNOWN",
         duration_months=entry.duration_months,
         validation_status=validation_status,
         review_status=MACHINE_REVIEW_STATUS,

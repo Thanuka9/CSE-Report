@@ -159,3 +159,27 @@ def test_financial_position_columns_have_no_duration_and_roles_from_dates() -> N
     ]
     assert all(cols[i].duration_months is None for i in (1, 2, 3, 4))
     assert [cols[i].comparison_role for i in (1, 2, 3, 4)] == ["CURRENT", "COMPARATIVE", "CURRENT", "COMPARATIVE"]
+
+
+def test_single_source_column_role_is_query_invariant() -> None:
+    page = make_page(
+        [
+            [*words("Statement of profit or loss - Company", 40)],
+            [*words("For the three months ended 30 June 2026", 300)],
+            [("30.06.2026", 300, 340)],
+            [*words("Revenue", 40), right_aligned("100", C1_X)],
+            [*words("Profit for the period", 40), right_aligned("10", C1_X)],
+        ]
+    )
+    known_matching = build_known_context(
+        issuer_name="X PLC", symbol="X.N0000", period_end=date(2026, 6, 30), required_entity="COMPANY"
+    )
+    known_other = build_known_context(
+        issuer_name="X PLC", symbol="X.N0000", period_end=date(2027, 6, 30), required_entity="COMPANY"
+    )
+    matching = _cols(_compile(page, known=known_matching))
+    other = _cols(_compile(page, known=known_other))
+    assert matching[1].period_end == other[1].period_end == date(2026, 6, 30)
+    assert matching[1].comparison_role == other[1].comparison_role == "CURRENT"
+    assert matching[1].evidence["comparison_role"]["source_owned"] is True
+    assert other[1].evidence["comparison_role"]["source_owned"] is True

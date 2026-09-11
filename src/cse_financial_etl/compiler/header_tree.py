@@ -333,10 +333,7 @@ def compile_header(
     compiled = _derive_period_ended_durations(compiled)
     # Comparison roles are facts about the source table, never about the query.
     # KnownContext is deliberately excluded here and used only for conflict validation below.
-    compiled = _assign_roles(
-        compiled,
-        target_period_end=known.target_period_end if known is not None else None,
-    )
+    compiled = _assign_roles(compiled)
     compiled = _period_starts(compiled)
 
     if known is not None:
@@ -557,18 +554,12 @@ def _derive_period_ended_durations(columns: list[CompiledHeaderColumn]) -> list[
     return out
 
 
-def _assign_roles(
-    columns: list[CompiledHeaderColumn],
-    *,
-    target_period_end: date | None = None,
-) -> list[CompiledHeaderColumn]:
-    """Derive CURRENT/COMPARATIVE exclusively from source-owned header dates.
+def _assign_roles(columns: list[CompiledHeaderColumn]) -> list[CompiledHeaderColumn]:
+    """Derive CURRENT/COMPARATIVE only from source-owned header dates.
 
-    A query target must never create a comparison role.  For a multi-column
-    source block, every sibling VALUE column must have a parsed date before
-    relative roles are inferred; otherwise the block is incomplete and roles
-    remain unknown.  A single explicitly dated VALUE column is CURRENT because
-    the source itself presents no competing period.
+    Query/target context is deliberately absent. Every sibling VALUE
+    column in a multi-column source block must have a parsed date before
+    roles are inferred; otherwise all roles in that block remain unknown.
     """
 
     groups: dict[tuple[Any, ...], list[CompiledHeaderColumn]] = {}
@@ -583,70 +574,37 @@ def _assign_roles(
         dated = [c for c in members if c.period_end is not None]
         if not dated:
             continue
-
-        # With multiple value columns, a missing sibling date is structural
-        # ambiguity (for example OCR may have lost the actual current header).
-        # Do not promote the latest surviving date to CURRENT.
         if len(members) > 1 and len(dated) != len(members):
             for col in members:
                 role_by_id[col.column_id] = None
             continue
 
-        latest = max(c.period_end for c in dated)  # type: ignore[type-var]
-        observed_dates = sorted({c.period_end.isoformat() for c in dated if c.period_end is not None})
+        observed_date_values = [c.period_end for c in dated if c.period_end is not None]
+        latest = max(observed_date_values)
+        observed_dates = sorted({value.isoformat() for value in observed_date_values})
         for col in members:
             if col.period_end is None:
                 role_by_id[col.column_id] = None
                 continue
-            role = "CURRENT" if col.period_end == latest else "COMPARATIVE"
-            role_by_id[col.column_id] = role
+            derived_role = "CURRENT" if col.period_end == latest else "COMPARATIVE"
+            role_by_id[col.column_id] = derived_role
             role_evidence_by_id[col.column_id] = {
                 "source": "source_header_date_order",
+                "source_owned": True,
                 "observed_dates": observed_dates,
                 "selected_date": col.period_end.isoformat(),
-                "role": role,
+                "role": derived_role,
             }
 
     out: list[CompiledHeaderColumn] = []
     for col in columns:
         evidence = dict(col.evidence)
-        role = role_by_id.get(col.column_id)
+        role: str | None = role_by_id.get(col.column_id)
         role_evidence = role_evidence_by_id.get(col.column_id)
-
-        # Known target context may only *remove* a false CURRENT classification
-        # from a single surviving source column. It never creates CURRENT and never
-        # rewrites the relative roles of a complete multi-column source table.
-        if (
-            target_period_end is not None
-            and role == "CURRENT"
-            and col.period_end is not None
-            and col.period_end != target_period_end
-            and len(groups.get((col.entity, col.duration_months, col.temporal_type), ())) == 1
-        ):
-            if col.period_end < target_period_end:
-                role = "COMPARATIVE"
-                role_evidence = {
-                    "source": "known_context_negative_guard",
-                    "source_owned": False,
-                    "selected_date": col.period_end.isoformat(),
-                    "target_period_end": target_period_end.isoformat(),
-                    "role": "COMPARATIVE",
-                }
-            else:
-                role = None
-                role_evidence = None
-
         if role_evidence is not None:
             evidence["comparison_role"] = role_evidence
-        out.append(
-            _replace(
-                col,
-                comparison_role=role,
-                evidence=evidence,
-            )
-        )
+        out.append(_replace(col, comparison_role=role, evidence=evidence))
     return out
-
 
 def _period_starts(columns: list[CompiledHeaderColumn]) -> list[CompiledHeaderColumn]:
     """First day of the month ``duration`` months before the period end month."""
