@@ -25,6 +25,7 @@ jobs:
           uv run python - <<'PY'
           import json
           import tempfile
+          from dataclasses import asdict
           from datetime import date
           from pathlib import Path
 
@@ -97,8 +98,8 @@ jobs:
                           "bbox": [p.bbox.x0, p.bbox.y0, p.bbox.x1, p.bbox.y1]}
               payload = {
                   "required_entity": entity,
-                  "regions": [vars(r) for r in regions],
-                  "links": [vars(l) for l in links],
+                  "regions": [asdict(r) for r in regions],
+                  "links": [asdict(l) for l in links],
                   "page2_lines": [line.text for line in document.pages[1].lines[:12]],
                   "page2_tables": [
                       {
@@ -158,10 +159,13 @@ jobs:
               print("CONTINUATION_DIAGNOSTIC_END")
           PY
       - name: Remove temporary diagnostic workflow
+        if: always()
         run: |
-          rm .github/workflows/diagnose-continuation-entity.yml
+          rm -f .github/workflows/diagnose-continuation-entity.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "Remove continuation diagnostic workflow"
-          git push
+          if ! git diff --cached --quiet; then
+            git commit -m "Remove continuation diagnostic workflow"
+            git push
+          fi
