@@ -144,6 +144,28 @@ def test_per_share_currency_is_not_invented_without_source_unit() -> None:
     ) == (None, None, None, 0.0)
 
 
+def test_per_share_currency_can_use_same_page_source_declaration() -> None:
+    unit = _line(1, 30, _token("Rs.", 20, 30))
+    row = _line(
+        1,
+        100,
+        _token("Basic", 20, 100),
+        _token("EPS", 70, 100),
+        _token("1.25", 300, 100),
+    )
+    page = _page(1, unit, row)
+    currency, scale, source, confidence = _unit_for_layout(
+        _doc(page),
+        page,
+        row,
+        "MONETARY_PER_SHARE",
+    )
+    assert currency == "LKR"
+    assert scale == 1
+    assert source is not None
+    assert confidence > 0
+
+
 def test_duplicate_metric_facts_do_not_use_last_write_wins() -> None:
     mapping = facts_by_code(
         [_fact("PAT", "10"), _fact("PAT", "11"), _fact("PBT", "12")]
