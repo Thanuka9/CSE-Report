@@ -333,7 +333,10 @@ def compile_header(
     compiled = _derive_period_ended_durations(compiled)
     # Comparison roles are facts about the source table, never about the query.
     # KnownContext is deliberately excluded here and used only for conflict validation below.
-    compiled = _assign_roles(compiled)
+    compiled = _assign_roles(
+        compiled,
+        target_period_end=known.target_period_end if known is not None else None,
+    )
     compiled = _period_starts(compiled)
 
     if known is not None:
@@ -554,7 +557,11 @@ def _derive_period_ended_durations(columns: list[CompiledHeaderColumn]) -> list[
     return out
 
 
-def _assign_roles(columns: list[CompiledHeaderColumn]) -> list[CompiledHeaderColumn]:
+def _assign_roles(
+    columns: list[CompiledHeaderColumn],
+    *,
+    target_period_end: date | None = None,
+) -> list[CompiledHeaderColumn]:
     """Derive CURRENT/COMPARATIVE exclusively from source-owned header dates.
 
     A query target must never create a comparison role.  For a multi-column
@@ -603,13 +610,37 @@ def _assign_roles(columns: list[CompiledHeaderColumn]) -> list[CompiledHeaderCol
     out: list[CompiledHeaderColumn] = []
     for col in columns:
         evidence = dict(col.evidence)
+        role = role_by_id.get(col.column_id)
         role_evidence = role_evidence_by_id.get(col.column_id)
+
+        # Known target context may only *remove* a false CURRENT classification.
+        # It never creates CURRENT.  This protects prior-only OCR survivors from
+        # being promoted merely because they are the latest date still visible.
+        if (
+            target_period_end is not None
+            and role == "CURRENT"
+            and col.period_end is not None
+            and col.period_end != target_period_end
+        ):
+            if col.period_end < target_period_end:
+                role = "COMPARATIVE"
+                role_evidence = {
+                    "source": "known_context_negative_guard",
+                    "source_owned": False,
+                    "selected_date": col.period_end.isoformat(),
+                    "target_period_end": target_period_end.isoformat(),
+                    "role": "COMPARATIVE",
+                }
+            else:
+                role = None
+                role_evidence = None
+
         if role_evidence is not None:
             evidence["comparison_role"] = role_evidence
         out.append(
             _replace(
                 col,
-                comparison_role=role_by_id.get(col.column_id),
+                comparison_role=role,
                 evidence=evidence,
             )
         )

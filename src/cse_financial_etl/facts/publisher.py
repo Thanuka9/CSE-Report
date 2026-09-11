@@ -424,7 +424,10 @@ def _from_accepted_entry(
 
     entry = queried.entry
     assert entry is not None
-    assert entry.entity is not None and entry.comparison_role is not None
+    # Entity is mandatory for every accepted source fact. Comparison role is
+    # mandatory only for exact-quarter FLOW concepts and is already enforced by
+    # the shared eligibility contract; AS_AT stock facts do not need a role.
+    assert entry.entity is not None
     origin = _candidate_origin(entry)
     routing, native_ok, fallback_code = compiler_routing(report)
     unit_resolution = entry.evidence.get("unit_resolution") or {}

@@ -56,6 +56,7 @@ def _fact(
         unit_source_text="Rs.",
         confidence="HIGH",
         status="EXTRACTED",
+        comparison_role="CURRENT",
         duration_months=duration,
         validation_status="PASSED",
         review_status="APPROVED",

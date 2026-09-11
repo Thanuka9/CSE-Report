@@ -7,6 +7,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Any
 
+from cse_financial_etl.accounting.concept_rules import requires_exact_3m
 from cse_financial_etl.extraction.statement_extractor import ExtractedFact
 from cse_financial_etl.validation.acceptance import is_publishable_fact
 from cse_financial_etl.validation.row_safety import (
@@ -265,8 +266,21 @@ def _same_quarter_ratio(
         return _missing_ratio(template, ratio_code, "INCOMPATIBLE_SCOPE", f"{numerator_code} and {denominator_code} entity scopes differ.")
     if numerator.entity_scope not in STANDALONE:
         return _missing_ratio(template, ratio_code, "INCOMPATIBLE_SCOPE", f"{ratio_code} requires standalone COMPANY/BANK inputs.")
-    if numerator.comparison_role != "CURRENT" or denominator.comparison_role != "CURRENT":
-        return _missing_ratio(template, ratio_code, "INCOMPATIBLE_PERIOD_CONTEXT", f"{ratio_code} requires CURRENT numerator and denominator facts.")
+    flow_inputs = [
+        fact
+        for fact in (numerator, denominator)
+        if requires_exact_3m(fact.metric_code)
+    ]
+    if any(
+        fact.comparison_role != "CURRENT" or fact.duration_months != 3
+        for fact in flow_inputs
+    ):
+        return _missing_ratio(
+            template,
+            ratio_code,
+            "INCOMPATIBLE_PERIOD_CONTEXT",
+            f"{ratio_code} requires CURRENT three-month context for FLOW inputs; AS_AT stock inputs are bound by target period.",
+        )
     assert numerator.normalized_value is not None
     assert denominator.normalized_value is not None
     if denominator.normalized_value <= 0:

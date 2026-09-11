@@ -130,7 +130,7 @@ CONCEPT_PATTERNS: dict[str, tuple[re.Pattern[str], ...]] = {
     "IMPAIRMENT": _rx(r"^(?:net )?impairment"),
     "OPERATING_PROFIT": _rx(
         r"^results? (?:from|of) operating activities$",
-        r"^operating profit(?: before taxes? on financial services)?$",
+        r"^operating profit(?: before tax(?:es)? on financial services)?$",
         r"^profit from operations?$",
         r"^profit from operating activities$",
         r"^results? from operations?$",
