@@ -79,9 +79,11 @@ def test_duplicate_review_decisions_do_not_use_jsonl_order_as_authority() -> Non
     )
 
     assert updated[0].review_status == "REVIEW"
+    assert summary.decisions_loaded == 2
     assert summary.approved_applied == 0
     assert summary.rejected_applied == 0
     assert summary.duplicate_decision_identities == 1
+    assert summary.unmatched == 0
 
 
 def test_legacy_unsigned_manual_correction_is_quarantined_not_applied(tmp_path) -> None:
