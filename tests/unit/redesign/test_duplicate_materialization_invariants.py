@@ -81,7 +81,11 @@ def _entry(entry_id: str, concept: str, value: str, *, score: float = 0.95) -> L
         bbox="[0,0,1,1]",
         label=concept,
         score=score,
-        evidence={"semantic_score": 1.0, "candidate_origin": "compiler_geometry"},
+        evidence={
+            "semantic_score": 1.0,
+            "candidate_origin": "compiler_geometry",
+            "statement_region_confidence": 1.0,
+        },
     )
 
 
