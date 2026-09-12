@@ -71,11 +71,40 @@ def _sanitize_source_fact(fact: ExtractedFact) -> ExtractedFact:
     return fact
 
 
-def _sanitize_cross_statement_scales(facts: list[ExtractedFact]) -> list[ExtractedFact]:
-    values = {
-        fact.metric_code: (fact.normalized_value, fact.scale_factor)
+def _group_facts_by_metric(facts: list[ExtractedFact]) -> dict[str, list[ExtractedFact]]:
+    grouped: dict[str, list[ExtractedFact]] = {}
+    for fact in facts:
+        grouped.setdefault(fact.metric_code, []).append(fact)
+    return grouped
+
+
+def _sanitize_duplicate_metric_facts(facts: list[ExtractedFact]) -> list[ExtractedFact]:
+    """Withhold every accepted row for a duplicated metric inside one filing."""
+
+    grouped = _group_facts_by_metric(facts)
+    duplicates = {code for code, items in grouped.items() if len(items) > 1}
+    if not duplicates:
+        return facts
+    return [
+        _withhold_source_fact(
+            fact,
+            status="AMBIGUOUS_CANDIDATES",
+            reason="DUPLICATE_METRIC_FACT",
+        )
+        if fact.metric_code in duplicates and fact.status in ACCEPTED
+        else fact
         for fact in facts
-        if fact.status in ACCEPTED and fact.validation_status == "PASSED"
+    ]
+
+
+def _sanitize_cross_statement_scales(facts: list[ExtractedFact]) -> list[ExtractedFact]:
+    grouped = _group_facts_by_metric(facts)
+    values = {
+        code: (items[0].normalized_value, items[0].scale_factor)
+        for code, items in grouped.items()
+        if len(items) == 1
+        and items[0].status in ACCEPTED
+        and items[0].validation_status == "PASSED"
     }
     unsafe = inconsistent_scale_metrics(values)
     if not unsafe:
@@ -89,7 +118,8 @@ def _sanitize_cross_statement_scales(facts: list[ExtractedFact]) -> list[Extract
 
 
 def _sanitize_eps_selected(facts: list[ExtractedFact]) -> list[ExtractedFact]:
-    by_code = {fact.metric_code: fact for fact in facts}
+    grouped = _group_facts_by_metric(facts)
+    by_code = {code: items[0] for code, items in grouped.items() if len(items) == 1}
     selected = by_code.get("EPS_SELECTED")
     if selected is None or selected.status not in ACCEPTED:
         return facts
@@ -311,6 +341,7 @@ def derive_ratio_facts[TFiling](
     sanitized_results: list[tuple[TFiling, list[ExtractedFact]]] = []
     for item, facts in extracted_results:
         sanitized = [_sanitize_source_fact(fact) for fact in facts]
+        sanitized = _sanitize_duplicate_metric_facts(sanitized)
         sanitized = _sanitize_cross_statement_scales(sanitized)
         sanitized = _sanitize_eps_selected(sanitized)
         sanitized_results.append((item, sanitized))

@@ -57,6 +57,15 @@ def compiler_routing(report: dict[str, Any]) -> tuple[str, bool, str | None]:
     return ROUTING_LAYOUT_ASSIST_ONLY, False, COMPILER_NO_STATEMENTS
 
 
+def _group_by_metric_code(items: list[Any]) -> dict[str, list[Any]]:
+    """Group metric rows without ever collapsing duplicates by iteration order."""
+
+    grouped: dict[str, list[Any]] = {}
+    for item in items:
+        grouped.setdefault(str(item.metric_code), []).append(item)
+    return grouped
+
+
 def publish_from_compiler(
     *,
     queried: list[QueriedFact],
@@ -71,8 +80,16 @@ def publish_from_compiler(
     """Build the official fact list from compiler queries, not raw layout rows."""
 
     routing, native_ok, fallback_code = compiler_routing(report)
-    layout_by_code = {f.metric_code: f for f in layout_facts}
-    queried_by_code = {q.metric_code: q for q in queried}
+    layout_groups = _group_by_metric_code(layout_facts)
+    queried_groups = _group_by_metric_code(queried)
+    layout_by_code = {
+        code: items[0] for code, items in layout_groups.items() if len(items) == 1
+    }
+    queried_by_code = {
+        code: items[0] for code, items in queried_groups.items() if len(items) == 1
+    }
+    duplicate_layout_codes = {code for code, items in layout_groups.items() if len(items) > 1}
+    duplicate_query_codes = {code for code, items in queried_groups.items() if len(items) > 1}
     published: list[ExtractedFact] = []
     stats: dict[str, Any] = {
         "publication_routing": routing,
@@ -85,14 +102,61 @@ def publish_from_compiler(
         "terminal_unresolved": 0,
         "final_check_failures": 0,
         "fallback_issue_codes": [],
+        "duplicate_layout_codes": sorted(duplicate_layout_codes),
+        "duplicate_query_codes": sorted(duplicate_query_codes),
     }
 
     skip_projection = {"EPS_SELECTED", "CROSS_METRIC_CONTEXT"}
-    codes = [c for c in dict.fromkeys([*layout_by_code.keys(), *queried_by_code.keys()]) if c not in skip_projection]
+    codes = [
+        code
+        for code in dict.fromkeys([*layout_groups.keys(), *queried_groups.keys()])
+        if code not in skip_projection
+    ]
     for code in codes:
         layout = layout_by_code.get(code)
         queried_fact = queried_by_code.get(code)
+        if code in duplicate_query_codes:
+            exemplar = queried_groups[code][0]
+            ambiguous = QueriedFact(
+                metric_code=code,
+                concept=str(exemplar.concept),
+                entry=None,
+                status="AMBIGUOUS_CANDIDATES",
+                issue="duplicate_queried_metric_code",
+            )
+            published.append(
+                _from_terminal(
+                    ambiguous,
+                    None,
+                    report=report,
+                    issuer_name=issuer_name,
+                    symbol=symbol,
+                    period_end=period_end,
+                )
+            )
+            stats["terminal_unresolved"] += 1
+            continue
         if queried_fact is None:
+            if code in duplicate_layout_codes:
+                ambiguous = QueriedFact(
+                    metric_code=code,
+                    concept=code,
+                    entry=None,
+                    status="AMBIGUOUS_CANDIDATES",
+                    issue="duplicate_layout_metric_code",
+                )
+                published.append(
+                    _from_terminal(
+                        ambiguous,
+                        None,
+                        report=report,
+                        issuer_name=issuer_name,
+                        symbol=symbol,
+                        period_end=period_end,
+                    )
+                )
+                stats["terminal_unresolved"] += 1
+                continue
             if layout is None:
                 continue
             published.append(
@@ -202,7 +266,10 @@ def _project_eps_selected(
     )
 
     routing, native_ok, fallback_code = compiler_routing(report)
-    by_code = {f.metric_code: f for f in published}
+    published_groups = _group_by_metric_code(published)
+    by_code = {
+        code: items[0] for code, items in published_groups.items() if len(items) == 1
+    }
     selected = _selected_eps_fact(
         issuer_name,
         symbol,
@@ -571,15 +638,15 @@ def _explicit_fallback_fact(
         metric_type=layout.metric_type,
         raw_text=layout.raw_text,
         raw_value=layout.raw_value,
-        normalized_value=layout.normalized_value,
+        normalized_value=None,
         currency=layout.currency,
         scale_factor=layout.scale_factor,
         entity_scope=layout.entity_scope,
         source_page=layout.source_page,
         source_line=layout.source_line,
         unit_source_text=layout.unit_source_text,
-        confidence=layout.confidence,
-        status=layout.status,
+        confidence="LOW",
+        status="EXPLICIT_LAYOUT_FALLBACK_REQUIRED",
         raw_label=layout.raw_label,
         source_bbox=layout.source_bbox,
         extraction_method="LAYOUT_FALLBACK",
@@ -589,12 +656,12 @@ def _explicit_fallback_fact(
         period_confidence=layout.period_confidence,
         unit_confidence=layout.unit_confidence,
         column_confidence=layout.column_confidence,
-        validation_confidence=layout.validation_confidence,
-        overall_certainty=layout.overall_certainty,
-        certainty_band=layout.certainty_band,
+        validation_confidence=0.0,
+        overall_certainty=0.0,
+        certainty_band="NONE",
         comparison_role=layout.comparison_role,
         duration_months=layout.duration_months,
-        validation_status=layout.validation_status,
+        validation_status="FAILED",
         review_status=MACHINE_REVIEW_STATUS,
         evidence_json=_evidence_blob(
             report=report,

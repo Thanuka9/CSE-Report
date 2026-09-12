@@ -111,8 +111,37 @@ def _query_one(
     if eligible_accepted:
         first_concept = eligible_accepted[0][0].concept
         same_concept = [item for item in eligible_accepted if item[0].concept == first_concept]
+        source_signatures = {
+            (
+                item[0].normalized_value,
+                item[0].entity,
+                item[0].period_end,
+                item[0].duration_months,
+                item[0].comparison_role,
+                item[0].unit,
+                item[0].scale_factor,
+            )
+            for item in same_concept
+        }
+        if len(same_concept) > 1 and len(source_signatures) > 1:
+            return QueriedFact(
+                query.metric_code,
+                query.concept,
+                None,
+                str(MissingReason.AMBIGUOUS_CANDIDATES),
+                "multiple_accepted_candidates_conflict",
+                _trace(all_entries, recovery_attempted),
+                ("MULTIPLE_ACCEPTED_CONFLICT",),
+            )
         best, eligible_reasons = max(same_concept, key=lambda item: item[0].score)
-        return QueriedFact(query.metric_code, best.concept, best, "EXTRACTED", None, eligibility_reasons=eligible_reasons)
+        return QueriedFact(
+            query.metric_code,
+            best.concept,
+            best,
+            "EXTRACTED",
+            None,
+            eligibility_reasons=eligible_reasons,
+        )
 
     trace = _trace(all_entries, recovery_attempted)
     unresolved = [e for e in all_entries if e.status == "unresolved"]
@@ -209,7 +238,20 @@ def _trace(entries: list[LedgerEntry], recovery_attempted: bool) -> SearchTrace:
 
 
 def queried_values(facts: list[QueriedFact]) -> dict[str, Decimal | None]:
-    out: dict[str, Decimal | None] = {}
+    """Materialize query values without last-write-wins on duplicate metric codes."""
+
+    grouped: dict[str, list[QueriedFact]] = {}
     for fact in facts:
-        out[fact.metric_code] = fact.entry.normalized_value if fact.entry and fact.status == "EXTRACTED" else None
+        grouped.setdefault(fact.metric_code, []).append(fact)
+    out: dict[str, Decimal | None] = {}
+    for code, items in grouped.items():
+        if len(items) != 1:
+            out[code] = None
+            continue
+        fact = items[0]
+        out[code] = (
+            fact.entry.normalized_value
+            if fact.entry is not None and fact.status == "EXTRACTED"
+            else None
+        )
     return out
