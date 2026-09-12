@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from contextlib import suppress
 from datetime import date
 from pathlib import Path
@@ -15,11 +16,129 @@ from cse_financial_etl.ingestion.quality_router import route_document_ingestion
 from cse_financial_etl.resolution.candidate_ledger import CandidateLedger, LedgerEntry
 from cse_financial_etl.tunnels.common_financial_engine import apply_financial_engine
 
-# Layout-assist candidates are discovery aids. They are deliberately capped below
-# native compiler evidence and, critically, query context is never copied into their
-# source dimensions. A legacy fact's period_end/entity/comparison_role may have been
-# populated from the requested target rather than independently observed in the PDF.
+# Layout-assist candidates remain discovery aids and are capped below native compiler
+# evidence. Target issuer/period metadata may constrain a query, but it is bridged into a
+# ledger candidate only when the layout extractor independently corroborated the selected
+# row with high-confidence PDF geometry. Ambiguous rows stay unresolved.
 _LAYOUT_ASSIST_CAP = 0.45
+_LAYOUT_CONTEXT_MIN_ENTITY_CONFIDENCE = 0.90
+_LAYOUT_CONTEXT_MIN_PERIOD_CONFIDENCE = 0.90
+
+
+def _confidence(value: Any) -> float:
+    try:
+        return float(value or 0.0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _period_string(value: Any) -> str | None:
+    if value is None:
+        return None
+    if hasattr(value, "isoformat"):
+        return str(value.isoformat())
+    text = str(value).strip()
+    return text or None
+
+
+def _source_corroborated_layout_context(
+    fact: Any,
+) -> tuple[str | None, str | None, str | None, dict[str, Any]]:
+    """Bridge target context only after the PDF row independently corroborates it.
+
+    The legacy layout extractor receives target issuer/period metadata, so those fields
+    cannot be treated as source evidence merely because they appear on ``ExtractedFact``.
+    However, an ``EXTRACTED``/``PASSED`` row also carries source-derived entity confidence,
+    comparison-role geometry, duration and a page/line/bbox reference. When all of those
+    agree, target metadata becomes a constrained label for observed evidence rather than
+    an invented fact. This preserves coverage without reviving the old blind context copy.
+    """
+
+    status = str(getattr(fact, "status", "") or "").strip().upper()
+    validation_status = str(
+        getattr(fact, "validation_status", "") or ""
+    ).strip().upper()
+    source_page = getattr(fact, "source_page", None)
+    source_line = str(getattr(fact, "source_line", "") or "").strip()
+    source_bbox = str(getattr(fact, "source_bbox", "") or "").strip()
+    has_geometry_reference = (
+        source_page is not None and bool(source_line) and bool(source_bbox)
+    )
+
+    raw_evidence = getattr(fact, "evidence_json", None)
+    evidence: dict[str, Any] = {}
+    if raw_evidence:
+        try:
+            loaded = json.loads(str(raw_evidence))
+            if isinstance(loaded, dict):
+                evidence = loaded
+        except (TypeError, ValueError, json.JSONDecodeError):
+            evidence = {}
+
+    entity = str(getattr(fact, "entity_scope", "") or "").strip().upper()
+    comparison_role = str(
+        getattr(fact, "comparison_role", "") or ""
+    ).strip().upper()
+    evidence_role = str(evidence.get("comparison_role") or "").strip().upper()
+    period_end = _period_string(getattr(fact, "period_end", None))
+    duration_months = getattr(fact, "duration_months", None)
+    evidence_duration = evidence.get("duration_months")
+    parent_kind = str(evidence.get("entity_parent_kind") or "").strip().upper()
+
+    base_ok = (
+        status == "EXTRACTED"
+        and validation_status == "PASSED"
+        and has_geometry_reference
+    )
+    entity_ok = (
+        base_ok
+        and entity in {"COMPANY", "BANK", "GROUP"}
+        and _confidence(getattr(fact, "entity_confidence", 0.0))
+        >= _LAYOUT_CONTEXT_MIN_ENTITY_CONFIDENCE
+        and not (
+            entity in {"COMPANY", "BANK"}
+            and parent_kind in {"GROUP", "CONSOLIDATED"}
+        )
+    )
+    role_ok = (
+        base_ok
+        and comparison_role == "CURRENT"
+        and evidence_role == "CURRENT"
+        and _confidence(getattr(fact, "period_confidence", 0.0))
+        >= _LAYOUT_CONTEXT_MIN_PERIOD_CONFIDENCE
+    )
+
+    # Flow rows must preserve exact-quarter duration. Stock rows legitimately have no
+    # duration. If evidence explicitly records a duration, it must agree with the fact.
+    duration_ok = duration_months in {None, 3}
+    if evidence_duration is not None:
+        try:
+            duration_ok = duration_ok and int(evidence_duration) == int(duration_months)
+        except (TypeError, ValueError):
+            duration_ok = False
+
+    period_ok = role_ok and duration_ok and period_end is not None
+    bridge_ok = entity_ok and period_ok
+
+    corroboration = {
+        "bridge_eligible": bridge_ok,
+        "status": status,
+        "validation_status": validation_status,
+        "has_geometry_reference": has_geometry_reference,
+        "entity": entity_ok,
+        "target_period": period_ok,
+        "comparison_role": role_ok,
+        "duration": duration_ok,
+        "entity_confidence": _confidence(
+            getattr(fact, "entity_confidence", 0.0)
+        ),
+        "period_confidence": _confidence(
+            getattr(fact, "period_confidence", 0.0)
+        ),
+    }
+    if not bridge_ok:
+        return None, None, None, corroboration
+    return entity, period_end, "CURRENT", corroboration
 
 
 def run_tunnel_a(
@@ -38,8 +157,8 @@ def run_tunnel_a(
     """Primary compiler.
 
     Layout extractor facts may assist discovery as ledger candidates. They are never
-    allowed to turn requested target context into observed evidence: arbiter + query
-    remain mandatory and only source-owned dimensions can make a candidate eligible.
+    allowed to turn requested target context into observed evidence without independent
+    PDF corroboration; arbiter + query + final validation remain mandatory.
     """
 
     if known is None:
@@ -136,14 +255,12 @@ def _empty_document(pdf_path: Path) -> CanonicalDocumentIR:
 
 
 def _seed_layout_assist(ledger: CandidateLedger, facts: list[Any], *, tunnel: str) -> None:
-    """Inject legacy layout discoveries without laundering target context into evidence.
+    """Inject layout discoveries while preserving a fail-closed context boundary.
 
-    The legacy extractor receives issuer/period query context up front, and its fact
-    object historically defaults comparison_role to CURRENT. Therefore those fields
-    are not independent source proof and are deliberately left unresolved here.
-    Semantic confidence and raw source provenance are preserved for discovery/review.
-    Native compiler/OCR candidates must establish entity, period and current/comparative
-    ownership before publication.
+    High-confidence rows may bridge trusted target metadata only when their own PDF
+    geometry independently corroborates entity and CURRENT-period ownership. Everything
+    else keeps those dimensions unresolved. The bridge remains a low-score candidate and
+    must still pass the same arbiter, target query and final-validator contracts.
     """
 
     for index, fact in enumerate(facts, start=1):
@@ -182,6 +299,9 @@ def _seed_layout_assist(ledger: CandidateLedger, facts: list[Any], *, tunnel: st
 
         semantic_confidence = getattr(fact, "semantic_confidence", None)
         fact_period = getattr(fact, "period_end", None)
+        bridged_entity, bridged_period, bridged_role, corroboration = (
+            _source_corroborated_layout_context(fact)
+        )
         evidence: dict[str, Any] = {
             "candidate_origin": "layout_geometry",
             "extraction_method": getattr(fact, "extraction_method", "LAYOUT_TEXT"),
@@ -196,19 +316,27 @@ def _seed_layout_assist(ledger: CandidateLedger, facts: list[Any], *, tunnel: st
             "legacy_entity_scope": getattr(fact, "entity_scope", None),
             "legacy_comparison_role": getattr(fact, "comparison_role", None),
             "legacy_duration_months": getattr(fact, "duration_months", None),
+            # The target period/entity originate in trusted run metadata, not the PDF.
+            # This flag remains True even for bridged rows; the corroboration object
+            # records the independent PDF evidence that permits the bridge.
             "context_not_source_owned": True,
+            "source_context_corroboration": corroboration,
         }
         if semantic_confidence is not None:
             with suppress(TypeError, ValueError):
                 evidence["semantic_score"] = float(semantic_confidence)
 
-        reasons = [
-            f"legacy_status:{status}",
-            "layout_assist",
-            "ENTITY_UNKNOWN:legacy_context_not_source_owned",
-            "PERIOD_UNKNOWN:legacy_context_not_source_owned",
-            "ROLE_UNKNOWN:legacy_context_not_source_owned",
-        ]
+        reasons = [f"legacy_status:{status}", "layout_assist"]
+        if corroboration["bridge_eligible"]:
+            reasons.append("layout_context_corroborated_by_pdf")
+        else:
+            reasons.extend(
+                [
+                    "ENTITY_UNKNOWN:layout_source_evidence_insufficient",
+                    "PERIOD_UNKNOWN:layout_source_evidence_insufficient",
+                    "ROLE_UNKNOWN:layout_source_evidence_insufficient",
+                ]
+            )
 
         ledger.add(
             LedgerEntry(
@@ -218,10 +346,10 @@ def _seed_layout_assist(ledger: CandidateLedger, facts: list[Any], *, tunnel: st
                 status=ledger_status,
                 raw_value=getattr(fact, "raw_value", None),
                 normalized_value=getattr(fact, "normalized_value", None),
-                entity=None,
-                period_end=None,
+                entity=bridged_entity,
+                period_end=bridged_period,
                 duration_months=getattr(fact, "duration_months", None),
-                comparison_role=None,
+                comparison_role=bridged_role,
                 unit=getattr(fact, "currency", None),
                 scale_factor=getattr(fact, "scale_factor", None),
                 page=getattr(fact, "source_page", None),
