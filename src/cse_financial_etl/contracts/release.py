@@ -333,8 +333,8 @@ def apply_review_decisions(
         decisions_loaded=len(decisions),
     )
     decision_groups: dict[str, list[ReviewDecision]] = {}
-    for decision in decisions:
-        decision_groups.setdefault(decision.identity, []).append(decision)
+    for review_decision in decisions:
+        decision_groups.setdefault(review_decision.identity, []).append(review_decision)
     duplicate_identities = {
         identity for identity, items in decision_groups.items() if len(items) > 1
     }
@@ -360,16 +360,16 @@ def apply_review_decisions(
             matched.add(identity)
             updated.append(fact)
             continue
-        decision = by_identity.get(identity)
-        if decision is None:
+        matched_decision = by_identity.get(identity)
+        if matched_decision is None:
             updated.append(fact)
             continue
         matched.add(identity)
-        if not decision.reviewer_id:
+        if not matched_decision.reviewer_id:
             summary.unauthenticated += 1
             updated.append(fact)
             continue
-        authenticated, auth_reason = verify_decision_signature(decision)
+        authenticated, auth_reason = verify_decision_signature(matched_decision)
         if not authenticated:
             summary.unauthenticated += 1
             if auth_reason == "SIGNATURE_INVALID":
@@ -378,26 +378,26 @@ def apply_review_decisions(
                 summary.signing_key_unavailable += 1
             updated.append(fact)
             continue
-        if decision.policy_version != policy_version:
+        if matched_decision.policy_version != policy_version:
             summary.policy_mismatch += 1
             updated.append(fact)
             continue
-        if decision.filing_sha256 != filing_sha256:
+        if matched_decision.filing_sha256 != filing_sha256:
             summary.stale_source_hash += 1
             updated.append(fact)
             continue
-        if decision.fact_fingerprint != fact_fingerprint(fact):
+        if matched_decision.fact_fingerprint != fact_fingerprint(fact):
             summary.stale_fact_fingerprint += 1
             updated.append(fact)
             continue
-        if decision.decision == DECISION_APPROVED:
+        if matched_decision.decision == DECISION_APPROVED:
             summary.approved_applied += 1
-        elif decision.decision == DECISION_REJECTED:
+        elif matched_decision.decision == DECISION_REJECTED:
             summary.rejected_applied += 1
         else:
             updated.append(fact)
             continue
-        updated.append(replace(fact, review_status=decision.decision))
+        updated.append(replace(fact, review_status=matched_decision.decision))
     summary.unmatched = len(
         [identity for identity in by_identity if identity not in matched]
     )
