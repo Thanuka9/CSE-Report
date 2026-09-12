@@ -366,31 +366,50 @@ class Repository:
         return self.root / "staging" / self.run_id
 
     def _apply_curated_corrections(self) -> None:
+        """Quarantine the legacy unsigned correction file instead of mutating facts.
+
+        Official human decisions are source-SHA/fact-fingerprint/signature bound in
+        ``contracts.release``.  The historical parquet override had no equivalent
+        trust binding and could directly manufacture PASSED/CURATED values at the
+        storage boundary.  Preserve it only as review evidence until migrated to a
+        signed correction contract.
+        """
+
         path = self.root / "curated" / "manual_corrections.parquet"
         if not path.exists():
             return
         try:
             frame = pl.read_parquet(path)
-        except Exception:
+        except Exception as exc:
+            self.add_review(
+                self.run_id or "UNKNOWN_RUN",
+                "UNKNOWN",
+                "UNKNOWN",
+                "LEGACY_CURATED_CORRECTION_UNREADABLE",
+                detail=f"{path}: {exc}",
+            )
             return
         if frame.is_empty():
             return
-        lookup = {
-            (str(row["issuer_name"]), str(row["period_end"]), str(row["metric_code"])): row
-            for row in frame.to_dicts()
-        }
-        for fact in self.fact_rows:
-            correction = lookup.get(
-                (str(fact["issuer_name"]), str(fact["period_end"]), str(fact["metric_code"]))
+        for row in frame.to_dicts():
+            raw_period = row.get("period_end")
+            try:
+                period = date.fromisoformat(str(raw_period)) if raw_period else None
+            except ValueError:
+                period = None
+            self.add_review(
+                self.run_id or "UNKNOWN_RUN",
+                str(row.get("issuer_name") or "UNKNOWN"),
+                str(row.get("symbol") or "UNKNOWN"),
+                "UNSIGNED_CURATED_CORRECTION_QUARANTINED",
+                period_end=period,
+                metric_code=str(row.get("metric_code") or "UNKNOWN"),
+                detail=(
+                    "Legacy manual_corrections.parquet cannot mutate production facts; "
+                    "migrate the correction to the signed fact-bound review workflow."
+                ),
+                diagnostic_path=str(path),
             )
-            if correction is None:
-                continue
-            fact["normalized_value"] = correction.get("corrected_value")
-            fact["status"] = "EXTRACTED"
-            fact["review_status"] = "CURATED"
-            fact["validation_status"] = "PASSED"
-            fact["missing_reason"] = None
-            fact["extraction_method"] = "CURATED_OVERRIDE"
 
     def _write_staging(self, status: str, statistics: dict[str, Any]) -> Path:
         self._apply_curated_corrections()

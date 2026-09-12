@@ -314,6 +314,7 @@ class ReleaseSummary:
     unauthenticated: int = 0
     invalid_signature: int = 0
     signing_key_unavailable: int = 0
+    duplicate_decision_identities: int = 0
     unmatched: int = 0
 
     def as_dict(self) -> dict[str, Any]:
@@ -331,8 +332,17 @@ def apply_review_decisions(
         policy_version=policy_version,
         decisions_loaded=len(decisions),
     )
+    decision_groups: dict[str, list[ReviewDecision]] = {}
+    for decision in decisions:
+        decision_groups.setdefault(decision.identity, []).append(decision)
+    duplicate_identities = {
+        identity for identity, items in decision_groups.items() if len(items) > 1
+    }
+    summary.duplicate_decision_identities = len(duplicate_identities)
     by_identity: dict[str, ReviewDecision] = {
-        decision.identity: decision for decision in decisions
+        identity: items[0]
+        for identity, items in decision_groups.items()
+        if len(items) == 1
     }
     updated: list[Any] = []
     matched: set[str] = set()
@@ -344,6 +354,12 @@ def apply_review_decisions(
             period,
             str(_fact_field(fact, "metric_code") or ""),
         )
+        if identity in duplicate_identities:
+            # Never let JSONL ordering choose between multiple human decisions.
+            # Operators must resolve the conflicting/replayed identity explicitly.
+            matched.add(identity)
+            updated.append(fact)
+            continue
         decision = by_identity.get(identity)
         if decision is None:
             updated.append(fact)
