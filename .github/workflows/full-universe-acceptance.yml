@@ -1,11 +1,6 @@
 name: Full universe acceptance
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - '.github/workflows/full-universe-acceptance.yml'
   workflow_dispatch:
     inputs:
       as_of:
