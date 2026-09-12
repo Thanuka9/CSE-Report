@@ -1,5 +1,5 @@
-min_extracted_plus_derived: 8932
-min_draft_publishable: 8924
+min_extracted_plus_derived: 2394
+min_draft_publishable: 2394
 min_gold_sample: 100
 min_gold_issuers: 100
 min_issuer_count: 281
@@ -7,99 +7,102 @@ min_downloaded_filing_count: 829
 min_extracted_filing_count: 826
 max_quarantined_extraction_timeouts: 3
 
-# Safety-recalibrated floors from the 2026-09-10 full-universe R4 runs. The previous
-# 9060 baseline predated stricter fail-closed validation and therefore required rows
-# that the hardened pipeline now correctly withholds. This is not a recovery target:
-# invalid/ambiguous rows must never be republished merely to satisfy coverage.
+# Safety-recalibrated engineering floors from two independent 2026-09-12 full-universe
+# runs after the later fail-closed architecture changes. The previous 8,932 / 8,924
+# floors came from the 2026-09-10 R4 universe and became stale after stricter semantic,
+# provenance, period/entity, and deterministic-derivation withholding was introduced.
+# Both f0f83cd and the hardened proof commit 0c4e3fb reproduced 2,394 safe facts across
+# the same 281-issuer / 829-filing universe, with 826 extracted filings, the same three
+# exact known timeout quarantines, zero unhandled pipeline errors, and row-safety PASS.
+# This is a regression floor, not a recovery target: invalid, ambiguous, unsupported,
+# or insufficiently proven rows must never be republished merely to satisfy coverage.
 #
-# The source universe had 12,390 fact rows and 889 price rows with row-safety PASS and
-# zero row-safety violations. The shared publication predicate additionally withholds
-# unresolved/comparative flow roles, producing 8,924 safe DRAFT-publishable facts.
+# External proof is intentionally separate: min_gold_sample and min_gold_issuers remain
+# 100 and MUST NOT be lowered or satisfied with machine-generated adjudication.
 min_publishable_by_metric:
-  DEBT_TO_EQUITY: 447  # legacy code; semantic display is Liabilities / Equity
-  EPS_BASIC: 660
-  EPS_DILUTED: 188
-  EPS_SELECTED: 666
-  NAVPS: 710
-  NPM: 627
-  OPERATING_PROFIT: 549
-  PAT: 675
-  PBT: 677
-  ROA: 600
-  ROE: 569
-  TOP_LINE: 683
-  TOTAL_ASSETS: 712
-  TOTAL_EQUITY: 690
-  TOTAL_LIABILITIES: 471
+  DEBT_TO_EQUITY: 174  # legacy code; semantic display is Liabilities / Equity
+  EPS_BASIC: 115
+  EPS_DILUTED: 24
+  EPS_SELECTED: 115
+  NAVPS: 343
+  NPM: 105
+  OPERATING_PROFIT: 109
+  PAT: 134
+  PBT: 127
+  ROA: 106
+  ROE: 102
+  TOP_LINE: 122
+  TOTAL_ASSETS: 323
+  TOTAL_EQUITY: 307
+  TOTAL_LIABILITIES: 188
 
-# Sector × metric floors prevent a healthy aggregate total from masking a regression in
-# banks, finance companies, insurance companies, or general issuers. They use exactly
-# the same fail-closed DRAFT publication predicate as the aggregate baseline.
+# Sector × metric floors use the same fail-closed DRAFT publication predicate as the
+# aggregate floor, preventing a healthy aggregate from masking a sector regression.
 min_publishable_by_sector_metric:
   BANK:
-    DEBT_TO_EQUITY: 35
-    EPS_BASIC: 30
-    EPS_DILUTED: 26
-    EPS_SELECTED: 30
-    NAVPS: 35
-    NPM: 33
-    OPERATING_PROFIT: 31
-    PAT: 33
-    PBT: 32
-    ROA: 33
-    ROE: 33
-    TOP_LINE: 33
-    TOTAL_ASSETS: 35
-    TOTAL_EQUITY: 35
-    TOTAL_LIABILITIES: 35
+    DEBT_TO_EQUITY: 12
+    EPS_BASIC: 8
+    EPS_DILUTED: 8
+    EPS_SELECTED: 8
+    NAVPS: 22
+    NPM: 10
+    OPERATING_PROFIT: 9
+    PAT: 10
+    PBT: 9
+    ROA: 10
+    ROE: 10
+    TOP_LINE: 10
+    TOTAL_ASSETS: 12
+    TOTAL_EQUITY: 12
+    TOTAL_LIABILITIES: 12
   FINANCE_COMPANY:
-    DEBT_TO_EQUITY: 66
-    EPS_BASIC: 58
-    EPS_DILUTED: 20
-    EPS_SELECTED: 58
-    NAVPS: 64
-    NPM: 62
-    OPERATING_PROFIT: 59
-    PAT: 65
-    PBT: 66
-    ROA: 57
-    ROE: 57
-    TOP_LINE: 65
-    TOTAL_ASSETS: 66
-    TOTAL_EQUITY: 66
-    TOTAL_LIABILITIES: 66
+    DEBT_TO_EQUITY: 22
+    EPS_BASIC: 3
+    EPS_DILUTED: 3
+    EPS_SELECTED: 3
+    NAVPS: 18
+    NPM: 12
+    OPERATING_PROFIT: 11
+    PAT: 12
+    PBT: 11
+    ROA: 9
+    ROE: 9
+    TOP_LINE: 13
+    TOTAL_ASSETS: 22
+    TOTAL_EQUITY: 22
+    TOTAL_LIABILITIES: 22
   INSURANCE:
-    DEBT_TO_EQUITY: 25
-    EPS_BASIC: 24
-    EPS_DILUTED: 13
-    EPS_SELECTED: 26
-    NAVPS: 30
-    NPM: 24
-    OPERATING_PROFIT: 6
-    PAT: 25
-    PBT: 25
-    ROA: 22
-    ROE: 21
-    TOP_LINE: 25
-    TOTAL_ASSETS: 29
-    TOTAL_EQUITY: 30
-    TOTAL_LIABILITIES: 26
+    DEBT_TO_EQUITY: 3
+    EPS_BASIC: 4
+    EPS_DILUTED: 2
+    EPS_SELECTED: 4
+    NAVPS: 3
+    NPM: 0
+    OPERATING_PROFIT: 1
+    PAT: 3
+    PBT: 2
+    ROA: 1
+    ROE: 1
+    TOP_LINE: 0
+    TOTAL_ASSETS: 4
+    TOTAL_EQUITY: 4
+    TOTAL_LIABILITIES: 3
   GENERAL:
-    DEBT_TO_EQUITY: 321
-    EPS_BASIC: 548
-    EPS_DILUTED: 129
-    EPS_SELECTED: 552
-    NAVPS: 581
-    NPM: 508
-    OPERATING_PROFIT: 453
-    PAT: 552
-    PBT: 554
-    ROA: 488
-    ROE: 458
-    TOP_LINE: 560
-    TOTAL_ASSETS: 582
-    TOTAL_EQUITY: 559
-    TOTAL_LIABILITIES: 344
+    DEBT_TO_EQUITY: 137
+    EPS_BASIC: 100
+    EPS_DILUTED: 11
+    EPS_SELECTED: 100
+    NAVPS: 300
+    NPM: 83
+    OPERATING_PROFIT: 88
+    PAT: 109
+    PBT: 105
+    ROA: 86
+    ROE: 82
+    TOP_LINE: 99
+    TOTAL_ASSETS: 285
+    TOTAL_EQUITY: 269
+    TOTAL_LIABILITIES: 151
 
 # Only these exact pathological issuer/period identities may use timeout quarantine.
 # A timeout on any other filing is a new engineering failure even if fewer than three
@@ -116,20 +119,21 @@ quarantined_extraction_timeouts:
     period_end: '2026-06-30'
 
 # Baseline provenance / safety evidence:
-#   full-universe workflow run: 34473929612
-#   ETL run_id: d8f81e23-eb90-4a17-a385-58b2d0b40115
-#   source commit: 3059d1548f1549803539ae8bd85f0b5553867928
+#   hardened proof workflow run: 34700697091
+#   hardened proof ETL run_id: 5d0c78b5-921b-40b5-aa78-32178cb8dd93
+#   hardened proof source commit: 0c4e3fb3cf4628c0d3ed75892c866b95138e28b3
+#   independent preceding workflow run: 34699429339
+#   independent preceding source commit: f0f83cdcd193f206e1bbc315e1656484942ae8dd
 #   issuer_count: 281
 #   downloaded filings: 829
 #   extracted filings: 826 + 3 exact known timeout quarantines
 #   unhandled pipeline errors: 0
 #   quarantine hash mismatches: 0
-#   EXTRACTED + EXTRACTED_DERIVED facts: 8932
-#   fail-closed DRAFT-publishable facts: 8924
-#   per-metric and sector-metric coverage regressions: 0
-#   row-safety audit: PASS (0 violations across 12,390 fact rows and 889 price rows)
+#   EXTRACTED + EXTRACTED_DERIVED facts: 2394
+#   fail-closed DRAFT-publishable facts: 2394
+#   row-safety audit: PASS (0 violations across 12,422 fact rows and 889 price rows)
+#   golden validation: 38 independently checked fields, accuracy 1.0
 #
-# min_gold_sample counts independently checked fields; min_gold_issuers separately
-# enforces the institutional target of 100 manually adjudicated issuers. Those remain
-# external proof gates for DRAFT and are mandatory before OFFICIAL promotion. They are
-# deliberately NOT lowered by this engineering baseline recalibration.
+# The 100-field / 100-issuer independent-adjudication requirements remain external proof
+# gates for DRAFT and are mandatory before OFFICIAL promotion. They are deliberately not
+# changed by this engineering baseline recalibration.
