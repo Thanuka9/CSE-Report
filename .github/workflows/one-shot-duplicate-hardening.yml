@@ -1,0 +1,115 @@
+name: One-shot duplicate safety hardening
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Apply generalized fail-closed duplicate hardening
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path: str, old: str, new: str) -> None:
+              p = Path(path)
+              text = p.read_text(encoding="utf-8")
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"{path}: expected one match, found {count}\n--- needle ---\n{old}")
+              p.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+          publisher = "src/cse_financial_etl/facts/publisher.py"
+          replace_once(
+              publisher,
+              '''    return ROUTING_LAYOUT_ASSIST_ONLY, False, COMPILER_NO_STATEMENTS\n\n\ndef publish_from_compiler(''',
+              '''    return ROUTING_LAYOUT_ASSIST_ONLY, False, COMPILER_NO_STATEMENTS\n\n\ndef _group_by_metric_code(items: list[Any]) -> dict[str, list[Any]]:\n    """Group metric rows without ever collapsing duplicates by iteration order."""\n\n    grouped: dict[str, list[Any]] = {}\n    for item in items:\n        grouped.setdefault(str(item.metric_code), []).append(item)\n    return grouped\n\n\ndef publish_from_compiler(''',
+          )
+          replace_once(
+              publisher,
+              '''    routing, native_ok, fallback_code = compiler_routing(report)\n    layout_by_code = {f.metric_code: f for f in layout_facts}\n    queried_by_code = {q.metric_code: q for q in queried}\n    published: list[ExtractedFact] = []''',
+              '''    routing, native_ok, fallback_code = compiler_routing(report)\n    layout_groups = _group_by_metric_code(layout_facts)\n    queried_groups = _group_by_metric_code(queried)\n    layout_by_code = {\n        code: items[0] for code, items in layout_groups.items() if len(items) == 1\n    }\n    queried_by_code = {\n        code: items[0] for code, items in queried_groups.items() if len(items) == 1\n    }\n    duplicate_layout_codes = {code for code, items in layout_groups.items() if len(items) > 1}\n    duplicate_query_codes = {code for code, items in queried_groups.items() if len(items) > 1}\n    published: list[ExtractedFact] = []''',
+          )
+          replace_once(
+              publisher,
+              '''        "final_check_failures": 0,\n        "fallback_issue_codes": [],\n    }''',
+              '''        "final_check_failures": 0,\n        "fallback_issue_codes": [],\n        "duplicate_layout_codes": sorted(duplicate_layout_codes),\n        "duplicate_query_codes": sorted(duplicate_query_codes),\n    }''',
+          )
+          replace_once(
+              publisher,
+              '''    skip_projection = {"EPS_SELECTED", "CROSS_METRIC_CONTEXT"}\n    codes = [c for c in dict.fromkeys([*layout_by_code.keys(), *queried_by_code.keys()]) if c not in skip_projection]\n    for code in codes:\n        layout = layout_by_code.get(code)\n        queried_fact = queried_by_code.get(code)\n        if queried_fact is None:\n            if layout is None:\n                continue\n            published.append(\n                _explicit_fallback_fact(\n                    layout,\n                    report=report,\n                    issue_code=LAYOUT_FALLBACK_QUERY_MISS,\n                    detail="metric_absent_from_compiler_query",\n                )\n            )\n            stats["explicit_layout_fallback"] += 1\n            stats["fallback_issue_codes"].append(f"{code}:{LAYOUT_FALLBACK_QUERY_MISS}")\n            continue''',
+              '''    skip_projection = {"EPS_SELECTED", "CROSS_METRIC_CONTEXT"}\n    codes = [\n        code\n        for code in dict.fromkeys([*layout_groups.keys(), *queried_groups.keys()])\n        if code not in skip_projection\n    ]\n    for code in codes:\n        layout = layout_by_code.get(code)\n        queried_fact = queried_by_code.get(code)\n        if code in duplicate_query_codes:\n            exemplar = queried_groups[code][0]\n            ambiguous = QueriedFact(\n                metric_code=code,\n                concept=str(exemplar.concept),\n                entry=None,\n                status="AMBIGUOUS_CANDIDATES",\n                issue="duplicate_queried_metric_code",\n            )\n            published.append(\n                _from_terminal(\n                    ambiguous,\n                    None,\n                    report=report,\n                    issuer_name=issuer_name,\n                    symbol=symbol,\n                    period_end=period_end,\n                )\n            )\n            stats["terminal_unresolved"] += 1\n            continue\n        if queried_fact is None:\n            if code in duplicate_layout_codes:\n                ambiguous = QueriedFact(\n                    metric_code=code,\n                    concept=code,\n                    entry=None,\n                    status="AMBIGUOUS_CANDIDATES",\n                    issue="duplicate_layout_metric_code",\n                )\n                published.append(\n                    _from_terminal(\n                        ambiguous,\n                        None,\n                        report=report,\n                        issuer_name=issuer_name,\n                        symbol=symbol,\n                        period_end=period_end,\n                    )\n                )\n                stats["terminal_unresolved"] += 1\n                continue\n            if layout is None:\n                continue\n            published.append(\n                _explicit_fallback_fact(\n                    layout,\n                    report=report,\n                    issue_code=LAYOUT_FALLBACK_QUERY_MISS,\n                    detail="metric_absent_from_compiler_query",\n                )\n            )\n            stats["explicit_layout_fallback"] += 1\n            stats["fallback_issue_codes"].append(f"{code}:{LAYOUT_FALLBACK_QUERY_MISS}")\n            continue''',
+          )
+          replace_once(
+              publisher,
+              '''    by_code = {f.metric_code: f for f in published}\n    selected = _selected_eps_fact(''',
+              '''    published_groups = _group_by_metric_code(published)\n    by_code = {\n        code: items[0] for code, items in published_groups.items() if len(items) == 1\n    }\n    selected = _selected_eps_fact(''',
+          )
+          replace_once(
+              publisher,
+              '''        normalized_value=layout.normalized_value,\n        currency=layout.currency,''',
+              '''        normalized_value=None,\n        currency=layout.currency,''',
+          )
+          replace_once(
+              publisher,
+              '''        confidence=layout.confidence,\n        status=layout.status,''',
+              '''        confidence="LOW",\n        status="EXPLICIT_LAYOUT_FALLBACK_REQUIRED",''',
+          )
+          replace_once(
+              publisher,
+              '''        validation_confidence=layout.validation_confidence,\n        overall_certainty=layout.overall_certainty,\n        certainty_band=layout.certainty_band,''',
+              '''        validation_confidence=0.0,\n        overall_certainty=0.0,\n        certainty_band="NONE",''',
+          )
+          replace_once(
+              publisher,
+              '''        validation_status=layout.validation_status,\n        review_status=MACHINE_REVIEW_STATUS,''',
+              '''        validation_status="FAILED",\n        review_status=MACHINE_REVIEW_STATUS,''',
+          )
+
+          ratios = "src/cse_financial_etl/transformation/ratios.py"
+          replace_once(
+              ratios,
+              '''def _sanitize_cross_statement_scales(facts: list[ExtractedFact]) -> list[ExtractedFact]:\n    values = {\n        fact.metric_code: (fact.normalized_value, fact.scale_factor)\n        for fact in facts\n        if fact.status in ACCEPTED and fact.validation_status == "PASSED"\n    }''',
+              '''def _group_facts_by_metric(facts: list[ExtractedFact]) -> dict[str, list[ExtractedFact]]:\n    grouped: dict[str, list[ExtractedFact]] = {}\n    for fact in facts:\n        grouped.setdefault(fact.metric_code, []).append(fact)\n    return grouped\n\n\ndef _sanitize_duplicate_metric_facts(facts: list[ExtractedFact]) -> list[ExtractedFact]:\n    """Withhold every accepted row for a duplicated metric inside one filing."""\n\n    grouped = _group_facts_by_metric(facts)\n    duplicates = {code for code, items in grouped.items() if len(items) > 1}\n    if not duplicates:\n        return facts\n    return [\n        _withhold_source_fact(\n            fact,\n            status="AMBIGUOUS_CANDIDATES",\n            reason="DUPLICATE_METRIC_FACT",\n        )\n        if fact.metric_code in duplicates and fact.status in ACCEPTED\n        else fact\n        for fact in facts\n    ]\n\n\ndef _sanitize_cross_statement_scales(facts: list[ExtractedFact]) -> list[ExtractedFact]:\n    grouped = _group_facts_by_metric(facts)\n    values = {\n        code: (items[0].normalized_value, items[0].scale_factor)\n        for code, items in grouped.items()\n        if len(items) == 1\n        and items[0].status in ACCEPTED\n        and items[0].validation_status == "PASSED"\n    }''',
+          )
+          replace_once(
+              ratios,
+              '''def _sanitize_eps_selected(facts: list[ExtractedFact]) -> list[ExtractedFact]:\n    by_code = {fact.metric_code: fact for fact in facts}\n    selected = by_code.get("EPS_SELECTED")''',
+              '''def _sanitize_eps_selected(facts: list[ExtractedFact]) -> list[ExtractedFact]:\n    grouped = _group_facts_by_metric(facts)\n    by_code = {code: items[0] for code, items in grouped.items() if len(items) == 1}\n    selected = by_code.get("EPS_SELECTED")''',
+          )
+          replace_once(
+              ratios,
+              '''        sanitized = [_sanitize_source_fact(fact) for fact in facts]\n        sanitized = _sanitize_cross_statement_scales(sanitized)''',
+              '''        sanitized = [_sanitize_source_fact(fact) for fact in facts]\n        sanitized = _sanitize_duplicate_metric_facts(sanitized)\n        sanitized = _sanitize_cross_statement_scales(sanitized)''',
+          )
+
+          query = "src/cse_financial_etl/facts/query_engine.py"
+          replace_once(
+              query,
+              '''    if eligible_accepted:\n        first_concept = eligible_accepted[0][0].concept\n        same_concept = [item for item in eligible_accepted if item[0].concept == first_concept]\n        best, eligible_reasons = max(same_concept, key=lambda item: item[0].score)\n        return QueriedFact(query.metric_code, best.concept, best, "EXTRACTED", None, eligibility_reasons=eligible_reasons)''',
+              '''    if eligible_accepted:\n        first_concept = eligible_accepted[0][0].concept\n        same_concept = [item for item in eligible_accepted if item[0].concept == first_concept]\n        source_signatures = {\n            (\n                item[0].normalized_value,\n                item[0].entity,\n                item[0].period_end,\n                item[0].duration_months,\n                item[0].comparison_role,\n                item[0].unit,\n                item[0].scale_factor,\n            )\n            for item in same_concept\n        }\n        if len(same_concept) > 1 and len(source_signatures) > 1:\n            return QueriedFact(\n                query.metric_code,\n                query.concept,\n                None,\n                str(MissingReason.AMBIGUOUS_CANDIDATES),\n                "multiple_accepted_candidates_conflict",\n                _trace(all_entries, recovery_attempted),\n                ("MULTIPLE_ACCEPTED_CONFLICT",),\n            )\n        best, eligible_reasons = max(same_concept, key=lambda item: item[0].score)\n        return QueriedFact(\n            query.metric_code,\n            best.concept,\n            best,\n            "EXTRACTED",\n            None,\n            eligibility_reasons=eligible_reasons,\n        )''',
+          )
+          replace_once(
+              query,
+              '''def queried_values(facts: list[QueriedFact]) -> dict[str, Decimal | None]:\n    out: dict[str, Decimal | None] = {}\n    for fact in facts:\n        out[fact.metric_code] = fact.entry.normalized_value if fact.entry and fact.status == "EXTRACTED" else None\n    return out''',
+              '''def queried_values(facts: list[QueriedFact]) -> dict[str, Decimal | None]:\n    """Materialize query values without last-write-wins on duplicate metric codes."""\n\n    grouped: dict[str, list[QueriedFact]] = {}\n    for fact in facts:\n        grouped.setdefault(fact.metric_code, []).append(fact)\n    out: dict[str, Decimal | None] = {}\n    for code, items in grouped.items():\n        if len(items) != 1:\n            out[code] = None\n            continue\n        fact = items[0]\n        out[code] = (\n            fact.entry.normalized_value\n            if fact.entry is not None and fact.status == "EXTRACTED"\n            else None\n        )\n    return out''',
+          )
+          PY
+      - name: Commit hardened production paths and remove one-shot workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm .github/workflows/one-shot-duplicate-hardening.yml
+          git add src/cse_financial_etl/facts/publisher.py src/cse_financial_etl/facts/query_engine.py src/cse_financial_etl/transformation/ratios.py .github/workflows/one-shot-duplicate-hardening.yml
+          git commit -m "Fail closed on duplicate metric materialization"
+          git push
