@@ -112,10 +112,13 @@ def _source_corroborated_layout_context(
     # duration. If evidence explicitly records a duration, it must agree with the fact.
     duration_ok = duration_months in {None, 3}
     if evidence_duration is not None:
-        try:
-            duration_ok = duration_ok and int(evidence_duration) == int(duration_months)
-        except (TypeError, ValueError):
+        if duration_months is None:
             duration_ok = False
+        else:
+            try:
+                duration_ok = duration_ok and int(evidence_duration) == int(duration_months)
+            except (TypeError, ValueError):
+                duration_ok = False
 
     period_ok = role_ok and duration_ok and period_end is not None
     bridge_ok = entity_ok and period_ok
