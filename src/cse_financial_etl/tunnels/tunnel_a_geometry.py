@@ -59,8 +59,11 @@ def _layout_candidate_competition_resolved(evidence: dict[str, Any]) -> bool:
     )
     if not isinstance(selected, dict):
         return False
+    selected_score_value = selected.get("score")
+    if selected_score_value is None:
+        return False
     try:
-        selected_score = float(selected.get("score"))
+        selected_score = float(selected_score_value)
     except (TypeError, ValueError):
         return False
     selected_raw = str(selected.get("raw_value") or "").replace(",", "").strip()
@@ -72,8 +75,11 @@ def _layout_candidate_competition_resolved(evidence: dict[str, Any]) -> bool:
         raw = str(row.get("raw_value") or "").replace(",", "").strip()
         if not raw or raw == selected_raw:
             continue
+        score_value = row.get("score")
+        if score_value is None:
+            return False
         try:
-            score = float(row.get("score"))
+            score = float(score_value)
         except (TypeError, ValueError):
             return False
         if selected_score - score < _LAYOUT_CONTEXT_MIN_CANDIDATE_MARGIN:
