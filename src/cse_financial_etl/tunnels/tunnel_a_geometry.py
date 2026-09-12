@@ -23,6 +23,8 @@ from cse_financial_etl.tunnels.common_financial_engine import apply_financial_en
 _LAYOUT_ASSIST_CAP = 0.45
 _LAYOUT_CONTEXT_MIN_ENTITY_CONFIDENCE = 0.90
 _LAYOUT_CONTEXT_MIN_PERIOD_CONFIDENCE = 0.90
+_LAYOUT_CONTEXT_MIN_COLUMN_CONFIDENCE = 0.80
+_LAYOUT_CONTEXT_MIN_CANDIDATE_MARGIN = 0.10
 
 
 def _confidence(value: Any) -> float:
@@ -41,6 +43,70 @@ def _period_string(value: Any) -> str | None:
     return text or None
 
 
+def _layout_candidate_competition_resolved(evidence: dict[str, Any]) -> bool:
+    """Reject a layout bridge when another different value is an evidence near-tie."""
+
+    rows = evidence.get("candidate_scores")
+    if not isinstance(rows, list) or not rows:
+        return False
+    selected = next(
+        (
+            row
+            for row in rows
+            if isinstance(row, dict) and row.get("selected") is True
+        ),
+        None,
+    )
+    if not isinstance(selected, dict):
+        return False
+    try:
+        selected_score = float(selected.get("score"))
+    except (TypeError, ValueError):
+        return False
+    selected_raw = str(selected.get("raw_value") or "").replace(",", "").strip()
+    if not selected_raw:
+        return False
+    for row in rows:
+        if not isinstance(row, dict) or row is selected:
+            continue
+        raw = str(row.get("raw_value") or "").replace(",", "").strip()
+        if not raw or raw == selected_raw:
+            continue
+        try:
+            score = float(row.get("score"))
+        except (TypeError, ValueError):
+            return False
+        if selected_score - score < _LAYOUT_CONTEXT_MIN_CANDIDATE_MARGIN:
+            return False
+    return True
+
+
+def _layout_entity_structure_resolved(
+    *,
+    entity: str,
+    entity_confidence: float,
+    evidence: dict[str, Any],
+) -> bool:
+    """Require structural ownership for the 0.94 dual-entity confidence tier."""
+
+    # 0.95+ is produced by an explicit standalone statement/entity title. 0.94 is the
+    # extractor's dual-entity tier and must additionally prove a real multi-column block.
+    if entity_confidence >= 0.95:
+        return True
+    if entity_confidence < 0.93:
+        return False
+    graph = evidence.get("graph")
+    if not isinstance(graph, dict):
+        return False
+    clusters = graph.get("cluster_centers")
+    parent_kind = str(evidence.get("entity_parent_kind") or "").strip().upper()
+    return (
+        isinstance(clusters, list)
+        and len(clusters) >= 4
+        and parent_kind == entity
+    )
+
+
 def _source_corroborated_layout_context(
     fact: Any,
 ) -> tuple[str | None, str | None, str | None, dict[str, Any]]:
@@ -49,9 +115,9 @@ def _source_corroborated_layout_context(
     The legacy layout extractor receives target issuer/period metadata, so those fields
     cannot be treated as source evidence merely because they appear on ``ExtractedFact``.
     However, an ``EXTRACTED``/``PASSED`` row also carries source-derived entity confidence,
-    comparison-role geometry, duration and a page/line/bbox reference. When all of those
-    agree, target metadata becomes a constrained label for observed evidence rather than
-    an invented fact. This preserves coverage without reviving the old blind context copy.
+    comparison-role geometry, duration, column ownership, candidate competition and a
+    page/line/bbox reference. Only when all of those agree may trusted target metadata be
+    attached to the candidate. Ambiguous values remain fail-closed.
     """
 
     status = str(getattr(fact, "status", "") or "").strip().upper()
@@ -84,28 +150,38 @@ def _source_corroborated_layout_context(
     duration_months = getattr(fact, "duration_months", None)
     evidence_duration = evidence.get("duration_months")
     parent_kind = str(evidence.get("entity_parent_kind") or "").strip().upper()
+    entity_confidence = _confidence(getattr(fact, "entity_confidence", 0.0))
+    period_confidence = _confidence(getattr(fact, "period_confidence", 0.0))
+    column_confidence = _confidence(getattr(fact, "column_confidence", 0.0))
 
     base_ok = (
         status == "EXTRACTED"
         and validation_status == "PASSED"
         and has_geometry_reference
     )
+    entity_structure_ok = _layout_entity_structure_resolved(
+        entity=entity,
+        entity_confidence=entity_confidence,
+        evidence=evidence,
+    )
     entity_ok = (
         base_ok
         and entity in {"COMPANY", "BANK", "GROUP"}
-        and _confidence(getattr(fact, "entity_confidence", 0.0))
-        >= _LAYOUT_CONTEXT_MIN_ENTITY_CONFIDENCE
+        and entity_confidence >= _LAYOUT_CONTEXT_MIN_ENTITY_CONFIDENCE
+        and entity_structure_ok
         and not (
             entity in {"COMPANY", "BANK"}
             and parent_kind in {"GROUP", "CONSOLIDATED"}
         )
     )
+    column_ok = column_confidence >= _LAYOUT_CONTEXT_MIN_COLUMN_CONFIDENCE
+    competition_ok = _layout_candidate_competition_resolved(evidence)
     role_ok = (
         base_ok
+        and column_ok
         and comparison_role == "CURRENT"
         and evidence_role == "CURRENT"
-        and _confidence(getattr(fact, "period_confidence", 0.0))
-        >= _LAYOUT_CONTEXT_MIN_PERIOD_CONFIDENCE
+        and period_confidence >= _LAYOUT_CONTEXT_MIN_PERIOD_CONFIDENCE
     )
 
     # Flow rows must preserve exact-quarter duration. Stock rows legitimately have no
@@ -121,7 +197,7 @@ def _source_corroborated_layout_context(
                 duration_ok = False
 
     period_ok = role_ok and duration_ok and period_end is not None
-    bridge_ok = entity_ok and period_ok
+    bridge_ok = entity_ok and period_ok and competition_ok
 
     corroboration = {
         "bridge_eligible": bridge_ok,
@@ -129,15 +205,15 @@ def _source_corroborated_layout_context(
         "validation_status": validation_status,
         "has_geometry_reference": has_geometry_reference,
         "entity": entity_ok,
+        "entity_structure": entity_structure_ok,
         "target_period": period_ok,
         "comparison_role": role_ok,
+        "column_identity": column_ok,
+        "candidate_competition": competition_ok,
         "duration": duration_ok,
-        "entity_confidence": _confidence(
-            getattr(fact, "entity_confidence", 0.0)
-        ),
-        "period_confidence": _confidence(
-            getattr(fact, "period_confidence", 0.0)
-        ),
+        "entity_confidence": entity_confidence,
+        "period_confidence": period_confidence,
+        "column_confidence": column_confidence,
     }
     if not bridge_ok:
         return None, None, None, corroboration

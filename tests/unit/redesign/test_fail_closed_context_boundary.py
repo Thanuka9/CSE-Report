@@ -44,6 +44,28 @@ def _entry() -> LedgerEntry:
     )
 
 
+def _default_evidence() -> dict[str, object]:
+    return {
+        "selected_line": "Profit for the period 10",
+        "comparison_role": "CURRENT",
+        "duration_months": 3,
+        "entity_parent_kind": "COMPANY",
+        "candidate_scores": [
+            {
+                "page": 1,
+                "label": "Profit for the period",
+                "raw_value": "10",
+                "score": 0.95,
+                "selected": True,
+            }
+        ],
+        "graph": {
+            "cluster_centers": [380.0, 485.0],
+            "selected_score": 0.95,
+        },
+    }
+
+
 def _layout_fact(**overrides: object) -> ExtractedFact:
     values: dict[str, object] = {
         "issuer_name": "Acme PLC",
@@ -68,29 +90,34 @@ def _layout_fact(**overrides: object) -> ExtractedFact:
         "entity_confidence": 0.96,
         "period_confidence": 0.98,
         "unit_confidence": 1.0,
-        "column_confidence": 1.0,
+        "column_confidence": 0.95,
         "overall_certainty": 0.98,
         "comparison_role": "CURRENT",
         "duration_months": 3,
         "validation_status": "PASSED",
         "review_status": "REVIEW",
-        "evidence_json": json.dumps(
-            {
-                "selected_line": "Profit for the period 10",
-                "comparison_role": "CURRENT",
-                "duration_months": 3,
-                "entity_parent_kind": "COMPANY",
-            }
-        ),
+        "evidence_json": json.dumps(_default_evidence()),
     }
     values.update(overrides)
     return ExtractedFact(**values)  # type: ignore[arg-type]
 
 
-def test_layout_source_corroboration_may_bridge_trusted_target_context() -> None:
+def _seed_one(fact: ExtractedFact) -> LedgerEntry:
     ledger = CandidateLedger()
-    _seed_layout_assist(ledger, [_layout_fact()], tunnel="A")
+    _seed_layout_assist(ledger, [fact], tunnel="A")
     [entry] = ledger.entries
+    return entry
+
+
+def _assert_context_unresolved(entry: LedgerEntry) -> None:
+    assert entry.entity is None
+    assert entry.period_end is None
+    assert entry.comparison_role is None
+    assert entry.evidence["source_context_corroboration"]["bridge_eligible"] is False
+
+
+def test_layout_source_corroboration_may_bridge_trusted_target_context() -> None:
+    entry = _seed_one(_layout_fact())
 
     assert entry.entity == "COMPANY"
     assert entry.period_end == "2026-06-30"
@@ -100,6 +127,8 @@ def test_layout_source_corroboration_may_bridge_trusted_target_context() -> None
     assert corroboration["bridge_eligible"] is True
     assert corroboration["entity"] is True
     assert corroboration["target_period"] is True
+    assert corroboration["column_identity"] is True
+    assert corroboration["candidate_competition"] is True
     assert "layout_context_corroborated_by_pdf" in entry.reasons
 
     result = evaluate_eligibility(
@@ -114,26 +143,16 @@ def test_layout_source_corroboration_may_bridge_trusted_target_context() -> None
 
 
 def test_layout_context_stays_unresolved_without_independent_pdf_corroboration() -> None:
+    evidence = _default_evidence()
+    evidence["comparison_role"] = "UNKNOWN"
     weak = _layout_fact(
         entity_confidence=0.72,
         period_confidence=0.80,
         comparison_role="UNKNOWN",
-        evidence_json=json.dumps(
-            {
-                "selected_line": "Profit for the period 10",
-                "comparison_role": "UNKNOWN",
-                "duration_months": 3,
-            }
-        ),
+        evidence_json=json.dumps(evidence),
     )
-    ledger = CandidateLedger()
-    _seed_layout_assist(ledger, [weak], tunnel="A")
-    [entry] = ledger.entries
-
-    assert entry.entity is None
-    assert entry.period_end is None
-    assert entry.comparison_role is None
-    assert entry.evidence["source_context_corroboration"]["bridge_eligible"] is False
+    entry = _seed_one(weak)
+    _assert_context_unresolved(entry)
 
     result = evaluate_eligibility(
         entry,
@@ -149,15 +168,78 @@ def test_layout_context_stays_unresolved_without_independent_pdf_corroboration()
 
 
 def test_layout_context_stays_unresolved_without_geometry_reference() -> None:
-    no_geometry = _layout_fact(source_bbox=None)
-    ledger = CandidateLedger()
-    _seed_layout_assist(ledger, [no_geometry], tunnel="A")
-    [entry] = ledger.entries
+    entry = _seed_one(_layout_fact(source_bbox=None))
+    _assert_context_unresolved(entry)
+    assert (
+        entry.evidence["source_context_corroboration"]["has_geometry_reference"]
+        is False
+    )
 
-    assert entry.entity is None
-    assert entry.period_end is None
-    assert entry.comparison_role is None
-    assert entry.evidence["source_context_corroboration"]["has_geometry_reference"] is False
+
+def test_layout_context_stays_unresolved_without_column_identity() -> None:
+    entry = _seed_one(_layout_fact(column_confidence=0.62))
+    _assert_context_unresolved(entry)
+    assert entry.evidence["source_context_corroboration"]["column_identity"] is False
+
+
+def test_layout_context_stays_unresolved_for_near_tied_conflicting_rows() -> None:
+    evidence = _default_evidence()
+    evidence["candidate_scores"] = [
+        {
+            "page": 1,
+            "label": "Profit for the period",
+            "raw_value": "10",
+            "score": 0.95,
+            "selected": True,
+        },
+        {
+            "page": 1,
+            "label": "Profit for the period",
+            "raw_value": "12",
+            "score": 0.92,
+            "selected": False,
+        },
+    ]
+    entry = _seed_one(_layout_fact(evidence_json=json.dumps(evidence)))
+    _assert_context_unresolved(entry)
+    assert (
+        entry.evidence["source_context_corroboration"]["candidate_competition"]
+        is False
+    )
+
+
+def test_layout_context_stays_unresolved_for_ambiguous_dual_entity_structure() -> None:
+    evidence = _default_evidence()
+    evidence["graph"] = {
+        "cluster_centers": [380.0, 485.0],
+        "selected_score": 0.95,
+    }
+    entry = _seed_one(
+        _layout_fact(
+            entity_confidence=0.94,
+            evidence_json=json.dumps(evidence),
+        )
+    )
+    _assert_context_unresolved(entry)
+    assert entry.evidence["source_context_corroboration"]["entity_structure"] is False
+
+
+def test_layout_context_accepts_proven_dual_entity_structure() -> None:
+    evidence = _default_evidence()
+    evidence["graph"] = {
+        "cluster_centers": [170.0, 270.0, 380.0, 485.0],
+        "selected_score": 0.95,
+    }
+    entry = _seed_one(
+        _layout_fact(
+            entity_confidence=0.94,
+            evidence_json=json.dumps(evidence),
+        )
+    )
+    assert entry.entity == "COMPANY"
+    assert entry.period_end == "2026-06-30"
+    assert entry.comparison_role == "CURRENT"
+    assert entry.evidence["source_context_corroboration"]["entity_structure"] is True
 
 
 def test_entity_recovery_refuses_missing_target_scope() -> None:
