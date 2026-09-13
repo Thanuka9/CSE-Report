@@ -15,6 +15,9 @@ data/staging/**
 data/review/**
 data/curated/**
 data/quarantine/**
+data/cache/**
+data/tmp/**
+data/master/**
 outputs/**
 !data/**/.gitkeep
 !outputs/.gitkeep

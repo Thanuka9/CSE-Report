@@ -309,3 +309,14 @@ Each nontrivial deviation from `AGENT_IMPLEMENTATION_PLAN.md` is recorded here. 
 - **Evidence:** `tests/v2/unit/test_workbook_v2.py`.
 - **Affected modules:** `v2/production/publish.py`.
 - **Temporary/permanent:** Permanent API. Wiring into `cse-etl run` waits for V2 engine promotion.
+
+---
+
+## 2026-09-14 — One-run V2 challenger override; keep production default V1
+
+- **Decision:** `cse-etl run --engine v1|v2` and `scripts/run_production_pipeline.py --engine` override `configs/app.yml` for that run only. Production default stays `extraction.engine: v1`. Do not promote V2 from the 2026-09-09 challenger result.
+- **Reason:** Challenger coverage on the current local universe failed closed: draft-publishable **3,684** vs floor **8,924**, EXTRACTED+DERIVED **3,993** vs **8,932**, 43 `OCR_REQUIRED_NOT_AVAILABLE` pipeline errors, gold CURRENT not promoted (`ENGINEERING_FAILURES_PRESENT`). 3,684/8,924 is a structural failure, not a new floor.
+- **Alternatives:** Set `extraction.engine: v2`; lower `min_draft_publishable`; treat missing CIC gold cells as a V2 pass.
+- **Evidence:** `outputs/manifests/run_manifest_2026-09-09.json` (`extraction_engine: v2`), `outputs/universe_acceptance_2026-09-09.json`. Locked 33 probe remains **209/237**, 0 critical-wrong, recall **88.19%**. Not plan §37.
+- **Affected modules:** `cli.py`, `orchestration/pipeline.py`, `orchestration/resilient_pipeline.py`, `scripts/run_production_pipeline.py`.
+- **Temporary/permanent:** Temporary override. Permanent default stays V1 until gold, frozen universe, current-universe floors, OCR image smoke, and OFFICIAL review pass.

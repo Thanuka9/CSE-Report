@@ -16,7 +16,7 @@ Do not mark institutional cutover complete because code exists. Production extra
 12. [ ] Golden corpus quality gates pass on institutional CSE filings (synthetic §37 gates pass; locked 33 probe is 209/237 recall 88.19%, 0 critical-wrong, duration/unit 100% on labeled gold; not newly human-re-adjudicated, not §37; recall is below 0.97 because unlabeled-entity and missing-line facts stay unpublished).
 13. [ ] Frozen-universe acceptance passes.
 14. [x] Repeated fixed-input runs are deterministic.
-15. [ ] Current-universe run succeeds.
+15. [ ] Current-universe run succeeds. (2026-09-09 V2 challenger `--engine v2`: 3,684 draft-publishable vs floor 8,924; EXTRACTED+DERIVED 3,993 vs 8,932; `ENGINEERING_FAILURES_PRESENT`. That count is not an accepted baseline.)
 16. [x] V2 DRAFT workbook contains correct numeric data (synthetic e2e).
 17. [x] OFFICIAL remains gated by required institutional review.
 
@@ -31,7 +31,7 @@ Phase 15 remaining:
 1. [ ] Make V2 extraction the default (blocked until items 12, 13, and 15).
 2. [x] Keep V1 extraction as the production default; V2 is challenger-only.
 3. [ ] Run another full frozen-universe acceptance.
-4. [ ] Run the current snapshot.
-5. [ ] Generate DRAFT output.
+4. [ ] Run the current snapshot to a passing acceptance (2026-09-09 V2 challenger ran and failed coverage floors; see item 15).
+5. [ ] Generate DRAFT output from a passing current-universe run.
 6. [ ] Complete required human checks (re-adjudicate the 25–40 gold set).
 7. [ ] Remove obsolete V1 extraction paths only after the rollback window closes.

@@ -181,7 +181,7 @@ Tests live under `tests/v2/unit`, `tests/v2/property`, `tests/v2/golden`. Plan d
 ### Human-ready leftovers (engineering is done)
 - Plan §32 / Phase 13 / checklist 12: 25–40 **human re-adjudicated** CSE filings at §37 gates (bbox, unit, entity, period). Locked 33 probe is **209/237**, not newly human-adjudicated, not §37.
 - Plan §14 / Phase 14 / checklist 13: frozen September-10 universe artefacts (2026-09-05 CSV is pinned as best-available only)
-- Plan §15 / checklist 15: current-universe run
+- Plan §15 / checklist 15: current-universe run that meets floors. 2026-09-09 V2 challenger (`--engine v2`, SHA `606c530`) is 3,684 draft-publishable vs 8,924 and `ENGINEERING_FAILURES_PRESENT`. Not an accepted baseline. Production default remains V1.
 - Checklist 17 / Phase 15: OFFICIAL human review, then V1 deletion after the rollback window
 
 ### Deferred, not launch-blocking
