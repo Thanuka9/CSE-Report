@@ -90,6 +90,9 @@ CORE_CONCEPTS: tuple[ConceptDefinition, ...] = (
             "Profit/(Loss) for the Period from Continuing Operations",
             "Profit/ (Loss) for the period from continuing operations",
             "Profit for the period from continuing operations",
+            "Loss for the period",
+            "(Loss)/ Profit for the period",
+            "(Loss)/Profit for the period",
         ),
     ),
     ConceptDefinition(
@@ -108,6 +111,7 @@ CORE_CONCEPTS: tuple[ConceptDefinition, ...] = (
             "Profit/(Loss) Before Tax from Continuing Operations",
             "Profit/ (Loss) before tax for the period",
             "Profit/(loss) before tax",
+            "Loss before tax",
         ),
     ),
     ConceptDefinition(
@@ -122,6 +126,10 @@ CORE_CONCEPTS: tuple[ConceptDefinition, ...] = (
             "Results from operating activities",
             "Profit from operations",
             "Profit from operating activities",
+            "Profit from Operation",
+            "Profit / (loss) from operating activities",
+            "Profit/(loss) from operations",
+            "Profit / (loss) from operations",
             "Operating profit/(loss)",
             "Operating profit before tax on financial services",
             "Operating profit before taxes on financial services",

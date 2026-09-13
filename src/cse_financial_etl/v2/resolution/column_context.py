@@ -101,9 +101,18 @@ def parse_duration_months(text: str) -> int | None:
 
 
 def parse_entity_scope(text: str) -> EntityScope | None:
+    hits: list[EntityScope] = []
     for scope, pattern in _ENTITY_PATTERNS:
-        if pattern.search(text):
-            return scope
+        if pattern.search(text) and scope not in hits:
+            hits.append(scope)
+    if not hits:
+        return None
+    if len(hits) == 1:
+        return hits[0]
+    if set(hits) <= {EntityScope.GROUP, EntityScope.CONSOLIDATED}:
+        return hits[0]
+    if set(hits) <= {EntityScope.COMPANY, EntityScope.SEPARATE}:
+        return hits[0]
     return None
 
 
@@ -171,6 +180,8 @@ def bind_column_context(
     banner_dates = [parsed for _x, parsed in date_banners]
     if banner_dates and len(banner_dates) == monetary_count:
         period_dates = banner_dates
+    elif len(set(banner_dates)) >= 2 and len(banner_dates) > monetary_count > 0:
+        period_dates = banner_dates[-monetary_count:]
     else:
         period_dates = dates or banner_dates
     columns: list[StatementColumn] = []
@@ -204,7 +215,9 @@ def bind_column_context(
             duration = _duration_for_position(position, monetary_count, blob, duration_banners)
             if duration is None:
                 duration = parse_duration_months(cover)
-        role = _role_for_period(period_for_column, period_dates)
+        role = _role_for_period(
+            period_for_column, period_dates, monetary_count=monetary_count
+        )
         unit = parse_unit(blob)
         cover_unit = parse_unit(cover)
         if (unit[1] is None or unit[1] == Decimal("1")) and cover_unit[1] not in {
@@ -252,12 +265,20 @@ def context_blob(document: CanonicalDocument, region: StatementRegion | None) ->
 def _cover_heading(document: CanonicalDocument) -> str:
     if not document.pages:
         return ""
-    return " ".join(line.text for line in document.pages[0].lines[:HEADING_BAND_LINES])
+    return " ".join(_page_context_lines(document.pages[0]))
 
 
 def header_calendar_dates(blob: str) -> list[date]:
     years = [int(text) for text in _YEAR.findall(blob)]
     day_months = _day_months(blob)
+    if day_months and years and len(day_months) == len(years):
+        aligned: list[date] = []
+        for (day, month), year in zip(day_months, years, strict=True):
+            parsed = _safe_date(year, month, day)
+            if parsed is not None:
+                aligned.append(parsed)
+        if len(aligned) == len(years):
+            return aligned
     unique_dm = _unique_pairs(day_months)
     if unique_dm and len(years) >= 2:
         paired: list[date] = []
@@ -316,6 +337,13 @@ def _heading_context_lines(page: CanonicalPage) -> list[CanonicalLine]:
         if _skip_context_line(line):
             continue
         if index < HEADING_BAND_LINES:
+            if (
+                _ACCOUNT_LINE.search(line.text)
+                and any(parse_numeric(token.text) is not None for token in line.tokens)
+                and not _STATEMENT_TITLE.search(line.text)
+                and not _UNIT_CUE.search(line.text)
+            ):
+                continue
             lines.append(line)
             continue
         if _UNIT_CUE.search(line.text) and not _ACCOUNT_LINE.search(line.text):
@@ -331,6 +359,10 @@ def _skip_context_line(line: CanonicalLine) -> bool:
     if _JUNK_HEADER.search(line.text) or _NON_HEADER_LABEL.search(line.text):
         return True
     if _STATEMENT_TITLE.search(line.text):
+        return False
+    if _dates_in_text(line.text):
+        return False
+    if _day_months(line.text):
         return False
     if _UNIT_CUE.search(line.text) and not _ACCOUNT_LINE.search(line.text):
         return False
@@ -637,6 +669,14 @@ def _column_kinds(statement: CanonicalStatement) -> list[str]:
             "10000"
         ):
             kinds.append("note")
+        elif (
+            numbers
+            and all(
+                value == value.to_integral() and abs(value) < Decimal("100") for value in numbers
+            )
+            and any(column_max >= Decimal("100") for column_max in maxima)
+        ):
+            kinds.append("note")
         else:
             kinds.append("monetary")
     return kinds
@@ -669,9 +709,12 @@ def _entity_for_position(
         if len(scopes) >= 4 and len(unique) == 2 and monetary_count == 6:
             mapped = (scopes[0], scopes[1], scopes[2], scopes[2], scopes[3], scopes[3])
             return mapped[position]
-        if len(unique) == 2 and monetary_count >= 4:
-            midpoint = monetary_count // 2
-            return unique[0] if position < midpoint else unique[1]
+        if len(unique) == 2 and monetary_count >= 2:
+            xs = [x for x, _scope in entity_banners or ()]
+            spread = max(xs) - min(xs) if xs else 0
+            if monetary_count >= 4 or spread >= 80:
+                midpoint = monetary_count // 2
+                return unique[0] if position < midpoint else unique[1]
         if len(unique) == 1:
             return unique[0]
     left, right = _paired_entities(blob)
@@ -768,9 +811,14 @@ def _last_index(blob: str, pattern: str) -> int | None:
     return matches[-1].start() if matches else None
 
 
-def _role_for_period(period: date | None, dates: list[date]) -> ComparisonRole | None:
+def _role_for_period(
+    period: date | None, dates: list[date], *, monetary_count: int
+) -> ComparisonRole | None:
     if period is None:
         return None
-    if len({item for item in dates}) >= 2:
-        return ComparisonRole.CURRENT if period == max(dates) else ComparisonRole.COMPARATIVE
-    return ComparisonRole.CURRENT
+    unique = {item for item in dates}
+    if len(unique) >= 2:
+        return ComparisonRole.CURRENT if period == max(unique) else ComparisonRole.COMPARATIVE
+    if monetary_count <= 1:
+        return ComparisonRole.CURRENT
+    return None

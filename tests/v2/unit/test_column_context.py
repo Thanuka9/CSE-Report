@@ -31,6 +31,7 @@ def test_parsers_cover_required_formats() -> None:
     assert parse_duration_months("period ended") == 3
     assert parse_entity_scope("GROUP") is EntityScope.GROUP
     assert parse_entity_scope("Company") is EntityScope.COMPANY
+    assert parse_entity_scope("GROUP COMPANY") is None
     currency, scale, dimension = parse_unit("Rs '000")
     assert currency == "LKR"
     assert scale == Decimal("1000")

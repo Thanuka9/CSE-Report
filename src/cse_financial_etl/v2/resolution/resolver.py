@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from decimal import Decimal
 
 from cse_financial_etl.v2.contracts.concepts import ConceptCandidate
@@ -24,9 +25,10 @@ from cse_financial_etl.v2.contracts.statement import (
     StatementRow,
 )
 from cse_financial_etl.v2.taxonomy.matcher import RegistryMatcher
-from cse_financial_etl.v2.taxonomy.registry import ConceptRegistry, load_registry
+from cse_financial_etl.v2.taxonomy.registry import ConceptRegistry, load_registry, normalize_label
 
 FLOW_CODES = frozenset({"PAT", "PBT", "OPERATING_PROFIT", "TOP_LINE", "EPS_BASIC", "EPS_DILUTED"})
+_ROW_LABEL_PREFIX = re.compile(r"\s+[\d(]")
 
 
 def _status(value: object) -> ResolutionStatus:
@@ -146,7 +148,7 @@ def resolve_source_facts(
         concept = registry.get(candidate.concept.metric_code)
         if (
             concept.unit_dimension is UnitDimension.MONETARY
-            and candidate.unit_dimension is UnitDimension.PERCENTAGE
+            and candidate.unit_dimension is not UnitDimension.MONETARY
         ):
             continue
         duration = candidate.duration_months
@@ -203,4 +205,54 @@ def resolve_source_facts(
                 reason_codes=tuple(reasons),
             )
         )
-    return tuple(facts)
+    return _withhold_conflicting_values(tuple(facts))
+
+
+def _withhold_conflicting_values(facts: tuple[SourceFact, ...]) -> tuple[SourceFact, ...]:
+    """Do not last-write-win when two current cells disagree on the same metric."""
+
+    groups: dict[tuple[object, ...], list[SourceFact]] = {}
+    for fact in facts:
+        if fact.publication_status is not PublicationStatus.ELIGIBLE:
+            continue
+        key = (
+            fact.statement_id,
+            fact.metric_code,
+            _conflict_row_label(fact),
+            fact.entity_scope,
+            fact.period_end,
+            fact.duration_months,
+            fact.comparison_role,
+        )
+        groups.setdefault(key, []).append(fact)
+    conflict_ids = {
+        member.fact_id
+        for members in groups.values()
+        if len({member.normalized_value for member in members}) > 1
+        for member in members
+    }
+    if not conflict_ids:
+        return facts
+    updated: list[SourceFact] = []
+    for fact in facts:
+        if fact.fact_id not in conflict_ids:
+            updated.append(fact)
+            continue
+        updated.append(
+            fact.model_copy(
+                update={
+                    "publication_status": PublicationStatus.WITHHELD,
+                    "reason_codes": (*fact.reason_codes, "CONFLICTING_SOURCE"),
+                }
+            )
+        )
+    return tuple(updated)
+
+
+def _conflict_row_label(fact: SourceFact) -> str:
+    """Account label only. Gross income and Interest income are not duplicates."""
+
+    text = fact.source_ref.raw_text or ""
+    match = _ROW_LABEL_PREFIX.search(text)
+    head = text[: match.start()] if match is not None else text
+    return normalize_label(head)

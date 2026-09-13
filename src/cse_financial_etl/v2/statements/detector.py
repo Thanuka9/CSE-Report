@@ -262,6 +262,13 @@ def _page_has_continuation_marker(page: CanonicalPage) -> bool:
     return any(_CONTINUED.search(line.text) for line in (*band, *footer))
 
 
+def _conflicting_entity_heading(text: str) -> bool:
+    has_group = re.search(r"\b(?:group|consolidated)\b", text, re.I) is not None
+    has_company = re.search(r"\b(?:company|separate)\b", text, re.I) is not None
+    has_bank = re.search(r"\bbank\b", text, re.I) is not None
+    return sum(bool(flag) for flag in (has_group, has_company, has_bank)) >= 2
+
+
 def _apply_explicit_continuations(
     document: CanonicalDocument,
     regions: list[StatementRegion],
@@ -284,6 +291,8 @@ def _apply_explicit_continuations(
             continue
         page = pages.get(current.page_start)
         if page is None or not _page_has_continuation_marker(page):
+            continue
+        if _conflicting_entity_heading(current.heading_text):
             continue
         promoted[index] = StatementRegion(
             region_id=f"p{current.page_start:04d}-{previous.statement_type.value}",

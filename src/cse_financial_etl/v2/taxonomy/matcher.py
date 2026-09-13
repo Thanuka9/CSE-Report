@@ -50,6 +50,11 @@ class RegistryMatcher:
         ]
         if not viable:
             return [ConceptCandidate(metric_code=None, match_kind=MatchKind.ABSTAIN)]
+        if "operat" not in label:
+            # "Taxes on financial services" must not fuzzy-match operating profit.
+            viable = [item for item in viable if item[2] != "OPERATING_PROFIT"]
+        if not viable:
+            return [ConceptCandidate(metric_code=None, match_kind=MatchKind.ABSTAIN)]
         best_score = viable[0][1]
         top = [item for item in viable if best_score - item[1] <= _AMBIGUITY_DELTA]
         codes = {item[2] for item in top}

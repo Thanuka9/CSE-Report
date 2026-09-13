@@ -96,6 +96,31 @@ def test_closing_market_price_is_not_last_traded() -> None:
     assert hits[0].match_kind is MatchKind.ABSTAIN
 
 
+def test_loss_for_the_period_is_pat() -> None:
+    matcher = RegistryMatcher()
+    hits = matcher.candidates(
+        _row("Loss for the period"), statement_type=StatementType.INCOME_STATEMENT
+    )
+    assert hits[0].metric_code == "PAT"
+    op = matcher.candidates(
+        _row("Profit from Operation"), statement_type=StatementType.INCOME_STATEMENT
+    )
+    assert op[0].metric_code == "OPERATING_PROFIT"
+    signed = matcher.candidates(
+        _row("Profit/(loss) from operations"),
+        statement_type=StatementType.INCOME_STATEMENT,
+    )
+    assert signed[0].metric_code == "OPERATING_PROFIT"
+    matcher = RegistryMatcher()
+    for label in (
+        "Less: Taxes on financial services",
+        "Taxes on financial services",
+        "VAT on financial services",
+    ):
+        hits = matcher.candidates(_row(label), statement_type=StatementType.INCOME_STATEMENT)
+        assert hits[0].metric_code != "OPERATING_PROFIT", label
+
+
 def test_ambiguous_fuzzy_candidates_abstain() -> None:
     registry = ConceptRegistry(
         (
