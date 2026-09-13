@@ -1,0 +1,152 @@
+from __future__ import annotations
+
+from datetime import date
+from decimal import Decimal
+from pathlib import Path
+
+from cse_financial_etl.config import AppConfig
+from cse_financial_etl.v2.contracts.enums import (
+    ComparisonRole,
+    EntityScope,
+    PublicationStatus,
+    StatementType,
+)
+from cse_financial_etl.v2.market.quarter_end_price import resolve_last_traded_as_of_quarter_end
+from cse_financial_etl.v2.orchestration.filing_pipeline import run_filing_pipeline
+from cse_financial_etl.v2.production.adapter import select_pipeline_facts
+from cse_financial_etl.v2.production.engine import extract_for_production
+from tests.v2.helpers import geometric_document, source_fact
+
+
+def test_app_config_defaults_to_v2_engine() -> None:
+    assert AppConfig().extraction_engine == "v2"
+
+
+def test_investor_navps_publishes_company() -> None:
+    document = geometric_document(
+        (
+            ((40.0, "INVESTOR INFORMATION"),),
+            ((40.0, "30 June 2026"), (220.0, "30 June 2025")),
+            ((40.0, "Net assets per share"), (220.0, "148.27"), (340.0, "127.14")),
+        ),
+        title="INVESTOR INFORMATION",
+    )
+    statements, facts, _derived, _metrics = run_filing_pipeline(
+        document, issuer_id="HAYL.N0000"
+    )
+    assert any(item.statement_type is StatementType.EPS_NOTE for item in statements)
+    navps = [
+        fact
+        for fact in facts
+        if fact.metric_code == "NAVPS" and fact.publication_status is PublicationStatus.ELIGIBLE
+    ]
+    assert navps
+    assert any(
+        fact.entity_scope is EntityScope.COMPANY
+        and fact.normalized_value == Decimal("148.27")
+        for fact in navps
+    )
+
+
+def test_last_traded_rejects_observed_after_quarter_end(tmp_path: Path) -> None:
+    resolved = resolve_last_traded_as_of_quarter_end(
+        tmp_path, "AAA.N0000", date(2026, 6, 30)
+    )
+    assert resolved is None
+
+
+def test_last_traded_wrapper_drops_future_observation(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setattr(
+        "cse_financial_etl.v2.market.quarter_end_price.resolve_quarter_end_price",
+        lambda *_args, **_kwargs: (Decimal("10"), date(2026, 7, 1), "LEAK"),
+    )
+    assert (
+        resolve_last_traded_as_of_quarter_end(tmp_path, "AAA.N0000", date(2026, 6, 30))
+        is None
+    )
+
+
+def test_pipeline_facts_prefer_requested_company_over_group() -> None:
+    company = source_fact(
+        fact_id="company-pat",
+        metric_code="PAT",
+        entity_scope=EntityScope.COMPANY,
+        normalized_value=Decimal("1"),
+        raw_value=Decimal("1"),
+    )
+    group = source_fact(
+        fact_id="group-pat",
+        metric_code="PAT",
+        entity_scope=EntityScope.GROUP,
+        normalized_value=Decimal("9"),
+        raw_value=Decimal("9"),
+        cell_id="cell-2",
+    )
+    selected = select_pipeline_facts(
+        (group, company),
+        period_end=date(2026, 6, 30),
+        expected_entity=EntityScope.COMPANY,
+    )
+    assert len(selected) == 1
+    assert selected[0].entity_scope is EntityScope.COMPANY
+    assert selected[0].normalized_value == Decimal("1")
+
+
+def test_pipeline_facts_keep_true_group_when_company_absent() -> None:
+    group = source_fact(entity_scope=EntityScope.GROUP)
+    selected = select_pipeline_facts(
+        (group,),
+        period_end=date(2026, 6, 30),
+        expected_entity=EntityScope.COMPANY,
+    )
+    assert len(selected) == 1
+    assert selected[0].entity_scope is EntityScope.GROUP
+
+
+def test_pipeline_facts_drop_comparative_and_non_quarter_flow() -> None:
+    comparative = source_fact(
+        fact_id="prior",
+        comparison_role=ComparisonRole.COMPARATIVE,
+        period_end=date(2025, 6, 30),
+        cell_id="cell-2",
+    )
+    six_month = source_fact(fact_id="six", duration_months=6, cell_id="cell-3")
+    current = source_fact()
+    selected = select_pipeline_facts(
+        (comparative, six_month, current),
+        period_end=date(2026, 6, 30),
+        expected_entity=EntityScope.COMPANY,
+    )
+    assert [fact.fact_id for fact in selected] == ["fact-1"]
+
+
+def test_pipeline_extract_filing_defaults_to_v2(monkeypatch) -> None:
+    called = {"v2": False}
+
+    def fake_v2(*_args, **_kwargs):
+        called["v2"] = True
+        return []
+
+    monkeypatch.setattr(
+        "cse_financial_etl.v2.production.engine.extract_filing_v2", fake_v2
+    )
+    from cse_financial_etl.orchestration.pipeline import extract_filing
+
+    extract_filing(Path("missing.pdf"), "Acme PLC", "ACM.N0000", date(2026, 6, 30))
+    assert called["v2"] is True
+
+
+def test_v1_engine_flag_still_calls_challenger(monkeypatch) -> None:
+    called = {"v1": False}
+
+    def fake_v1(*_args, **_kwargs):
+        called["v1"] = True
+        return []
+
+    monkeypatch.setattr(
+        "cse_financial_etl.v2.production.engine.extract_filing", fake_v1
+    )
+    extract_for_production(
+        Path("missing.pdf"), "Acme", "ACM.N0000", date(2026, 6, 30), engine="v1"
+    )
+    assert called["v1"] is True

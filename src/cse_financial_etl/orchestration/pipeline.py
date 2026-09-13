@@ -32,9 +32,11 @@ from cse_financial_etl.extraction.semantic_matcher import apply_metric_catalog, 
 from cse_financial_etl.extraction.statement_extractor import (
     ExtractedFact,
     QuarterPrice,
-    extract_filing,
     extract_quarter_prices,
     facts_by_code,
+)
+from cse_financial_etl.extraction.statement_extractor import (
+    extract_filing as extract_filing_v1,
 )
 from cse_financial_etl.extraction.unit_detector import configure_unit_patterns
 from cse_financial_etl.reporting.dashboard import generate_run_dashboard
@@ -52,7 +54,6 @@ from cse_financial_etl.sources.cse import (
     load_market_capitalization_cache,
     serialize_security,
 )
-from cse_financial_etl.sources.historical_prices import resolve_quarter_end_price
 from cse_financial_etl.storage.gold_snapshot import current_gold_dir
 from cse_financial_etl.storage.repository import DERIVED_METRIC_CODES, Repository
 from cse_financial_etl.storage.run_archive import (
@@ -63,6 +64,9 @@ from cse_financial_etl.storage.run_archive import (
     utc_stamp,
 )
 from cse_financial_etl.transformation.ratios import derive_ratio_facts
+from cse_financial_etl.v2.market.quarter_end_price import (
+    resolve_last_traded_as_of_quarter_end as resolve_quarter_end_price,
+)
 from cse_financial_etl.validation.acceptance import current_release_mode, set_release_mode
 from cse_financial_etl.validation.cross_filing import flag_cross_filing_mismatches
 from cse_financial_etl.validation.equation_engine import ValidationOutcome, ValidationResult
@@ -130,7 +134,40 @@ def build_extract_kwargs(
         "manual_review_threshold": app_config.manual_review_threshold,
         "compile_statements": compile_statements,
         "run_tunnel_b_always": run_tunnel_b_always,
+        "engine": str(getattr(app_config, "extraction_engine", "v2") or "v2").strip().lower(),
     }
+
+
+def extract_filing(
+    pdf_path: Path,
+    issuer_name: str,
+    symbol: str,
+    period_end: date,
+    text_cache_dir: Path | None = None,
+    **kwargs: Any,
+) -> list[ExtractedFact]:
+    """Production extractor. Defaults to V2; ``engine='v1'`` is the challenger path."""
+
+    engine = str(kwargs.pop("engine", None) or "v2").strip().lower()
+    if engine == "v1":
+        return extract_filing_v1(
+            pdf_path,
+            issuer_name,
+            symbol,
+            period_end,
+            text_cache_dir,
+            **kwargs,
+        )
+    from cse_financial_etl.v2.production.engine import extract_for_production
+
+    return extract_for_production(
+        pdf_path,
+        issuer_name,
+        symbol,
+        period_end,
+        engine="v2",
+        issuers=kwargs.get("issuers"),
+    )
 
 
 def stamp_validation_status(

@@ -244,6 +244,41 @@ def _send_child_error(send: Connection, exc: BaseException) -> None:
         )
 
 
+def _extract_financial_facts(
+    pdf_path: Path,
+    issuer_name: str,
+    symbol: str,
+    period_end: date,
+    text_cache_dir: Path | None,
+    kwargs: dict[str, Any],
+) -> list[ExtractedFact]:
+    """Dispatch production extraction. ``engine`` is popped so V1 never sees it."""
+
+    options = dict(kwargs)
+    engine = str(options.pop("engine", "v2") or "v2").strip().lower()
+    if engine == "v1":
+        from cse_financial_etl.extraction.statement_extractor import extract_filing
+
+        return extract_filing(
+            pdf_path,
+            issuer_name,
+            symbol,
+            period_end,
+            text_cache_dir,
+            **options,
+        )
+    from cse_financial_etl.v2.production.engine import extract_for_production
+
+    return extract_for_production(
+        pdf_path,
+        issuer_name,
+        symbol,
+        period_end,
+        engine="v2",
+        issuers=options.get("issuers"),
+    )
+
+
 def _financial_worker(
     send: Connection,
     project_root: str,
@@ -257,15 +292,13 @@ def _financial_worker(
     _become_process_group_leader()
     try:
         _configure_child(Path(project_root))
-        from cse_financial_etl.extraction.statement_extractor import extract_filing
-
-        facts = extract_filing(
+        facts = _extract_financial_facts(
             Path(pdf_path),
             issuer_name,
             symbol,
             date.fromisoformat(period_end),
             Path(text_cache_dir) if text_cache_dir else None,
-            **kwargs,
+            kwargs,
         )
         send.send({"ok": True, "facts": [fact.as_json() for fact in facts]})
     except BaseException as exc:  # child boundary includes parser/system failures
@@ -527,15 +560,13 @@ def extract_filing_resilient(
             timeout_seconds=process_timeout_seconds,
         )
     else:
-        from cse_financial_etl.extraction.statement_extractor import extract_filing
-
-        facts = extract_filing(
+        facts = _extract_financial_facts(
             pdf_path,
             issuer_name,
             symbol,
             period_end,
             text_cache_dir,
-            **extract_kwargs,
+            extract_kwargs,
         )
 
     if cache_path is not None:

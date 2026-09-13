@@ -21,8 +21,12 @@ jobs:
           python-version: '3.12'
           enable-cache: true
       - run: uv sync --locked --group dev
-      - run: uv run ruff check src scripts/run_production_pipeline.py scripts/check_universe_acceptance.py
+      - run: uv run ruff check src scripts/run_production_pipeline.py scripts/check_universe_acceptance.py scripts/check_coverage_floors.py scripts/v2_fixed_input_replay.py scripts/v2_golden_run.py scripts/v2_shadow_diff.py scripts/v2_real_golden_run.py scripts/v2_universe_shadow.py
       - run: uv run mypy src
+      - name: Coverage floors cannot silently decrease
+        run: uv run python scripts/check_coverage_floors.py --git-base ${{ github.event.pull_request.base.sha || github.event.before }}
+      - name: V2 isolated suite
+        run: uv run pytest tests/v2 --junitxml=outputs/v2-tests.xml
       - name: Adversarial synthetic PDF gauntlets are mandatory
         run: >-
           uv run pytest

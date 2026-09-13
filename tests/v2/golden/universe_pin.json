@@ -1,0 +1,8 @@
+{
+  "snapshot_id": "normalized_facts_2026-09-05",
+  "relative_path": "outputs/normalized_facts_2026-09-05.csv",
+  "kind": "best-available-live-v1-snapshot",
+  "pinned_on": "2026-09-13",
+  "not_frozen_september_10": true,
+  "note": "Best available in-repo V1 fact CSV. This is not the frozen September-10 universe artefact required by plan Phase 14 acceptance."
+}

@@ -1,0 +1,116 @@
+"""V2 diagnostic and semantic enumerations.
+
+Status dimensions are independent. One primary status must never hide a secondary
+failure (entity unresolved while concept resolved, etc.).
+"""
+
+from __future__ import annotations
+
+from enum import StrEnum
+
+
+class StatementType(StrEnum):
+    INCOME_STATEMENT = "INCOME_STATEMENT"
+    BALANCE_SHEET = "BALANCE_SHEET"
+    CASH_FLOW = "CASH_FLOW"
+    CHANGES_IN_EQUITY = "CHANGES_IN_EQUITY"
+    EPS_NOTE = "EPS_NOTE"
+    OTHER_FINANCIAL_STATEMENT = "OTHER_FINANCIAL_STATEMENT"
+
+
+class EntityScope(StrEnum):
+    COMPANY = "COMPANY"
+    BANK = "BANK"
+    GROUP = "GROUP"
+    CONSOLIDATED = "CONSOLIDATED"
+    SEPARATE = "SEPARATE"
+    UNKNOWN = "UNKNOWN"
+
+
+class ComparisonRole(StrEnum):
+    CURRENT = "CURRENT"
+    COMPARATIVE = "COMPARATIVE"
+    UNKNOWN = "UNKNOWN"
+
+
+class UnitDimension(StrEnum):
+    MONETARY = "MONETARY"
+    PER_SHARE = "PER_SHARE"
+    PERCENTAGE = "PERCENTAGE"
+    RATIO = "RATIO"
+    COUNT = "COUNT"
+
+
+class UnitDeclarationScope(StrEnum):
+    REPORT = "REPORT"
+    STATEMENT = "STATEMENT"
+    TABLE = "TABLE"
+    COLUMN = "COLUMN"
+    ROW = "ROW"
+    CELL = "CELL"
+
+
+class ExtractionMode(StrEnum):
+    NATIVE = "NATIVE"
+    OCR = "OCR"
+    HYBRID = "HYBRID"
+
+
+class ResolutionStatus(StrEnum):
+    RESOLVED = "RESOLVED"
+    UNRESOLVED = "UNRESOLVED"
+    CONFLICT = "CONFLICT"
+    WITHHELD = "WITHHELD"
+    NOT_APPLICABLE = "NOT_APPLICABLE"
+
+
+class ValidationStatus(StrEnum):
+    PASSED = "PASSED"
+    FAILED = "FAILED"
+    NOT_VALIDATED = "NOT_VALIDATED"
+
+
+class ReviewStatus(StrEnum):
+    REVIEW = "REVIEW"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+    CURATED = "CURATED"
+
+
+class PublicationStatus(StrEnum):
+    ELIGIBLE = "ELIGIBLE"
+    WITHHELD = "WITHHELD"
+    PUBLISHED = "PUBLISHED"
+
+
+class FactKind(StrEnum):
+    SOURCE = "SOURCE"
+    DERIVED = "DERIVED"
+
+
+class PeriodBehavior(StrEnum):
+    FLOW = "FLOW"
+    STOCK = "STOCK"
+    POINT_IN_TIME = "POINT_IN_TIME"
+
+
+class ReleaseMode(StrEnum):
+    DRAFT = "DRAFT"
+    OFFICIAL = "OFFICIAL"
+
+
+class AccountingRegime(StrEnum):
+    GENERAL = "GENERAL"
+    BANK = "BANK"
+    FINANCE_COMPANY = "FINANCE_COMPANY"
+    INSURANCE = "INSURANCE"
+    SLFRS4 = "SLFRS4"
+    SLFRS17 = "SLFRS17"
+
+
+class MatchKind(StrEnum):
+    EXACT_ALIAS = "EXACT_ALIAS"
+    CONTROLLED_ALIAS = "CONTROLLED_ALIAS"
+    FUZZY = "FUZZY"
+    STRUCTURAL = "STRUCTURAL"
+    ABSTAIN = "ABSTAIN"

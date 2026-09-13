@@ -1,0 +1,56 @@
+{
+  "id": "v2-real-gold-lock-2026-09-13",
+  "pinned_on": "2026-09-13",
+  "note": "Locked local V2 scoring set. Not newly human-re-adjudicated. MANUAL_QA PAT truths stay. PDF-heading overlay (adjudication_round1.json) covers rounds 1–2: heading-explicit replacements, unlabeled COMPANY drops, and EPS_DILUTED drops where no diluted line exists. Remaining PIPELINE_SEEDED rows are still a diverse probe. Passing this set is not plan §37 institutional gold and does not switch the default engine off V1.",
+  "scoring_symbols": [
+    "JKH.N0000",
+    "COMB.N0000",
+    "DIAL.N0000",
+    "JAT.N0000",
+    "CIC.N0000",
+    "PKME.N0000",
+    "NDB.N0000",
+    "ABL.N0000",
+    "CBNK.N0000",
+    "DFCC.N0000",
+    "HNB.N0000",
+    "SAMP.N0000",
+    "SEYB.N0000",
+    "HDFC.N0000",
+    "NTB.N0000",
+    "AAF.N0000",
+    "PLC.N0000",
+    "LFIN.N0000",
+    "LCBF.N0000",
+    "CALF.N0000",
+    "ATL.N0000",
+    "AINS.N0000",
+    "UAL.N0000",
+    "GREG.N0000",
+    "KPHL.N0000",
+    "YORK.N0000",
+    "ACL.N0000",
+    "SPEN.N0000",
+    "HAYL.N0000",
+    "CTC.N0000",
+    "DIST.N0000",
+    "DIMO.N0000",
+    "RICH.N0000"
+  ],
+  "regression_symbols": [
+    "ABAN.N0000",
+    "CDB.N0000",
+    "CRL.N0000",
+    "AAIC.N0000"
+  ],
+  "known_timeout_symbols": [
+    "SDF.N0000",
+    "RENU.N0000"
+  ],
+  "required_manual_qa_symbols": [
+    "JKH.N0000",
+    "COMB.N0000",
+    "DIAL.N0000",
+    "JAT.N0000"
+  ]
+}

@@ -70,6 +70,7 @@ def test_successful_result_cache_resumes_without_reextracting(
         "process_timeout_seconds": 0,
         "cache_namespace": "sha-a:config-a",
         "ocr_enabled": False,
+        "engine": "v1",
     }
     first = extract_filing_resilient(
         source,
@@ -100,6 +101,7 @@ def test_successful_result_cache_resumes_without_reextracting(
         process_timeout_seconds=0,
         cache_namespace="sha-b:config-a",
         ocr_enabled=False,
+        engine="v1",
     )
     assert calls["count"] == 2
     assert changed[0].normalized_value == Decimal("2")

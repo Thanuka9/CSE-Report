@@ -1,0 +1,153 @@
+{
+  "id": "v2-adjudication-round2-2026-09-13",
+  "reviewer": "v2-pdf-heading-adjudication",
+  "review_date": "2026-09-13",
+  "note": "Agent PDF-heading adjudication rounds 1–2 of the locked 33. Not institutional plan §37 gold and not a human re-adjudication of every cell. Audited PAT truths are kept. Unlabeled company-only pages drop expected COMPANY facts instead of inventing entity. EPS_DILUTED is dropped where the heading has no separate diluted line. AAF expected FLOW is the quarter column, not the six-month column.",
+  "symbols": {
+    "JKH.N0000": {
+      "action": "keep",
+      "reason": "MANUAL_QA PAT 5378093000 matches Company quarter current on the income statement."
+    },
+    "COMB.N0000": {
+      "action": "keep",
+      "reason": "MANUAL_QA PAT 16621006000 matches Bank quarter current 16,621,006 x 1000. No separate diluted EPS line.",
+      "drop": ["EPS_DILUTED"]
+    },
+    "DIAL.N0000": {
+      "action": "keep",
+      "reason": "MANUAL_QA PAT 8187022000 matches Company quarter current on the income statement."
+    },
+    "JAT.N0000": {
+      "action": "keep",
+      "reason": "MANUAL_QA PAT 108959808 matches Company quarter current on the income statement."
+    },
+    "HAYL.N0000": {
+      "action": "replace",
+      "reason": "V1 gold used Company as-at 31.03.26 stocks as 30.06.26. Heading as-at 30.06.26 Company column is 67,443,036 / 14,896,802 / 52,546,234 x 1000. No separate diluted EPS line.",
+      "replace": {
+        "TOTAL_ASSETS": "67443036000",
+        "TOTAL_EQUITY": "14896802000",
+        "TOTAL_LIABILITIES": "52546234000"
+      },
+      "drop": ["EPS_DILUTED"]
+    },
+    "CBNK.N0000": {
+      "action": "replace",
+      "reason": "V1 gold TOP_LINE is Net interest income 1,165,845 x 1000. Bank heading top line is Interest income quarter current 2,716,705 x 1000. No separate diluted EPS line.",
+      "replace": {
+        "TOP_LINE": "2716705000"
+      },
+      "drop": ["EPS_DILUTED"]
+    },
+    "ATL.N0000": {
+      "action": "replace",
+      "reason": "V1 gold EPS_BASIC 1.63 is the six-month / weighted-average line. Quarter current basic/diluted on the 3M income page is 0.46.",
+      "replace": {
+        "EPS_BASIC": "0.46"
+      }
+    },
+    "LCBF.N0000": {
+      "action": "drop_all_expected",
+      "reason": "Income heading is issuer name plus Quarter ended / Rs. No Company, Group, or Bank column. Fail-closed unpublished."
+    },
+    "CALF.N0000": {
+      "action": "drop_all_expected",
+      "reason": "Dialog Finance income heading has six-month and three-month columns and Rs thousands. No Company/Group/Bank. Fail-closed unpublished."
+    },
+    "AINS.N0000": {
+      "action": "drop_all_expected",
+      "reason": "Arpico Insurance income heading has LKR quarter/period columns. No Company/Group/Bank. Fail-closed unpublished."
+    },
+    "UAL.N0000": {
+      "action": "drop_all_expected",
+      "reason": "Union Assurance income heading is issuer name plus period/quarter Rs '000. No Company/Group/Bank. Fail-closed unpublished."
+    },
+    "YORK.N0000": {
+      "action": "drop_all_expected",
+      "reason": "York Arcade income heading is issuer name plus Year/Quarter columns. No Company/Group/Bank. Fail-closed unpublished. V1 PAT 2026 was the year token."
+    },
+    "AAF.N0000": {
+      "action": "replace",
+      "reason": "V1 gold FLOW is the six-month column. Income heading Company quarter current is Interest income 1,834,333,250 / PBT 294,817,405 / PAT 181,180,388 / EPS 1.46. SOFP heading has no Company/Group/Bank. No separate diluted line.",
+      "replace": {
+        "TOP_LINE": "1834333250",
+        "PBT": "294817405",
+        "PAT": "181180388",
+        "EPS_BASIC": "1.46"
+      },
+      "drop": [
+        "EPS_DILUTED",
+        "OPERATING_PROFIT",
+        "NAVPS",
+        "TOTAL_ASSETS",
+        "TOTAL_EQUITY",
+        "TOTAL_LIABILITIES"
+      ]
+    },
+    "NDB.N0000": {
+      "action": "keep",
+      "reason": "Bank Period/Quarter grid. No separate diluted EPS line.",
+      "drop": ["EPS_DILUTED"]
+    },
+    "ABL.N0000": {
+      "action": "keep",
+      "reason": "No separate diluted EPS line; heading Basic/Diluted is one figure.",
+      "drop": ["EPS_DILUTED"]
+    },
+    "DFCC.N0000": {
+      "action": "keep",
+      "reason": "No separate diluted EPS line.",
+      "drop": ["EPS_DILUTED"]
+    },
+    "HNB.N0000": {
+      "action": "keep",
+      "reason": "No separate diluted EPS line.",
+      "drop": ["EPS_DILUTED"]
+    },
+    "SAMP.N0000": {
+      "action": "keep",
+      "reason": "No separate diluted EPS line. Bank vs Group columns stay fail-closed; do not copy Group into Bank.",
+      "drop": ["EPS_DILUTED"]
+    },
+    "SEYB.N0000": {
+      "action": "keep",
+      "reason": "No separate diluted EPS line.",
+      "drop": ["EPS_DILUTED"]
+    },
+    "NTB.N0000": {
+      "action": "keep",
+      "reason": "No separate diluted EPS line.",
+      "drop": ["EPS_DILUTED"]
+    },
+    "PLC.N0000": {
+      "action": "keep",
+      "reason": "No separate diluted EPS line.",
+      "drop": ["EPS_DILUTED"]
+    },
+    "ACL.N0000": {
+      "action": "keep",
+      "reason": "No separate diluted EPS line.",
+      "drop": ["EPS_DILUTED"]
+    },
+    "CTC.N0000": {
+      "action": "keep",
+      "reason": "No separate diluted EPS line.",
+      "drop": ["EPS_DILUTED"]
+    },
+    "RICH.N0000": {
+      "action": "keep",
+      "reason": "No separate diluted EPS line.",
+      "drop": ["EPS_DILUTED"]
+    },
+    "SPEN.N0000": {
+      "action": "keep",
+      "reason": "No separate diluted EPS line.",
+      "drop": ["EPS_DILUTED"]
+    },
+    "KPHL.N0000": {
+      "action": "keep",
+      "reason": "No separate diluted EPS line on the income heading.",
+      "drop": ["EPS_DILUTED"]
+    }
+  }
+}

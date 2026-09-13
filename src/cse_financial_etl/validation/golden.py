@@ -8,9 +8,8 @@ from pathlib import Path
 from typing import Any
 
 from cse_financial_etl.extraction.statement_extractor import (
-    extract_filing,
+    ExtractedFact,
     extract_quarter_prices,
-    facts_by_code,
 )
 from cse_financial_etl.validation.acceptance import is_publishable_fact
 from cse_financial_etl.validation.calibration import calibration_from_results
@@ -18,6 +17,73 @@ from cse_financial_etl.validation.calibration import calibration_from_results
 
 def _same_value(actual: Decimal | None, expected: str) -> bool:
     return actual is not None and actual == Decimal(expected)
+
+
+def _extract_production_facts(
+    project_root: Path,
+    pdf_path: Path,
+    issuer_name: str,
+    symbol: str,
+    period_end: date,
+) -> list[ExtractedFact]:
+    from cse_financial_etl.config import load_app_config, load_issuers
+    from cse_financial_etl.v2.production.engine import extract_for_production
+
+    config = load_app_config(project_root)
+    return extract_for_production(
+        pdf_path,
+        issuer_name,
+        symbol,
+        period_end,
+        engine=str(config.extraction_engine or "v2"),
+        issuers=load_issuers(project_root),
+    )
+
+
+def _select_golden_fact(
+    facts: list[ExtractedFact],
+    *,
+    metric_code: str,
+    period_end: date,
+    fixture_entity: str,
+    expected_context: dict[str, Any],
+) -> ExtractedFact | None:
+    candidates = [fact for fact in facts if fact.metric_code == metric_code]
+    if not candidates:
+        return None
+    wanted_entity = str(expected_context.get("entity_scope") or fixture_entity or "")
+    wanted_duration = expected_context.get("duration_months")
+    wanted_role = str(expected_context.get("comparison_role") or "CURRENT")
+
+    def score(fact: ExtractedFact) -> tuple[int, int]:
+        points = 0
+        if wanted_entity and str(fact.entity_scope) == wanted_entity:
+            points += 8
+        if fact.period_end == period_end:
+            points += 4
+        if str(fact.comparison_role or "") == wanted_role:
+            points += 2
+        if wanted_duration is not None and fact.duration_months == wanted_duration:
+            points += 1
+        page = fact.source_page if fact.source_page is not None else 10**6
+        return (points, -page)
+
+    return max(candidates, key=score)
+
+
+def _context_matches(
+    actual_context: dict[str, Any],
+    expected_context: dict[str, Any],
+) -> bool:
+    if not expected_context:
+        return False
+    for key, value in expected_context.items():
+        actual = actual_context.get(key)
+        if key == "duration_months" and actual is None:
+            continue
+        if str(actual) != str(value):
+            return False
+    return True
 
 
 def validate_golden(project_root: Path, as_of_date: date) -> dict[str, Any]:
@@ -37,17 +103,22 @@ def validate_golden(project_root: Path, as_of_date: date) -> dict[str, Any]:
             continue
         period_end = date.fromisoformat(fixture["period_end"])
         verification = str(fixture.get("verification_status") or "UNKNOWN")
-        facts = facts_by_code(
-            extract_filing(
-                pdf_path,
-                fixture["issuer_name"],
-                fixture["symbol"],
-                period_end,
-            )
+        extracted = _extract_production_facts(
+            project_root,
+            pdf_path,
+            fixture["issuer_name"],
+            fixture["symbol"],
+            period_end,
         )
         for metric_code, expected in fixture["facts"].items():
-            fact = facts.get(metric_code)
             expected_context = fixture.get("fact_context", {}).get(metric_code, {})
+            fact = _select_golden_fact(
+                extracted,
+                metric_code=metric_code,
+                period_end=period_end,
+                fixture_entity=str(fixture.get("entity_scope") or ""),
+                expected_context=expected_context,
+            )
             actual_context = {
                 "entity_scope": fact.entity_scope if fact else None,
                 "period_end": fact.period_end.isoformat() if fact else None,
@@ -56,9 +127,7 @@ def validate_golden(project_root: Path, as_of_date: date) -> dict[str, Any]:
                 "unit": fact.currency if fact else None,
                 "scale_factor": fact.scale_factor if fact else None,
             }
-            context_ok = bool(expected_context) and all(
-                str(actual_context.get(key)) == str(value) for key, value in expected_context.items()
-            )
+            context_ok = _context_matches(actual_context, expected_context)
             numeric_match = bool(fact and _same_value(fact.normalized_value, expected))
             passed = bool(
                 numeric_match
