@@ -13,13 +13,14 @@ from cse_financial_etl.v2.contracts.enums import (
 )
 from cse_financial_etl.v2.market.quarter_end_price import resolve_last_traded_as_of_quarter_end
 from cse_financial_etl.v2.orchestration.filing_pipeline import run_filing_pipeline
-from cse_financial_etl.v2.production.adapter import select_pipeline_facts
+from cse_financial_etl.v2.production.adapter import _from_source, select_pipeline_facts
+from cse_financial_etl.v2.taxonomy.registry import load_registry
 from cse_financial_etl.v2.production.engine import extract_for_production
 from tests.v2.helpers import geometric_document, source_fact
 
 
-def test_app_config_defaults_to_v2_engine() -> None:
-    assert AppConfig().extraction_engine == "v2"
+def test_app_config_defaults_to_v1_engine() -> None:
+    assert AppConfig().extraction_engine == "v1"
 
 
 def test_investor_navps_publishes_company() -> None:
@@ -92,15 +93,46 @@ def test_pipeline_facts_prefer_requested_company_over_group() -> None:
     assert selected[0].normalized_value == Decimal("1")
 
 
-def test_pipeline_facts_keep_true_group_when_company_absent() -> None:
+def test_pipeline_facts_fail_closed_when_company_absent() -> None:
     group = source_fact(entity_scope=EntityScope.GROUP)
     selected = select_pipeline_facts(
         (group,),
         period_end=date(2026, 6, 30),
         expected_entity=EntityScope.COMPANY,
     )
+    assert selected == ()
+
+
+def test_pipeline_facts_fail_closed_when_bank_absent() -> None:
+    group = source_fact(entity_scope=EntityScope.GROUP)
+    selected = select_pipeline_facts(
+        (group,),
+        period_end=date(2026, 6, 30),
+        expected_entity=EntityScope.BANK,
+    )
+    assert selected == ()
+
+
+def test_pipeline_facts_allow_company_separate_equivalence() -> None:
+    separate = source_fact(entity_scope=EntityScope.SEPARATE)
+    selected = select_pipeline_facts(
+        (separate,),
+        period_end=date(2026, 6, 30),
+        expected_entity=EntityScope.COMPANY,
+    )
     assert len(selected) == 1
-    assert selected[0].entity_scope is EntityScope.GROUP
+    assert selected[0].entity_scope is EntityScope.SEPARATE
+
+
+def test_pipeline_facts_allow_group_consolidated_equivalence() -> None:
+    consolidated = source_fact(entity_scope=EntityScope.CONSOLIDATED)
+    selected = select_pipeline_facts(
+        (consolidated,),
+        period_end=date(2026, 6, 30),
+        expected_entity=EntityScope.GROUP,
+    )
+    assert len(selected) == 1
+    assert selected[0].entity_scope is EntityScope.CONSOLIDATED
 
 
 def test_pipeline_facts_drop_comparative_and_non_quarter_flow() -> None:
@@ -120,20 +152,28 @@ def test_pipeline_facts_drop_comparative_and_non_quarter_flow() -> None:
     assert [fact.fact_id for fact in selected] == ["fact-1"]
 
 
-def test_pipeline_extract_filing_defaults_to_v2(monkeypatch) -> None:
-    called = {"v2": False}
+def test_pipeline_extract_filing_defaults_to_v1(monkeypatch) -> None:
+    called = {"v1": False, "v2": False}
+
+    def fake_v1(*_args, **_kwargs):
+        called["v1"] = True
+        return []
 
     def fake_v2(*_args, **_kwargs):
         called["v2"] = True
         return []
 
     monkeypatch.setattr(
+        "cse_financial_etl.orchestration.pipeline.extract_filing_v1", fake_v1
+    )
+    monkeypatch.setattr(
         "cse_financial_etl.v2.production.engine.extract_filing_v2", fake_v2
     )
     from cse_financial_etl.orchestration.pipeline import extract_filing
 
     extract_filing(Path("missing.pdf"), "Acme PLC", "ACM.N0000", date(2026, 6, 30))
-    assert called["v2"] is True
+    assert called["v1"] is True
+    assert called["v2"] is False
 
 
 def test_v1_engine_flag_still_calls_challenger(monkeypatch) -> None:
@@ -150,3 +190,19 @@ def test_v1_engine_flag_still_calls_challenger(monkeypatch) -> None:
         Path("missing.pdf"), "Acme", "ACM.N0000", date(2026, 6, 30), engine="v1"
     )
     assert called["v1"] is True
+
+
+def test_v2_adapter_does_not_invent_confidence_one() -> None:
+    fact = _from_source(
+        source_fact(),
+        issuer_name="Acme PLC",
+        symbol="ACM.N0000",
+        registry=load_registry(),
+    )
+    assert fact.confidence == "DETERMINISTIC"
+    assert fact.certainty_band == "DETERMINISTIC"
+    assert fact.semantic_confidence == 0.0
+    assert fact.entity_confidence == 0.0
+    assert fact.period_confidence == 0.0
+    assert fact.unit_confidence == 0.0
+    assert fact.overall_certainty == 0.0

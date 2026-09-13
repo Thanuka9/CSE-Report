@@ -8,10 +8,10 @@ import pytest
 from cse_financial_etl.v2 import PARSER_NAME_NATIVE
 from cse_financial_etl.v2.contracts.enums import ExtractionMode
 from cse_financial_etl.v2.document.native_reader import read_native_pdf, sha256_file
-from cse_financial_etl.v2.document.ocr_reader import read_ocr_pdf
+from cse_financial_etl.v2.document.ocr_reader import _tesseract_engine, read_ocr_pdf
 from cse_financial_etl.v2.document.quality import measure_document_quality
 from cse_financial_etl.v2.document.router import read_document, select_reader_route
-from cse_financial_etl.v2.exceptions import NativeParseError
+from cse_financial_etl.v2.exceptions import NativeParseError, OcrRouteNotEnabledError
 from cse_financial_etl.v2.statements.detector import detect_statement_regions
 from tests.v2.helpers import geometric_document
 
@@ -65,12 +65,15 @@ def test_ocr_path_uses_the_same_canonical_document(tmp_path: Path) -> None:
     pdf_path = tmp_path / "native.pdf"
     _write_native_pdf(pdf_path)
     native = read_native_pdf(pdf_path, filing_version_id="fv-test")
+    if _tesseract_engine() is None:
+        with pytest.raises(OcrRouteNotEnabledError, match="OCR_REQUIRED_NOT_AVAILABLE"):
+            read_ocr_pdf(pdf_path, filing_version_id="fv-test")
+        return
     ocr = read_ocr_pdf(pdf_path, filing_version_id="fv-test")
     assert ocr.pages[0].extraction_mode == ExtractionMode.OCR
     assert native.source_sha256 == ocr.source_sha256
-    assert [line.text for line in native.pages[0].lines] == [
-        line.text for line in ocr.pages[0].lines
-    ]
+    assert ocr.parser_manifest.get("parser_name") == "v2.ocr.tesseract"
+    assert any(line.tokens for line in ocr.pages[0].lines)
     assert select_reader_route() == ExtractionMode.NATIVE
 
 
@@ -84,6 +87,10 @@ def test_empty_native_text_routes_to_ocr(tmp_path: Path) -> None:
     quality = measure_document_quality(native)
     assert quality.native_token_count == 0
     assert select_reader_route(quality) == ExtractionMode.OCR
+    if _tesseract_engine() is None:
+        with pytest.raises(OcrRouteNotEnabledError, match="OCR_REQUIRED_NOT_AVAILABLE"):
+            read_document(pdf_path, filing_version_id="fv-test")
+        return
     routed = read_document(pdf_path, filing_version_id="fv-test")
     assert routed.pages[0].extraction_mode == ExtractionMode.OCR
 

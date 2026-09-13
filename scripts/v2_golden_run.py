@@ -39,6 +39,7 @@ def main(argv: list[str] | None = None) -> int:
             case.document,
             issuer_id=case.issuer_id,
             expected_entity_scope=case.expected_entity_scope,
+            accounting_regime=case.accounting_regime,
         )
         published = {
             fact.metric_code

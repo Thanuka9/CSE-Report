@@ -95,8 +95,6 @@ def parse_duration_months(text: str) -> int | None:
             return months
     if _QUARTER_WORD.search(text):
         return 3
-    if _PERIOD_WORD.search(text):
-        return 3
     return None
 
 
@@ -131,7 +129,6 @@ def parse_unit(text: str) -> tuple[str | None, Decimal | None, UnitDimension | N
         currency = "LKR"
     scale = None
     if re.search(r"million|\bmns?\.?\b|\brs\.?\s*mns?\b", lowered):
-        scale = Decimal("1000000")
         scale = Decimal("1000000")
     elif re.search(r"billion|\bbn\b", lowered):
         scale = Decimal("1000000000")
@@ -374,14 +371,12 @@ def _skip_context_line(line: CanonicalLine) -> bool:
     if len(values) >= 2:
         if all(1900 <= abs(value) <= 2100 and value == value.to_integral() for value in values):
             return False
-        if any(pattern.search(line.text) for _months, pattern in _DURATION_BANNER):
-            return False
-        if _QUARTER_WORD.search(line.text) or _PERIOD_WORD.search(line.text):
-            return False
-        return True
-    if _ACCOUNT_LINE.search(line.text) and values:
-        return True
-    return False
+        return not (
+            any(pattern.search(line.text) for _months, pattern in _DURATION_BANNER)
+            or _QUARTER_WORD.search(line.text)
+            or _PERIOD_WORD.search(line.text)
+        )
+    return bool(_ACCOUNT_LINE.search(line.text) and values)
 
 
 def _match_x(line: CanonicalLine, match: re.Match[str]) -> float:
@@ -486,10 +481,9 @@ def _duration_banners(
     for x, months in found:
         mapped = months
         if months == 0:
-            if has_explicit_quarter:
-                mapped = 9 if has_nine else 6
-            else:
-                mapped = 3
+            if not has_explicit_quarter:
+                continue
+            mapped = 9 if has_nine else 6
         key = (round(x, 1), mapped)
         if key in seen:
             continue
@@ -665,11 +659,9 @@ def _column_kinds(statement: CanonicalStatement) -> list[str]:
             )
         ):
             kinds.append("percent")
-        elif all(abs(value) < Decimal("100") for value in numbers) and global_max >= Decimal(
-            "10000"
-        ):
-            kinds.append("note")
         elif (
+            all(abs(value) < Decimal("100") for value in numbers) and global_max >= Decimal("10000")
+        ) or (
             numbers
             and all(
                 value == value.to_integral() and abs(value) < Decimal("100") for value in numbers

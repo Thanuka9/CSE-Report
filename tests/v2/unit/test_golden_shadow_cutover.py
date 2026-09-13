@@ -98,10 +98,10 @@ def test_shadow_diff_breaks_down_by_metric() -> None:
     assert "v2.native_pymupdf" in report["by_parser"]
 
 
-def test_cutover_uses_v2_engine_before_institutional_ready() -> None:
+def test_cutover_uses_v1_engine_before_institutional_ready() -> None:
     decision = evaluate_cutover({"canonical_document": True, "golden_corpus": False})
     assert decision.ready is False
-    assert decision.default_engine == "V2"
+    assert decision.default_engine == "V1"
     assert any(not gate.passed for gate in decision.gates if gate.name == "frozen_universe")
     assert_v1_remains_default(decision)
 

@@ -5,12 +5,53 @@ from __future__ import annotations
 from rapidfuzz import fuzz, process
 
 from cse_financial_etl.v2.contracts.concepts import ConceptCandidate
-from cse_financial_etl.v2.contracts.enums import MatchKind, StatementType
+from cse_financial_etl.v2.contracts.enums import AccountingRegime, MatchKind, StatementType
 from cse_financial_etl.v2.contracts.statement import StatementRow
 from cse_financial_etl.v2.taxonomy.registry import ConceptRegistry, load_registry, normalize_label
 
 _FUZZY_FLOOR = 90
 _AMBIGUITY_DELTA = 2
+
+_INSURANCE_REGIMES = ("INSURANCE", "SLFRS4", "SLFRS17")
+_ISSUER_TYPE_TO_REGIME = {
+    "BANK": AccountingRegime.BANK,
+    "FINANCE_COMPANY": AccountingRegime.FINANCE_COMPANY,
+    "FINANCE": AccountingRegime.FINANCE_COMPANY,
+    "INSURANCE": AccountingRegime.INSURANCE,
+    "SLFRS4": AccountingRegime.SLFRS4,
+    "SLFRS17": AccountingRegime.SLFRS17,
+}
+
+
+def regimes_for(accounting_regime: AccountingRegime | None) -> tuple[str, ...]:
+    if accounting_regime is None or accounting_regime is AccountingRegime.GENERAL:
+        return ()
+    if accounting_regime is AccountingRegime.INSURANCE:
+        return _INSURANCE_REGIMES
+    return (accounting_regime.value,)
+
+
+def accounting_regime_for(
+    *,
+    issuer_id: str = "",
+    issuer_name: str = "",
+    issuer_type: str = "",
+) -> AccountingRegime:
+    """Map master-data issuer type / legal name onto an accounting regime."""
+
+    mapped = _ISSUER_TYPE_TO_REGIME.get(str(issuer_type).strip().upper())
+    if mapped is not None:
+        return mapped
+    from cse_financial_etl.config import infer_issuer_type
+
+    for identity in (issuer_name, issuer_id):
+        if not identity:
+            continue
+        kind = infer_issuer_type(identity)
+        mapped = _ISSUER_TYPE_TO_REGIME.get(kind)
+        if mapped is not None:
+            return mapped
+    return AccountingRegime.GENERAL
 
 
 class RegistryMatcher:
@@ -18,12 +59,17 @@ class RegistryMatcher:
         self.registry = registry or load_registry()
 
     def candidates(
-        self, row: StatementRow, *, statement_type: StatementType
+        self,
+        row: StatementRow,
+        *,
+        statement_type: StatementType,
+        accounting_regime: AccountingRegime | None = None,
     ) -> list[ConceptCandidate]:
         label = normalize_label(row.normalized_label or row.raw_label)
+        regimes = regimes_for(accounting_regime)
         if self.registry.is_forbidden(label) or "discontinued" in label:
             return [ConceptCandidate(metric_code=None, match_kind=MatchKind.ABSTAIN)]
-        exact = self.registry.lookup_alias(label)
+        exact = self.registry.lookup_alias(label, regimes=regimes)
         if exact is not None:
             if statement_type not in exact.statement_types:
                 return [ConceptCandidate(metric_code=None, match_kind=MatchKind.ABSTAIN)]
@@ -33,8 +79,10 @@ class RegistryMatcher:
                 else MatchKind.CONTROLLED_ALIAS
             )
             return [ConceptCandidate(metric_code=exact.code, match_kind=kind, score=100.0)]
+        if self.registry.is_regime_alias(label):
+            return [ConceptCandidate(metric_code=None, match_kind=MatchKind.ABSTAIN)]
         diluted_only = "diluted" in label and "basic" not in label
-        choices: dict[str, str] = {}
+        choices: dict[str, str] = dict(self.registry.regime_aliases(regimes=regimes))
         for concept in self.registry.concepts:
             if statement_type not in concept.statement_types or not concept.source_only:
                 continue

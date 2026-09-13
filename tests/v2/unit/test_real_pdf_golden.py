@@ -83,6 +83,8 @@ def test_real_cse_golden_corpus_runs_on_available_filings() -> None:
             filing_version_id=case.case_id,
             expected_entity_scope=case.entity_scope,
             target_period_end=case.period_end,
+            issuer_name=case.issuer_name,
+            issuer_type=case.issuer_type,
         )
         report = score_golden(case.expected, facts)
         hits += report.true_positives

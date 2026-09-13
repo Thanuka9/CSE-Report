@@ -134,7 +134,7 @@ def build_extract_kwargs(
         "manual_review_threshold": app_config.manual_review_threshold,
         "compile_statements": compile_statements,
         "run_tunnel_b_always": run_tunnel_b_always,
-        "engine": str(getattr(app_config, "extraction_engine", "v2") or "v2").strip().lower(),
+        "engine": str(getattr(app_config, "extraction_engine", "v1") or "v1").strip().lower(),
     }
 
 
@@ -146,27 +146,27 @@ def extract_filing(
     text_cache_dir: Path | None = None,
     **kwargs: Any,
 ) -> list[ExtractedFact]:
-    """Production extractor. Defaults to V2; ``engine='v1'`` is the challenger path."""
+    """Production extractor. Defaults to V1 until cutover gates pass; ``engine='v2'`` is the challenger."""
 
-    engine = str(kwargs.pop("engine", None) or "v2").strip().lower()
-    if engine == "v1":
-        return extract_filing_v1(
+    engine = str(kwargs.pop("engine", None) or "v1").strip().lower()
+    if engine == "v2":
+        from cse_financial_etl.v2.production.engine import extract_for_production
+
+        return extract_for_production(
             pdf_path,
             issuer_name,
             symbol,
             period_end,
-            text_cache_dir,
-            **kwargs,
+            engine="v2",
+            issuers=kwargs.get("issuers"),
         )
-    from cse_financial_etl.v2.production.engine import extract_for_production
-
-    return extract_for_production(
+    return extract_filing_v1(
         pdf_path,
         issuer_name,
         symbol,
         period_end,
-        engine="v2",
-        issuers=kwargs.get("issuers"),
+        text_cache_dir,
+        **kwargs,
     )
 
 

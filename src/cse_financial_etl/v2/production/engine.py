@@ -16,17 +16,17 @@ def extract_for_production(
     symbol: str,
     period_end: date,
     *,
-    engine: str = "v2",
+    engine: str = "v1",
     issuers: dict[str, Any] | None = None,
     **kwargs: object,
 ) -> list[ExtractedFact]:
-    """Run V2 by default. ``engine='v1'`` keeps the previous compiler path."""
+    """Run V1 by default until cutover. ``engine='v2'`` is the challenger path."""
 
-    chosen = str(engine or "v2").strip().lower()
-    if chosen == "v1":
-        if issuers is not None:
-            kwargs = {**kwargs, "issuers": issuers}
-        return extract_filing(pdf_path, issuer_name, symbol, period_end, **kwargs)  # type: ignore[arg-type]
-    return extract_filing_v2(
-        pdf_path, issuer_name, symbol, period_end, issuers=issuers
-    )
+    chosen = str(engine or "v1").strip().lower()
+    if chosen == "v2":
+        return extract_filing_v2(
+            pdf_path, issuer_name, symbol, period_end, issuers=issuers
+        )
+    if issuers is not None:
+        kwargs = {**kwargs, "issuers": issuers}
+    return extract_filing(pdf_path, issuer_name, symbol, period_end, **kwargs)  # type: ignore[arg-type]

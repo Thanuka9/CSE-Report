@@ -46,6 +46,8 @@ def main(argv: list[str] | None = None) -> int:
             filing_version_id=case.case_id,
             expected_entity_scope=case.entity_scope,
             target_period_end=case.period_end,
+            issuer_name=case.issuer_name,
+            issuer_type=case.issuer_type,
         )
         report = score_golden(case.expected, facts)
         reports.append(report)

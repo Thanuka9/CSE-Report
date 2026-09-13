@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from cse_financial_etl.v2.contracts.enums import (
+    AccountingRegime,
     MatchKind,
     PeriodBehavior,
     StatementType,
@@ -27,21 +28,72 @@ def test_controlled_alias_uses_normalized_label() -> None:
 
 def test_regime_alias_gross_income_is_top_line() -> None:
     matcher = RegistryMatcher()
-    hits = matcher.candidates(_row("Gross income"), statement_type=StatementType.INCOME_STATEMENT)
+    hits = matcher.candidates(
+        _row("Gross income"),
+        statement_type=StatementType.INCOME_STATEMENT,
+        accounting_regime=AccountingRegime.BANK,
+    )
     assert hits[0].metric_code == "TOP_LINE"
     assert hits[0].match_kind is MatchKind.EXACT_ALIAS
     interest = matcher.candidates(
-        _row("Interest income"), statement_type=StatementType.INCOME_STATEMENT
+        _row("Interest income"),
+        statement_type=StatementType.INCOME_STATEMENT,
+        accounting_regime=AccountingRegime.BANK,
     )
     assert interest[0].metric_code == "TOP_LINE"
     assert interest[0].match_kind is MatchKind.EXACT_ALIAS
+    general = matcher.candidates(
+        _row("Interest income"), statement_type=StatementType.INCOME_STATEMENT
+    )
+    assert general[0].metric_code is None
+    assert general[0].match_kind is MatchKind.ABSTAIN
+
+
+def test_insurance_aliases_are_regime_locked() -> None:
+    matcher = RegistryMatcher()
+    slfrs17 = matcher.candidates(
+        _row("Insurance revenue"),
+        statement_type=StatementType.INCOME_STATEMENT,
+        accounting_regime=AccountingRegime.SLFRS17,
+    )
+    assert slfrs17[0].metric_code == "TOP_LINE"
+    general = matcher.candidates(
+        _row("Insurance revenue"), statement_type=StatementType.INCOME_STATEMENT
+    )
+    assert general[0].metric_code is None
+    gwp = matcher.candidates(
+        _row("Gross written premium"),
+        statement_type=StatementType.INCOME_STATEMENT,
+        accounting_regime=AccountingRegime.SLFRS4,
+    )
+    assert gwp[0].metric_code == "TOP_LINE"
+    nep = matcher.candidates(
+        _row("Net earned premium"),
+        statement_type=StatementType.INCOME_STATEMENT,
+        accounting_regime=AccountingRegime.SLFRS4,
+    )
+    assert nep[0].metric_code == "TOP_LINE"
+    slfrs17_gwp = matcher.candidates(
+        _row("Gross written premium"),
+        statement_type=StatementType.INCOME_STATEMENT,
+        accounting_regime=AccountingRegime.SLFRS17,
+    )
+    assert slfrs17_gwp[0].metric_code is None
 
 
 def test_finance_income_row_is_top_line_not_income_tax() -> None:
     matcher = RegistryMatcher()
-    income = matcher.candidates(_row("Income"), statement_type=StatementType.INCOME_STATEMENT)
+    income = matcher.candidates(
+        _row("Income"),
+        statement_type=StatementType.INCOME_STATEMENT,
+        accounting_regime=AccountingRegime.FINANCE_COMPANY,
+    )
     assert income[0].metric_code == "TOP_LINE"
     assert income[0].match_kind is MatchKind.EXACT_ALIAS
+    general_income = matcher.candidates(
+        _row("Income"), statement_type=StatementType.INCOME_STATEMENT
+    )
+    assert general_income[0].metric_code is None
     tax = matcher.candidates(
         _row("Income tax expense"), statement_type=StatementType.INCOME_STATEMENT
     )

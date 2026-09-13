@@ -88,6 +88,16 @@ def test_relative_pr_reduction_is_unauthorized_even_if_above_historical() -> Non
         assert_coverage_floors_not_lowered(current=current, previous=previous)
 
 
+def test_relative_reduction_from_raised_floor_9100_to_9000_is_unauthorized() -> None:
+    previous = deepcopy(historical_lock_payload())
+    previous["min_draft_publishable"] = 9100
+    current = deepcopy(previous)
+    current["min_draft_publishable"] = 9000
+    assert 9000 > HISTORICAL_MIN_DRAFT_PUBLISHABLE
+    with pytest.raises(UnauthorizedCoverageFloorReduction):
+        assert_coverage_floors_not_lowered(current=current, previous=previous)
+
+
 def test_complete_governance_record_is_required_to_lower() -> None:
     current = deepcopy(historical_lock_payload())
     current["min_draft_publishable"] = 8000

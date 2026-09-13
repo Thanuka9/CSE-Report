@@ -40,7 +40,7 @@ class AppConfig:
     balance_sheet_relative: float = 0.005
     keep_review_diagnostics: bool = True
     # Production extraction engine. V1 remains importable for replay/challenger.
-    extraction_engine: str = "v2"
+    extraction_engine: str = "v1"
     # OFFICIAL: only reviewer-approved facts publish. DRAFT: validated but unreviewed
     # candidates are displayed, and every artefact is labelled DRAFT (audit finding 6).
     release_mode: str = "OFFICIAL"
@@ -96,7 +96,7 @@ def load_app_config(project_root: Path) -> AppConfig:
         http_max_retries=int(http.get("max_retries", 3)),
         balance_sheet_relative=float(tolerances.get("balance_sheet_relative", 0.005)),
         keep_review_diagnostics=bool(extraction.get("keep_review_diagnostics", True)),
-        extraction_engine=str(extraction.get("engine", "v2")).strip().lower(),
+        extraction_engine=str(extraction.get("engine", "v1")).strip().lower(),
     )
 
 

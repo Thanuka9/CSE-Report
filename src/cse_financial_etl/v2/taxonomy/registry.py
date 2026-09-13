@@ -317,18 +317,25 @@ class ConceptRegistry:
         if len(self._by_code) != len(concepts):
             raise RegistryConflictError("duplicate concept codes")
         self._alias_index: dict[str, str] = {}
+        self._regime_alias_index: dict[str, dict[str, str]] = defaultdict(dict)
         collisions: dict[str, set[str]] = defaultdict(set)
         for concept in concepts:
-            aliases = list(concept.exact_aliases) + list(concept.synonyms)
-            for values in concept.regime_aliases.values():
-                aliases.extend(values)
-            for alias in aliases:
+            for alias in (*concept.exact_aliases, *concept.synonyms):
                 key = _norm(alias)
                 owner = self._alias_index.get(key)
                 if owner is not None and owner != concept.code:
                     collisions[key].update({owner, concept.code})
                 else:
                     self._alias_index[key] = concept.code
+            for regime, values in concept.regime_aliases.items():
+                bucket = self._regime_alias_index[regime.upper()]
+                for alias in values:
+                    key = _norm(alias)
+                    owner = bucket.get(key)
+                    if owner is not None and owner != concept.code:
+                        collisions[f"{regime}:{key}"].update({owner, concept.code})
+                    else:
+                        bucket[key] = concept.code
             for forbidden in concept.forbidden_aliases:
                 forbidden_key = _norm(forbidden)
                 if (
@@ -344,9 +351,27 @@ class ConceptRegistry:
     def get(self, code: str) -> ConceptDefinition:
         return self._by_code[code]
 
-    def lookup_alias(self, label: str) -> ConceptDefinition | None:
-        code = self._alias_index.get(_norm(label))
+    def lookup_alias(
+        self, label: str, *, regimes: tuple[str, ...] = ()
+    ) -> ConceptDefinition | None:
+        key = _norm(label)
+        code = self._alias_index.get(key)
+        if code is None:
+            for regime in regimes:
+                code = self._regime_alias_index.get(regime.upper(), {}).get(key)
+                if code is not None:
+                    break
         return self._by_code.get(code) if code else None
+
+    def regime_aliases(self, *, regimes: tuple[str, ...]) -> dict[str, str]:
+        choices: dict[str, str] = {}
+        for regime in regimes:
+            choices.update(self._regime_alias_index.get(regime.upper(), {}))
+        return choices
+
+    def is_regime_alias(self, label: str) -> bool:
+        key = _norm(label)
+        return any(key in bucket for bucket in self._regime_alias_index.values())
 
     def is_forbidden(self, label: str) -> bool:
         key = _norm(label)

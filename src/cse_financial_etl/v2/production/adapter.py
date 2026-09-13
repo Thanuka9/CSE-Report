@@ -54,16 +54,21 @@ def extract_filing_v2(
         issuer_id=symbol,
         filing_version_id=f"{symbol}-{period_end.isoformat()}",
         target_period_end=period_end,
+        issuer_name=issuer_name,
     )
     expected = _expected_entity(issuer_name, issuers)
     source = select_pipeline_facts(source, period_end=period_end, expected_entity=expected)
     derived = select_pipeline_facts(derived, period_end=period_end, expected_entity=expected)
     registry = load_registry()
     rows: list[ExtractedFact] = []
-    for fact in source:
-        rows.append(_from_source(fact, issuer_name=issuer_name, symbol=symbol, registry=registry))
-    for fact in derived:
-        rows.append(_from_derived(fact, issuer_name=issuer_name, symbol=symbol, registry=registry))
+    for source_fact in source:
+        rows.append(
+            _from_source(source_fact, issuer_name=issuer_name, symbol=symbol, registry=registry)
+        )
+    for derived_fact in derived:
+        rows.append(
+            _from_derived(derived_fact, issuer_name=issuer_name, symbol=symbol, registry=registry)
+        )
     return rows
 
 
@@ -75,8 +80,8 @@ def select_pipeline_facts[TFact: SourceFact | DerivedFact](
 ) -> tuple[TFact, ...]:
     """Keep current-period eligible facts for the production snapshot query.
 
-    If the requested entity exists among eligible facts, only that entity is
-    forwarded. If it does not, remaining facts keep their true entity labels.
+    If the requested entity is absent among eligible facts, the snapshot is
+    empty. GROUP is never forwarded as a COMPANY or BANK substitute.
     """
 
     eligible = [
@@ -89,8 +94,9 @@ def select_pipeline_facts[TFact: SourceFact | DerivedFact](
     ]
     if expected_entity is not None:
         matching = [fact for fact in eligible if _entity_matches(fact.entity_scope, expected_entity)]
-        if matching:
-            eligible = matching
+        if not matching:
+            return ()
+        eligible = matching
     return _unique_by_metric(eligible)
 
 
@@ -127,7 +133,7 @@ def _from_source(
     symbol: str,
     registry: ConceptRegistry,
 ) -> ExtractedFact:
-    concept = registry.get(fact.metric_code)  # type: ignore[union-attr]
+    concept = registry.get(fact.metric_code)
     scale = fact.source_scale or Decimal("1")
     return ExtractedFact(
         issuer_name=issuer_name,
@@ -144,18 +150,14 @@ def _from_source(
         source_page=fact.source_ref.page_number,
         source_line=fact.source_ref.raw_text,
         unit_source_text=fact.source_ref.raw_text,
-        confidence="HIGH",
+        confidence="DETERMINISTIC",
         status="EXTRACTED",
         raw_label=fact.source_ref.raw_text,
         source_bbox=None if fact.source_ref.bbox is None else str(fact.source_ref.bbox),
         extraction_method="V2_COLUMN_CONTEXT",
         semantic_model="v2-registry",
-        semantic_confidence=1.0,
-        entity_confidence=1.0,
-        period_confidence=1.0,
-        unit_confidence=1.0,
-        overall_certainty=1.0,
-        certainty_band="HIGH",
+        certainty_band="DETERMINISTIC",
+        evidence_json='{"evidence_grade":"DETERMINISTIC"}',
         comparison_role=fact.comparison_role.value,
         duration_months=fact.duration_months,
         validation_status=fact.validation_status.value,
@@ -170,7 +172,7 @@ def _from_derived(
     symbol: str,
     registry: ConceptRegistry,
 ) -> ExtractedFact:
-    concept = registry.get(fact.metric_code)  # type: ignore[union-attr]
+    concept = registry.get(fact.metric_code)
     return ExtractedFact(
         issuer_name=issuer_name,
         symbol=symbol,
@@ -186,11 +188,13 @@ def _from_derived(
         source_page=None,
         source_line=fact.formula_id,
         unit_source_text=None,
-        confidence="HIGH",
+        confidence="DETERMINISTIC",
         status="EXTRACTED",
         raw_label=fact.formula_id,
         extraction_method="V2_DERIVED",
         semantic_model="v2-derived",
+        certainty_band="DETERMINISTIC",
+        evidence_json='{"evidence_grade":"DETERMINISTIC"}',
         comparison_role=fact.comparison_role.value,
         duration_months=fact.duration_months,
         validation_status=fact.validation_status.value,

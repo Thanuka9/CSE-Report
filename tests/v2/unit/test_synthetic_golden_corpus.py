@@ -27,6 +27,7 @@ def test_synthetic_golden_corpus_meets_engineering_gates() -> None:
             issuer_id=case.issuer_id,
             expected_entity_scope=case.expected_entity_scope,
             target_period_end=target,
+            accounting_regime=case.accounting_regime,
         )
         published = {
             fact.metric_code

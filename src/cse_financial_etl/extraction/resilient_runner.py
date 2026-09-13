@@ -255,7 +255,7 @@ def _extract_financial_facts(
     """Dispatch production extraction. ``engine`` is popped so V1 never sees it."""
 
     options = dict(kwargs)
-    engine = str(options.pop("engine", "v2") or "v2").strip().lower()
+    engine = str(options.pop("engine", "v1") or "v1").strip().lower()
     if engine == "v1":
         from cse_financial_etl.extraction.statement_extractor import extract_filing
 

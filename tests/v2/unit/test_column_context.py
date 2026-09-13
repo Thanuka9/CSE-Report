@@ -26,9 +26,13 @@ def test_parsers_cover_required_formats() -> None:
     assert parse_period_end("2026-06-30") == date(2026, 6, 30)
     assert parse_duration_months("03 months") == 3
     assert parse_duration_months("three months") == 3
+    assert parse_duration_months("three months ended 30 June 2026") == 3
     assert parse_duration_months("quarter ended") == 3
+    assert parse_duration_months("quarter ended 30 June 2026") == 3
     assert parse_duration_months("six months") == 6
-    assert parse_duration_months("period ended") == 3
+    assert parse_duration_months("nine months ended") == 9
+    assert parse_duration_months("period ended") is None
+    assert parse_duration_months("period ended 30 June 2026") is None
     assert parse_entity_scope("GROUP") is EntityScope.GROUP
     assert parse_entity_scope("Company") is EntityScope.COMPANY
     assert parse_entity_scope("GROUP COMPANY") is None
@@ -688,7 +692,7 @@ def test_wrapped_three_and_nine_months_keep_quarter_first() -> None:
     assert [column.duration_months for column in monetary[:4]] == [3, 3, 9, 9]
 
 
-def test_period_ended_alone_is_the_interim_quarter() -> None:
+def test_period_ended_alone_does_not_invent_three_months() -> None:
     document = geometric_document(
         (
             ((200.0, "GROUP"), (360.0, "COMPANY")),
@@ -709,7 +713,7 @@ def test_period_ended_alone_is_the_interim_quarter() -> None:
     monetary = [
         column for column in bound.columns if column.unit_dimension is UnitDimension.MONETARY
     ]
-    assert all(column.duration_months == 3 for column in monetary[:4])
+    assert all(column.duration_months is None for column in monetary[:4])
 
 
 def test_group_only_page_does_not_take_bank_from_issuer_name() -> None:

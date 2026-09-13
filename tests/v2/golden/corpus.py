@@ -11,7 +11,7 @@ from datetime import date
 from decimal import Decimal
 
 from cse_financial_etl.v2.contracts.document import CanonicalDocument
-from cse_financial_etl.v2.contracts.enums import EntityScope
+from cse_financial_etl.v2.contracts.enums import AccountingRegime, EntityScope
 from cse_financial_etl.v2.diagnostics.golden import GoldenFact
 from tests.v2.helpers import canonical_document_from_pages, geometric_document
 
@@ -29,6 +29,7 @@ class SyntheticCase:
     expected_entity_scope: EntityScope | None
     expected: tuple[GoldenFact, ...]
     must_not_publish: tuple[str, ...] = ()
+    accounting_regime: AccountingRegime | None = None
 
 
 def _gold(
@@ -268,6 +269,7 @@ def load_synthetic_corpus() -> tuple[SyntheticCase, ...]:
             "issuer-bank",
             EntityScope.BANK,
             (_gold(metric="TOP_LINE", raw="5500", entity=EntityScope.BANK),),
+            accounting_regime=AccountingRegime.BANK,
         ),
         SyntheticCase(
             "insurance-revenue-top-line",
@@ -278,6 +280,7 @@ def load_synthetic_corpus() -> tuple[SyntheticCase, ...]:
             "issuer-ins",
             EntityScope.COMPANY,
             (_gold(metric="TOP_LINE", raw="3200"),),
+            accounting_regime=AccountingRegime.INSURANCE,
         ),
         SyntheticCase(
             "ebitda-not-operating-profit",

@@ -35,7 +35,7 @@ def _extract_production_facts(
         issuer_name,
         symbol,
         period_end,
-        engine=str(config.extraction_engine or "v2"),
+        engine=str(config.extraction_engine or "v1"),
         issuers=load_issuers(project_root),
     )
 

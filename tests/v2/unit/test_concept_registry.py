@@ -39,6 +39,12 @@ def test_registry_loads_and_rejects_duplicate_aliases() -> None:
     assert registry.lookup_alias("Earnings per share - basic") is registry.get("EPS_BASIC")
     assert registry.lookup_alias("Earnings per share - diluted") is registry.get("EPS_DILUTED")
     assert registry.lookup_alias("Basic/Diluted (Rs.)") is None
+    assert registry.lookup_alias("Gross income") is None
+    assert registry.lookup_alias("Gross income", regimes=("BANK",)) is registry.get("TOP_LINE")
+    assert registry.lookup_alias("Insurance revenue") is None
+    assert registry.lookup_alias("Insurance revenue", regimes=("SLFRS17",)) is registry.get(
+        "TOP_LINE"
+    )
     duplicate = registry.concepts[0]
     with pytest.raises(RegistryConflictError):
         ConceptRegistry(

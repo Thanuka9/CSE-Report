@@ -6,7 +6,7 @@ from datetime import date
 from pathlib import Path
 
 from cse_financial_etl.v2.contracts.document import CanonicalDocument
-from cse_financial_etl.v2.contracts.enums import EntityScope
+from cse_financial_etl.v2.contracts.enums import AccountingRegime, EntityScope
 from cse_financial_etl.v2.contracts.facts import DerivedFact, SourceFact
 from cse_financial_etl.v2.contracts.statement import CanonicalStatement
 from cse_financial_etl.v2.diagnostics.stage_metrics import StageMetrics
@@ -18,6 +18,7 @@ from cse_financial_etl.v2.resolution.column_context import (
 from cse_financial_etl.v2.resolution.resolver import build_candidates, resolve_source_facts
 from cse_financial_etl.v2.statements.detector import detect_statement_regions
 from cse_financial_etl.v2.statements.table_reconstructor import reconstruct_statements
+from cse_financial_etl.v2.taxonomy.matcher import accounting_regime_for
 from cse_financial_etl.v2.validation.accounting import derive_facts, validate_source_facts
 
 
@@ -27,9 +28,15 @@ def run_filing_pipeline(
     issuer_id: str,
     expected_entity_scope: EntityScope | None = None,
     target_period_end: date | None = None,
+    accounting_regime: AccountingRegime | None = None,
+    issuer_name: str = "",
+    issuer_type: str = "",
 ) -> tuple[
     tuple[CanonicalStatement, ...], tuple[SourceFact, ...], tuple[DerivedFact, ...], StageMetrics
 ]:
+    regime = accounting_regime or accounting_regime_for(
+        issuer_id=issuer_id, issuer_name=issuer_name, issuer_type=issuer_type
+    )
     regions = detect_statement_regions(document)
     reconstructed = reconstruct_statements(document, regions)
     statements = tuple(
@@ -42,7 +49,9 @@ def run_filing_pipeline(
         for statement in reconstructed
     )
     candidates = tuple(
-        candidate for statement in statements for candidate in build_candidates(statement)
+        candidate
+        for statement in statements
+        for candidate in build_candidates(statement, accounting_regime=regime)
     )
     source = resolve_source_facts(
         candidates,
@@ -87,6 +96,9 @@ def run_pdf_pipeline(
     expected_entity_scope: EntityScope | None = None,
     target_period_end: date | None = None,
     force_ocr: bool = False,
+    accounting_regime: AccountingRegime | None = None,
+    issuer_name: str = "",
+    issuer_type: str = "",
 ) -> tuple[
     tuple[CanonicalStatement, ...], tuple[SourceFact, ...], tuple[DerivedFact, ...], StageMetrics
 ]:
@@ -96,4 +108,7 @@ def run_pdf_pipeline(
         issuer_id=issuer_id,
         expected_entity_scope=expected_entity_scope,
         target_period_end=target_period_end,
+        accounting_regime=accounting_regime,
+        issuer_name=issuer_name,
+        issuer_type=issuer_type,
     )

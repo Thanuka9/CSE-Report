@@ -107,7 +107,7 @@ def run_resilient_pipeline(
     identity = git_identity(root)
     revision = identity.commit_sha or "no-git-sha"
     pipeline = Pipeline(root, progress=progress)
-    engine = str(getattr(pipeline.app_config, "extraction_engine", "v2") or "v2").strip().lower()
+    engine = str(getattr(pipeline.app_config, "extraction_engine", "v1") or "v1").strip().lower()
     namespace = f"{revision}:{config_hash(root)}:resilient-{engine}"
     try:
         with _patched_resilient_extractors(

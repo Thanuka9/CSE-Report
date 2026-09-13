@@ -7,6 +7,7 @@ from decimal import Decimal
 
 from cse_financial_etl.v2.contracts.concepts import ConceptCandidate
 from cse_financial_etl.v2.contracts.enums import (
+    AccountingRegime,
     ComparisonRole,
     EntityScope,
     MatchKind,
@@ -39,12 +40,17 @@ def build_candidates(
     statement: CanonicalStatement,
     *,
     matcher: RegistryMatcher | None = None,
+    accounting_regime: AccountingRegime | None = None,
 ) -> tuple[FactCandidate, ...]:
     matcher = matcher or RegistryMatcher()
     columns = {column.column_id: column for column in statement.columns}
     candidates: list[FactCandidate] = []
     for row in statement.rows:
-        concepts = matcher.candidates(row, statement_type=statement.statement_type)
+        concepts = matcher.candidates(
+            row,
+            statement_type=statement.statement_type,
+            accounting_regime=accounting_regime,
+        )
         primary = (
             concepts[0]
             if concepts

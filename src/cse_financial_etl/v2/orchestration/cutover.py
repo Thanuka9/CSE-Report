@@ -1,4 +1,4 @@
-"""Cutover gates. V1 extract_filing stays importable. Production extraction defaults to V2."""
+"""Cutover gates. V1 remains the production default until institutional gates pass."""
 
 from __future__ import annotations
 
@@ -62,11 +62,11 @@ def evaluate_cutover(
         for name in REQUIRED_GATES
     )
     ready = all(gate.passed for gate in gates)
-    return CutoverDecision(ready=ready, default_engine="V2", gates=gates)
+    return CutoverDecision(ready=ready, default_engine="V2" if ready else "V1", gates=gates)
 
 
 def assert_v1_remains_default(decision: CutoverDecision) -> None:
-    """Production extracts with V2. V1 extract_filing stays importable until sign-off."""
+    """Production extracts with V1 until ready. V1 extract_filing stays importable."""
 
     from cse_financial_etl.extraction.statement_extractor import extract_filing as extract_filing_v1
 

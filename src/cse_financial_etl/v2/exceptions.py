@@ -26,7 +26,9 @@ class WorkbookReconciliationFailed(V2Error):
 
 
 class OcrRouteNotEnabledError(V2Error):
-    """OCR/document-vision is Phase 11 and is not part of the initial native path."""
+    """OCR was required but no OCR engine produced evidence."""
+
+    reason_code = "OCR_REQUIRED_NOT_AVAILABLE"
 
 
 class WorkbookRendererNotEnabledError(V2Error):
