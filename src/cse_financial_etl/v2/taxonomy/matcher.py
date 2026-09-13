@@ -7,7 +7,12 @@ import re
 from rapidfuzz import fuzz, process
 
 from cse_financial_etl.v2.contracts.concepts import ConceptCandidate
-from cse_financial_etl.v2.contracts.enums import AccountingRegime, MatchKind, StatementType
+from cse_financial_etl.v2.contracts.enums import (
+    AccountingRegime,
+    MatchKind,
+    ResolutionStatus,
+    StatementType,
+)
 from cse_financial_etl.v2.contracts.statement import StatementRow
 from cse_financial_etl.v2.taxonomy.registry import ConceptRegistry, load_registry, normalize_label
 
@@ -83,6 +88,40 @@ def _material_extra_tokens(label: str, alias: str) -> bool:
     return bool(extra & _FUZZY_BLOCKERS)
 
 
+def _proven_accounting_regime(
+    requested: AccountingRegime | None,
+) -> tuple[AccountingRegime | None, ResolutionStatus]:
+    """Issuer class INSURANCE is not proof of SLFRS 4 vs SLFRS 17."""
+
+    if requested is None:
+        return None, ResolutionStatus.NOT_APPLICABLE
+    if requested is AccountingRegime.INSURANCE:
+        return None, ResolutionStatus.UNRESOLVED
+    return requested, ResolutionStatus.RESOLVED
+
+
+def _concept_candidate(
+    *,
+    metric_code: str | None,
+    match_kind: MatchKind,
+    score: float | None = None,
+    matched_alias: str | None = None,
+    requested_regime: AccountingRegime | None = None,
+) -> ConceptCandidate:
+    if metric_code is None:
+        return ConceptCandidate(metric_code=None, match_kind=match_kind, score=score)
+    proven, status = _proven_accounting_regime(requested_regime)
+    return ConceptCandidate(
+        metric_code=metric_code,
+        match_kind=match_kind,
+        score=score,
+        source_concept=matched_alias,
+        matched_alias=matched_alias,
+        accounting_regime=proven,
+        accounting_regime_status=status,
+    )
+
+
 class RegistryMatcher:
     def __init__(self, registry: ConceptRegistry | None = None) -> None:
         self.registry = registry or load_registry()
@@ -100,16 +139,24 @@ class RegistryMatcher:
             return [ConceptCandidate(metric_code=None, match_kind=MatchKind.ABSTAIN)]
         if not _ACCOUNT_WORD.search(label):
             return [ConceptCandidate(metric_code=None, match_kind=MatchKind.ABSTAIN)]
-        exact = self.registry.lookup_alias(label, regimes=regimes)
+        exact = self.registry.match_alias(label, regimes=regimes)
         if exact is not None:
-            if statement_type not in exact.statement_types:
+            if statement_type not in exact.concept.statement_types:
                 return [ConceptCandidate(metric_code=None, match_kind=MatchKind.ABSTAIN)]
             kind = (
                 MatchKind.EXACT_ALIAS
                 if normalize_label(row.raw_label) == label
                 else MatchKind.CONTROLLED_ALIAS
             )
-            return [ConceptCandidate(metric_code=exact.code, match_kind=kind, score=100.0)]
+            return [
+                _concept_candidate(
+                    metric_code=exact.concept.code,
+                    match_kind=kind,
+                    score=100.0,
+                    matched_alias=exact.matched_alias,
+                    requested_regime=accounting_regime,
+                )
+            ]
         if self.registry.is_regime_alias(label):
             return [ConceptCandidate(metric_code=None, match_kind=MatchKind.ABSTAIN)]
         diluted_only = "diluted" in label and "basic" not in label
@@ -146,20 +193,34 @@ class RegistryMatcher:
         top = [item for item in viable if best_score - item[1] <= _AMBIGUITY_DELTA]
         codes = {item[2] for item in top}
         if len(codes) != 1:
-            return [
-                ConceptCandidate(
-                    metric_code=code, match_kind=MatchKind.FUZZY, score=float(best_score)
+            seen: set[str] = set()
+            ambiguous: list[ConceptCandidate] = []
+            for alias, _score, code in top:
+                if code in seen:
+                    continue
+                seen.add(code)
+                ambiguous.append(
+                    _concept_candidate(
+                        metric_code=code,
+                        match_kind=MatchKind.FUZZY,
+                        score=float(best_score),
+                        matched_alias=self.registry.original_alias(alias, regimes=regimes),
+                        requested_regime=accounting_regime,
+                    )
                 )
-                for code in sorted(codes)
-            ] + [
+            ambiguous.append(
                 ConceptCandidate(
                     metric_code=None, match_kind=MatchKind.ABSTAIN, score=float(best_score)
                 )
-            ]
+            )
+            return ambiguous
+        winner = next(item for item in top if item[2] == next(iter(codes)))
         return [
-            ConceptCandidate(
+            _concept_candidate(
                 metric_code=next(iter(codes)),
                 match_kind=MatchKind.FUZZY,
                 score=float(best_score),
+                matched_alias=self.registry.original_alias(winner[0], regimes=regimes),
+                requested_regime=accounting_regime,
             )
         ]

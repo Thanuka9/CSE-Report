@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from collections import defaultdict
-from typing import Literal
+from typing import Literal, NamedTuple
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -47,6 +47,12 @@ class ConceptDefinition(BaseModel):
         if not value.strip() or value != value.upper():
             raise ValueError("concept code must be uppercase")
         return value
+
+
+class AliasMatch(NamedTuple):
+    concept: ConceptDefinition
+    matched_alias: str
+    alias_regime: str | None
 
 
 _TRAILING_NOISE = re.compile(
@@ -324,7 +330,9 @@ class ConceptRegistry:
         if len(self._by_code) != len(concepts):
             raise RegistryConflictError("duplicate concept codes")
         self._alias_index: dict[str, str] = {}
+        self._alias_original: dict[str, str] = {}
         self._regime_alias_index: dict[str, dict[str, str]] = defaultdict(dict)
+        self._regime_alias_original: dict[str, dict[str, str]] = defaultdict(dict)
         collisions: dict[str, set[str]] = defaultdict(set)
         for concept in concepts:
             for alias in (*concept.exact_aliases, *concept.synonyms):
@@ -334,8 +342,10 @@ class ConceptRegistry:
                     collisions[key].update({owner, concept.code})
                 else:
                     self._alias_index[key] = concept.code
+                    self._alias_original.setdefault(key, alias)
             for regime, values in concept.regime_aliases.items():
                 bucket = self._regime_alias_index[regime.upper()]
+                originals = self._regime_alias_original[regime.upper()]
                 for alias in values:
                     key = _norm(alias)
                     owner = bucket.get(key)
@@ -343,6 +353,7 @@ class ConceptRegistry:
                         collisions[f"{regime}:{key}"].update({owner, concept.code})
                     else:
                         bucket[key] = concept.code
+                        originals.setdefault(key, alias)
             for forbidden in concept.forbidden_aliases:
                 forbidden_key = _norm(forbidden)
                 if (
@@ -361,14 +372,47 @@ class ConceptRegistry:
     def lookup_alias(
         self, label: str, *, regimes: tuple[str, ...] = ()
     ) -> ConceptDefinition | None:
+        hit = self.match_alias(label, regimes=regimes)
+        return None if hit is None else hit.concept
+
+    def match_alias(self, label: str, *, regimes: tuple[str, ...] = ()) -> AliasMatch | None:
         key = _norm(label)
         code = self._alias_index.get(key)
-        if code is None:
-            for regime in regimes:
-                code = self._regime_alias_index.get(regime.upper(), {}).get(key)
-                if code is not None:
-                    break
-        return self._by_code.get(code) if code else None
+        if code is not None:
+            return AliasMatch(
+                concept=self._by_code[code],
+                matched_alias=self._alias_original.get(key, label),
+                alias_regime=None,
+            )
+        for regime in regimes:
+            bucket = self._regime_alias_index.get(regime.upper(), {})
+            code = bucket.get(key)
+            if code is None:
+                continue
+            original = self._regime_alias_original.get(regime.upper(), {}).get(key, label)
+            return AliasMatch(
+                concept=self._by_code[code],
+                matched_alias=original,
+                alias_regime=regime.upper(),
+            )
+        return None
+
+    def original_alias(self, normalized: str, *, regimes: tuple[str, ...] = ()) -> str:
+        if normalized in self._alias_original:
+            return self._alias_original[normalized]
+        for regime in regimes:
+            found = self._regime_alias_original.get(regime.upper(), {}).get(normalized)
+            if found is not None:
+                return found
+        return normalized
+
+    def alias_regime(self, normalized: str, *, regimes: tuple[str, ...] = ()) -> str | None:
+        if normalized in self._alias_index:
+            return None
+        for regime in regimes:
+            if normalized in self._regime_alias_index.get(regime.upper(), {}):
+                return regime.upper()
+        return None
 
     def regime_aliases(self, *, regimes: tuple[str, ...]) -> dict[str, str]:
         choices: dict[str, str] = {}

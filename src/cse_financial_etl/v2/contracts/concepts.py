@@ -7,7 +7,7 @@ from typing import Literal, Protocol
 from pydantic import BaseModel, ConfigDict, Field
 
 from cse_financial_etl.v2 import SCHEMA_VERSION
-from cse_financial_etl.v2.contracts.enums import MatchKind
+from cse_financial_etl.v2.contracts.enums import AccountingRegime, MatchKind, ResolutionStatus
 from cse_financial_etl.v2.contracts.provenance import SourceRef
 from cse_financial_etl.v2.contracts.statement import StatementRow
 
@@ -24,6 +24,16 @@ class ConceptCandidate(BaseModel):
         default=None,
         description="Diagnostic only. Must not decide publication truth alone.",
     )
+    source_concept: str | None = Field(
+        default=None,
+        description="Matched source label/alias. Distinct from canonical metric_code.",
+    )
+    matched_alias: str | None = None
+    accounting_regime: AccountingRegime | None = Field(
+        default=None,
+        description="Proven reporting regime only. INSURANCE issuer class is not SLFRS4/17.",
+    )
+    accounting_regime_status: ResolutionStatus = ResolutionStatus.NOT_APPLICABLE
     evidence: tuple[SourceRef, ...] = ()
 
 

@@ -276,3 +276,36 @@ Each nontrivial deviation from `AGENT_IMPLEMENTATION_PLAN.md` is recorded here. 
 - **Evidence:** Locked local V2 scoring set **209/237**, recall **88.19%**, **0 critical-wrong**. Not plan §37.
 - **Affected modules:** `v2/resolution/column_context.py`, `v2/resolution/resolver.py`, `v2/taxonomy/matcher.py`, `v2/taxonomy/registry.py`, `tests/v2/golden/adjudication_round1.json`.
 - **Temporary/permanent:** Fail-closed matching is permanent. The HDFC overlay waits for human gold.
+
+---
+
+## 2026-09-14 — Preserve insurance source concept and proven accounting regime
+
+- **Decision:** `ConceptCandidate` and `SourceFact` carry `source_concept`, `matched_alias`, `accounting_regime`, and `accounting_regime_status`. Canonical `metric_code` remains `TOP_LINE`. Generic issuer class `INSURANCE` may match SLFRS4/SLFRS17 *labels* but leaves `accounting_regime` unresolved. SLFRS4/SLFRS17 are recorded only when that reporting regime is explicitly requested.
+- **Reason:** Distinguishing Gross written premium from Insurance revenue is required before OFFICIAL use. Issuer type is not proof of the reporting standard.
+- **Alternatives:** Infer SLFRS17 from any insurance issuer; keep only `metric_code=TOP_LINE`.
+- **Evidence:** `tests/v2/unit/test_matcher_extended.py`, `tests/v2/unit/test_resolver_and_validation.py`.
+- **Affected modules:** `v2/contracts/concepts.py`, `v2/contracts/facts.py`, `v2/taxonomy/matcher.py`, `v2/taxonomy/registry.py`, `v2/resolution/resolver.py`.
+- **Temporary/permanent:** Permanent lineage. Filing-text detection of SLFRS 17 vs 4 is still future evidence, not issuer-type inference.
+
+---
+
+## 2026-09-14 — Package OCR in the production Dockerfile
+
+- **Decision:** The production `Dockerfile` installs `tesseract-ocr`, `ghostscript`, and `uv sync --frozen --no-dev --extra ocr`. `scripts/v2_ocr_runtime_smoke.py` is the image-only acceptance probe. `.github/workflows/ocr-production-validation.yml` builds the image and runs that probe.
+- **Reason:** Code-complete OCR is not runtime-complete OCR. The previous image could not OCR scanned PDFs.
+- **Alternatives:** Document that production does not use this Dockerfile; keep OCR as a CI-only extra.
+- **Evidence:** `Dockerfile`, `tests/v2/unit/test_ocr_runtime_packaging.py`. Scanned-PDF support stays unproven until the production-image job is green.
+- **Affected modules:** `Dockerfile`, `scripts/v2_ocr_runtime_smoke.py`, `.github/workflows/ocr-production-validation.yml`.
+- **Temporary/permanent:** Permanent packaging. The smoke proof is the remaining OCR gate.
+
+---
+
+## 2026-09-14 — V2 publication authority is publish_production_workbook
+
+- **Decision:** `v2.production.publish.publish_production_workbook` is the authoritative V2 workbook path and requires an explicit `ReleaseContext`. `cse-etl run` still uses the V1 excel renderer while `extraction.engine` is `v1`. Do not make V2 the default in this change.
+- **Reason:** Process-global `_release_mode` must not be publication authority for V2.
+- **Alternatives:** Switch `Pipeline.run` excel generation now; keep only renderer tests.
+- **Evidence:** `tests/v2/unit/test_workbook_v2.py`.
+- **Affected modules:** `v2/production/publish.py`.
+- **Temporary/permanent:** Permanent API. Wiring into `cse-etl run` waits for V2 engine promotion.

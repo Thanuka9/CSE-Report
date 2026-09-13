@@ -4,6 +4,7 @@ from cse_financial_etl.v2.contracts.enums import (
     AccountingRegime,
     MatchKind,
     PeriodBehavior,
+    ResolutionStatus,
     StatementType,
     UnitDimension,
 )
@@ -57,6 +58,10 @@ def test_insurance_aliases_are_regime_locked() -> None:
         accounting_regime=AccountingRegime.SLFRS17,
     )
     assert slfrs17[0].metric_code == "TOP_LINE"
+    assert slfrs17[0].source_concept == "Insurance revenue"
+    assert slfrs17[0].matched_alias == "Insurance revenue"
+    assert slfrs17[0].accounting_regime is AccountingRegime.SLFRS17
+    assert slfrs17[0].accounting_regime_status is ResolutionStatus.RESOLVED
     general = matcher.candidates(
         _row("Insurance revenue"), statement_type=StatementType.INCOME_STATEMENT
     )
@@ -67,6 +72,10 @@ def test_insurance_aliases_are_regime_locked() -> None:
         accounting_regime=AccountingRegime.SLFRS4,
     )
     assert gwp[0].metric_code == "TOP_LINE"
+    assert gwp[0].source_concept == "Gross written premium"
+    assert gwp[0].matched_alias == "Gross written premium"
+    assert gwp[0].accounting_regime is AccountingRegime.SLFRS4
+    assert gwp[0].accounting_regime_status is ResolutionStatus.RESOLVED
     nep = matcher.candidates(
         _row("Net earned premium"),
         statement_type=StatementType.INCOME_STATEMENT,
@@ -79,6 +88,18 @@ def test_insurance_aliases_are_regime_locked() -> None:
         accounting_regime=AccountingRegime.SLFRS17,
     )
     assert slfrs17_gwp[0].metric_code is None
+    generic_insurance = matcher.candidates(
+        _row("Insurance revenue"),
+        statement_type=StatementType.INCOME_STATEMENT,
+        accounting_regime=AccountingRegime.INSURANCE,
+    )
+    assert generic_insurance[0].metric_code == "TOP_LINE"
+    assert generic_insurance[0].source_concept == "Insurance revenue"
+    assert generic_insurance[0].matched_alias == "Insurance revenue"
+    assert generic_insurance[0].accounting_regime is None
+    assert generic_insurance[0].accounting_regime is not AccountingRegime.SLFRS4
+    assert generic_insurance[0].accounting_regime is not AccountingRegime.SLFRS17
+    assert generic_insurance[0].accounting_regime_status is ResolutionStatus.UNRESOLVED
 
 
 def test_finance_income_row_is_top_line_not_income_tax() -> None:

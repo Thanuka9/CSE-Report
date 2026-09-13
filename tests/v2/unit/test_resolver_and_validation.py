@@ -4,6 +4,7 @@ from datetime import date
 from decimal import Decimal
 
 from cse_financial_etl.v2.contracts.enums import (
+    AccountingRegime,
     ComparisonRole,
     EntityScope,
     PublicationStatus,
@@ -236,3 +237,46 @@ def test_eps_does_not_inherit_statement_thousand_scale() -> None:
     assert eps.source_scale == Decimal("1")
     assert eps.normalized_value == Decimal("0.89")
     assert eps.publication_status is PublicationStatus.ELIGIBLE
+
+
+def test_slfrs17_insurance_revenue_lineage_survives_source_fact() -> None:
+    document = geometric_document(
+        (
+            ((40.0, "Company"),),
+            ((40.0, "For the three months ended 30 June 2026"),),
+            ((40.0, "Rs '000"),),
+            ((40.0, "Insurance revenue"), (300.0, "1,234")),
+        )
+    )
+    _statements, facts, _derived, _metrics = run_filing_pipeline(
+        document,
+        issuer_id="ins-1",
+        expected_entity_scope=EntityScope.COMPANY,
+        accounting_regime=AccountingRegime.SLFRS17,
+    )
+    top = next(fact for fact in facts if fact.metric_code == "TOP_LINE")
+    assert top.source_concept == "Insurance revenue"
+    assert top.matched_alias == "Insurance revenue"
+    assert top.accounting_regime is AccountingRegime.SLFRS17
+    assert top.accounting_regime_status is ResolutionStatus.RESOLVED
+
+
+def test_generic_insurance_issuer_does_not_fabricate_slfrs_standard() -> None:
+    document = geometric_document(
+        (
+            ((40.0, "Company"),),
+            ((40.0, "For the three months ended 30 June 2026"),),
+            ((40.0, "Rs '000"),),
+            ((40.0, "Gross written premium"), (300.0, "2,000")),
+        )
+    )
+    _statements, facts, _derived, _metrics = run_filing_pipeline(
+        document,
+        issuer_id="ins-2",
+        expected_entity_scope=EntityScope.COMPANY,
+        issuer_type="INSURANCE",
+    )
+    top = next(fact for fact in facts if fact.metric_code == "TOP_LINE")
+    assert top.source_concept == "Gross written premium"
+    assert top.accounting_regime is None
+    assert top.accounting_regime_status is ResolutionStatus.UNRESOLVED

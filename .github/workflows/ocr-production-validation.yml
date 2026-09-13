@@ -25,4 +25,14 @@ jobs:
       - name: Run OCR and weak-layout acceptance gates
         env:
           CSE_REQUIRE_REAL_OCR: '1'
-        run: uv run pytest tests/regression/test_parser_method_gates.py -q
+        run: uv run pytest tests/regression/test_parser_method_gates.py tests/v2/unit/test_ocr_scanned_sample.py -q
+
+  production-image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build production image with OCR runtime
+        run: docker build -t cse-etl:ocr-smoke .
+      - name: Image-only OCR smoke on the production image
+        run: docker run --rm --entrypoint python cse-etl:ocr-smoke /app/scripts/v2_ocr_runtime_smoke.py

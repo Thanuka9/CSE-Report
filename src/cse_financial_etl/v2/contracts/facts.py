@@ -11,6 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from cse_financial_etl.v2 import SCHEMA_VERSION
 from cse_financial_etl.v2.contracts.concepts import ConceptCandidate
 from cse_financial_etl.v2.contracts.enums import (
+    AccountingRegime,
     ComparisonRole,
     EntityScope,
     FactKind,
@@ -85,6 +86,10 @@ class SourceFact(BaseModel):
     cell_id: str
     issuer_id: str
     metric_code: str
+    source_concept: str | None = None
+    matched_alias: str | None = None
+    accounting_regime: AccountingRegime | None = None
+    accounting_regime_status: ResolutionStatus = ResolutionStatus.NOT_APPLICABLE
     entity_scope: EntityScope
     period_end: date
     duration_months: int | None = None

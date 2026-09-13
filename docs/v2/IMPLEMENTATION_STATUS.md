@@ -72,16 +72,18 @@ Evidence:
 ## Phase 7 — Concept Registry
 - [x] Single registry loader with conflict detection
 - [x] Source vs derived concepts; `TOTAL_LIABILITIES` derivation forbidden
+- [x] Alias match returns original source label plus regime bucket
 
 Evidence:
-- tests: `tests/v2/unit/test_concept_registry.py`
-- remaining risks: regime aliases still need golden-label adjudication
+- tests: `tests/v2/unit/test_concept_registry.py`, `tests/v2/unit/test_matcher_extended.py`
+- remaining risks: SLFRS4 vs SLFRS17 still needs explicit filing/report evidence, not issuer-type inference
 
 ## Phase 8 — Row Concept Matching
 - [x] Exact / RapidFuzz candidates; abstain on forbidden labels and wrong statement type
+- [x] `source_concept` / `matched_alias` / proven `accounting_regime` on `ConceptCandidate` and `SourceFact`
 
 Evidence:
-- tests: `tests/v2/unit/test_concept_registry.py`
+- tests: `tests/v2/unit/test_concept_registry.py`, `tests/v2/unit/test_matcher_extended.py`, `tests/v2/unit/test_resolver_and_validation.py`
 - remaining risks: controlled-alias vs exact-alias scoring on noisy OCR labels; ambiguity-delta still synthetic
 
 ## Phase 9 — Candidate Builder and Resolver
@@ -105,11 +107,13 @@ Evidence:
 ## Phase 11 — OCR / Complex PDF Route
 - [x] Same `CanonicalDocument`; detector is parser-agnostic
 - [x] OCR only when native token count is 0 or `force_ocr=True`
-- [x] `tests/fixtures/ocr/scanned_sample.pdf` exercised through the OCR CanonicalDocument route
+- [x] OCR implementation exists (`v2.ocr.tesseract` rasterize + image_to_data)
+- [x] Production `Dockerfile` installs Tesseract, Ghostscript, and the `ocr` extra
+- [ ] Production-image OCR smoke proven (`scripts/v2_ocr_runtime_smoke.py` on the built image)
 
 Evidence:
-- tests: `tests/v2/unit/test_native_reader.py`, `tests/v2/unit/test_ocr_scanned_sample.py`
-- remaining risks: image-PDF OCR still depends on a Tesseract install. Missing Tesseract raises `OCR_REQUIRED_NOT_AVAILABLE`; native text is not retagged as OCR.
+- tests: `tests/v2/unit/test_native_reader.py`, `tests/v2/unit/test_ocr_scanned_sample.py`, `tests/v2/unit/test_ocr_runtime_packaging.py`
+- remaining risks: OCR implementation rasterizes pages through Tesseract when installed. Missing Tesseract raises `OCR_REQUIRED_NOT_AVAILABLE`. The production `Dockerfile` now installs `tesseract-ocr`, `ghostscript`, and `--extra ocr`. Scanned-PDF support is not production-ready until the production-image OCR smoke in `.github/workflows/ocr-production-validation.yml` passes.
 
 ## Phase 12 — Workbook V2 Renderer
 - [x] Numeric-or-null Snapshot cells; status strings on other sheets
@@ -181,7 +185,7 @@ Tests live under `tests/v2/unit`, `tests/v2/property`, `tests/v2/golden`. Plan d
 - Checklist 17 / Phase 15: OFFICIAL human review, then V1 deletion after the rollback window
 
 ### Deferred, not launch-blocking
-- Plan §24: Paddle OCR is still deferred. Tesseract OCR is real when installed; otherwise `OCR_REQUIRED_NOT_AVAILABLE`.
+- Plan §24: Paddle OCR is still deferred. Tesseract OCR is implemented and packaged in the production Dockerfile; scanned-PDF support is not production-ready until the container smoke passes.
 - Plan §25–26: Table Transformer / BGE / rankers
 
 ### Closed vs earlier audit

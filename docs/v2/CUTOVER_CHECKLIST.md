@@ -20,7 +20,11 @@ Do not mark institutional cutover complete because code exists. Production extra
 16. [x] V2 DRAFT workbook contains correct numeric data (synthetic e2e).
 17. [x] OFFICIAL remains gated by required institutional review.
 
-Production extraction engine is **V1** (`configs/app.yml` `extraction.engine: v1`). V2 stays available as `engine=v2` for shadow/challenger runs. Do not delete V1. Do not set `extraction.engine: v2` or cutover `ready=True` until items 12, 13, and 15 plus OFFICIAL human review.
+18. [ ] Production OCR runtime packaging proven (Dockerfile installs Tesseract + `ocr` extra; container smoke still required).
+19. [x] Source accounting-regime lineage on SourceFact (engineering). Generic INSURANCE does not fabricate SLFRS4/SLFRS17. Still required on the 25–40 human gold set.
+20. [ ] Production V2 publication path (`publish_production_workbook` + explicit `ReleaseContext`) adopted by `cse-etl run` after engine promotion.
+
+Production extraction engine is **V1** (`configs/app.yml` `extraction.engine: v1`). V2 stays available as `engine=v2` for shadow/challenger runs. Do not delete V1. Do not set `extraction.engine: v2` or cutover `ready=True` until items 12, 13, 15, 18, 19, and 20 plus OFFICIAL human review.
 
 Phase 15 remaining:
 
