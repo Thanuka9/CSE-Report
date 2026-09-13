@@ -120,11 +120,17 @@ def build_extract_kwargs(
     diagnostics_dir: Path | None,
     compile_statements: bool,
     run_tunnel_b_always: bool,
+    engine: str | None = None,
 ) -> dict[str, Any]:
     """The ONE set of extraction business rules — used by the primary pass and every
     retry (gap A1). A retry that ran under different issuer profiles / OCR / thresholds
     would silently replace production facts with differently-ruled ones."""
 
+    chosen = str(
+        engine or getattr(app_config, "extraction_engine", "v1") or "v1"
+    ).strip().lower()
+    if chosen not in {"v1", "v2"}:
+        raise ValueError(f"extraction engine must be v1 or v2, got {chosen!r}")
     return {
         "text_cache_dir": text_cache_dir,
         "ocr_enabled": app_config.ocr_enabled,
@@ -134,7 +140,7 @@ def build_extract_kwargs(
         "manual_review_threshold": app_config.manual_review_threshold,
         "compile_statements": compile_statements,
         "run_tunnel_b_always": run_tunnel_b_always,
-        "engine": str(getattr(app_config, "extraction_engine", "v1") or "v1").strip().lower(),
+        "engine": chosen,
     }
 
 
@@ -295,9 +301,15 @@ class Pipeline:
         skip_excel: bool = False,
         compile_statements: bool = True,
         run_tunnel_b_always: bool = False,
+        engine: str | None = None,
     ) -> dict[str, object]:
         target_periods = tuple(periods)
         extraction_periods = supporting_periods(target_periods)
+        chosen_engine = str(
+            engine or getattr(self.app_config, "extraction_engine", "v1") or "v1"
+        ).strip().lower()
+        if chosen_engine not in {"v1", "v2"}:
+            raise ValueError(f"extraction engine must be v1 or v2, got {chosen_engine!r}")
         set_release_mode(self.app_config.release_mode)
         run_id = str(uuid.uuid4())
         self.repository.start_run(run_id, as_of_date)
@@ -419,6 +431,7 @@ class Pipeline:
                 diagnostics_dir=diagnostics_dir,
                 compile_statements=compile_statements,
                 run_tunnel_b_always=run_tunnel_b_always,
+                engine=chosen_engine,
             )
 
         def extract_one(item: DownloadedFiling) -> tuple[DownloadedFiling, list[ExtractedFact]]:
@@ -785,6 +798,7 @@ class Pipeline:
             "equation_validation": dict(equation_summary),
             "retry_summary": retry_summary,
             "ocr_enabled": self.app_config.ocr_enabled,
+            "extraction_engine": chosen_engine,
             "release_mode": current_release_mode(),
             "use_transformer": self.app_config.use_transformer,
             "semantic_model": get_semantic_matcher().model_name,

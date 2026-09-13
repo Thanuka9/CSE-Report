@@ -99,6 +99,7 @@ def run_resilient_pipeline(
     skip_excel: bool = False,
     compile_statements: bool = True,
     run_tunnel_b_always: bool = False,
+    engine: str | None = None,
     progress: Any = print,
 ) -> dict[str, object]:
     """Run the normal ETL with per-PDF process isolation and resumable result caches."""
@@ -107,8 +108,12 @@ def run_resilient_pipeline(
     identity = git_identity(root)
     revision = identity.commit_sha or "no-git-sha"
     pipeline = Pipeline(root, progress=progress)
-    engine = str(getattr(pipeline.app_config, "extraction_engine", "v1") or "v1").strip().lower()
-    namespace = f"{revision}:{config_hash(root)}:resilient-{engine}"
+    chosen = str(
+        engine or getattr(pipeline.app_config, "extraction_engine", "v1") or "v1"
+    ).strip().lower()
+    if chosen not in {"v1", "v2"}:
+        raise ValueError(f"extraction engine must be v1 or v2, got {chosen!r}")
+    namespace = f"{revision}:{config_hash(root)}:resilient-{chosen}"
     try:
         with _patched_resilient_extractors(
             project_root=root,
@@ -126,6 +131,7 @@ def run_resilient_pipeline(
                 skip_excel=skip_excel,
                 compile_statements=compile_statements,
                 run_tunnel_b_always=run_tunnel_b_always,
+                engine=chosen,
             )
     finally:
         pipeline.close()

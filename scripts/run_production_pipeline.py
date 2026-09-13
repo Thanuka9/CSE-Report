@@ -63,6 +63,12 @@ def main() -> int:
     parser.add_argument("--skip-excel", action="store_true")
     parser.add_argument("--no-compile", action="store_true")
     parser.add_argument("--tunnel-b-always", action="store_true")
+    parser.add_argument(
+        "--engine",
+        choices=("v1", "v2"),
+        default=None,
+        help="Override configs/app.yml extraction.engine for this run only",
+    )
     args = parser.parse_args()
 
     root = args.project_root.resolve()
@@ -87,6 +93,7 @@ def main() -> int:
                 skip_excel=True,
                 compile_statements=not args.no_compile,
                 run_tunnel_b_always=args.tunnel_b_always,
+                engine=args.engine,
             )
 
         issuer_master = build_issuer_master(root, as_of)

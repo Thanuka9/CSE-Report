@@ -54,6 +54,27 @@ def test_build_extract_kwargs_carries_issuer_and_ocr() -> None:
     assert kwargs["issuers"] == {"mbsl": "FINANCE_COMPANY"}
     assert kwargs["ocr_enabled"] is True
     assert kwargs["compile_statements"] is True
+    assert kwargs["engine"] == "v1"
+
+
+def test_build_extract_kwargs_engine_override_selects_v2_challenger() -> None:
+    class Cfg:
+        ocr_enabled = True
+        keep_review_diagnostics = True
+        auto_approve_threshold = 0.95
+        manual_review_threshold = 0.8
+        extraction_engine = "v1"
+
+    kwargs = build_extract_kwargs(
+        app_config=Cfg(),
+        issuers={},
+        text_cache_dir=__import__("pathlib").Path("ocr"),
+        diagnostics_dir=None,
+        compile_statements=True,
+        run_tunnel_b_always=False,
+        engine="v2",
+    )
+    assert kwargs["engine"] == "v2"
 
 
 def test_stamp_does_not_vacuously_pass_uncovered_metrics() -> None:

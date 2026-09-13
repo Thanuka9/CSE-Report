@@ -92,6 +92,10 @@ def run_pipeline(
     tunnel_b_always: bool = typer.Option(
         False, help="Always run the independent Tunnel B reader (not only for risky/sampled filings)"
     ),
+    engine: str | None = typer.Option(
+        None,
+        help="Override configs/app.yml extraction.engine for this run only (v1 or v2)",
+    ),
 ) -> None:
     """Run discovery, download, extraction, validation, storage, and reporting."""
 
@@ -99,6 +103,8 @@ def run_pipeline(
         as_of_date = date.fromisoformat(as_of)
     except ValueError as exc:
         raise typer.BadParameter("As-of date must use YYYY-MM-DD.") from exc
+    if engine is not None and engine.strip().lower() not in {"v1", "v2"}:
+        raise typer.BadParameter("engine must be v1 or v2")
     period_dates = _parse_periods(periods) if periods else _rolling_periods(as_of_date)
     pipeline = Pipeline(project_root.resolve(), progress=typer.echo)
     try:
@@ -110,6 +116,7 @@ def run_pipeline(
             skip_excel=skip_excel,
             compile_statements=not no_compile,
             run_tunnel_b_always=tunnel_b_always,
+            engine=None if engine is None else engine.strip().lower(),
         )
     finally:
         pipeline.close()
