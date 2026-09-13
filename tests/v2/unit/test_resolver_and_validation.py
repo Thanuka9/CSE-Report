@@ -4,14 +4,24 @@ from datetime import date
 from decimal import Decimal
 
 from cse_financial_etl.v2.contracts.enums import (
+    ComparisonRole,
     EntityScope,
     PublicationStatus,
+    ResolutionStatus,
+    StatementType,
     UnitDimension,
     ValidationStatus,
 )
+from cse_financial_etl.v2.contracts.statement import (
+    CanonicalStatement,
+    StatementCell,
+    StatementColumn,
+    StatementRow,
+)
 from cse_financial_etl.v2.orchestration.filing_pipeline import run_filing_pipeline
+from cse_financial_etl.v2.resolution.resolver import build_candidates
 from cse_financial_etl.v2.validation.accounting import derive_facts, validate_source_facts
-from tests.v2.helpers import geometric_document, source_fact
+from tests.v2.helpers import geometric_document, source_fact, source_ref
 
 
 def test_pipeline_emits_pat_with_lineage_and_does_not_assume_group() -> None:
@@ -54,6 +64,47 @@ def test_group_is_not_converted_to_company() -> None:
         expected_entity_scope=EntityScope.COMPANY,
     )
     assert not [fact for fact in facts if fact.metric_code == "PAT"]
+
+
+def test_collapsed_row_with_extra_embedded_values_is_unresolved() -> None:
+    column = StatementColumn(
+        column_id="col-1",
+        entity_scope=EntityScope.COMPANY,
+        period_end=date(2026, 6, 30),
+        duration_months=3,
+        comparison_role=ComparisonRole.CURRENT,
+        currency="LKR",
+        monetary_scale=Decimal("1000000"),
+        unit_dimension=UnitDimension.MONETARY,
+    )
+    cell = StatementCell(
+        cell_id="cell-1",
+        row_id="row-1",
+        column_id="col-1",
+        raw_text="34",
+        parsed_numeric_value=Decimal("34"),
+        source_ref=source_ref(raw_text="Profit for the period 34 (4) 105 27"),
+    )
+    row = StatementRow(
+        row_id="row-1",
+        raw_label="Profit for the period",
+        normalized_label="profit for the period",
+        cells=(cell,),
+        source_refs=(cell.source_ref,),
+    )
+    statement = CanonicalStatement(
+        statement_id="stmt-1",
+        filing_version_id="fv-1",
+        statement_type=StatementType.INCOME_STATEMENT,
+        pages=(1,),
+        rows=(row,),
+        columns=(column,),
+        source_refs=(cell.source_ref,),
+    )
+    candidates = build_candidates(statement)
+    assert candidates
+    assert candidates[0].concept_status is ResolutionStatus.UNRESOLVED
+    assert "AMBIGUOUS_ROW_VALUES" in candidates[0].reason_codes
 
 
 def test_missing_entity_is_not_filled_with_company() -> None:

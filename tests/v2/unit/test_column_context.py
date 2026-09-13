@@ -3,8 +3,10 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
-from cse_financial_etl.v2.contracts.enums import ComparisonRole, EntityScope, UnitDimension
+from cse_financial_etl.v2.contracts.enums import ComparisonRole, EntityScope, StatementType, UnitDimension
+from cse_financial_etl.v2.contracts.statement import CanonicalStatement, StatementColumn
 from cse_financial_etl.v2.resolution.column_context import (
+    _fail_closed_partial_monetary_columns,
     bind_column_context,
     context_resolution_metrics,
     header_calendar_dates,
@@ -14,12 +16,23 @@ from cse_financial_etl.v2.resolution.column_context import (
     parse_unit,
 )
 from cse_financial_etl.v2.statements.statement_builder import build_statements
-from tests.v2.helpers import canonical_document_from_pages, geometric_document
+from tests.v2.helpers import canonical_document_from_pages, geometric_document, source_ref
 
 
 def test_parsers_cover_required_formats() -> None:
     assert parse_period_end("June 30, 2026") == date(2026, 6, 30)
     assert parse_period_end("30-Jun-26") == date(2026, 6, 30)
+    assert parse_period_end("30\u2010Jun\u20102026") == date(2026, 6, 30)
+    assert parse_period_end("30\u2013Jun\u20132025") == date(2025, 6, 30)
+    dates = header_calendar_dates(
+        "30\u2010Jun\u20102026 30\u2010Jun\u20102025 30\u2010Jun\u20102026 30\u2010Jun\u20102025"
+    )
+    assert dates[:4] == [
+        date(2026, 6, 30),
+        date(2025, 6, 30),
+        date(2026, 6, 30),
+        date(2025, 6, 30),
+    ]
     assert parse_period_end("30th June 2026") == date(2026, 6, 30)
     assert parse_period_end("30 June 2026") == date(2026, 6, 30)
     assert parse_period_end("30/06/2026") == date(2026, 6, 30)
@@ -690,6 +703,32 @@ def test_wrapped_three_and_nine_months_keep_quarter_first() -> None:
         column for column in bound.columns if column.unit_dimension is UnitDimension.MONETARY
     ]
     assert [column.duration_months for column in monetary[:4]] == [3, 3, 9, 9]
+
+
+def test_partially_labeled_monetary_columns_fail_closed() -> None:
+    statement = CanonicalStatement(
+        statement_id="stmt-1",
+        filing_version_id="fv-1",
+        statement_type=StatementType.INCOME_STATEMENT,
+        pages=(1,),
+        columns=(),
+        source_refs=(source_ref(),),
+    )
+    mixed = [
+        StatementColumn(
+            column_id="c1",
+            entity_scope=EntityScope.COMPANY,
+            period_end=date(2026, 6, 30),
+            unit_dimension=UnitDimension.MONETARY,
+        ),
+        StatementColumn(
+            column_id="c2",
+            period_end=date(2026, 6, 30),
+            unit_dimension=UnitDimension.MONETARY,
+        ),
+    ]
+    cleared = _fail_closed_partial_monetary_columns(statement, mixed)
+    assert all(column.entity_scope is None and column.period_end is None for column in cleared)
 
 
 def test_period_ended_alone_does_not_invent_three_months() -> None:

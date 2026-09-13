@@ -158,7 +158,14 @@ CORE_CONCEPTS: tuple[ConceptDefinition, ...] = (
         ),
         regime_aliases={
             "BANK": ("Gross income", "Interest income", "Total operating income"),
-            "FINANCE_COMPANY": ("Total income", "Net operating income", "Income"),
+            "FINANCE_COMPANY": (
+                "Total income",
+                "Net operating income",
+                "Income",
+                "Gross income",
+                "Interest income",
+                "Total operating income",
+            ),
             "SLFRS17": ("Insurance revenue",),
             "SLFRS4": ("Gross written premium", "Net earned premium"),
         },

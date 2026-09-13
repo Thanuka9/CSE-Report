@@ -77,7 +77,7 @@ Each nontrivial deviation from `AGENT_IMPLEMENTATION_PLAN.md` is recorded here. 
 - **Alternatives:** Keep raising `OcrRouteNotEnabledError`; wait for institutional Tesseract installs.
 - **Evidence:** Plan §23–§24 / Phase 11. This is a parser-availability fallback, not an OCR semantic shortcut.
 - **Affected modules:** `v2/document/router.py`, `v2/document/ocr_reader.py`.
-- **Temporary/permanent:** Fallback is temporary until Tesseract is a required runtime. Empty-native routing is permanent.
+- **Temporary/permanent:** Superseded: missing Tesseract now raises `OCR_REQUIRED_NOT_AVAILABLE`. Native text is not retagged as OCR.
 
 ---
 
@@ -253,4 +253,26 @@ Each nontrivial deviation from `AGENT_IMPLEMENTATION_PLAN.md` is recorded here. 
 - **Alternatives:** Keep V1 as production until frozen Sept-10 artefacts exist; emit every eligible V2 fact into the V1 workbook map.
 - **Evidence:** `configs/app.yml`, `v2/production/`, `tests/v2/unit/test_production_engine.py`. This is not plan §37 and not frozen-universe acceptance.
 - **Affected modules:** `orchestration/pipeline.py`, `extraction/resilient_runner.py`, `validation/golden.py`, `v2/production/`, `v2/market/quarter_end_price.py`, `v2/orchestration/cutover.py`.
-- **Temporary/permanent:** V2 production default is permanent until a measured rollback. V1 deletion remains forbidden until institutional sign-off.
+- **Temporary/permanent:** Superseded the same day: V1 remains the production default until institutional gates pass. V1 deletion remains forbidden until institutional sign-off.
+
+---
+
+## 2026-09-13 — Keep V1 as production default until gold and universe gates pass
+
+- **Decision:** Set `extraction.engine: v1`. V2 remains callable as `engine=v2` for shadow/challenger runs. Cutover `ready` stays false. Do not promote V2 until institutional gold, frozen September-10 universe, current-universe, and OFFICIAL review pass.
+- **Reason:** Code-complete V2 is not the same as accepted V2. The locked 33 is still PIPELINE_SEEDED plus heading overlays, not 25–40 human re-adjudicated filings, and the September-10 universe artefact is still missing.
+- **Alternatives:** Keep V2 as default behind `V2_CUTOVER_READY=false`; claim cutover because synthetic gates pass.
+- **Evidence:** `configs/app.yml`, `v2/orchestration/cutover.py`, `tests/v2/unit/test_production_engine.py`. This is not plan §37.
+- **Affected modules:** `configs/app.yml`, `docs/v2/CUTOVER_CHECKLIST.md`, `docs/v2/IMPLEMENTATION_STATUS.md`.
+- **Temporary/permanent:** Temporary until promotion gates pass. Then V2 becomes the permanent default.
+
+---
+
+## 2026-09-13 — Fail closed on collapsed rows and heading-true HDFC quarter current
+
+- **Decision:** Fold unicode dashes in date parsing. If only some monetary columns have entity+period, clear all of them. Short one-token aliases (`Income`) are exact-only; fuzzy OP requires `profit` in the label; extra blocker tokens (`tax`, `net`, `fee`, …) abstain. Collapsed rows with more embedded numbers than cells are `AMBIGUOUS_ROW_VALUES`. FINANCE_COMPANY TOP_LINE also accepts Gross/Interest/Total operating income. Overlay HDFC quarter-current PAT/PBT to heading-true 34 / 80 Rs Mn and drop unpublished operating profit.
+- **Reason:** HDFC unicode-hyphen dates, NTB “Total operating income” as OP, and PLC “Income” fuzzy-matching tax/NII produced critical-wrong populated facts. Missing lines must stay unpublished.
+- **Alternatives:** Issuer-specific extraction patches; invent HDFC operating profit; keep pipeline-seeded 2025 quarter cells as current.
+- **Evidence:** Locked local V2 scoring set **209/237**, recall **88.19%**, **0 critical-wrong**. Not plan §37.
+- **Affected modules:** `v2/resolution/column_context.py`, `v2/resolution/resolver.py`, `v2/taxonomy/matcher.py`, `v2/taxonomy/registry.py`, `tests/v2/golden/adjudication_round1.json`.
+- **Temporary/permanent:** Fail-closed matching is permanent. The HDFC overlay waits for human gold.

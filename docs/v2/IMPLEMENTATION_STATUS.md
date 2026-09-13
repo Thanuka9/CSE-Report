@@ -109,7 +109,7 @@ Evidence:
 
 Evidence:
 - tests: `tests/v2/unit/test_native_reader.py`, `tests/v2/unit/test_ocr_scanned_sample.py`
-- remaining risks: without Tesseract, OCR uses `v2.ocr.canonical_fallback` (retag of native text). True image-PDF OCR still depends on a Tesseract install.
+- remaining risks: image-PDF OCR still depends on a Tesseract install. Missing Tesseract raises `OCR_REQUIRED_NOT_AVAILABLE`; native text is not retagged as OCR.
 
 ## Phase 12 — Workbook V2 Renderer
 - [x] Numeric-or-null Snapshot cells; status strings on other sheets
@@ -131,7 +131,7 @@ Evidence:
 Evidence:
 - tests: `tests/v2/unit/test_synthetic_golden_corpus.py`, `tests/v2/unit/test_golden_shadow_cutover.py`, `tests/v2/unit/test_real_pdf_golden.py`, `tests/v2/unit/test_gold_lock.py`, `tests/v2/unit/test_adjudication_overlay.py`
 - fixtures: `tests/v2/golden/corpus.py`, `tests/v2/golden/real_filings_lock.json`, `tests/v2/golden/adjudication_round1.json`, `tests/fixtures/golden_financial_facts.json`
-- remaining risks: the lock is still not institutional gold. After extraction (aliases, Change-column percent, EPS wrap-rows, EPS_NOTE two-value clustering) the locked 33 scores **236/238** true positives, **0 critical-wrong**, recall **99.16%**, duration/unit **100%** on labeled gold. Engineering gates on this probe pass; plan §37 is **not** claimed. Two leftover misses are heading-true fail-closed gaps: HDFC has no operating-profit line; ATL NAVPS sits on a notes page classified OTHER. Production extraction engine is V2.
+- remaining risks: the lock is still not institutional gold. After heading-true overlay and fail-closed matching, the locked 33 scores **209/237** true positives, **0 critical-wrong**, recall **88.19%**, duration/unit **100%** on labeled gold. Recall stays below 0.97 because unlabeled-entity pages, missing lines (HDFC operating profit), and collapsed/unresolved rows remain unpublished. Plan §37 is **not** claimed. Production extraction engine is V1; V2 is challenger-only.
 
 ## Phase 14 — Full Universe Shadow Run
 - [x] Fact-identity shadow diff with class counts by metric/reason/issuer/parser/sector
@@ -144,9 +144,9 @@ Evidence:
 - remaining risks: the Sept-10 frozen snapshot is still not in-repo; the 2026-09-05 pin is a diagnostic shadow only
 
 ## Phase 15 — Cutover
-- [x] Production extraction engine is **V2** (`configs/app.yml` `extraction.engine: v2`); `engine: v1` remains the challenger
+- [x] Production extraction engine is **V1** (`configs/app.yml` `extraction.engine: v1`); `engine: v2` is the challenger until gold and universe gates pass
 - [x] `assert_v1_remains_default` still refuses V1 deletion when `ready=True`
-- [ ] Institutional sign-off / V1 deletion (explicitly not done)
+- [ ] Institutional sign-off / V2 default / V1 deletion (explicitly not done)
 
 Evidence:
 - tests: `tests/v2/unit/test_golden_shadow_cutover.py`, `tests/v2/unit/test_release_context.py`, `tests/v2/unit/test_production_engine.py`
@@ -156,7 +156,7 @@ Evidence:
 
 ## Plan audit (2026-09-13)
 
-Checked `CSE_V2_CURSOR_AGI_IMPLEMENTATION_PLAN.md` §§0–44 against the isolated V2 tree. Production extraction engine is V2. Coverage floor is still `min_draft_publishable = 8924`. V1 `extract_filing` remains importable. Cutover `ready` stays false until human gold, frozen universe, and OFFICIAL review.
+Checked `CSE_V2_CURSOR_AGI_IMPLEMENTATION_PLAN.md` §§0–44 against the isolated V2 tree. Production extraction engine is V1; V2 is challenger-only. Coverage floor is still `min_draft_publishable = 8924`. V1 `extract_filing` remains importable. Cutover `ready` stays false until human gold, frozen universe, and OFFICIAL review.
 
 ### Hard rules with tests
 Never invent entity/period/unit; never convert GROUP→COMPANY; non-quarter FLOW withheld; Q4/cumulative FLOW fail-closed; `TOTAL_LIABILITIES` not derived; workbook Snapshot cells numeric-or-blank; explicit `ReleaseContext`; V2 does not call `set_release_mode`; OFFICIAL omits `REVIEW` facts; closing market price is not `LAST_TRADED_PRICE`.
@@ -175,18 +175,18 @@ Extra vs plan (allowed): `v2/governance/`, `diagnostics/golden.py`, `shadow.py`,
 Tests live under `tests/v2/unit`, `tests/v2/property`, `tests/v2/golden`. Plan dirs `tests/v2/fixtures`, `regression`, and `universe` were not created as separate trees.
 
 ### Human-ready leftovers (engineering is done)
-- Plan §32 / Phase 13 / checklist 12: 25–40 **human re-adjudicated** CSE filings at §37 gates (bbox, unit, entity, period). Locked 33 probe is **236/238**, not newly human-adjudicated, not §37.
+- Plan §32 / Phase 13 / checklist 12: 25–40 **human re-adjudicated** CSE filings at §37 gates (bbox, unit, entity, period). Locked 33 probe is **209/237**, not newly human-adjudicated, not §37.
 - Plan §14 / Phase 14 / checklist 13: frozen September-10 universe artefacts (2026-09-05 CSV is pinned as best-available only)
 - Plan §15 / checklist 15: current-universe run
 - Checklist 17 / Phase 15: OFFICIAL human review, then V1 deletion after the rollback window
 
 ### Deferred, not launch-blocking
-- Plan §24: true Tesseract/Paddle OCR (canonical fallback still used without Tesseract)
+- Plan §24: Paddle OCR is still deferred. Tesseract OCR is real when installed; otherwise `OCR_REQUIRED_NOT_AVAILABLE`.
 - Plan §25–26: Table Transformer / BGE / rankers
 
 ### Closed vs earlier audit
 - Plan §16: last-traded as-of quarter-end wrapper plus leak test (`v2/market/quarter_end_price.py`)
 - Plan §33: Abans/CDB/Softlogic geometric fail-closed tests plus named PDFs when present; SDF/RENU stay out of the lock
-- Phase 15 step 1: production default is V2; V1 is `engine: v1` only
+- Phase 15 step 1: production default remains V1; V2 is `engine: v2` challenger only
 
 V2 is **not** complete under plan §44 items 12, 13, and 15. Those are the human/artefact leftovers.

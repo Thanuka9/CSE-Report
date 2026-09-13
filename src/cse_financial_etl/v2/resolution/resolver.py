@@ -25,6 +25,7 @@ from cse_financial_etl.v2.contracts.statement import (
     StatementColumn,
     StatementRow,
 )
+from cse_financial_etl.v2.statements.numeric import split_label_and_values
 from cse_financial_etl.v2.taxonomy.matcher import RegistryMatcher
 from cse_financial_etl.v2.taxonomy.registry import ConceptRegistry, load_registry, normalize_label
 
@@ -60,7 +61,16 @@ def build_candidates(
             if cell.raw_text.strip().endswith("%"):
                 continue
             column = columns[cell.column_id]
-            candidates.append(_candidate(statement, row, column, cell, primary, concepts))
+            candidate = _candidate(statement, row, column, cell, primary, concepts)
+            _, embedded = split_label_and_values(cell.source_ref.raw_text or "")
+            if len(embedded) > len(row.cells):
+                candidate = candidate.model_copy(
+                    update={
+                        "concept_status": ResolutionStatus.UNRESOLVED,
+                        "reason_codes": (*candidate.reason_codes, "AMBIGUOUS_ROW_VALUES"),
+                    }
+                )
+            candidates.append(candidate)
     return tuple(candidates)
 
 

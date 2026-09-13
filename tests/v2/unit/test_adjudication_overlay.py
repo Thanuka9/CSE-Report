@@ -24,6 +24,7 @@ def test_round1_overlay_keeps_audited_pat_and_drops_unlabeled() -> None:
         "AINS.N0000",
         "UAL.N0000",
         "YORK.N0000",
+        "HDFC.N0000",
     }
     assert symbols["JKH.N0000"]["action"] == "keep"
     assert symbols["LCBF.N0000"]["action"] == "drop_all_expected"
@@ -56,3 +57,8 @@ def test_round1_overlay_keeps_audited_pat_and_drops_unlabeled() -> None:
         assert cases["LCBF.N0000"].expected == ()
     if "YORK.N0000" in cases:
         assert cases["YORK.N0000"].expected == ()
+    if "HDFC.N0000" in cases:
+        expected = {fact.metric_code: fact.normalized_value for fact in cases["HDFC.N0000"].expected}
+        assert expected["PAT"] == Decimal("34000000")
+        assert expected["PBT"] == Decimal("80000000")
+        assert "OPERATING_PROFIT" not in expected

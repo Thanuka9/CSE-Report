@@ -82,10 +82,24 @@ _DOTTED_DATE = re.compile(r"\b(\d{1,2})\.(\d{1,2})\.(20\d{2}|\d{2})\b")
 _DAY_MONTH = re.compile(r"\b(\d{1,2})(?:st|nd|rd|th)?[- ,]+([A-Za-z]{3,9})\b", re.I)
 _YEAR = re.compile(r"\b(20\d{2})\b")
 _FOLLOWING_MONTH = re.compile(r"\s+([A-Za-z]{3,9})\b")
+_UNICODE_DASHES = str.maketrans(
+    {
+        "\u2010": "-",
+        "\u2011": "-",
+        "\u2012": "-",
+        "\u2013": "-",
+        "\u2014": "-",
+        "\u2212": "-",
+    }
+)
+
+
+def _fold_dashes(text: str) -> str:
+    return text.translate(_UNICODE_DASHES)
 
 
 def parse_period_end(text: str) -> date | None:
-    dates = _dates_in_text(text)
+    dates = _dates_in_text(_fold_dashes(text))
     return dates[0] if dates else None
 
 
@@ -241,7 +255,43 @@ def bind_column_context(
                 unit_evidence=evidence if unit[2] is not None else (),
             )
         )
+    columns = _fail_closed_partial_monetary_columns(statement, columns)
     return statement.model_copy(update={"columns": tuple(columns)})
+
+
+def _fail_closed_partial_monetary_columns(
+    statement: CanonicalStatement, columns: list[StatementColumn]
+) -> list[StatementColumn]:
+    """If only some monetary columns have entity/period, none of them are proven."""
+
+    del statement
+    monetary = [
+        column for column in columns if column.unit_dimension is UnitDimension.MONETARY
+    ]
+    if len(monetary) < 2:
+        return columns
+    resolved = [
+        column
+        for column in monetary
+        if column.entity_scope is not None and column.period_end is not None
+    ]
+    if not resolved or len(resolved) == len(monetary):
+        return columns
+    cleared: list[StatementColumn] = []
+    for column in columns:
+        if column.unit_dimension is not UnitDimension.MONETARY:
+            cleared.append(column)
+            continue
+        cleared.append(
+            StatementColumn(
+                column_id=column.column_id,
+                currency=column.currency,
+                monetary_scale=column.monetary_scale,
+                unit_dimension=column.unit_dimension,
+                unit_evidence=column.unit_evidence,
+            )
+        )
+    return cleared
 
 
 def context_blob(document: CanonicalDocument, region: StatementRegion | None) -> str:
@@ -266,6 +316,7 @@ def _cover_heading(document: CanonicalDocument) -> str:
 
 
 def header_calendar_dates(blob: str) -> list[date]:
+    blob = _fold_dashes(blob)
     years = [int(text) for text in _YEAR.findall(blob)]
     day_months = _day_months(blob)
     if day_months and years and len(day_months) == len(years):
@@ -419,6 +470,7 @@ def _date_banners(
 
 
 def _iter_date_matches(text: str) -> list[tuple[re.Match[str], date]]:
+    text = _fold_dashes(text)
     found: list[tuple[re.Match[str], date]] = []
     for match in _NAMED_DATE.finditer(text):
         parsed = _named_date(match, text)
@@ -517,6 +569,7 @@ def _issuer_name_entity_line(text: str) -> bool:
 
 
 def _dates_in_text(text: str) -> list[date]:
+    text = _fold_dashes(text)
     found: list[date] = []
     seen: set[date] = set()
     spans: list[tuple[int, date]] = []

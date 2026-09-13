@@ -1,8 +1,8 @@
 {
-  "id": "v2-adjudication-round2-2026-09-13",
+  "id": "v2-adjudication-round3-2026-09-13",
   "reviewer": "v2-pdf-heading-adjudication",
   "review_date": "2026-09-13",
-  "note": "Agent PDF-heading adjudication rounds 1–2 of the locked 33. Not institutional plan §37 gold and not a human re-adjudication of every cell. Audited PAT truths are kept. Unlabeled company-only pages drop expected COMPANY facts instead of inventing entity. EPS_DILUTED is dropped where the heading has no separate diluted line. AAF expected FLOW is the quarter column, not the six-month column.",
+  "note": "Agent PDF-heading adjudication rounds 1–3 of the locked 33. Not institutional plan §37 gold and not a human re-adjudication of every cell. Audited PAT truths are kept. Unlabeled company-only pages drop expected COMPANY facts instead of inventing entity. EPS_DILUTED is dropped where the heading has no separate diluted line. AAF expected FLOW is the quarter column, not the six-month column. HDFC quarter-current PAT/PBT follow the 30-Jun-2026 quarter column; operating profit stays unpublished because the income statement has no such line.",
   "symbols": {
     "JKH.N0000": {
       "action": "keep",
@@ -113,6 +113,15 @@
       "action": "keep",
       "reason": "No separate diluted EPS line.",
       "drop": ["EPS_DILUTED"]
+    },
+    "HDFC.N0000": {
+      "action": "replace",
+      "reason": "Income heading is Quarter 30-Jun-2026, Quarter 30-Jun-2025, period 30-Jun-2026, period 30-Jun-2025. Pipeline gold used the 2025 quarter PAT/PBT cells as current. Heading-true Bank quarter current is 34 / 80 Rs Mn. No operating-profit line; do not invent one.",
+      "replace": {
+        "PAT": "34000000",
+        "PBT": "80000000"
+      },
+      "drop": ["OPERATING_PROFIT"]
     },
     "NTB.N0000": {
       "action": "keep",

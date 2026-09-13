@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 from rapidfuzz import fuzz, process
 
 from cse_financial_etl.v2.contracts.concepts import ConceptCandidate
@@ -11,6 +13,23 @@ from cse_financial_etl.v2.taxonomy.registry import ConceptRegistry, load_registr
 
 _FUZZY_FLOOR = 90
 _AMBIGUITY_DELTA = 2
+_ACCOUNT_WORD = re.compile(r"[a-z]{3,}")
+_FUZZY_BLOCKERS = frozenset(
+    {
+        "tax",
+        "expense",
+        "fee",
+        "commission",
+        "other",
+        "net",
+        "less",
+        "vat",
+        "impairment",
+        "written",
+        "earned",
+        "premium",
+    }
+)
 
 _INSURANCE_REGIMES = ("INSURANCE", "SLFRS4", "SLFRS17")
 _ISSUER_TYPE_TO_REGIME = {
@@ -54,6 +73,16 @@ def accounting_regime_for(
     return AccountingRegime.GENERAL
 
 
+def _short_exact_only_alias(alias: str) -> bool:
+    tokens = alias.split()
+    return len(tokens) <= 1 and len(alias) < 12
+
+
+def _material_extra_tokens(label: str, alias: str) -> bool:
+    extra = set(label.split()) - set(alias.split())
+    return bool(extra & _FUZZY_BLOCKERS)
+
+
 class RegistryMatcher:
     def __init__(self, registry: ConceptRegistry | None = None) -> None:
         self.registry = registry or load_registry()
@@ -69,6 +98,8 @@ class RegistryMatcher:
         regimes = regimes_for(accounting_regime)
         if self.registry.is_forbidden(label) or "discontinued" in label:
             return [ConceptCandidate(metric_code=None, match_kind=MatchKind.ABSTAIN)]
+        if not _ACCOUNT_WORD.search(label):
+            return [ConceptCandidate(metric_code=None, match_kind=MatchKind.ABSTAIN)]
         exact = self.registry.lookup_alias(label, regimes=regimes)
         if exact is not None:
             if statement_type not in exact.statement_types:
@@ -82,24 +113,32 @@ class RegistryMatcher:
         if self.registry.is_regime_alias(label):
             return [ConceptCandidate(metric_code=None, match_kind=MatchKind.ABSTAIN)]
         diluted_only = "diluted" in label and "basic" not in label
-        choices: dict[str, str] = dict(self.registry.regime_aliases(regimes=regimes))
+        choices: dict[str, str] = {}
+        for alias, code in self.registry.regime_aliases(regimes=regimes).items():
+            if _short_exact_only_alias(alias):
+                continue
+            choices[alias] = code
         for concept in self.registry.concepts:
             if statement_type not in concept.statement_types or not concept.source_only:
                 continue
             if diluted_only and concept.code == "EPS_BASIC":
                 continue
             for alias in (*concept.exact_aliases, *concept.synonyms):
-                choices[normalize_label(alias)] = concept.code
+                key = normalize_label(alias)
+                if _short_exact_only_alias(key):
+                    continue
+                choices[key] = concept.code
         if not choices:
             return [ConceptCandidate(metric_code=None, match_kind=MatchKind.ABSTAIN)]
         ranked = process.extract(label, list(choices), scorer=fuzz.token_set_ratio, limit=3)
         viable = [
-            (alias, score, choices[alias]) for alias, score, _ in ranked if score >= _FUZZY_FLOOR
+            (alias, score, choices[alias])
+            for alias, score, _ in ranked
+            if score >= _FUZZY_FLOOR and not _material_extra_tokens(label, alias)
         ]
         if not viable:
             return [ConceptCandidate(metric_code=None, match_kind=MatchKind.ABSTAIN)]
-        if "operat" not in label:
-            # "Taxes on financial services" must not fuzzy-match operating profit.
+        if "profit" not in label:
             viable = [item for item in viable if item[2] != "OPERATING_PROFIT"]
         if not viable:
             return [ConceptCandidate(metric_code=None, match_kind=MatchKind.ABSTAIN)]

@@ -100,6 +100,38 @@ def test_finance_income_row_is_top_line_not_income_tax() -> None:
     assert tax[0].metric_code != "TOP_LINE"
 
 
+def test_total_operating_income_is_top_line_not_operating_profit() -> None:
+    matcher = RegistryMatcher()
+    hits = matcher.candidates(
+        _row("Total operating income"),
+        statement_type=StatementType.INCOME_STATEMENT,
+        accounting_regime=AccountingRegime.BANK,
+    )
+    assert hits[0].metric_code == "TOP_LINE"
+    for label in ("Gross income", "Interest income", "Total operating income"):
+        finance = matcher.candidates(
+            _row(label),
+            statement_type=StatementType.INCOME_STATEMENT,
+            accounting_regime=AccountingRegime.FINANCE_COMPANY,
+        )
+        assert finance[0].metric_code == "TOP_LINE", label
+    income_tax = matcher.candidates(
+        _row("Income tax expense"),
+        statement_type=StatementType.INCOME_STATEMENT,
+        accounting_regime=AccountingRegime.FINANCE_COMPANY,
+    )
+    assert income_tax[0].metric_code != "TOP_LINE"
+    nii = matcher.candidates(
+        _row("Net interest income"),
+        statement_type=StatementType.INCOME_STATEMENT,
+        accounting_regime=AccountingRegime.FINANCE_COMPANY,
+    )
+    assert nii[0].metric_code != "TOP_LINE"
+    digits = matcher.candidates(_row("1,234"), statement_type=StatementType.INCOME_STATEMENT)
+    assert digits[0].metric_code is None
+    assert digits[0].match_kind is MatchKind.ABSTAIN
+
+
 def test_revenue_from_contracts_and_slash_pat_aliases() -> None:
     matcher = RegistryMatcher()
     revenue = matcher.candidates(
