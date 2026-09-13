@@ -20,6 +20,11 @@ from openpyxl.workbook.workbook import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
 
 from cse_financial_etl.reporting.excel import generate_excel
+from cse_financial_etl.validation.acceptance import (
+    RELEASE_MODES,
+    current_release_mode,
+    set_release_mode,
+)
 
 _HEADER_FILL = PatternFill("solid", fgColor="17365D")
 _HEADER_FONT = Font(bold=True, color="FFFFFF")
@@ -261,10 +266,23 @@ def build_final_workbook(project_root: Path, as_of: date) -> Path:
     if not isinstance(raw_periods, list) or not raw_periods:
         raise ValueError("Run manifest does not contain target_periods")
     periods = tuple(date.fromisoformat(str(value)) for value in raw_periods)
+    manifest_release_mode = str(manifest.get("release_mode") or "").strip().upper()
+    if manifest_release_mode not in RELEASE_MODES:
+        raise ValueError("Run manifest does not contain a valid release_mode")
 
-    # generate_excel reads the current CSV outputs. At this stage those files have
-    # already been rewritten by R4, so the visible Snapshot cannot lag hardening.
-    workbook_path = generate_excel(root, as_of, periods, run_id)
+    # The final-workbook script runs in a fresh process. Without explicitly restoring
+    # the governed run mode here, publication.py defaults to OFFICIAL and converts every
+    # valid DRAFT row with review_status=REVIEW into REVIEW_REQUIRED in the Snapshot.
+    # Scope the process-global release mode to workbook generation and restore it after.
+    previous_release_mode = current_release_mode()
+    try:
+        set_release_mode(manifest_release_mode)
+        # generate_excel reads the current CSV outputs. At this stage those files have
+        # already been rewritten by R4, so the visible Snapshot cannot lag hardening.
+        workbook_path = generate_excel(root, as_of, periods, run_id)
+    finally:
+        set_release_mode(previous_release_mode)
+
     wb = load_workbook(workbook_path)
     _relabel_snapshot_headers(wb)
 

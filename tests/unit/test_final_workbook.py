@@ -4,9 +4,11 @@ import json
 from datetime import date
 from pathlib import Path
 
+import pytest
 from openpyxl import load_workbook
 
 from cse_financial_etl.reporting.final_workbook import build_final_workbook
+from cse_financial_etl.validation.acceptance import current_release_mode
 
 
 def _write(path: Path, text: str) -> None:
@@ -36,11 +38,23 @@ def test_final_workbook_contains_review_and_lineage_sheets(tmp_path: Path) -> No
     )
     _write(
         tmp_path / "outputs" / "manifests" / f"run_manifest_{date_text}.json",
-        json.dumps({"run_id": "test-run", "target_periods": periods, "issuer_count": 1}),
+        json.dumps(
+            {
+                "run_id": "test-run",
+                "target_periods": periods,
+                "issuer_count": 1,
+                "release_mode": "DRAFT",
+            }
+        ),
     )
     _write(
         tmp_path / "outputs" / f"normalized_facts_{date_text}.csv",
-        "issuer_name,period_end,metric_code,normalized_value,status,validation_status,review_status\n",
+        (
+            "issuer_name,period_end,metric_code,metric_type,normalized_value,status,"
+            "validation_status,review_status,duration_months,comparison_role,evidence_json\n"
+            f"TEST PLC,{periods[-1]},PAT,MONETARY_ABSOLUTE,123000,EXTRACTED,PASSED,"
+            "REVIEW,3,CURRENT,{}\n"
+        ),
     )
     _write(
         tmp_path / "outputs" / f"quarter_end_prices_{date_text}.csv",
@@ -87,8 +101,10 @@ def test_final_workbook_contains_review_and_lineage_sheets(tmp_path: Path) -> No
     }.items():
         _write(tmp_path / "outputs" / f"{name}_{date_text}.json", json.dumps(payload))
 
+    previous_mode = current_release_mode()
     workbook_path = build_final_workbook(tmp_path, as_of)
     assert workbook_path.exists()
+    assert current_release_mode() == previous_mode
 
     workbook = load_workbook(workbook_path, read_only=True)
     expected_sheets = {
@@ -109,10 +125,14 @@ def test_final_workbook_contains_review_and_lineage_sheets(tmp_path: Path) -> No
     }
     assert expected_sheets.issubset(set(workbook.sheetnames))
 
-    headers = [cell.value for cell in workbook[f"Snapshot_{date_text}"][4]]
+    snapshot = workbook[f"Snapshot_{date_text}"]
+    headers = [cell.value for cell in snapshot[4]]
     assert "EPS (Selected)" in headers
     assert "Last Traded Price (Qtr End)" in headers
     assert "Liabilities / Equity" in headers
+    assert "[DRAFT — not an official release]" in str(snapshot["A1"].value)
+    # Third period starts at column 39 (AM); PAT is the first visible metric.
+    assert snapshot.cell(row=5, column=39).value == 123000
 
     summary_rows = list(workbook["Run_Summary"].iter_rows(values_only=True))
     assert (
@@ -120,3 +140,21 @@ def test_final_workbook_contains_review_and_lineage_sheets(tmp_path: Path) -> No
         "assembly_stage",
         "POST_R4_POST_ROW_SAFETY_POST_ACCEPTANCE_RECHECK",
     ) in summary_rows
+
+
+def test_final_workbook_requires_explicit_manifest_release_mode(tmp_path: Path) -> None:
+    as_of = date(2026, 9, 10)
+    date_text = as_of.isoformat()
+    _write(
+        tmp_path / "outputs" / "manifests" / f"run_manifest_{date_text}.json",
+        json.dumps(
+            {
+                "run_id": "test-run",
+                "target_periods": ["2026-06-30"],
+                "issuer_count": 1,
+            }
+        ),
+    )
+
+    with pytest.raises(ValueError, match="valid release_mode"):
+        build_final_workbook(tmp_path, as_of)
