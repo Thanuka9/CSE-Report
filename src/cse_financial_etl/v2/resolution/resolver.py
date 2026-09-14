@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 from decimal import Decimal
 
 from cse_financial_etl.v2.contracts.concepts import ConceptCandidate
@@ -31,7 +30,12 @@ from cse_financial_etl.v2.taxonomy.matcher import RegistryMatcher
 from cse_financial_etl.v2.taxonomy.registry import ConceptRegistry, load_registry, normalize_label
 
 FLOW_CODES = frozenset({"PAT", "PBT", "OPERATING_PROFIT", "TOP_LINE", "EPS_BASIC", "EPS_DILUTED"})
-_ROW_LABEL_PREFIX = re.compile(r"\s+[\d(]")
+
+
+def _row_line_text(row: StatementRow, cell: StatementCell) -> str:
+    if row.source_refs:
+        return row.source_refs[0].raw_text or ""
+    return cell.source_ref.raw_text or ""
 
 
 def _status(value: object) -> ResolutionStatus:
@@ -97,7 +101,7 @@ def build_candidates(
                 continue
             column = columns[cell.column_id]
             candidate = _candidate(statement, row, column, cell, primary, concepts)
-            _, embedded = split_label_and_values(cell.source_ref.raw_text or "")
+            _, embedded = split_label_and_values(_row_line_text(row, cell))
             if len(embedded) > len(row.cells):
                 candidate = candidate.model_copy(
                     update={
@@ -293,9 +297,6 @@ def _withhold_conflicting_values(facts: tuple[SourceFact, ...]) -> tuple[SourceF
 
 
 def _conflict_row_label(fact: SourceFact) -> str:
-    """Account label only. Gross income and Interest income are not duplicates."""
+    """Account alias only. Gross income and Interest income are not duplicates."""
 
-    text = fact.source_ref.raw_text or ""
-    match = _ROW_LABEL_PREFIX.search(text)
-    head = text[: match.start()] if match is not None else text
-    return normalize_label(head)
+    return normalize_label(fact.matched_alias or fact.source_concept or "")

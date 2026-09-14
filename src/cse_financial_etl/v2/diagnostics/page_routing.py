@@ -22,3 +22,11 @@ def classify_page_route(page: CanonicalPage) -> ExtractionMode:
 def mixed_native_ocr_document(document: CanonicalDocument) -> bool:
     routes = {classify_page_route(page) for page in document.pages}
     return ExtractionMode.NATIVE in routes and ExtractionMode.OCR in routes
+
+
+def empty_native_page_numbers(document: CanonicalDocument) -> tuple[int, ...]:
+    return tuple(
+        page.page_number
+        for page in document.pages
+        if classify_page_route(page) is ExtractionMode.OCR
+    )

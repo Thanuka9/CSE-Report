@@ -194,3 +194,5 @@ Tests live under `tests/v2/unit`, `tests/v2/property`, `tests/v2/golden`. Plan d
 - Phase 15 step 1: production default remains V1; V2 is `engine: v2` challenger only
 
 V2 is **not** complete under plan §44 items 12, 13, and 15. Those are the human/artefact leftovers.
+
+Extraction investigation status (T00–T29) is `docs/v2/EXTRACTION_INVESTIGATION_STATUS.md`. Engineering T00–T20 harnesses are in place. T10/T25–T29 remain human- or artefact-blocked. Production engine stays V1.

@@ -8,8 +8,8 @@
       "family": "MIXED_NATIVE_OCR",
       "count": 7,
       "unit": "filings",
-      "why": "P0 routes the whole PDF from document-level native token count. Seven locked filings have both native and empty pages.",
-      "next": "T14 page-level router; do not pick a parser because it emits more tokens."
+      "why": "P0 routes the whole PDF from document-level native token count. Seven locked filings have both native and empty pages (9 empty pages). P1 exists as opt-in diagnostic; production stays P0. Tesseract was not available on this machine.",
+      "next": "OCR those empty pages on a production image with Tesseract. Do not pick a parser because it emits more tokens."
     },
     {
       "rank": 2,
@@ -17,7 +17,7 @@
       "count": 130,
       "unit": "source-target facts",
       "why": "V1 emitted a target metric V2 did not. Could be V2 miss or V1 false positive.",
-      "next": "T10 blind source adjudication on DEV, not alias expansion."
+      "next": "T10 blind source adjudication on DEV. Queue is tests/v2/source_truth/t10_review_queue.json. items.jsonl stays empty."
     },
     {
       "rank": 3,
@@ -25,31 +25,31 @@
       "count": 61,
       "unit": "source-target facts",
       "why": "Same identity, different normalized value. Could be scale, duration, or wrong cell.",
-      "next": "T10 plus header/unit bake-off on those rows."
+      "next": "T10 plus header/unit bake-off on those rows. First 38 T10 queue items are DEV VALUE_DISAGREEMENT."
     },
     {
       "rank": 4,
-      "family": "SOURCE_VALUE_NOT_REPRODUCIBLE",
-      "count": 98,
+      "family": "CONTEXT_EVIDENCE_INCOMPLETE",
+      "count": 16,
       "unit": "emitted SourceFacts",
-      "why": "Lineage auditor could not re-parse raw_text into raw_value. Often concatenated label/value blobs.",
-      "next": "Tighten auditor and table reconstruction before changing matchers."
+      "why": "Emitted facts missing duration or other required FLOW context in the audit. All 16 remaining are GREG rows headed Period ended with no month count. SEYB narrative TOP_LINE on a highlights page was fail-closed.",
+      "next": "G03 upstream duration resolution vs gate. Do not allow 6M/9M as Q4."
     },
     {
       "rank": 5,
-      "family": "CONTEXT_EVIDENCE_INCOMPLETE",
-      "count": 17,
-      "unit": "emitted SourceFacts",
-      "why": "Emitted facts missing duration or other required FLOW context in the audit.",
-      "next": "G03 upstream duration resolution vs gate."
-    },
-    {
-      "rank": 6,
       "family": "V2_ONLY_DISAGREEMENT",
       "count": 442,
       "unit": "source-target facts",
       "why": "V2 SourceFacts with no V1 comparator row. Includes comparatives and extra entity columns. Not extra recall until production selection is scored separately.",
-      "next": "Separate extraction vs production selection in T11/T08."
+      "next": "Separate extraction vs production selection."
+    },
+    {
+      "rank": 6,
+      "family": "SOURCE_VALUE_NOT_REPRODUCIBLE",
+      "count": 0,
+      "unit": "emitted SourceFacts",
+      "why": "Was 98 (HAYL 57). Cell SourceRef.raw_text used the whole line; the auditor could not re-parse it. Cell provenance is now the numeric token. Lineage complete 888/905. Not source-confirmed gold.",
+      "next": "Keep cell-level provenance. Do not loosen the auditor."
     }
   ]
 }

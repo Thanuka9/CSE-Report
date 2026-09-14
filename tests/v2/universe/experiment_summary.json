@@ -1,0 +1,69 @@
+{
+  "case_count": 33,
+  "g02": {
+    "cascade_source_facts": 766,
+    "per_column_source_facts": 766,
+    "facts_suppressed_by_cascade": 0
+  },
+  "g02_decision": "UNTESTED",
+  "page_empty": {
+    "mixed_native_ocr_filings": 7,
+    "empty_native_pages": 9,
+    "production_router": "document",
+    "p1_ocr_applied": false
+  },
+  "discovery": {
+    "alias_hits": 32,
+    "hits_on_statement_pages": 23,
+    "hits_on_other_pages": 9
+  },
+  "lineage": {
+    "LINEAGE_COMPLETE": 872,
+    "CONTEXT_EVIDENCE_INCOMPLETE": 16
+  },
+  "h0": {
+    "columns": 891,
+    "entity_resolved": 635,
+    "period_resolved": 715,
+    "duration_resolved": 494,
+    "comparison_resolved": 585,
+    "unit_resolved": 873,
+    "entity_resolution_rate_num": 635,
+    "entity_resolution_rate_den": 891
+  },
+  "u0": {
+    "unit_unresolved_columns": 18,
+    "cents_evidence_columns": 0,
+    "usd_columns": 0
+  },
+  "g01": {
+    "unresolved_entity_columns": 256,
+    "unresolved_with_document_entity_cue": 65,
+    "decision": "UNTESTED"
+  },
+  "g03": {
+    "flow_source_facts": 628,
+    "flow_duration_quarter": 380,
+    "flow_duration_non_quarter": 232,
+    "exact_quarter_gate": 248,
+    "flow_duration_missing": 16,
+    "decision": "UNTESTED"
+  },
+  "g05": {
+    "regions": 264,
+    "explicit_continuation_regions": 0,
+    "decision": "UNTESTED"
+  },
+  "g08": {
+    "eligible_source_facts": 361,
+    "duplicate_identity_groups": 36,
+    "decision": "UNTESTED"
+  },
+  "prototypes": {
+    "h2": false,
+    "u2": false,
+    "p2": false
+  },
+  "t10_queue_item_count": 40,
+  "note": "Diagnostic only. Gates remain UNTESTED. P1 is not production. H2/U2/P2 are not built. Discovery does not publish. T10 queue is not gold."
+}

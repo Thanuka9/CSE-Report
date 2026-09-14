@@ -78,6 +78,9 @@ def accounting_regime_for(
     return AccountingRegime.GENERAL
 
 
+_MAX_FUZZY_EXTRA_TOKENS = 5
+
+
 def _short_exact_only_alias(alias: str) -> bool:
     tokens = alias.split()
     return len(tokens) <= 1 and len(alias) < 12
@@ -85,7 +88,9 @@ def _short_exact_only_alias(alias: str) -> bool:
 
 def _material_extra_tokens(label: str, alias: str) -> bool:
     extra = set(label.split()) - set(alias.split())
-    return bool(extra & _FUZZY_BLOCKERS)
+    if extra & _FUZZY_BLOCKERS:
+        return True
+    return len(extra) > _MAX_FUZZY_EXTRA_TOKENS
 
 
 def _proven_accounting_regime(
@@ -161,7 +166,11 @@ class RegistryMatcher:
             return [ConceptCandidate(metric_code=None, match_kind=MatchKind.ABSTAIN)]
         diluted_only = "diluted" in label and "basic" not in label
         choices: dict[str, str] = {}
+        concepts_by_code = {concept.code: concept for concept in self.registry.concepts}
         for alias, code in self.registry.regime_aliases(regimes=regimes).items():
+            concept = concepts_by_code.get(code)
+            if concept is None or statement_type not in concept.statement_types:
+                continue
             if _short_exact_only_alias(alias):
                 continue
             choices[alias] = code

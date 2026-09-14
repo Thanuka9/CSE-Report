@@ -28,6 +28,13 @@ def test_dev_holdout_queue_has_no_expected_values() -> None:
     assert "expected" not in payload
     assert "drop" not in payload
     assert ITEMS_PATH.read_text(encoding="utf-8").strip() == ""
+    queue_path = ROOT / "tests" / "v2" / "source_truth" / "t10_review_queue.json"
+    if queue_path.is_file():
+        queue = json.loads(queue_path.read_text(encoding="utf-8"))
+        assert queue["items"]
+        assert all("v1_value" not in item for item in queue["items"])
+        assert all(item["source_truth_status"] == "NOT_ADJUDICATED" for item in queue["items"])
+        assert ITEMS_PATH.read_text(encoding="utf-8").strip() == ""
 
 
 def test_source_truth_item_is_source_not_policy() -> None:

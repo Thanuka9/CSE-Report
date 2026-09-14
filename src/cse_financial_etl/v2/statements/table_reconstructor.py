@@ -63,15 +63,32 @@ def _parser(document: CanonicalDocument) -> tuple[str, str]:
     )
 
 
-def _ref(document: CanonicalDocument, line: CanonicalLine, page_number: int) -> SourceRef:
+def _ref(
+    document: CanonicalDocument,
+    line: CanonicalLine,
+    page_number: int,
+    *,
+    raw_text: str | None = None,
+    x: float | None = None,
+) -> SourceRef:
     parser_name, parser_version = _parser(document)
+    token = None
+    if raw_text is not None:
+        matches = [item for item in line.tokens if item.text == raw_text]
+        if matches and x is not None:
+            token = min(
+                matches,
+                key=lambda item: abs(((item.bbox[0] + item.bbox[2]) / 2.0) - x),
+            )
+        elif matches:
+            token = matches[0]
     return SourceRef(
         filing_id=document.filing_version_id,
         filing_version_id=document.filing_version_id,
         source_sha256=document.source_sha256,
         page_number=page_number,
-        bbox=line.bbox,
-        raw_text=line.text,
+        bbox=token.bbox if token is not None else line.bbox,
+        raw_text=raw_text if raw_text is not None else line.text,
         parser_name=parser_name,
         parser_version=parser_version,
     )
@@ -263,7 +280,7 @@ def _reconstruct_region(
                     column_id=columns[col_index].column_id,
                     raw_text=raw,
                     parsed_numeric_value=parse_numeric(raw),
-                    source_ref=_ref(document, line, page_number),
+                    source_ref=_ref(document, line, page_number, raw_text=raw, x=x),
                 )
             )
         rows.append(

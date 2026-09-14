@@ -28,6 +28,31 @@ def test_locked_source_manifest_has_sha_set() -> None:
     assert all(not row["local_file"].startswith("D:") for row in rows)
 
 
+def test_experiment_summary_is_diagnostic() -> None:
+    path = ROOT / "tests" / "v2" / "universe" / "experiment_summary.json"
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    assert payload["case_count"] == 33
+    assert payload["g02_decision"] == "UNTESTED"
+    assert payload["g02"]["facts_suppressed_by_cascade"] == 0
+    assert payload["page_empty"]["production_router"] == "document"
+    assert payload["page_empty"]["p1_ocr_applied"] is False
+    assert "SOURCE_VALUE_NOT_REPRODUCIBLE" not in payload["lineage"]
+    assert payload["lineage"]["CONTEXT_EVIDENCE_INCOMPLETE"] == 16
+    assert payload.get("prototypes", {}).get("h2") is False
+    assert payload.get("prototypes", {}).get("u2") is False
+    assert payload.get("prototypes", {}).get("p2") is False
+    assert "not gold" in payload["note"].casefold() or "Diagnostic" in payload["note"]
+
+
+def test_investigation_status_blocks_cutover() -> None:
+    text = (ROOT / "docs" / "v2" / "EXTRACTION_INVESTIGATION_STATUS.md").read_text(encoding="utf-8")
+    assert "T29 Resume cutover" in text
+    assert "BLOCKED" in text
+    assert "engine: v2" in text
+    assert "items.jsonl" in text
+    assert (ROOT / "docs" / "v2" / "EXTRACTION_REPORT.md").is_file()
+
+
 def test_defect_ranking_is_not_source_truth() -> None:
     payload = json.loads(RANKING.read_text(encoding="utf-8"))
     assert "Not source-confirmed" in payload["note"] or "not source" in payload["note"].casefold()

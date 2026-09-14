@@ -28,6 +28,7 @@ def test_emitted_source_fact_has_complete_lineage() -> None:
         document, issuer_id="issuer-1", expected_entity_scope=EntityScope.COMPANY
     )
     pat = next(fact for fact in facts if fact.metric_code == "PAT")
+    assert pat.source_ref.raw_text == "1,234"
     assert audit_source_fact(pat, document=document) is LineageStatus.LINEAGE_COMPLETE
 
 

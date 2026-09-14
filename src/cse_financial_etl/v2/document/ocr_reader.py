@@ -45,6 +45,48 @@ def require_ocr_engine() -> Any:
     return engine
 
 
+def _canonical_ocr_page(page: Any, *, page_number: int, tesseract: Any) -> CanonicalPage:
+    rect = page.rect
+    tokens = _ocr_page_tokens(page, page_number=page_number, tesseract=tesseract)
+    return CanonicalPage(
+        page_number=page_number,
+        width=float(rect.width),
+        height=float(rect.height),
+        lines=_cluster_tokens(tokens, page_number=page_number),
+        extraction_mode=ExtractionMode.OCR,
+    )
+
+
+def read_ocr_page(
+    pdf_path: Path,
+    page_number: int,
+    *,
+    tesseract: Any | None = None,
+) -> CanonicalPage:
+    """OCR a single PDF page. Does not retag native text as OCR."""
+
+    if not pdf_path.is_file():
+        raise NativeParseError(f"PDF does not exist: {pdf_path}")
+    if page_number < 1:
+        raise NativeParseError("page_number must be >= 1")
+    engine = tesseract or require_ocr_engine()
+    try:
+        with fitz.open(pdf_path) as document:  # type: ignore[no-untyped-call]
+            page_count = int(document.page_count)
+            if page_number > page_count:
+                raise NativeParseError(f"page {page_number} is out of range for {pdf_path}")
+            page = document.load_page(page_number - 1)
+            return _canonical_ocr_page(page, page_number=page_number, tesseract=engine)
+    except OcrRouteNotEnabledError:
+        raise
+    except NativeParseError:
+        raise
+    except Exception as exc:
+        raise NativeParseError(
+            f"OCR failed to parse page {page_number} of {pdf_path}: {exc}"
+        ) from exc
+
+
 def _ocr_page_tokens(page: Any, *, page_number: int, tesseract: Any) -> list[CanonicalToken]:
     matrix = fitz.Matrix(_OCR_ZOOM, _OCR_ZOOM)  # type: ignore[no-untyped-call]
     pixmap = page.get_pixmap(matrix=matrix, alpha=False)
@@ -100,17 +142,7 @@ def read_ocr_pdf(pdf_path: Path, *, filing_version_id: str) -> CanonicalDocument
                 raise NativeParseError("PDF contains no pages")
             for index in range(1, page_count + 1):
                 page = document.load_page(index - 1)
-                rect = page.rect
-                tokens = _ocr_page_tokens(page, page_number=index, tesseract=tesseract)
-                pages.append(
-                    CanonicalPage(
-                        page_number=index,
-                        width=float(rect.width),
-                        height=float(rect.height),
-                        lines=_cluster_tokens(tokens, page_number=index),
-                        extraction_mode=ExtractionMode.OCR,
-                    )
-                )
+                pages.append(_canonical_ocr_page(page, page_number=index, tesseract=tesseract))
     except OcrRouteNotEnabledError:
         raise
     except NativeParseError:

@@ -142,6 +142,8 @@ def parse_unit(text: str) -> tuple[str | None, Decimal | None, UnitDimension | N
     currency = None
     if re.search(r"\b(?:rs\.?|lkr|rupees?)\b", lowered):
         currency = "LKR"
+    elif re.search(r"\busd\b|us\$", lowered):
+        currency = "USD"
     scale = None
     if re.search(r"million|\bmns?\.?\b|\brs\.?\s*mns?\b", lowered):
         scale = Decimal("1000000")
