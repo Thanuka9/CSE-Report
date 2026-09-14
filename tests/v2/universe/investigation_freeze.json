@@ -1,0 +1,24 @@
+{
+  "schema_version": "v2.0.0",
+  "investigation_base_sha": "91a9c68bf940d3d9c2a86245f127de88ad4b4b6d",
+  "code_sha": "91a9c68bf940d3d9c2a86245f127de88ad4b4b6d",
+  "python_version": "3.12.0",
+  "platform": "Windows-11-AMD64",
+  "uv_lock_sha256": "d87a5d20b884732fc9271c1679caa806e511ebcb6a60dd122ffc9b9c49fc3a71",
+  "pymupdf_version": "1.28.2",
+  "tesseract_version": null,
+  "pytesseract_version": null,
+  "extraction_engine": "v1",
+  "min_draft_publishable": 8924,
+  "file_sha256": {
+    "uv.lock": "d87a5d20b884732fc9271c1679caa806e511ebcb6a60dd122ffc9b9c49fc3a71",
+    "configs/app.yml": "38c00fb784e06830e4b9860edddbc4f56dafa0c147aacdb1a53dced6e3489821",
+    "configs/coverage_baseline.yml": "7dd2c962f52f180e11b95510161b2919ec4eac44f861d54f40c6525e8b99bc30",
+    "src/cse_financial_etl/v2/taxonomy/registry.py": "68f645944d0a17a54a0fa0d2874ab1642d355c0bdbabab7d2f1534d60d244415",
+    "tests/v2/golden/real_filings_lock.json": "f99733fd0770e4bb9629c9110b9c8cbdab297c68b334b70754e752d0274795d6"
+  },
+  "issuer_master_sha256": "cd5adabed3be5e7176e90b8352857c4a87ad59fa48eebb11070cbd2f82fc7166",
+  "extra": {
+    "implementation": "CPython"
+  }
+}

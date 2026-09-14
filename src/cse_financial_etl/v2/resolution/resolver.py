@@ -10,6 +10,7 @@ from cse_financial_etl.v2.contracts.enums import (
     AccountingRegime,
     ComparisonRole,
     EntityScope,
+    FirstFailureStage,
     MatchKind,
     PeriodBehavior,
     PublicationStatus,
@@ -35,6 +36,40 @@ _ROW_LABEL_PREFIX = re.compile(r"\s+[\d(]")
 
 def _status(value: object) -> ResolutionStatus:
     return ResolutionStatus.RESOLVED if value is not None else ResolutionStatus.UNRESOLVED
+
+
+def source_admission_failure(
+    candidate: FactCandidate,
+    *,
+    expected_entity_scope: EntityScope | None,
+    registry: ConceptRegistry,
+) -> FirstFailureStage | None:
+    """Return why a candidate cannot become a SourceFact, or None if it can.
+
+    Order matches ``resolve_source_facts``. Missing context is never invented.
+    """
+
+    if candidate.raw_value is None:
+        return FirstFailureStage.NUMERIC_UNPARSED
+    if candidate.concept is None or candidate.concept.metric_code is None:
+        return FirstFailureStage.CONCEPT_UNRESOLVED
+    if candidate.concept_status is not ResolutionStatus.RESOLVED:
+        return FirstFailureStage.CONCEPT_UNRESOLVED
+    if candidate.entity_status is not ResolutionStatus.RESOLVED or candidate.entity_scope is None:
+        return FirstFailureStage.ENTITY_UNRESOLVED
+    if candidate.period_status is not ResolutionStatus.RESOLVED or candidate.period_end is None:
+        return FirstFailureStage.PERIOD_UNRESOLVED
+    if candidate.unit_status is not ResolutionStatus.RESOLVED or candidate.unit_dimension is None:
+        return FirstFailureStage.UNIT_UNRESOLVED
+    if expected_entity_scope is not None and candidate.entity_scope != expected_entity_scope:
+        return FirstFailureStage.PRODUCTION_SELECTION
+    concept = registry.get(candidate.concept.metric_code)
+    if (
+        concept.unit_dimension is UnitDimension.MONETARY
+        and candidate.unit_dimension is not UnitDimension.MONETARY
+    ):
+        return FirstFailureStage.UNIT_DIMENSION_MISMATCH
+    return None
 
 
 def build_candidates(
@@ -140,33 +175,21 @@ def resolve_source_facts(
     facts: list[SourceFact] = []
     for candidate in candidates:
         if (
-            candidate.raw_value is None
-            or candidate.concept is None
-            or candidate.concept.metric_code is None
+            source_admission_failure(
+                candidate,
+                expected_entity_scope=expected_entity_scope,
+                registry=registry,
+            )
+            is not None
         ):
             continue
-        if candidate.concept_status is not ResolutionStatus.RESOLVED:
-            continue
-        if (
-            candidate.entity_status is not ResolutionStatus.RESOLVED
-            or candidate.entity_scope is None
-        ):
-            continue
-        if candidate.period_status is not ResolutionStatus.RESOLVED or candidate.period_end is None:
-            continue
-        if (
-            candidate.unit_status is not ResolutionStatus.RESOLVED
-            or candidate.unit_dimension is None
-        ):
-            continue
-        if expected_entity_scope is not None and candidate.entity_scope != expected_entity_scope:
-            continue
+        assert candidate.concept is not None
+        assert candidate.concept.metric_code is not None
+        assert candidate.entity_scope is not None
+        assert candidate.period_end is not None
+        assert candidate.unit_dimension is not None
+        assert candidate.raw_value is not None
         concept = registry.get(candidate.concept.metric_code)
-        if (
-            concept.unit_dimension is UnitDimension.MONETARY
-            and candidate.unit_dimension is not UnitDimension.MONETARY
-        ):
-            continue
         duration = candidate.duration_months
         if concept.period_behavior in {PeriodBehavior.STOCK, PeriodBehavior.POINT_IN_TIME}:
             duration = None

@@ -320,3 +320,14 @@ Each nontrivial deviation from `AGENT_IMPLEMENTATION_PLAN.md` is recorded here. 
 - **Evidence:** `outputs/manifests/run_manifest_2026-09-09.json` (`extraction_engine: v2`), `outputs/universe_acceptance_2026-09-09.json`. Locked 33 probe remains **209/237**, 0 critical-wrong, recall **88.19%**. Not plan §37.
 - **Affected modules:** `cli.py`, `orchestration/pipeline.py`, `orchestration/resilient_pipeline.py`, `scripts/run_production_pipeline.py`.
 - **Temporary/permanent:** Temporary override. Permanent default stays V1 until gold, frozen universe, current-universe floors, OCR image smoke, and OFFICIAL review pass.
+
+---
+
+## 2026-09-14 — Start V2 extraction investigation; freeze source truth vs policy
+
+- **Decision:** Open branch `v2/extraction-investigation` from audited head `91a9c68`. Lock `docs/v2/SOURCE_METRIC_TRUTH_CONTRACT.md`, a blind source-truth schema, a DEV/HOLDOUT review queue with no expected values, CandidateTrace persistence, and an investigation freeze. Do not add cutover features, do not lower coverage floors, do not set `extraction.engine: v2`, and do not treat the current 33-filing overlay as institutional gold.
+- **Reason:** The 2026-09-09 challenger run failed coverage because we do not yet know which withheld facts are source-true. Gate decisions must be ablated against source truth, not against V1 counts or current publication policy.
+- **Alternatives:** Keep tuning against the 33-file overlay; promote V2; lower 8,924.
+- **Evidence:** Final Extraction Test Program T00–T04. Existing gold explicitly embeds policy such as unlabeled-entity drops.
+- **Affected modules:** `v2/contracts/investigation.py`, `v2/diagnostics/candidate_trace.py`, `v2/diagnostics/investigation_freeze.py`, `v2/resolution/resolver.py`, `tests/v2/source_truth/`, `tests/v2/universe/`, `tests/v2/regression/`.
+- **Temporary/permanent:** Permanent investigation protocol. Extraction behaviour is unchanged except that rejected candidates can be traced.

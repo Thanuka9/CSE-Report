@@ -9,6 +9,10 @@ from cse_financial_etl.v2.contracts.document import CanonicalDocument
 from cse_financial_etl.v2.contracts.enums import AccountingRegime, EntityScope
 from cse_financial_etl.v2.contracts.facts import DerivedFact, SourceFact
 from cse_financial_etl.v2.contracts.statement import CanonicalStatement
+from cse_financial_etl.v2.diagnostics.candidate_trace import (
+    build_candidate_traces,
+    write_candidate_trace,
+)
 from cse_financial_etl.v2.diagnostics.stage_metrics import StageMetrics
 from cse_financial_etl.v2.document.router import read_document
 from cse_financial_etl.v2.resolution.column_context import (
@@ -31,6 +35,9 @@ def run_filing_pipeline(
     accounting_regime: AccountingRegime | None = None,
     issuer_name: str = "",
     issuer_type: str = "",
+    candidate_trace_path: Path | None = None,
+    run_id: str | None = None,
+    code_sha: str | None = None,
 ) -> tuple[
     tuple[CanonicalStatement, ...], tuple[SourceFact, ...], tuple[DerivedFact, ...], StageMetrics
 ]:
@@ -61,6 +68,19 @@ def run_filing_pipeline(
     )
     validated = validate_source_facts(source)
     derived = derive_facts(validated)
+    if candidate_trace_path is not None:
+        traces = build_candidate_traces(
+            candidates,
+            validated,
+            statements=statements,
+            issuer_id=issuer_id,
+            filing_version_id=document.filing_version_id,
+            expected_entity_scope=expected_entity_scope,
+            run_id=run_id,
+            code_sha=code_sha,
+            regime=None if regime is None else regime.value,
+        )
+        write_candidate_trace(candidate_trace_path, traces)
     context_counts = {
         "entity_resolved_candidates": 0,
         "period_resolved_candidates": 0,
@@ -99,6 +119,9 @@ def run_pdf_pipeline(
     accounting_regime: AccountingRegime | None = None,
     issuer_name: str = "",
     issuer_type: str = "",
+    candidate_trace_path: Path | None = None,
+    run_id: str | None = None,
+    code_sha: str | None = None,
 ) -> tuple[
     tuple[CanonicalStatement, ...], tuple[SourceFact, ...], tuple[DerivedFact, ...], StageMetrics
 ]:
@@ -111,4 +134,7 @@ def run_pdf_pipeline(
         accounting_regime=accounting_regime,
         issuer_name=issuer_name,
         issuer_type=issuer_type,
+        candidate_trace_path=candidate_trace_path,
+        run_id=run_id,
+        code_sha=code_sha,
     )
