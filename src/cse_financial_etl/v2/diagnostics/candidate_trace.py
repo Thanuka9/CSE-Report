@@ -123,9 +123,16 @@ def write_candidate_trace(path: Path, traces: Sequence[CandidateTrace]) -> None:
     rows = []
     for trace in traces:
         payload = trace.model_dump(mode="json")
-        payload["concept_candidates"] = list(payload["concept_candidates"])
-        payload["reason_codes"] = list(payload["reason_codes"])
+        payload["concept_candidates"] = dumps(list(payload["concept_candidates"]))
+        payload["reason_codes"] = dumps(list(payload["reason_codes"]))
         payload["extra"] = dumps(payload["extra"], sort_keys=True)
+        for key, value in payload.items():
+            if value is None:
+                payload[key] = ""
         rows.append(payload)
-    frame = pl.DataFrame(rows) if rows else pl.DataFrame({"pdf_sha": []})
+    frame = (
+        pl.DataFrame(rows, infer_schema_length=len(rows))
+        if rows
+        else pl.DataFrame({"pdf_sha": []})
+    )
     frame.write_parquet(path)

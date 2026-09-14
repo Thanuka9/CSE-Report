@@ -11,9 +11,9 @@ Investigation base SHA: `91a9c68bf940d3d9c2a86245f127de88ad4b4b6d`.
 | Gate | Current behaviour | Variants to test | Decision | Evidence |
 |---|---|---|---|---|
 | G01 Required entity semantics | Unresolved entity withholds. Expected issuer metadata is not source evidence. GROUP is never COMPANY. | A local explicit; B statement-level; C document-level; D singleton presentation; E issuer metadata only | UNTESTED | |
-| G02 Partial-context cascade | Whole-monetary-table clearing when only some columns resolve | A current; B no cascade; C per-column; D HeaderGraph | UNTESTED | |
+| G02 Partial-context cascade | Whole-monetary-table clearing when only some columns resolve | A current; B no cascade; C per-column; D HeaderGraph | UNTESTED | Diagnostic harness `g02_ablation` (`cascade` vs `per_column`). Production default remains cascade. |
 | G03 Exact-quarter | FLOW publication requires `duration_months == 3`. 6M/9M/12M withheld. | Keep invariant; measure upstream duration errors vs gate | UNTESTED | |
-| G04 OTHER-page exclusion | Notes/other pages skipped as statements | A blanket skip; B whole-PDF exact alias; C multi-label + context | UNTESTED | |
+| G04 OTHER-page exclusion | Notes/other pages skipped as statements | A blanket skip; B whole-PDF exact alias; C multi-label + context | UNTESTED | Diagnostic `discover_exact_aliases` finds exact aliases without publishing. |
 | G05 Continuation | Explicit continued marker only | A current; B V1 evidenced; C V2 schema-evidence | UNTESTED | |
 | G06 Source conflict | Conflicting current values withheld; no first/earliest win | Keep withholding; test header/entity/duration ownership | UNTESTED | |
 | G07 Collapsed rows | Extra embedded numbers → `AMBIGUOUS_ROW_VALUES` | Reconstruct cells first, then gate | UNTESTED | |

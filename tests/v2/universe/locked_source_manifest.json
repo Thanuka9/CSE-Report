@@ -1,0 +1,332 @@
+[
+  {
+    "filing_version_id": "JKH.N0000-2026-06-30",
+    "issuer_id": "JKH.N0000",
+    "symbol": "JKH.N0000",
+    "period": "2026-06-30",
+    "local_file": "data/raw/filings/JOHN_KEELLS_HOLDINGS_PLC/2026-06-30_508_1785229278745.pdf",
+    "pdf_sha256": "2c94f23f3f62769c1a22f5a51b03665feef60d22bfb8f58355b52ceac8b254c5",
+    "file_size": 241458,
+    "issuer_type": "HOLDING"
+  },
+  {
+    "filing_version_id": "COMB.N0000-2026-06-30",
+    "issuer_id": "COMB.N0000",
+    "symbol": "COMB.N0000",
+    "period": "2026-06-30",
+    "local_file": "data/raw/filings/COMMERCIAL_BANK_OF_CEYLON_PLC/2026-06-30_369_1786618965674.pdf",
+    "pdf_sha256": "6e6ca4efd1778c18293bfc33fb75c05a9fce494f8e8de12de41391b6fb90279a",
+    "file_size": 878885,
+    "issuer_type": "BANK"
+  },
+  {
+    "filing_version_id": "DIAL.N0000-2026-06-30",
+    "issuer_id": "DIAL.N0000",
+    "symbol": "DIAL.N0000",
+    "period": "2026-06-30",
+    "local_file": "data/raw/filings/DIALOG_AXIATA_PLC/2026-06-30_389_1786711190916.pdf",
+    "pdf_sha256": "c5a4d964e95f08e2314cf47f499924064ecea80d8a499296da05797aca7c79ae",
+    "file_size": 724342,
+    "issuer_type": "GENERAL"
+  },
+  {
+    "filing_version_id": "JAT.N0000-2026-06-30",
+    "issuer_id": "JAT.N0000",
+    "symbol": "JAT.N0000",
+    "period": "2026-06-30",
+    "local_file": "data/raw/filings/JAT_HOLDINGS_PLC/2026-06-30_2353_1786011152811.27_Q1_SIGNED.pdf",
+    "pdf_sha256": "227a9232dd3804c87b42b8c1d6bd7be65708df6b3d69e54499dbb459c58c73e3",
+    "file_size": 912265,
+    "issuer_type": "HOLDING"
+  },
+  {
+    "filing_version_id": "CIC.N0000-2025-12-31",
+    "issuer_id": "CIC.N0000",
+    "symbol": "CIC.N0000",
+    "period": "2025-12-31",
+    "local_file": "data/raw/filings/C_I_C_HOLDINGS_PLC/2025-12-31_493_1770119995452.pdf",
+    "pdf_sha256": "5d64e71e80ca1db87011b5d580b37cd2baf6e909d0ddb2632de9ca4547cc63b9",
+    "file_size": 476616,
+    "issuer_type": "HOLDING"
+  },
+  {
+    "filing_version_id": "PKME.N0000-2026-06-30",
+    "issuer_id": "PKME.N0000",
+    "symbol": "PKME.N0000",
+    "period": "2026-06-30",
+    "local_file": "data/raw/filings/DIGITAL_MOBILITY_SOLUTIONS_LANKA_PLC/2026-06-30_3218_1785237350161.pdf",
+    "pdf_sha256": "261f41c0eab405b76a395b97b8e3caa6a20da18f1b0d226d4cd9bf3c758a34e2",
+    "file_size": 3490688,
+    "issuer_type": "GENERAL"
+  },
+  {
+    "filing_version_id": "NDB.N0000-2026-06-30",
+    "issuer_id": "NDB.N0000",
+    "symbol": "NDB.N0000",
+    "period": "2026-06-30",
+    "local_file": "data/raw/filings/NATIONAL_DEVELOPMENT_BANK_PLC/2026-06-30_386_1784717094209.pdf",
+    "pdf_sha256": "f334e04638c7ceedafe0650b844dd1b23bb09e24c4191cd249c74f052f1a7331",
+    "file_size": 4714823,
+    "issuer_type": "BANK"
+  },
+  {
+    "filing_version_id": "ABL.N0000-2026-06-30",
+    "issuer_id": "ABL.N0000",
+    "symbol": "ABL.N0000",
+    "period": "2026-06-30",
+    "local_file": "data/raw/filings/AMANA_BANK_PLC/2026-06-30_1303_1786627989885.pdf",
+    "pdf_sha256": "02539c46642b05c6c69cb1ddece7be09a9d04bc8b494dc747f130e1cae4d5c8f",
+    "file_size": 545754,
+    "issuer_type": "BANK"
+  },
+  {
+    "filing_version_id": "CBNK.N0000-2026-06-30",
+    "issuer_id": "CBNK.N0000",
+    "symbol": "CBNK.N0000",
+    "period": "2026-06-30",
+    "local_file": "data/raw/filings/CARGILLS_BANK_PLC/2026-06-30_3118_1786612056865.pdf",
+    "pdf_sha256": "382b42a3d85eacd9cbb6a6df0e6e1558f608eb70f9f74654db8822908a1eca82",
+    "file_size": 693899,
+    "issuer_type": "BANK"
+  },
+  {
+    "filing_version_id": "DFCC.N0000-2026-06-30",
+    "issuer_id": "DFCC.N0000",
+    "symbol": "DFCC.N0000",
+    "period": "2026-06-30",
+    "local_file": "data/raw/filings/DFCC_BANK_PLC/2026-06-30_371_1786617016139.pdf",
+    "pdf_sha256": "2977ceec9294fe2dd33076ab14f3fc658cd3532c59d001349423dbf447f33075",
+    "file_size": 993717,
+    "issuer_type": "BANK"
+  },
+  {
+    "filing_version_id": "HNB.N0000-2026-06-30",
+    "issuer_id": "HNB.N0000",
+    "symbol": "HNB.N0000",
+    "period": "2026-06-30",
+    "local_file": "data/raw/filings/HATTON_NATIONAL_BANK_PLC/2026-06-30_373_1786545582269.pdf",
+    "pdf_sha256": "539398c855112ef3537cfedca0507e68d9773990dc3dc320466e1c143076a6a4",
+    "file_size": 1269598,
+    "issuer_type": "BANK"
+  },
+  {
+    "filing_version_id": "SAMP.N0000-2026-06-30",
+    "issuer_id": "SAMP.N0000",
+    "symbol": "SAMP.N0000",
+    "period": "2026-06-30",
+    "local_file": "data/raw/filings/SAMPATH_BANK_PLC/2026-06-30_431_1786590688111.06.2026.pdf",
+    "pdf_sha256": "ba28a234f3a5a1f269d0273b1a6f00e743ca15c5f7caa33df3bb54bcbda30592",
+    "file_size": 793062,
+    "issuer_type": "BANK"
+  },
+  {
+    "filing_version_id": "SEYB.N0000-2026-06-30",
+    "issuer_id": "SEYB.N0000",
+    "symbol": "SEYB.N0000",
+    "period": "2026-06-30",
+    "local_file": "data/raw/filings/SEYLAN_BANK_PLC/2026-06-30_443_1785411925853.pdf",
+    "pdf_sha256": "fda0139e0831beabbc2ac36c0f6c007d5a3ee43768d748eca89f2d6c3e1f8659",
+    "file_size": 2728006,
+    "issuer_type": "BANK"
+  },
+  {
+    "filing_version_id": "HDFC.N0000-2026-06-30",
+    "issuer_id": "HDFC.N0000",
+    "symbol": "HDFC.N0000",
+    "period": "2026-06-30",
+    "local_file": "data/raw/filings/HOUSING_DEVELOPMENT_FINANCE_CORPORATION_BANK_OF_SL/2026-06-30_376_1786614164242.06.2026.pdf",
+    "pdf_sha256": "a625e2d179b5a356d35a89b5a98be354c313fd977e5cdc395e3249734f2eeacb",
+    "file_size": 300610,
+    "issuer_type": "BANK"
+  },
+  {
+    "filing_version_id": "NTB.N0000-2026-06-30",
+    "issuer_id": "NTB.N0000",
+    "symbol": "NTB.N0000",
+    "period": "2026-06-30",
+    "local_file": "data/raw/filings/NATIONS_TRUST_BANK_PLC/2026-06-30_387_1786611868010.pdf",
+    "pdf_sha256": "3af1b4619c200a134b0cc2ef9f3b0b48ae94ab5d22b7207f83985e526b2bc08d",
+    "file_size": 1348489,
+    "issuer_type": "BANK"
+  },
+  {
+    "filing_version_id": "AAF.N0000-2026-06-30",
+    "issuer_id": "AAF.N0000",
+    "symbol": "AAF.N0000",
+    "period": "2026-06-30",
+    "local_file": "data/raw/filings/ASIA_ASSET_FINANCE_PLC/2026-06-30_1108_1785236157796.pdf",
+    "pdf_sha256": "d8cdb3dd0e3d2871d00b5e2f3e4d61ceaca3c5b91f9e1287fc5b6043a508c43a",
+    "file_size": 1493819,
+    "issuer_type": "FINANCE"
+  },
+  {
+    "filing_version_id": "PLC.N0000-2026-06-30",
+    "issuer_id": "PLC.N0000",
+    "symbol": "PLC.N0000",
+    "period": "2026-06-30",
+    "local_file": "data/raw/filings/PEOPLE_S_LEASING_FINANCE_PLC/2026-06-30_1103_1786413386791.pdf",
+    "pdf_sha256": "bcb91707f5077c00bb63418ffb3242422bbef9fdabbd2108acc0872897e7ccef",
+    "file_size": 2413160,
+    "issuer_type": "FINANCE"
+  },
+  {
+    "filing_version_id": "LFIN.N0000-2026-06-30",
+    "issuer_id": "LFIN.N0000",
+    "symbol": "LFIN.N0000",
+    "period": "2026-06-30",
+    "local_file": "data/raw/filings/LB_FINANCE_PLC/2026-06-30_379_1784195933058.06.2026.pdf",
+    "pdf_sha256": "49e48c1c031a79fdfe35b9fec765eb6772640d5148e972323b59b7ce5356082f",
+    "file_size": 1366684,
+    "issuer_type": "FINANCE"
+  },
+  {
+    "filing_version_id": "LCBF.N0000-2026-06-30",
+    "issuer_id": "LCBF.N0000",
+    "symbol": "LCBF.N0000",
+    "period": "2026-06-30",
+    "local_file": "data/raw/filings/LANKA_CREDIT_AND_BUSINESS_FINANCE_PLC/2026-06-30_2512_1785493631763.06.2026 V2 - SGD.pdf",
+    "pdf_sha256": "8a15e4869f70fdf988f3afc6821af1e206f4d74424c19ab9558b3a28b2219996",
+    "file_size": 361401,
+    "issuer_type": "FINANCE"
+  },
+  {
+    "filing_version_id": "CALF.N0000-2026-06-30",
+    "issuer_id": "CALF.N0000",
+    "symbol": "CALF.N0000",
+    "period": "2026-06-30",
+    "local_file": "data/raw/filings/DIALOG_FINANCE_PLC/2026-06-30_1101_1786093873886.pdf",
+    "pdf_sha256": "8cd16c62b7e952cfac525accf1259bcef35badd1ab781a4abe0c9c088f74f8d0",
+    "file_size": 384287,
+    "issuer_type": "FINANCE"
+  },
+  {
+    "filing_version_id": "ATL.N0000-2026-06-30",
+    "issuer_id": "ATL.N0000",
+    "symbol": "ATL.N0000",
+    "period": "2026-06-30",
+    "local_file": "data/raw/filings/AMANA_TAKAFUL_PLC/2026-06-30_361_1786698848189.pdf",
+    "pdf_sha256": "f04f428794cf35be4df61b699c67b055b0d28f857c62bdda510ae669cf7d264a",
+    "file_size": 801310,
+    "issuer_type": "INSURANCE"
+  },
+  {
+    "filing_version_id": "AINS.N0000-2026-06-30",
+    "issuer_id": "AINS.N0000",
+    "symbol": "AINS.N0000",
+    "period": "2026-06-30",
+    "local_file": "data/raw/filings/ARPICO_INSURANCE_PLC/2026-06-30_1405_1786702427086.pdf",
+    "pdf_sha256": "484f2862c1f76b97fb31a88b78b42a90894fa27ae6b12084f5ccf70ade0352cf",
+    "file_size": 906245,
+    "issuer_type": "INSURANCE"
+  },
+  {
+    "filing_version_id": "UAL.N0000-2026-06-30",
+    "issuer_id": "UAL.N0000",
+    "symbol": "UAL.N0000",
+    "period": "2026-06-30",
+    "local_file": "data/raw/filings/UNION_ASSURANCE_PLC/2026-06-30_450_1786698498893.pdf",
+    "pdf_sha256": "a2e21a24a346699c3ea8dc448307a3567dd28b16e3dc1abf35c5d0fde7719661",
+    "file_size": 181964,
+    "issuer_type": "INSURANCE"
+  },
+  {
+    "filing_version_id": "GREG.N0000-2026-06-30",
+    "issuer_id": "GREG.N0000",
+    "symbol": "GREG.N0000",
+    "period": "2026-06-30",
+    "local_file": "data/raw/filings/AMBEON_HOLDINGS_PLC/2026-06-30_782_1786930433403.06.2026.pdf",
+    "pdf_sha256": "6d35b83c9c587fdec93a596c4dec8aca48d7ba0cfcdf2e136ab18f197ec20fcc",
+    "file_size": 456273,
+    "issuer_type": "HOLDING"
+  },
+  {
+    "filing_version_id": "KPHL.N0000-2026-06-30",
+    "issuer_id": "KPHL.N0000",
+    "symbol": "KPHL.N0000",
+    "period": "2026-06-30",
+    "local_file": "data/raw/filings/KAPRUKA_HOLDINGS_PLC/2026-06-30_2714_1786700376627.pdf",
+    "pdf_sha256": "731a35e23b86c79516b320a8120a30b57344fc045904880e3f70f2076f47d562",
+    "file_size": 1363104,
+    "issuer_type": "HOLDING"
+  },
+  {
+    "filing_version_id": "YORK.N0000-2026-06-30",
+    "issuer_id": "YORK.N0000",
+    "symbol": "YORK.N0000",
+    "period": "2026-06-30",
+    "local_file": "data/raw/filings/YORK_ARCADE_HOLDINGS_PLC/2026-06-30_641_1786101193519.06.2026.pdf",
+    "pdf_sha256": "18bc853800cc960ca4c94fe5d9e36b2acd70d9eb9ddaeaf492ad188589525d2d",
+    "file_size": 320183,
+    "issuer_type": "HOLDING"
+  },
+  {
+    "filing_version_id": "ACL.N0000-2026-06-30",
+    "issuer_id": "ACL.N0000",
+    "symbol": "ACL.N0000",
+    "period": "2026-06-30",
+    "local_file": "data/raw/filings/ACL_CABLES_PLC/2026-06-30_644_1786700245863.06.2026 1.pdf",
+    "pdf_sha256": "22e1af573e5614deab5f924fd099c3567fe5ed64b1a69b67af860ebd5fc3ecd9",
+    "file_size": 342178,
+    "issuer_type": "GENERAL"
+  },
+  {
+    "filing_version_id": "SPEN.N0000-2026-06-30",
+    "issuer_id": "SPEN.N0000",
+    "symbol": "SPEN.N0000",
+    "period": "2026-06-30",
+    "local_file": "data/raw/filings/AITKEN_SPENCE_PLC/2026-06-30_501_1786698547448.pdf",
+    "pdf_sha256": "7c6277681925f2e978613e8f34bab05cc6a49c12f95c8aa3d1e38f9274e73b78",
+    "file_size": 808212,
+    "issuer_type": "GENERAL"
+  },
+  {
+    "filing_version_id": "HAYL.N0000-2026-06-30",
+    "issuer_id": "HAYL.N0000",
+    "symbol": "HAYL.N0000",
+    "period": "2026-06-30",
+    "local_file": "data/raw/filings/HAYLEYS_PLC/2026-06-30_505_1786534657894.27 CSE.pdf",
+    "pdf_sha256": "99ef18fee56ea59ec5176e859785824d28aba25c0c5f8c2cf3f8652908c44c60",
+    "file_size": 717389,
+    "issuer_type": "GENERAL"
+  },
+  {
+    "filing_version_id": "CTC.N0000-2026-06-30",
+    "issuer_id": "CTC.N0000",
+    "symbol": "CTC.N0000",
+    "period": "2026-06-30",
+    "local_file": "data/raw/filings/CEYLON_TOBACCO_COMPANY_PLC/2026-06-30_460_1786619524644.pdf",
+    "pdf_sha256": "91197f28f7c5c56c03775ced351bbb94a6095efc15bec1a39c12f7bea1235f2e",
+    "file_size": 574053,
+    "issuer_type": "GENERAL"
+  },
+  {
+    "filing_version_id": "DIST.N0000-2026-06-30",
+    "issuer_id": "DIST.N0000",
+    "symbol": "DIST.N0000",
+    "period": "2026-06-30",
+    "local_file": "data/raw/filings/DISTILLERIES_COMPANY_OF_SRI_LANKA_PLC/2026-06-30_463_1786620025048.pdf",
+    "pdf_sha256": "d7d473b0519ea4f9791505abf1edde6475a353415c88a4ead1bbcde0fd199024",
+    "file_size": 265426,
+    "issuer_type": "GENERAL"
+  },
+  {
+    "filing_version_id": "DIMO.N0000-2026-06-30",
+    "issuer_id": "DIMO.N0000",
+    "symbol": "DIMO.N0000",
+    "period": "2026-06-30",
+    "local_file": "data/raw/filings/DIESEL_MOTOR_ENGINEERING_PLC/2026-06-30_694_1786620097859.pdf",
+    "pdf_sha256": "8e95f81413db5d0a7d17afc4bf1e1a273c217ae4f3ae6cd2d3382783cb1f2c36",
+    "file_size": 3350665,
+    "issuer_type": "GENERAL"
+  },
+  {
+    "filing_version_id": "RICH.N0000-2026-06-30",
+    "issuer_id": "RICH.N0000",
+    "symbol": "RICH.N0000",
+    "period": "2026-06-30",
+    "local_file": "data/raw/filings/RICHARD_PIERIS_AND_COMPANY_PLC/2026-06-30_509_1786618793157.pdf",
+    "pdf_sha256": "b52a0a63a614a0fcebf869482ec6a7660b50659808df76fd63990419f0486ad0",
+    "file_size": 985598,
+    "issuer_type": "GENERAL"
+  }
+]

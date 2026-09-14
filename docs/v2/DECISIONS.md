@@ -331,3 +331,14 @@ Each nontrivial deviation from `AGENT_IMPLEMENTATION_PLAN.md` is recorded here. 
 - **Evidence:** Final Extraction Test Program T00–T04. Existing gold explicitly embeds policy such as unlabeled-entity drops.
 - **Affected modules:** `v2/contracts/investigation.py`, `v2/diagnostics/candidate_trace.py`, `v2/diagnostics/investigation_freeze.py`, `v2/resolution/resolver.py`, `tests/v2/source_truth/`, `tests/v2/universe/`, `tests/v2/regression/`.
 - **Temporary/permanent:** Permanent investigation protocol. Extraction behaviour is unchanged except that rejected candidates can be traced.
+
+---
+
+## 2026-09-14 — Locked-set V2 A/B baseline and V1 comparator
+
+- **Decision:** Run T05-T09 on the locked 33 PDFs. Require V2 A/B determinism. Audit lineage and derived facts separately. Build a V1/V2 disagreement ledger that stays `NOT_ADJUDICATED`. Do not treat V1-only rows as V2 misses. Do not change fail-closed gates from these counts.
+- **Reason:** The investigation needs a clean baseline before gate ablation. Same-input V2 A/B was deterministic (905 source facts, 136 derived). Mixed native/OCR pages exist on 7 filings. 130 V1-only and 61 value disagreements need human source truth.
+- **Alternatives:** Tune against V1 counts; disable cascade to raise SourceFact counts; claim T10 complete.
+- **Evidence:** `tests/v2/universe/baseline_run_summary.json`, `tests/v2/universe/locked_source_manifest.json`, `tests/v2/universe/defect_family_ranking.json`.
+- **Affected modules:** `v2/diagnostics/baseline.py`, `lineage.py`, `issue_ledger.py`, `gate_ablation.py`, `page_routing.py`, `discovery.py`.
+- **Temporary/permanent:** Baseline artefacts are the investigation pin. Gate KEEP/NARROW/REPLACE/REMOVE remains UNTESTED until source truth exists.

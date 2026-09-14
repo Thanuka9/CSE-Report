@@ -1,0 +1,34 @@
+{
+  "generated_at": "2026-09-14T13:25:02.875765+00:00",
+  "case_count": 33,
+  "all_deterministic": true,
+  "source_facts": 905,
+  "derived_facts": 136,
+  "mixed_native_ocr_filings": 7,
+  "v1_errors": 0,
+  "lineage": {
+    "LINEAGE_COMPLETE": 790,
+    "CONTEXT_EVIDENCE_INCOMPLETE": 17,
+    "SOURCE_VALUE_NOT_REPRODUCIBLE": 98
+  },
+  "derived_audit": {
+    "DERIVED_COMPLETE": 136
+  },
+  "disagreement": {
+    "REFERENCE_ONLY_DISAGREEMENT": 130,
+    "V2_ONLY_DISAGREEMENT": 442,
+    "AGREEMENT": 139,
+    "VALUE_DISAGREEMENT": 61
+  },
+  "include_v1": true,
+  "note": "V1 rows are comparator-only. Disagreements are not source truth. source_truth_status remains NOT_ADJUDICATED.",
+  "mixed_native_ocr_case_ids": [
+    "JKH.N0000-2026-06-30",
+    "COMB.N0000-2026-06-30",
+    "PKME.N0000-2026-06-30",
+    "AAF.N0000-2026-06-30",
+    "PLC.N0000-2026-06-30",
+    "LFIN.N0000-2026-06-30",
+    "AINS.N0000-2026-06-30"
+  ]
+}

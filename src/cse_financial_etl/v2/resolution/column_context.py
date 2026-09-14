@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 from datetime import date
 from decimal import Decimal
+from typing import Literal
 
 from cse_financial_etl.v2.contracts.document import CanonicalDocument, CanonicalLine, CanonicalPage
 from cse_financial_etl.v2.contracts.enums import (
@@ -170,6 +171,7 @@ def bind_column_context(
     *,
     expected_entity_scope: EntityScope | None = None,
     target_period_end: date | None = None,
+    partial_monetary: Literal["cascade", "per_column"] = "cascade",
 ) -> CanonicalStatement:
     """Fill column context from heading evidence only. Query targets are not source."""
 
@@ -255,7 +257,11 @@ def bind_column_context(
                 unit_evidence=evidence if unit[2] is not None else (),
             )
         )
-    columns = _fail_closed_partial_monetary_columns(statement, columns)
+    columns = (
+        _fail_closed_partial_monetary_columns(statement, columns)
+        if partial_monetary == "cascade"
+        else columns
+    )
     return statement.model_copy(update={"columns": tuple(columns)})
 
 
