@@ -83,6 +83,12 @@ class PublicationStatus(StrEnum):
     PUBLISHED = "PUBLISHED"
 
 
+class ProductionSelectionStatus(StrEnum):
+    SELECTED = "SELECTED"
+    NOT_SELECTED = "NOT_SELECTED"
+    NOT_APPLICABLE = "NOT_APPLICABLE"
+
+
 class FactKind(StrEnum):
     SOURCE = "SOURCE"
     DERIVED = "DERIVED"

@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 from cse_financial_etl.v2.diagnostics.experiments import run_locked_experiments
+from cse_financial_etl.v2.diagnostics.investigation_freeze import collect_investigation_freeze
 
 
 def _root() -> Path:
@@ -30,6 +31,7 @@ def main(argv: list[str] | None = None) -> int:
         ledger_dir=root / "outputs" / "v2_extraction_baseline",
         split_path=root / "tests" / "v2" / "source_truth" / "split.json",
         limit=args.limit,
+        freeze=collect_investigation_freeze(root),
     )
     summary = result["summary"]
     (root / "tests" / "v2" / "universe" / "experiment_summary.json").write_text(

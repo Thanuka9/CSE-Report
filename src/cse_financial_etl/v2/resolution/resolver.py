@@ -8,7 +8,6 @@ from cse_financial_etl.v2.contracts.concepts import ConceptCandidate
 from cse_financial_etl.v2.contracts.enums import (
     AccountingRegime,
     ComparisonRole,
-    EntityScope,
     FirstFailureStage,
     MatchKind,
     PeriodBehavior,
@@ -45,12 +44,12 @@ def _status(value: object) -> ResolutionStatus:
 def source_admission_failure(
     candidate: FactCandidate,
     *,
-    expected_entity_scope: EntityScope | None,
     registry: ConceptRegistry,
 ) -> FirstFailureStage | None:
     """Return why a candidate cannot become a SourceFact, or None if it can.
 
     Order matches ``resolve_source_facts``. Missing context is never invented.
+    Production entity selection is not a source-admission failure.
     """
 
     if candidate.raw_value is None:
@@ -65,8 +64,6 @@ def source_admission_failure(
         return FirstFailureStage.PERIOD_UNRESOLVED
     if candidate.unit_status is not ResolutionStatus.RESOLVED or candidate.unit_dimension is None:
         return FirstFailureStage.UNIT_UNRESOLVED
-    if expected_entity_scope is not None and candidate.entity_scope != expected_entity_scope:
-        return FirstFailureStage.PRODUCTION_SELECTION
     concept = registry.get(candidate.concept.metric_code)
     if (
         concept.unit_dimension is UnitDimension.MONETARY
@@ -100,7 +97,7 @@ def build_candidates(
             if cell.raw_text.strip().endswith("%"):
                 continue
             column = columns[cell.column_id]
-            candidate = _candidate(statement, row, column, cell, primary, concepts)
+            candidate = _candidate(statement, row, column, cell, primary, tuple(concepts))
             _, embedded = split_label_and_values(_row_line_text(row, cell))
             if len(embedded) > len(row.cells):
                 candidate = candidate.model_copy(
@@ -119,7 +116,7 @@ def _candidate(
     column: StatementColumn,
     cell: StatementCell,
     concept: ConceptCandidate,
-    all_concepts: list[ConceptCandidate],
+    all_concepts: tuple[ConceptCandidate, ...],
 ) -> FactCandidate:
     ambiguous = (
         sum(1 for item in all_concepts if item.metric_code and item.match_kind != MatchKind.ABSTAIN)
@@ -146,6 +143,7 @@ def _candidate(
         row_id=row.row_id,
         column_id=column.column_id,
         concept=concept,
+        concept_alternatives=all_concepts,
         concept_status=concept_status,
         entity_scope=column.entity_scope,
         entity_status=_status(column.entity_scope),
@@ -171,21 +169,13 @@ def resolve_source_facts(
     issuer_id: str,
     filing_version_id: str,
     registry: ConceptRegistry | None = None,
-    expected_entity_scope: EntityScope | None = None,
 ) -> tuple[SourceFact, ...]:
     """Emit SourceFacts only when required source context is present. Never assume."""
 
     registry = registry or load_registry()
     facts: list[SourceFact] = []
     for candidate in candidates:
-        if (
-            source_admission_failure(
-                candidate,
-                expected_entity_scope=expected_entity_scope,
-                registry=registry,
-            )
-            is not None
-        ):
+        if source_admission_failure(candidate, registry=registry) is not None:
             continue
         assert candidate.concept is not None
         assert candidate.concept.metric_code is not None
@@ -211,14 +201,15 @@ def resolve_source_facts(
             publication = PublicationStatus.WITHHELD
             reasons.append("CUMULATIVE_ONLY")
         scale = candidate.monetary_scale or Decimal("1")
-        if concept.unit_dimension is not UnitDimension.MONETARY:
-            # Per-share / ratio facts must not inherit statement Rs/'000 scaling.
+        if concept.unit_dimension is UnitDimension.PER_SHARE:
+            # Cents/share normalize to Rs/share. Do not inherit statement Rs/'000.
+            scale = scale if scale == Decimal("0.01") else Decimal("1")
+            normalized = candidate.raw_value * scale
+        elif concept.unit_dimension is not UnitDimension.MONETARY:
             scale = Decimal("1")
-        normalized = (
-            candidate.raw_value * scale
-            if concept.unit_dimension is UnitDimension.MONETARY
-            else candidate.raw_value
-        )
+            normalized = candidate.raw_value
+        else:
+            normalized = candidate.raw_value * scale
         facts.append(
             SourceFact(
                 fact_id=candidate.candidate_id.replace("-cand", "-fact"),

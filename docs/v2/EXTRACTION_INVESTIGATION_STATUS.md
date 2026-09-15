@@ -9,16 +9,16 @@ Branch: `v2/extraction-investigation`.
 
 | Task | Status | Evidence |
 |---|---|---|
-| T00 Freeze | DONE | `tests/v2/universe/investigation_freeze.json` |
-| T01 Source Metric Truth Contract | DONE | `docs/v2/SOURCE_METRIC_TRUTH_CONTRACT.md`. OPEN: PAT vs attributable; TOTAL_EQUITY vs owners; cents/share `0.01`; document-level entity (G01). |
+| T00 Freeze | DONE | `tests/v2/universe/investigation_freeze.json` records `investigation_base_sha` and `actual_code_sha`. |
+| T01 Source Metric Truth Contract | DONE | PAT = total period profit, not attributable. TOTAL_EQUITY = inclusive total, not owners. BANK TOP_LINE = Gross income. cents/share scale `0.01`. G01 document-level entity remains UNTESTED. |
 | T02 Neutral schema | DONE | `src/cse_financial_etl/v2/contracts/investigation.py` |
-| T03 DEV/HOLDOUT split | DONE | DEV 22 / HOLDOUT 11. `items.jsonl` empty. |
-| T04 CandidateTrace | DONE | Rejected candidates retained. |
-| T05–T09 Locked-33 baseline | DONE | 33/33 deterministic. 905 SourceFacts. V1 comparator-only. |
+| T03 DEV/HOLDOUT split | DONE | Locked 33 = DEV/regression. New unseen 12-filing HOLDOUT in `holdout_manifest.json`. Do not inspect holdout. `items.jsonl` empty. |
+| T04 CandidateTrace | DONE | Exact in-run candidates. Production selection recorded separately from publication. |
+| T05–T09 Locked-33 baseline | DONE | 33/33 deterministic on fresh read/parse A/B. 1642 SourceFacts (all proven entities). V1 comparator-only. Production selection is separate. |
 | T10 Blind adjudication | QUEUE ONLY | `tests/v2/source_truth/t10_review_queue.json` (40 DEV pointers, no comparator values). **Human blocked.** Not gold. |
 | T11 G02 ablation | DIAGNOSTIC | Cascade 766 = per_column 766. Decision **UNTESTED**. |
-| T12 Header H0/H1/H2 | H0 ONLY | Locked-33 H0: 635/891 entity, 715 period, 494 duration, 585 comparison, 873 unit columns resolved. H1 not ported. **H2 not built.** |
-| T13 Unit U0/U1/U2 | U0 ONLY | Locked-33: 18 unit-unresolved columns, 0 cents evidence, 0 USD columns. U0 parses USD as USD with no FX. cents/share scale **OPEN**. **U2 not built.** |
+| T12 Header H0/H1/H2 | H0 ONLY | Locked-33 H0: 635/891 entity, 715 period, 494 duration, 715 comparison, 873 unit columns resolved. H1 not ported. **H2 not built.** |
+| T13 Unit U0/U1/U2 | U0 ONLY | cents/share scale locked at `0.01`. **U2 not built.** |
 | T14 Page router P0/P1/P2 | P1 OPT-IN | Production P0. P1 census: 7 mixed filings, 9 empty pages. No Tesseract. **P2 not built.** |
 | T15 Continuation | DIAGNOSTIC | Locked-33: 0 explicit continuation regions. Schema-evidence continuation not enabled. **UNTESTED.** |
 | T16 Whole-PDF discovery | DIAGNOSTIC | 32 exact hits, 9 other-page. Does not publish. |
@@ -26,9 +26,9 @@ Branch: `v2/extraction-investigation`.
 | T18 Concept semantics | DIAGNOSTIC | PAT/PBT/Revenue positives; EBITDA, attributable, closing price, bank Interest income negatives. |
 | T19 Issuer/regime audit | DIAGNOSTIC | `audit_issuer_regime`. Name heuristics are not final truth. |
 | T20 Defect ranking | DONE | `tests/v2/universe/defect_family_ranking.json`. Not source-confirmed. |
-| T21 Generalized fix | PARTIAL | Cell-level `SourceRef` cleared value-reproducible failures. Narrative fuzzy TOP_LINE on highlights/SOFP is now abstained (SEYB). Remaining 16 `CONTEXT_EVIDENCE_INCOMPLETE` are GREG FLOW rows headed `Period ended` with no month count. Duration is not invented. |
+| T21 Generalized fix | PARTIAL | Cell-level `SourceRef` cleared value-reproducible failures. Narrative fuzzy TOP_LINE on highlights/SOFP is now abstained (SEYB). Remaining 36 `CONTEXT_EVIDENCE_INCOMPLETE` are FLOW rows headed `Period ended` with no month count. Duration is not invented. |
 | T22–T24 Iterate | BLOCKED | Needs T10 source-confirmed families. |
-| T25 HOLDOUT gold | BLOCKED | Do not inspect holdout to tune rules. |
+| T25 HOLDOUT gold | BLOCKED | New unseen holdout. Do not inspect holdout to tune rules. |
 | T26 Frozen-universe A/B | BLOCKED | September-10 artefacts not in-repo. |
 | T27 SOURCE_VALIDATED_BASELINE | BLOCKED | |
 | T28 Certification | BLOCKED | |
@@ -42,6 +42,21 @@ Branch: `v2/extraction-investigation`.
 - Do not enable P1 as production without Tesseract proof.
 - Do not choose H2/U2/P2; they are not built.
 - G09 currently infers COMPANY on EPS_NOTE when the blob has no Group. That is **not** source-confirmed KEEP.
+
+## Pre-T10 infrastructure
+
+Source extraction no longer filters by expected production entity. Production
+selection is measured separately. CandidateTrace uses the exact pipeline
+candidates. Full read/parse A/B is required for the locked baseline. Canonical
+freeze, baseline, experiments, and ranking share one `actual_code_sha`. Do not
+start T10 human review until this branch's CI is green.
+
+Investigation ruff, mypy, and `tests/v2` are green. Canonical artefacts share
+`actual_code_sha`. CandidateTrace records `candidate_id` and SourceFact linkage.
+Run-level canonical parquet/jsonl files are assembled after the locked A/B.
+Full `pytest` still has 8 V1 universe failure-pack failures
+that call `extract_filing` and are unchanged versus `e92689d`. Those PDFs are
+gitignored, so GitHub CI skips that file.
 
 ## Cutover document
 

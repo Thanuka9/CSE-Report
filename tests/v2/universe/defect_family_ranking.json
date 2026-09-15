@@ -1,6 +1,7 @@
 {
   "note": "Diagnostic ranking only. Not source-confirmed. V1 is not truth. Do not fix by chasing these counts.",
   "investigation_base_sha": "91a9c68bf940d3d9c2a86245f127de88ad4b4b6d",
+  "actual_code_sha": "e92689dabc400e3609e64a9d50512e99d9374dec:dirty:0e06ef8bd0b3",
   "locked_set": "v2-real-gold-lock-2026-09-13",
   "families": [
     {
@@ -14,7 +15,7 @@
     {
       "rank": 2,
       "family": "REFERENCE_ONLY_DISAGREEMENT",
-      "count": 130,
+      "count": 131,
       "unit": "source-target facts",
       "why": "V1 emitted a target metric V2 did not. Could be V2 miss or V1 false positive.",
       "next": "T10 blind source adjudication on DEV. Queue is tests/v2/source_truth/t10_review_queue.json. items.jsonl stays empty."
@@ -22,33 +23,33 @@
     {
       "rank": 3,
       "family": "VALUE_DISAGREEMENT",
-      "count": 61,
+      "count": 60,
       "unit": "source-target facts",
       "why": "Same identity, different normalized value. Could be scale, duration, or wrong cell.",
-      "next": "T10 plus header/unit bake-off on those rows. First 38 T10 queue items are DEV VALUE_DISAGREEMENT."
+      "next": "T10 plus header/unit bake-off on those rows. First T10 queue items are DEV VALUE_DISAGREEMENT."
     },
     {
       "rank": 4,
       "family": "CONTEXT_EVIDENCE_INCOMPLETE",
-      "count": 16,
+      "count": 36,
       "unit": "emitted SourceFacts",
-      "why": "Emitted facts missing duration or other required FLOW context in the audit. All 16 remaining are GREG rows headed Period ended with no month count. SEYB narrative TOP_LINE on a highlights page was fail-closed.",
+      "why": "Emitted facts missing duration or other required FLOW context in the audit. Do not invent duration from a Period ended heading with no month count.",
       "next": "G03 upstream duration resolution vs gate. Do not allow 6M/9M as Q4."
     },
     {
       "rank": 5,
       "family": "V2_ONLY_DISAGREEMENT",
-      "count": 442,
+      "count": 965,
       "unit": "source-target facts",
-      "why": "V2 SourceFacts with no V1 comparator row. Includes comparatives and extra entity columns. Not extra recall until production selection is scored separately.",
-      "next": "Separate extraction vs production selection."
+      "why": "V2 SourceFacts with no V1 comparator row. Includes comparatives and extra entity columns now that source extraction no longer filters by expected production entity.",
+      "next": "Score production-selected facts separately from all-source facts in T10."
     },
     {
       "rank": 6,
       "family": "SOURCE_VALUE_NOT_REPRODUCIBLE",
       "count": 0,
       "unit": "emitted SourceFacts",
-      "why": "Was 98 (HAYL 57). Cell SourceRef.raw_text used the whole line; the auditor could not re-parse it. Cell provenance is now the numeric token. Lineage complete 888/905. Not source-confirmed gold.",
+      "why": "Cell provenance is the numeric token. Lineage complete 1606/1642. Not source-confirmed gold.",
       "next": "Keep cell-level provenance. Do not loosen the auditor."
     }
   ]

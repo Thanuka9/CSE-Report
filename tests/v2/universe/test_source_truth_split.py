@@ -21,10 +21,11 @@ def test_dev_holdout_queue_has_no_expected_values() -> None:
     lock = load_gold_lock(root=ROOT)
     dev = payload["dev"]
     holdout = payload["holdout"]
-    assert 20 <= len(dev) <= 25
+    assert len(dev) == 33
     assert 10 <= len(holdout) <= 15
     assert not set(dev) & set(holdout)
-    assert set(dev + holdout) == set(lock.scoring_symbols)
+    assert set(dev) == set(lock.scoring_symbols)
+    assert not set(holdout) & set(lock.scoring_symbols)
     assert "expected" not in payload
     assert "drop" not in payload
     assert ITEMS_PATH.read_text(encoding="utf-8").strip() == ""
@@ -51,3 +52,19 @@ def test_source_truth_item_is_source_not_policy() -> None:
     assert item.metric_code in SOURCE_TARGET_METRICS
     assert "ROE" in DERIVED_METRICS
     assert "LAST_TRADED_PRICE" not in SOURCE_TARGET_METRICS
+
+
+def test_unseen_holdout_is_identity_only() -> None:
+    path = ROOT / "tests" / "v2" / "source_truth" / "holdout_manifest.json"
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    items = payload["items"]
+    assert 10 <= len(items) <= 15
+    lock = load_gold_lock(root=ROOT)
+    symbols = {item["symbol"] for item in items}
+    assert not symbols & set(lock.scoring_symbols)
+    for item in items:
+        assert len(item["pdf_sha256"]) == 64
+        assert "v1_value" not in item
+        assert "v2_value" not in item
+        assert "normalized_value" not in item
+        assert not str(item["local_file"]).startswith("D:")

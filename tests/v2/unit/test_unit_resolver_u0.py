@@ -28,13 +28,8 @@ def test_u0_unit_formats() -> None:
     assert percent[2] is UnitDimension.PERCENTAGE
 
 
-def test_u0_cents_currently_labelled_per_share_not_scaled() -> None:
-    """Contract forbids treating cents as LKR scale 1. U0 still returns PER_SHARE.
-
-    0.01 scaling is OPEN until the unit bake-off; this records current U0 output.
-    """
-
+def test_u0_cents_per_share_scale_is_one_hundredth() -> None:
     currency, scale, dimension = parse_unit("cents per share")
     assert dimension is UnitDimension.PER_SHARE
-    assert scale == Decimal("1")
+    assert scale == Decimal("0.01")
     assert currency == "LKR"

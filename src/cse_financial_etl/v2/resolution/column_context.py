@@ -156,7 +156,9 @@ def parse_unit(text: str) -> tuple[str | None, Decimal | None, UnitDimension | N
     # Statement-level Rs/'000 wins over an EPS "per share" mention in the same blob.
     if currency is not None:
         return currency, scale, UnitDimension.MONETARY
-    if "per share" in lowered or "cents per share" in lowered:
+    if re.search(r"\bcents?\b", lowered) and "share" in lowered:
+        return "LKR", Decimal("0.01"), UnitDimension.PER_SHARE
+    if "per share" in lowered:
         return "LKR", Decimal("1"), UnitDimension.PER_SHARE
     if "number of share" in lowered:
         return None, Decimal("1"), UnitDimension.COUNT
@@ -872,6 +874,4 @@ def _role_for_period(
     unique = {item for item in dates}
     if len(unique) >= 2:
         return ComparisonRole.CURRENT if period == max(unique) else ComparisonRole.COMPARATIVE
-    if monetary_count <= 1:
-        return ComparisonRole.CURRENT
-    return None
+    return ComparisonRole.CURRENT

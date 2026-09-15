@@ -22,9 +22,8 @@ Derived metrics and market prices are out of scope for source-extraction recall.
   evidenced scale (`123` at `Rs '000` → `123000` LKR when currency is LKR).
 - Per-share values stay per-share. They **must not** inherit statement `Rs/'000`
   monetary scale.
-- `cents/share` is not `Rs/share`. Do not silently store cents as LKR with scale 1.
-  Whether to apply `0.01` to reach LKR/share is **OPEN** until the unit bake-off
-  (U0/U1/U2) and a human lock.
+- `cents/share` is not `Rs/share`. Normalize cents to rupees per share with
+  explicit scale `0.01`. Do not store cents as LKR with scale 1.
 - Percentages stay percentages. Ratios stay unitless. Share counts stay counts.
 - **No FX conversion** unless a separate governed FX policy exists. None exists.
 
@@ -62,14 +61,14 @@ may still withhold it.
 | Period / duration | FLOW. Source records the reported duration. Publication requires 3 months. |
 | Unit | Monetary, source currency |
 | Accepted variants | Registry exact aliases: profit/(loss) for the period; after tax; continuing operations period profit |
-| Explicit exclusions | EBITDA; PBT; OCI-only lines |
+| Explicit exclusions | EBITDA; PBT; OCI-only lines; profit **attributable to owners / equity holders** |
 | Derivation | Forbidden |
 | Sector/regime | Same semantic across GENERAL / BANK / FINANCE / INSURANCE |
 
-**OPEN before adjudication:** when a statement prints both “profit for the period”
-and “profit attributable to owners”, which line is PAT? Current registry aliases
-are the total period line, not the NCI/attributable line. Do not treat
-attributable-only as PAT until this is human-locked.
+**Locked:** `PAT` is the total-entity profit/(loss) for the period after tax.
+"Profit attributable to owners of the parent" is not PAT. If both lines exist,
+record PAT from the total period line only. If only an attributable line exists,
+source presence for PAT is `NOT_REPORTED` (do not silently promote attributable).
 
 ---
 
@@ -115,7 +114,8 @@ If the income statement has no operating-profit line, source presence is
 Regime source concepts (registry):
 
 - GENERAL: Revenue, Total revenue, Net sales, Turnover, Revenue from contracts with customers
-- BANK: Gross income, Interest income, Total operating income
+- BANK canonical TOP_LINE: **Gross income**
+- BANK distinct source lines, not substitutes for Gross income: Interest income; Total operating income
 - FINANCE_COMPANY: Total income, Net operating income, Income (exact), Gross income, Interest income, Total operating income
 - SLFRS17: Insurance revenue
 - SLFRS4: Gross written premium, Net earned premium
@@ -124,9 +124,11 @@ Generic issuer class `INSURANCE` is **not** proof of SLFRS 4 or 17. Record
 `source_concept` / `matched_alias`. Leave `accounting_regime` unresolved unless
 that reporting regime is explicitly requested or evidenced.
 
-**OPEN:** BANK “Interest income” vs “Gross income” vs “Total operating income”
-when more than one is present — source truth must name the line, not pick a
-workbook default during adjudication.
+**Locked:** BANK TOP_LINE is Gross income. Interest income and Total operating
+income remain distinct source concepts. When Gross income is present, that line
+is TOP_LINE. When only Interest income or Total operating income is present,
+record the actual `matched_alias`; do not relabel it as Gross income. Reviewers
+must not pick a workbook default among the three.
 
 ---
 
@@ -184,9 +186,12 @@ copy basic EPS into diluted.
 | Period behaviour | STOCK |
 | Derivation | Forbidden |
 | Current aliases | Total equity; Shareholders funds; Total shareholders funds |
+| Explicit exclusions | Equity attributable to owners / equity holders of the parent |
 
-**OPEN:** total entity equity vs equity attributable to owners when both lines
-exist. Do not silently pick one during adjudication.
+**Locked:** `TOTAL_EQUITY` is total equity of the stated entity, including NCI
+when a total line exists. "Equity attributable to owners of the parent" is not
+TOTAL_EQUITY. If both lines exist, use the inclusive total. If only attributable
+equity is printed, source presence for TOTAL_EQUITY is `NOT_REPORTED`.
 
 ---
 

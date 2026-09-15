@@ -100,6 +100,11 @@ CORE_CONCEPTS: tuple[ConceptDefinition, ...] = (
             "(Loss)/ Profit for the period",
             "(Loss)/Profit for the period",
         ),
+        forbidden_aliases=(
+            "Profit attributable to owners",
+            "Profit attributable to equity holders",
+            "Profit attributable to owners of the parent",
+        ),
     ),
     ConceptDefinition(
         code="PBT",
@@ -238,6 +243,11 @@ CORE_CONCEPTS: tuple[ConceptDefinition, ...] = (
         period_behavior=PeriodBehavior.STOCK,
         unit_dimension=UnitDimension.MONETARY,
         exact_aliases=("Total equity", "Shareholders funds", "Total shareholders funds"),
+        forbidden_aliases=(
+            "Equity attributable to owners",
+            "Equity attributable to owners of the parent",
+            "Equity attributable to equity holders",
+        ),
     ),
     ConceptDefinition(
         code="TOTAL_ASSETS",

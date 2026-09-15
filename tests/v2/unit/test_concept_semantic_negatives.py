@@ -92,3 +92,12 @@ def test_narrative_operating_income_is_not_top_line() -> None:
     )
     assert sofp[0].metric_code is None
     assert income[0].metric_code is None
+
+
+def test_attributable_equity_is_not_total_equity() -> None:
+    matcher = RegistryMatcher()
+    hits = matcher.candidates(
+        StatementRow(row_id="r1", raw_label="Equity attributable to owners of the parent"),
+        statement_type=StatementType.BALANCE_SHEET,
+    )
+    assert hits[0].metric_code is None

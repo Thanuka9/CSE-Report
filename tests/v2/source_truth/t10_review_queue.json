@@ -4,7 +4,43 @@
   "item_count": 40,
   "items": [
     {
-      "issue_id": "ACL.N0000-NAVPS-6",
+      "issue_id": "ABL.N0000-PAT-11",
+      "pdf_sha": "02539c46642b05c6c69cb1ddece7be09a9d04bc8b494dc747f130e1cae4d5c8f",
+      "issuer": "ABL.N0000",
+      "metric": "PAT",
+      "page": 5,
+      "disagreement_class": "VALUE_DISAGREEMENT",
+      "split": "DEV",
+      "adjudication_status": "NOT_STARTED",
+      "source_truth_status": "NOT_ADJUDICATED",
+      "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
+    },
+    {
+      "issue_id": "ABL.N0000-TOP_LINE-19",
+      "pdf_sha": "02539c46642b05c6c69cb1ddece7be09a9d04bc8b494dc747f130e1cae4d5c8f",
+      "issuer": "ABL.N0000",
+      "metric": "TOP_LINE",
+      "page": 4,
+      "disagreement_class": "VALUE_DISAGREEMENT",
+      "split": "DEV",
+      "adjudication_status": "NOT_STARTED",
+      "source_truth_status": "NOT_ADJUDICATED",
+      "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
+    },
+    {
+      "issue_id": "ABL.N0000-TOTAL_LIABILITIES-26",
+      "pdf_sha": "02539c46642b05c6c69cb1ddece7be09a9d04bc8b494dc747f130e1cae4d5c8f",
+      "issuer": "ABL.N0000",
+      "metric": "TOTAL_LIABILITIES",
+      "page": 6,
+      "disagreement_class": "VALUE_DISAGREEMENT",
+      "split": "DEV",
+      "adjudication_status": "NOT_STARTED",
+      "source_truth_status": "NOT_ADJUDICATED",
+      "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
+    },
+    {
+      "issue_id": "ACL.N0000-NAVPS-8",
       "pdf_sha": "22e1af573e5614deab5f924fd099c3567fe5ed64b1a69b67af860ebd5fc3ecd9",
       "issuer": "ACL.N0000",
       "metric": "NAVPS",
@@ -16,7 +52,7 @@
       "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
     },
     {
-      "issue_id": "ACL.N0000-TOTAL_ASSETS-20",
+      "issue_id": "ACL.N0000-TOTAL_ASSETS-32",
       "pdf_sha": "22e1af573e5614deab5f924fd099c3567fe5ed64b1a69b67af860ebd5fc3ecd9",
       "issuer": "ACL.N0000",
       "metric": "TOTAL_ASSETS",
@@ -28,7 +64,7 @@
       "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
     },
     {
-      "issue_id": "ACL.N0000-TOTAL_EQUITY-22",
+      "issue_id": "ACL.N0000-TOTAL_EQUITY-36",
       "pdf_sha": "22e1af573e5614deab5f924fd099c3567fe5ed64b1a69b67af860ebd5fc3ecd9",
       "issuer": "ACL.N0000",
       "metric": "TOTAL_EQUITY",
@@ -40,7 +76,7 @@
       "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
     },
     {
-      "issue_id": "ACL.N0000-TOTAL_LIABILITIES-24",
+      "issue_id": "ACL.N0000-TOTAL_LIABILITIES-40",
       "pdf_sha": "22e1af573e5614deab5f924fd099c3567fe5ed64b1a69b67af860ebd5fc3ecd9",
       "issuer": "ACL.N0000",
       "metric": "TOTAL_LIABILITIES",
@@ -52,7 +88,7 @@
       "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
     },
     {
-      "issue_id": "ATL.N0000-EPS_DILUTED-7",
+      "issue_id": "ATL.N0000-EPS_DILUTED-11",
       "pdf_sha": "f04f428794cf35be4df61b699c67b055b0d28f857c62bdda510ae669cf7d264a",
       "issuer": "ATL.N0000",
       "metric": "EPS_DILUTED",
@@ -64,7 +100,7 @@
       "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
     },
     {
-      "issue_id": "ATL.N0000-TOP_LINE-23",
+      "issue_id": "ATL.N0000-TOP_LINE-41",
       "pdf_sha": "f04f428794cf35be4df61b699c67b055b0d28f857c62bdda510ae669cf7d264a",
       "issuer": "ATL.N0000",
       "metric": "TOP_LINE",
@@ -136,7 +172,7 @@
       "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
     },
     {
-      "issue_id": "CIC.N0000-OPERATING_PROFIT-11",
+      "issue_id": "CIC.N0000-OPERATING_PROFIT-18",
       "pdf_sha": "5d64e71e80ca1db87011b5d580b37cd2baf6e909d0ddb2632de9ca4547cc63b9",
       "issuer": "CIC.N0000",
       "metric": "OPERATING_PROFIT",
@@ -148,7 +184,7 @@
       "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
     },
     {
-      "issue_id": "CIC.N0000-PAT-15",
+      "issue_id": "CIC.N0000-PAT-26",
       "pdf_sha": "5d64e71e80ca1db87011b5d580b37cd2baf6e909d0ddb2632de9ca4547cc63b9",
       "issuer": "CIC.N0000",
       "metric": "PAT",
@@ -160,7 +196,7 @@
       "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
     },
     {
-      "issue_id": "CIC.N0000-PBT-19",
+      "issue_id": "CIC.N0000-PBT-34",
       "pdf_sha": "5d64e71e80ca1db87011b5d580b37cd2baf6e909d0ddb2632de9ca4547cc63b9",
       "issuer": "CIC.N0000",
       "metric": "PBT",
@@ -172,7 +208,7 @@
       "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
     },
     {
-      "issue_id": "CIC.N0000-TOP_LINE-23",
+      "issue_id": "CIC.N0000-TOP_LINE-42",
       "pdf_sha": "5d64e71e80ca1db87011b5d580b37cd2baf6e909d0ddb2632de9ca4547cc63b9",
       "issuer": "CIC.N0000",
       "metric": "TOP_LINE",
@@ -184,7 +220,7 @@
       "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
     },
     {
-      "issue_id": "COMB.N0000-PAT-17",
+      "issue_id": "COMB.N0000-PAT-31",
       "pdf_sha": "6e6ca4efd1778c18293bfc33fb75c05a9fce494f8e8de12de41391b6fb90279a",
       "issuer": "COMB.N0000",
       "metric": "PAT",
@@ -196,11 +232,35 @@
       "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
     },
     {
-      "issue_id": "COMB.N0000-TOP_LINE-25",
+      "issue_id": "COMB.N0000-TOP_LINE-47",
       "pdf_sha": "6e6ca4efd1778c18293bfc33fb75c05a9fce494f8e8de12de41391b6fb90279a",
       "issuer": "COMB.N0000",
       "metric": "TOP_LINE",
       "page": 7,
+      "disagreement_class": "VALUE_DISAGREEMENT",
+      "split": "DEV",
+      "adjudication_status": "NOT_STARTED",
+      "source_truth_status": "NOT_ADJUDICATED",
+      "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
+    },
+    {
+      "issue_id": "CTC.N0000-TOTAL_ASSETS-23",
+      "pdf_sha": "91197f28f7c5c56c03775ced351bbb94a6095efc15bec1a39c12f7bea1235f2e",
+      "issuer": "CTC.N0000",
+      "metric": "TOTAL_ASSETS",
+      "page": 4,
+      "disagreement_class": "VALUE_DISAGREEMENT",
+      "split": "DEV",
+      "adjudication_status": "NOT_STARTED",
+      "source_truth_status": "NOT_ADJUDICATED",
+      "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
+    },
+    {
+      "issue_id": "CTC.N0000-TOTAL_LIABILITIES-26",
+      "pdf_sha": "91197f28f7c5c56c03775ced351bbb94a6095efc15bec1a39c12f7bea1235f2e",
+      "issuer": "CTC.N0000",
+      "metric": "TOTAL_LIABILITIES",
+      "page": 4,
       "disagreement_class": "VALUE_DISAGREEMENT",
       "split": "DEV",
       "adjudication_status": "NOT_STARTED",
@@ -220,7 +280,7 @@
       "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
     },
     {
-      "issue_id": "DIMO.N0000-OPERATING_PROFIT-7",
+      "issue_id": "DIMO.N0000-OPERATING_PROFIT-9",
       "pdf_sha": "8e95f81413db5d0a7d17afc4bf1e1a273c217ae4f3ae6cd2d3382783cb1f2c36",
       "issuer": "DIMO.N0000",
       "metric": "OPERATING_PROFIT",
@@ -232,7 +292,7 @@
       "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
     },
     {
-      "issue_id": "DIMO.N0000-TOP_LINE-15",
+      "issue_id": "DIMO.N0000-TOP_LINE-23",
       "pdf_sha": "8e95f81413db5d0a7d17afc4bf1e1a273c217ae4f3ae6cd2d3382783cb1f2c36",
       "issuer": "DIMO.N0000",
       "metric": "TOP_LINE",
@@ -244,7 +304,7 @@
       "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
     },
     {
-      "issue_id": "DIMO.N0000-TOTAL_ASSETS-17",
+      "issue_id": "DIMO.N0000-TOTAL_ASSETS-27",
       "pdf_sha": "8e95f81413db5d0a7d17afc4bf1e1a273c217ae4f3ae6cd2d3382783cb1f2c36",
       "issuer": "DIMO.N0000",
       "metric": "TOTAL_ASSETS",
@@ -256,7 +316,7 @@
       "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
     },
     {
-      "issue_id": "DIMO.N0000-TOTAL_EQUITY-18",
+      "issue_id": "DIMO.N0000-TOTAL_EQUITY-29",
       "pdf_sha": "8e95f81413db5d0a7d17afc4bf1e1a273c217ae4f3ae6cd2d3382783cb1f2c36",
       "issuer": "DIMO.N0000",
       "metric": "TOTAL_EQUITY",
@@ -268,7 +328,7 @@
       "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
     },
     {
-      "issue_id": "DIMO.N0000-TOTAL_LIABILITIES-19",
+      "issue_id": "DIMO.N0000-TOTAL_LIABILITIES-31",
       "pdf_sha": "8e95f81413db5d0a7d17afc4bf1e1a273c217ae4f3ae6cd2d3382783cb1f2c36",
       "issuer": "DIMO.N0000",
       "metric": "TOTAL_LIABILITIES",
@@ -280,7 +340,7 @@
       "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
     },
     {
-      "issue_id": "DIST.N0000-NAVPS-5",
+      "issue_id": "DIST.N0000-NAVPS-7",
       "pdf_sha": "d7d473b0519ea4f9791505abf1edde6475a353415c88a4ead1bbcde0fd199024",
       "issuer": "DIST.N0000",
       "metric": "NAVPS",
@@ -292,7 +352,7 @@
       "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
     },
     {
-      "issue_id": "DIST.N0000-PAT-9",
+      "issue_id": "DIST.N0000-PAT-15",
       "pdf_sha": "d7d473b0519ea4f9791505abf1edde6475a353415c88a4ead1bbcde0fd199024",
       "issuer": "DIST.N0000",
       "metric": "PAT",
@@ -304,7 +364,7 @@
       "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
     },
     {
-      "issue_id": "DIST.N0000-PBT-11",
+      "issue_id": "DIST.N0000-PBT-19",
       "pdf_sha": "d7d473b0519ea4f9791505abf1edde6475a353415c88a4ead1bbcde0fd199024",
       "issuer": "DIST.N0000",
       "metric": "PBT",
@@ -316,7 +376,7 @@
       "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
     },
     {
-      "issue_id": "DIST.N0000-TOTAL_ASSETS-14",
+      "issue_id": "DIST.N0000-TOTAL_ASSETS-24",
       "pdf_sha": "d7d473b0519ea4f9791505abf1edde6475a353415c88a4ead1bbcde0fd199024",
       "issuer": "DIST.N0000",
       "metric": "TOTAL_ASSETS",
@@ -328,7 +388,7 @@
       "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
     },
     {
-      "issue_id": "DIST.N0000-TOTAL_EQUITY-16",
+      "issue_id": "DIST.N0000-TOTAL_EQUITY-28",
       "pdf_sha": "d7d473b0519ea4f9791505abf1edde6475a353415c88a4ead1bbcde0fd199024",
       "issuer": "DIST.N0000",
       "metric": "TOTAL_EQUITY",
@@ -340,144 +400,84 @@
       "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
     },
     {
-      "issue_id": "HDFC.N0000-PAT-12",
-      "pdf_sha": "a625e2d179b5a356d35a89b5a98be354c313fd977e5cdc395e3249734f2eeacb",
-      "issuer": "HDFC.N0000",
-      "metric": "PAT",
-      "page": 3,
-      "disagreement_class": "VALUE_DISAGREEMENT",
-      "split": "DEV",
-      "adjudication_status": "NOT_STARTED",
-      "source_truth_status": "NOT_ADJUDICATED",
-      "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
-    },
-    {
-      "issue_id": "HDFC.N0000-PBT-16",
-      "pdf_sha": "a625e2d179b5a356d35a89b5a98be354c313fd977e5cdc395e3249734f2eeacb",
-      "issuer": "HDFC.N0000",
-      "metric": "PBT",
-      "page": 3,
-      "disagreement_class": "VALUE_DISAGREEMENT",
-      "split": "DEV",
-      "adjudication_status": "NOT_STARTED",
-      "source_truth_status": "NOT_ADJUDICATED",
-      "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
-    },
-    {
-      "issue_id": "HDFC.N0000-TOP_LINE-20",
-      "pdf_sha": "a625e2d179b5a356d35a89b5a98be354c313fd977e5cdc395e3249734f2eeacb",
-      "issuer": "HDFC.N0000",
-      "metric": "TOP_LINE",
-      "page": 3,
-      "disagreement_class": "VALUE_DISAGREEMENT",
-      "split": "DEV",
-      "adjudication_status": "NOT_STARTED",
-      "source_truth_status": "NOT_ADJUDICATED",
-      "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
-    },
-    {
-      "issue_id": "JKH.N0000-OPERATING_PROFIT-6",
-      "pdf_sha": "2c94f23f3f62769c1a22f5a51b03665feef60d22bfb8f58355b52ceac8b254c5",
-      "issuer": "JKH.N0000",
-      "metric": "OPERATING_PROFIT",
-      "page": 15,
-      "disagreement_class": "VALUE_DISAGREEMENT",
-      "split": "DEV",
-      "adjudication_status": "NOT_STARTED",
-      "source_truth_status": "NOT_ADJUDICATED",
-      "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
-    },
-    {
-      "issue_id": "JKH.N0000-PBT-10",
-      "pdf_sha": "2c94f23f3f62769c1a22f5a51b03665feef60d22bfb8f58355b52ceac8b254c5",
-      "issuer": "JKH.N0000",
-      "metric": "PBT",
-      "page": 15,
-      "disagreement_class": "VALUE_DISAGREEMENT",
-      "split": "DEV",
-      "adjudication_status": "NOT_STARTED",
-      "source_truth_status": "NOT_ADJUDICATED",
-      "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
-    },
-    {
-      "issue_id": "JKH.N0000-TOP_LINE-12",
-      "pdf_sha": "2c94f23f3f62769c1a22f5a51b03665feef60d22bfb8f58355b52ceac8b254c5",
-      "issuer": "JKH.N0000",
-      "metric": "TOP_LINE",
-      "page": 15,
-      "disagreement_class": "VALUE_DISAGREEMENT",
-      "split": "DEV",
-      "adjudication_status": "NOT_STARTED",
-      "source_truth_status": "NOT_ADJUDICATED",
-      "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
-    },
-    {
-      "issue_id": "NDB.N0000-TOP_LINE-26",
-      "pdf_sha": "f334e04638c7ceedafe0650b844dd1b23bb09e24c4191cd249c74f052f1a7331",
-      "issuer": "NDB.N0000",
-      "metric": "TOP_LINE",
-      "page": 7,
-      "disagreement_class": "VALUE_DISAGREEMENT",
-      "split": "DEV",
-      "adjudication_status": "NOT_STARTED",
-      "source_truth_status": "NOT_ADJUDICATED",
-      "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
-    },
-    {
-      "issue_id": "NTB.N0000-TOP_LINE-21",
-      "pdf_sha": "3af1b4619c200a134b0cc2ef9f3b0b48ae94ab5d22b7207f83985e526b2bc08d",
-      "issuer": "NTB.N0000",
-      "metric": "TOP_LINE",
-      "page": 3,
-      "disagreement_class": "VALUE_DISAGREEMENT",
-      "split": "DEV",
-      "adjudication_status": "NOT_STARTED",
-      "source_truth_status": "NOT_ADJUDICATED",
-      "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
-    },
-    {
-      "issue_id": "PLC.N0000-PAT-9",
-      "pdf_sha": "bcb91707f5077c00bb63418ffb3242422bbef9fdabbd2108acc0872897e7ccef",
-      "issuer": "PLC.N0000",
-      "metric": "PAT",
-      "page": 5,
-      "disagreement_class": "VALUE_DISAGREEMENT",
-      "split": "DEV",
-      "adjudication_status": "NOT_STARTED",
-      "source_truth_status": "NOT_ADJUDICATED",
-      "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
-    },
-    {
-      "issue_id": "SPEN.N0000-TOP_LINE-13",
-      "pdf_sha": "7c6277681925f2e978613e8f34bab05cc6a49c12f95c8aa3d1e38f9274e73b78",
-      "issuer": "SPEN.N0000",
-      "metric": "TOP_LINE",
-      "page": 2,
-      "disagreement_class": "VALUE_DISAGREEMENT",
-      "split": "DEV",
-      "adjudication_status": "NOT_STARTED",
-      "source_truth_status": "NOT_ADJUDICATED",
-      "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
-    },
-    {
-      "issue_id": "AAF.N0000-EPS_BASIC-2",
-      "pdf_sha": "d8cdb3dd0e3d2871d00b5e2f3e4d61ceaca3c5b91f9e1287fc5b6043a508c43a",
-      "issuer": "AAF.N0000",
+      "issue_id": "GREG.N0000-EPS_BASIC-2",
+      "pdf_sha": "6d35b83c9c587fdec93a596c4dec8aca48d7ba0cfcdf2e136ab18f197ec20fcc",
+      "issuer": "GREG.N0000",
       "metric": "EPS_BASIC",
-      "page": 5,
-      "disagreement_class": "REFERENCE_ONLY_DISAGREEMENT",
+      "page": 3,
+      "disagreement_class": "VALUE_DISAGREEMENT",
       "split": "DEV",
       "adjudication_status": "NOT_STARTED",
       "source_truth_status": "NOT_ADJUDICATED",
       "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
     },
     {
-      "issue_id": "AAF.N0000-EPS_DILUTED-5",
-      "pdf_sha": "d8cdb3dd0e3d2871d00b5e2f3e4d61ceaca3c5b91f9e1287fc5b6043a508c43a",
-      "issuer": "AAF.N0000",
+      "issue_id": "GREG.N0000-EPS_DILUTED-6",
+      "pdf_sha": "6d35b83c9c587fdec93a596c4dec8aca48d7ba0cfcdf2e136ab18f197ec20fcc",
+      "issuer": "GREG.N0000",
       "metric": "EPS_DILUTED",
+      "page": 3,
+      "disagreement_class": "VALUE_DISAGREEMENT",
+      "split": "DEV",
+      "adjudication_status": "NOT_STARTED",
+      "source_truth_status": "NOT_ADJUDICATED",
+      "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
+    },
+    {
+      "issue_id": "GREG.N0000-NAVPS-10",
+      "pdf_sha": "6d35b83c9c587fdec93a596c4dec8aca48d7ba0cfcdf2e136ab18f197ec20fcc",
+      "issuer": "GREG.N0000",
+      "metric": "NAVPS",
       "page": 5,
-      "disagreement_class": "REFERENCE_ONLY_DISAGREEMENT",
+      "disagreement_class": "VALUE_DISAGREEMENT",
+      "split": "DEV",
+      "adjudication_status": "NOT_STARTED",
+      "source_truth_status": "NOT_ADJUDICATED",
+      "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
+    },
+    {
+      "issue_id": "GREG.N0000-OPERATING_PROFIT-14",
+      "pdf_sha": "6d35b83c9c587fdec93a596c4dec8aca48d7ba0cfcdf2e136ab18f197ec20fcc",
+      "issuer": "GREG.N0000",
+      "metric": "OPERATING_PROFIT",
+      "page": 3,
+      "disagreement_class": "VALUE_DISAGREEMENT",
+      "split": "DEV",
+      "adjudication_status": "NOT_STARTED",
+      "source_truth_status": "NOT_ADJUDICATED",
+      "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
+    },
+    {
+      "issue_id": "GREG.N0000-PAT-18",
+      "pdf_sha": "6d35b83c9c587fdec93a596c4dec8aca48d7ba0cfcdf2e136ab18f197ec20fcc",
+      "issuer": "GREG.N0000",
+      "metric": "PAT",
+      "page": 4,
+      "disagreement_class": "VALUE_DISAGREEMENT",
+      "split": "DEV",
+      "adjudication_status": "NOT_STARTED",
+      "source_truth_status": "NOT_ADJUDICATED",
+      "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
+    },
+    {
+      "issue_id": "GREG.N0000-PBT-22",
+      "pdf_sha": "6d35b83c9c587fdec93a596c4dec8aca48d7ba0cfcdf2e136ab18f197ec20fcc",
+      "issuer": "GREG.N0000",
+      "metric": "PBT",
+      "page": 3,
+      "disagreement_class": "VALUE_DISAGREEMENT",
+      "split": "DEV",
+      "adjudication_status": "NOT_STARTED",
+      "source_truth_status": "NOT_ADJUDICATED",
+      "notes": "Blind PDF review. Do not copy V1 or V2 values. Record source presence from the filing only."
+    },
+    {
+      "issue_id": "GREG.N0000-TOP_LINE-26",
+      "pdf_sha": "6d35b83c9c587fdec93a596c4dec8aca48d7ba0cfcdf2e136ab18f197ec20fcc",
+      "issuer": "GREG.N0000",
+      "metric": "TOP_LINE",
+      "page": 3,
+      "disagreement_class": "VALUE_DISAGREEMENT",
       "split": "DEV",
       "adjudication_status": "NOT_STARTED",
       "source_truth_status": "NOT_ADJUDICATED",

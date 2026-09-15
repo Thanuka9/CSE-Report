@@ -21,6 +21,14 @@ def test_investigation_freeze_pins_base_sha_engine_and_floors() -> None:
     assert freeze["investigation_base_sha"] == INVESTIGATION_BASE_SHA
     assert freeze["extraction_engine"] == "v1"
     assert freeze["min_draft_publishable"] == HISTORICAL_MIN_DRAFT_PUBLISHABLE
+    assert freeze["actual_code_sha"]
+    assert freeze["code_sha"]
+    assert "working_tree_dirty" in freeze
+    assert freeze.get("branch")
+    assert "config_hash" in freeze
+    assert "concept_registry_hash" in freeze
+    assert "issuer_master_sha256" in freeze
+    assert "uv_lock_sha256" in freeze
     app = yaml.safe_load((ROOT / "configs" / "app.yml").read_text(encoding="utf-8"))
     assert app["extraction"]["engine"] == "v1"
     coverage = yaml.safe_load(

@@ -22,3 +22,9 @@ def test_truth_contract_covers_registry_source_targets() -> None:
     assert "EBITDA" in text
     assert "No FX conversion" in text
     assert "cents/share" in text
+    assert "0.01" in text
+    assert "attributable to owners" in text.casefold()
+    assert "Gross income" in text
+    assert "Interest income" in text
+    assert "OPEN before adjudication" not in text
+    assert "**OPEN:**" not in text

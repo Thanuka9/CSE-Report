@@ -35,7 +35,6 @@ def count_source_facts(
         candidates,
         issuer_id=issuer_id,
         filing_version_id=document.filing_version_id,
-        expected_entity_scope=expected_entity_scope,
     )
     return len(facts)
 

@@ -59,12 +59,42 @@ def test_group_is_not_converted_to_company() -> None:
             ((40.0, "Profit for the period"), (300.0, "1,234")),
         )
     )
-    _statements, facts, _derived, _metrics = run_filing_pipeline(
+    result = run_filing_pipeline(
         document,
         issuer_id="issuer-1",
         expected_entity_scope=EntityScope.COMPANY,
+        target_period_end=date(2026, 6, 30),
     )
-    assert not [fact for fact in facts if fact.metric_code == "PAT"]
+    pats = [fact for fact in result.source_facts if fact.metric_code == "PAT"]
+    assert pats
+    assert all(fact.entity_scope is EntityScope.GROUP for fact in pats)
+    assert all(fact.entity_scope is not EntityScope.COMPANY for fact in pats)
+    assert result.production_selected_source == ()
+
+
+def test_company_and_group_both_emitted_then_company_selector() -> None:
+    document = geometric_document(
+        (
+            ((40.0, "Company"), (300.0, "Group")),
+            ((40.0, "For the three months ended 30 June 2026"),),
+            ((40.0, "Rs '000"),),
+            ((40.0, "Profit for the period"), (220.0, "1,234"), (340.0, "5,678")),
+        )
+    )
+    result = run_filing_pipeline(
+        document,
+        issuer_id="issuer-1",
+        expected_entity_scope=EntityScope.COMPANY,
+        target_period_end=date(2026, 6, 30),
+    )
+    pats = [fact for fact in result.source_facts if fact.metric_code == "PAT"]
+    scopes = {fact.entity_scope for fact in pats}
+    assert EntityScope.COMPANY in scopes
+    assert EntityScope.GROUP in scopes
+    selected = [fact for fact in result.production_selected_source if fact.metric_code == "PAT"]
+    assert len(selected) == 1
+    assert selected[0].entity_scope is EntityScope.COMPANY
+    assert selected[0].raw_value == Decimal("1234")
 
 
 def test_collapsed_row_with_extra_embedded_values_is_unresolved() -> None:

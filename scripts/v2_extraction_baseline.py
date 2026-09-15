@@ -10,6 +10,8 @@ from cse_financial_etl.v2.diagnostics.baseline import (
     build_locked_source_manifest,
     run_locked_baseline,
 )
+from cse_financial_etl.v2.diagnostics.canonical_outputs import write_json
+from cse_financial_etl.v2.diagnostics.investigation_freeze import collect_investigation_freeze
 
 
 def _root() -> Path:
@@ -32,17 +34,25 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
     root = _root()
+    freeze = collect_investigation_freeze(root)
     out = args.out or (root / "outputs" / "v2_extraction_baseline")
     manifest = build_locked_source_manifest(root)
-    (out).mkdir(parents=True, exist_ok=True)
-    (out / "source_manifest.json").write_text(
-        json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
+    out.mkdir(parents=True, exist_ok=True)
+    write_json(
+        out / "source_manifest.json",
+        {
+            "investigation_base_sha": freeze.investigation_base_sha,
+            "actual_code_sha": freeze.actual_code_sha,
+            "source_snapshot_id": freeze.source_snapshot_id,
+            "items": manifest,
+        },
     )
     summary = run_locked_baseline(
         root=root,
         out_dir=out,
         include_v1=not args.skip_v1,
         limit=args.limit,
+        freeze=freeze,
     )
     committed = root / "tests" / "v2" / "universe" / "locked_source_manifest.json"
     committed.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")

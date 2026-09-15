@@ -9,13 +9,10 @@ from typing import Any
 
 from cse_financial_etl.config import infer_entity_scope
 from cse_financial_etl.extraction.statement_extractor import ExtractedFact
-from cse_financial_etl.v2.contracts.enums import (
-    ComparisonRole,
-    EntityScope,
-    PublicationStatus,
-)
+from cse_financial_etl.v2.contracts.enums import EntityScope
 from cse_financial_etl.v2.contracts.facts import DerivedFact, SourceFact
 from cse_financial_etl.v2.orchestration.filing_pipeline import run_pdf_pipeline
+from cse_financial_etl.v2.resolution.production_selection import select_pipeline_facts
 from cse_financial_etl.v2.taxonomy.registry import ConceptRegistry, load_registry
 
 _ENTITY_TO_V1 = {
@@ -24,14 +21,6 @@ _ENTITY_TO_V1 = {
     EntityScope.GROUP: "GROUP",
     EntityScope.CONSOLIDATED: "GROUP",
     EntityScope.SEPARATE: "COMPANY",
-}
-
-_ENTITY_EQUIVALENTS: dict[EntityScope, frozenset[EntityScope]] = {
-    EntityScope.COMPANY: frozenset({EntityScope.COMPANY, EntityScope.SEPARATE}),
-    EntityScope.SEPARATE: frozenset({EntityScope.COMPANY, EntityScope.SEPARATE}),
-    EntityScope.GROUP: frozenset({EntityScope.GROUP, EntityScope.CONSOLIDATED}),
-    EntityScope.CONSOLIDATED: frozenset({EntityScope.GROUP, EntityScope.CONSOLIDATED}),
-    EntityScope.BANK: frozenset({EntityScope.BANK}),
 }
 
 
@@ -72,58 +61,12 @@ def extract_filing_v2(
     return rows
 
 
-def select_pipeline_facts[TFact: SourceFact | DerivedFact](
-    facts: tuple[TFact, ...] | list[TFact],
-    *,
-    period_end: date,
-    expected_entity: EntityScope | None,
-) -> tuple[TFact, ...]:
-    """Keep current-period eligible facts for the production snapshot query.
-
-    If the requested entity is absent among eligible facts, the snapshot is
-    empty. GROUP is never forwarded as a COMPANY or BANK substitute.
-    """
-
-    eligible = [
-        fact
-        for fact in facts
-        if fact.publication_status is PublicationStatus.ELIGIBLE
-        and fact.comparison_role is ComparisonRole.CURRENT
-        and fact.period_end == period_end
-        and (fact.duration_months is None or fact.duration_months == 3)
-    ]
-    if expected_entity is not None:
-        matching = [fact for fact in eligible if _entity_matches(fact.entity_scope, expected_entity)]
-        if not matching:
-            return ()
-        eligible = matching
-    return _unique_by_metric(eligible)
-
-
 def _expected_entity(issuer_name: str, issuers: dict[str, Any] | None) -> EntityScope | None:
     label = infer_entity_scope(issuer_name, issuers)
     try:
         return EntityScope(str(label).strip().upper())
     except ValueError:
         return None
-
-
-def _entity_matches(actual: EntityScope, expected: EntityScope) -> bool:
-    return actual in _ENTITY_EQUIVALENTS.get(expected, frozenset({expected}))
-
-
-def _unique_by_metric[TFact: SourceFact | DerivedFact](facts: list[TFact]) -> tuple[TFact, ...]:
-    chosen: dict[str, TFact] = {}
-    for fact in facts:
-        existing = chosen.get(fact.metric_code)
-        if existing is None or _fact_rank(fact) < _fact_rank(existing):
-            chosen[fact.metric_code] = fact
-    return tuple(chosen[code] for code in sorted(chosen))
-
-
-def _fact_rank(fact: SourceFact | DerivedFact) -> tuple[int, int, str]:
-    page = getattr(getattr(fact, "source_ref", None), "page_number", 10**6)
-    return (int(page), 0, fact.fact_id)
 
 
 def _from_source(

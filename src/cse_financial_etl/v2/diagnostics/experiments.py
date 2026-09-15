@@ -12,8 +12,14 @@ from typing import Any
 from cse_financial_etl.v2.contracts.document import CanonicalDocument
 from cse_financial_etl.v2.contracts.enums import StatementType
 from cse_financial_etl.v2.diagnostics.bakeoffs import pipeline_bakeoff
+from cse_financial_etl.v2.diagnostics.canonical_outputs import stamp_identity, write_json
 from cse_financial_etl.v2.diagnostics.discovery import discover_exact_aliases
 from cse_financial_etl.v2.diagnostics.gate_ablation import g02_ablation
+from cse_financial_etl.v2.diagnostics.investigation_freeze import (
+    InvestigationFreeze,
+    collect_investigation_freeze,
+    freeze_run_identity,
+)
 from cse_financial_etl.v2.diagnostics.page_routing import (
     empty_native_page_numbers,
     mixed_native_ocr_document,
@@ -62,8 +68,8 @@ def discovery_census(
         issuer_name=case.issuer_name,
         issuer_type=case.issuer_type,
     )
-    on_statement = [hit for hit in hits if int(hit["page"]) in statement_pages]
-    on_other = [hit for hit in hits if int(hit["page"]) not in statement_pages]
+    on_statement = [hit for hit in hits if int(str(hit["page"])) in statement_pages]
+    on_other = [hit for hit in hits if int(str(hit["page"])) not in statement_pages]
     metrics = Counter(str(hit["metric_code"]) for hit in hits)
     return {
         "case_id": case.case_id,
@@ -167,6 +173,101 @@ def load_existing_ledgers(out_dir: Path) -> list[dict[str, object]]:
     return rows
 
 
+def build_defect_ranking(
+    baseline_summary: dict[str, Any],
+    *,
+    freeze: InvestigationFreeze,
+) -> dict[str, Any]:
+    lineage = baseline_summary.get("lineage") or {}
+    disagreement = baseline_summary.get("disagreement") or {}
+    complete = int(lineage.get("LINEAGE_COMPLETE") or 0)
+    context = int(lineage.get("CONTEXT_EVIDENCE_INCOMPLETE") or 0)
+    total = int(baseline_summary.get("source_facts") or complete + context)
+    return {
+        "note": (
+            "Diagnostic ranking only. Not source-confirmed. V1 is not truth. "
+            "Do not fix by chasing these counts."
+        ),
+        "investigation_base_sha": freeze.investigation_base_sha,
+        "actual_code_sha": freeze.actual_code_sha,
+        "locked_set": "v2-real-gold-lock-2026-09-13",
+        "families": [
+            {
+                "rank": 1,
+                "family": "MIXED_NATIVE_OCR",
+                "count": int(baseline_summary.get("mixed_native_ocr_filings") or 0),
+                "unit": "filings",
+                "why": (
+                    "P0 routes the whole PDF from document-level native token count. "
+                    "Seven locked filings have both native and empty pages (9 empty pages). "
+                    "P1 exists as opt-in diagnostic; production stays P0. Tesseract was not "
+                    "available on this machine."
+                ),
+                "next": (
+                    "OCR those empty pages on a production image with Tesseract. "
+                    "Do not pick a parser because it emits more tokens."
+                ),
+            },
+            {
+                "rank": 2,
+                "family": "REFERENCE_ONLY_DISAGREEMENT",
+                "count": int(disagreement.get("REFERENCE_ONLY_DISAGREEMENT") or 0),
+                "unit": "source-target facts",
+                "why": "V1 emitted a target metric V2 did not. Could be V2 miss or V1 false positive.",
+                "next": (
+                    "T10 blind source adjudication on DEV. Queue is "
+                    "tests/v2/source_truth/t10_review_queue.json. items.jsonl stays empty."
+                ),
+            },
+            {
+                "rank": 3,
+                "family": "VALUE_DISAGREEMENT",
+                "count": int(disagreement.get("VALUE_DISAGREEMENT") or 0),
+                "unit": "source-target facts",
+                "why": "Same identity, different normalized value. Could be scale, duration, or wrong cell.",
+                "next": (
+                    "T10 plus header/unit bake-off on those rows. First T10 queue items "
+                    "are DEV VALUE_DISAGREEMENT."
+                ),
+            },
+            {
+                "rank": 4,
+                "family": "CONTEXT_EVIDENCE_INCOMPLETE",
+                "count": context,
+                "unit": "emitted SourceFacts",
+                "why": (
+                    "Emitted facts missing duration or other required FLOW context in the audit. "
+                    "Do not invent duration from a Period ended heading with no month count."
+                ),
+                "next": "G03 upstream duration resolution vs gate. Do not allow 6M/9M as Q4.",
+            },
+            {
+                "rank": 5,
+                "family": "V2_ONLY_DISAGREEMENT",
+                "count": int(disagreement.get("V2_ONLY_DISAGREEMENT") or 0),
+                "unit": "source-target facts",
+                "why": (
+                    "V2 SourceFacts with no V1 comparator row. Includes comparatives and extra "
+                    "entity columns now that source extraction no longer filters by expected "
+                    "production entity."
+                ),
+                "next": "Score production-selected facts separately from all-source facts in T10.",
+            },
+            {
+                "rank": 6,
+                "family": "SOURCE_VALUE_NOT_REPRODUCIBLE",
+                "count": int(lineage.get("SOURCE_VALUE_NOT_REPRODUCIBLE") or 0),
+                "unit": "emitted SourceFacts",
+                "why": (
+                    f"Cell provenance is the numeric token. Lineage complete {complete}/{total}. "
+                    "Not source-confirmed gold."
+                ),
+                "next": "Keep cell-level provenance. Do not loosen the auditor.",
+            },
+        ],
+    }
+
+
 def run_locked_experiments(
     *,
     root: Path,
@@ -174,7 +275,11 @@ def run_locked_experiments(
     ledger_dir: Path,
     split_path: Path,
     limit: int = 40,
+    freeze: InvestigationFreeze | None = None,
 ) -> dict[str, Any]:
+    freeze = freeze or collect_investigation_freeze(root)
+    run_id = f"locked-experiments-{freeze.actual_code_sha}"
+    identity = freeze_run_identity(freeze, run_id=run_id)
     cases = load_real_filing_cases(limit=limit, root=root, locked=True)
     g02_rows: list[dict[str, Any]] = []
     page_rows: list[dict[str, Any]] = []
@@ -212,6 +317,7 @@ def run_locked_experiments(
     }
     summary = {
         "case_count": len(cases),
+        **identity,
         "g02": g02_totals,
         "g02_decision": "UNTESTED",
         "page_empty": {
@@ -244,39 +350,29 @@ def run_locked_experiments(
         ),
     }
     out_dir.mkdir(parents=True, exist_ok=True)
-    (out_dir / "g02_ablation.json").write_text(
-        json.dumps({"totals": g02_totals, "filings": g02_rows}, indent=2) + "\n", encoding="utf-8"
+    write_json(
+        out_dir / "g02_ablation.json",
+        {"identity": identity, "totals": g02_totals, "filings": g02_rows},
     )
-    (out_dir / "page_empty_census.json").write_text(
-        json.dumps(page_rows, indent=2) + "\n", encoding="utf-8"
+    write_json(out_dir / "page_empty_census.json", stamp_identity(page_rows, identity))
+    write_json(out_dir / "discovery_census.json", stamp_identity(discovery_rows, identity))
+    write_json(
+        out_dir / "lineage_after_cell_ref.json",
+        {
+            "identity": identity,
+            "totals": dict(lineage_totals),
+            "filings": [
+                {
+                    "case_id": row["case_id"],
+                    "source_fact_count": row["source_fact_count"],
+                    "lineage": row["lineage"],
+                }
+                for row in bakeoff_rows
+            ],
+        },
     )
-    (out_dir / "discovery_census.json").write_text(
-        json.dumps(discovery_rows, indent=2) + "\n", encoding="utf-8"
-    )
-    (out_dir / "lineage_after_cell_ref.json").write_text(
-        json.dumps(
-            {
-                "totals": dict(lineage_totals),
-                "filings": [
-                    {
-                        "case_id": row["case_id"],
-                        "source_fact_count": row["source_fact_count"],
-                        "lineage": row["lineage"],
-                    }
-                    for row in bakeoff_rows
-                ],
-            },
-            indent=2,
-        )
-        + "\n",
-        encoding="utf-8",
-    )
-    (out_dir / "bakeoffs.json").write_text(
-        json.dumps(bakeoff_rows, indent=2) + "\n", encoding="utf-8"
-    )
-    (out_dir / "experiment_summary.json").write_text(
-        json.dumps(summary, indent=2) + "\n", encoding="utf-8"
-    )
+    write_json(out_dir / "bakeoffs.json", stamp_identity(bakeoff_rows, identity))
+    write_json(out_dir / "experiment_summary.json", summary)
     _write_section27_tables(out_dir, summary, g02_rows, page_rows, discovery_rows)
     (out_dir / "extraction_report.md").write_text(_extraction_report(summary), encoding="utf-8")
     return {"summary": summary, "t10": t10, "g02": g02_rows, "page": page_rows}
@@ -368,6 +464,11 @@ def _extraction_report(summary: dict[str, Any]) -> str:
         "# V2 Extraction Investigation Report\n\n"
         "Diagnostic report for the locked 33. Not certification. Not source gold.\n"
         "Production engine remains V1. Coverage floor remains 8924.\n\n"
+        f"- Run ID: {summary.get('run_id')}\n"
+        f"- Investigation base SHA: {summary.get('investigation_base_sha')}\n"
+        f"- Actual code SHA: {summary.get('actual_code_sha')}\n"
+        f"- Source snapshot ID: {summary.get('source_snapshot_id')}\n"
+        f"- Runtime: {summary.get('python_version')} / {summary.get('platform')}\n"
         f"- Cases: {summary.get('case_count')}\n"
         f"- Lineage complete: {lineage.get('LINEAGE_COMPLETE', 0)}\n"
         f"- Context incomplete: {lineage.get('CONTEXT_EVIDENCE_INCOMPLETE', 0)}\n"

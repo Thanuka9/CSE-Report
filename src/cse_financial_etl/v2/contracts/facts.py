@@ -37,6 +37,7 @@ class FactCandidate(BaseModel):
     row_id: str
     column_id: str
     concept: ConceptCandidate | None = None
+    concept_alternatives: tuple[ConceptCandidate, ...] = ()
     concept_status: ResolutionStatus = ResolutionStatus.UNRESOLVED
     entity_scope: EntityScope | None = None
     entity_status: ResolutionStatus = ResolutionStatus.UNRESOLVED

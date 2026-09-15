@@ -19,6 +19,7 @@ from cse_financial_etl.v2.contracts.enums import (
     EntityScope,
     EvidenceLevel,
     FirstFailureStage,
+    ProductionSelectionStatus,
     PublicationStatus,
     ResolutionStatus,
     SourcePresence,
@@ -48,6 +49,20 @@ DERIVED_METRICS: tuple[str, ...] = (
 )
 
 MARKET_METRICS: tuple[str, ...] = ("LAST_TRADED_PRICE",)
+
+
+class ConceptAlternativeRecord(BaseModel):
+    """One in-run concept alternative. Persist unresolved/ambiguous rows in full."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    metric_code: str | None = None
+    match_kind: str
+    matched_alias: str | None = None
+    source_concept: str | None = None
+    score: float | None = None
+    rejection_reason: str | None = None
+    accounting_regime: str | None = None
 
 
 class SourceTruthItem(BaseModel):
@@ -117,16 +132,21 @@ class CandidateTrace(BaseModel):
     statement_id: str
     statement_type: str | None = None
     table_id: str | None = None
+    candidate_id: str
     row_id: str
     row_label: str
     cell_id: str
+    source_fact_id: str | None = None
     raw_numeric_text: str | None = None
     parsed_numeric_value: Decimal | None = None
     page_classification: str | None = None
+    page_classification_status: str | None = None
     statement_detection_status: str | None = None
+    table_detection_status: str | None = None
     table_reconstruction_status: str | None = None
     row_reconstruction_status: str | None = None
     concept_candidates: tuple[str, ...] = ()
+    concept_alternatives: tuple[ConceptAlternativeRecord, ...] = ()
     concept_status: ResolutionStatus
     entity_status: ResolutionStatus
     period_status: ResolutionStatus
@@ -144,10 +164,14 @@ class CandidateTrace(BaseModel):
     source_ref_sha256: str
     header_evidence: str | None = None
     unit_evidence: str | None = None
+    duration_evidence: str | None = None
+    comparison_evidence: str | None = None
     reason_codes: tuple[str, ...] = ()
     source_fact_created: bool
     validation_status: ValidationStatus | None = None
+    production_selection_status: ProductionSelectionStatus | None = None
     production_selected: bool | None = None
+    production_selection_reason: str | None = None
     publication_status: PublicationStatus | None = None
     first_failure_stage: FirstFailureStage
     extra: dict[str, str] = Field(default_factory=dict)

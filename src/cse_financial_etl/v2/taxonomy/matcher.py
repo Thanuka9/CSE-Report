@@ -21,6 +21,8 @@ _AMBIGUITY_DELTA = 2
 _ACCOUNT_WORD = re.compile(r"[a-z]{3,}")
 _FUZZY_BLOCKERS = frozenset(
     {
+        "attributable",
+        "owners",
         "tax",
         "expense",
         "fee",

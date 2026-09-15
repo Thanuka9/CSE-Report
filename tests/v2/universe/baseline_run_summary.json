@@ -1,24 +1,37 @@
 {
-  "generated_at": "2026-09-14T13:25:02.875765+00:00",
+  "generated_at": "2026-09-15T16:29:34.954340+00:00",
+  "run_id": "locked-baseline-e92689dabc400e3609e64a9d50512e99d9374dec:dirty:0e06ef8bd0b3",
+  "investigation_base_sha": "91a9c68bf940d3d9c2a86245f127de88ad4b4b6d",
+  "actual_code_sha": "e92689dabc400e3609e64a9d50512e99d9374dec:dirty:0e06ef8bd0b3",
+  "source_snapshot_id": "7bab3c98cf6bdde906ad0a464885d32437a05f42925e80b49b4d4c8469c306dc",
+  "python_version": "3.12.0",
+  "platform": "Windows-11-AMD64",
+  "branch": "v2/extraction-investigation",
+  "working_tree_dirty": true,
+  "code_sha": "e92689dabc400e3609e64a9d50512e99d9374dec",
+  "uv_lock_sha256": "d87a5d20b884732fc9271c1679caa806e511ebcb6a60dd122ffc9b9c49fc3a71",
+  "pymupdf_version": "1.28.2",
+  "tesseract_version": null,
+  "pytesseract_version": null,
+  "extraction_engine": "v1",
   "case_count": 33,
   "all_deterministic": true,
-  "source_facts": 905,
-  "derived_facts": 136,
+  "source_facts": 1642,
+  "derived_facts": 221,
   "mixed_native_ocr_filings": 7,
   "v1_errors": 0,
   "lineage": {
-    "LINEAGE_COMPLETE": 790,
-    "CONTEXT_EVIDENCE_INCOMPLETE": 17,
-    "SOURCE_VALUE_NOT_REPRODUCIBLE": 98
+    "LINEAGE_COMPLETE": 1606,
+    "CONTEXT_EVIDENCE_INCOMPLETE": 36
   },
   "derived_audit": {
-    "DERIVED_COMPLETE": 136
+    "DERIVED_COMPLETE": 221
   },
   "disagreement": {
-    "REFERENCE_ONLY_DISAGREEMENT": 130,
-    "V2_ONLY_DISAGREEMENT": 442,
+    "REFERENCE_ONLY_DISAGREEMENT": 131,
+    "V2_ONLY_DISAGREEMENT": 965,
     "AGREEMENT": 139,
-    "VALUE_DISAGREEMENT": 61
+    "VALUE_DISAGREEMENT": 60
   },
   "include_v1": true,
   "note": "V1 rows are comparator-only. Disagreements are not source truth. source_truth_status remains NOT_ADJUDICATED.",
