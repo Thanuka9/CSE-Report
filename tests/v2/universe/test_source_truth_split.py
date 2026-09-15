@@ -28,14 +28,29 @@ def test_dev_holdout_queue_has_no_expected_values() -> None:
     assert not set(holdout) & set(lock.scoring_symbols)
     assert "expected" not in payload
     assert "drop" not in payload
-    assert ITEMS_PATH.read_text(encoding="utf-8").strip() == ""
     queue_path = ROOT / "tests" / "v2" / "source_truth" / "t10_review_queue.json"
     if queue_path.is_file():
         queue = json.loads(queue_path.read_text(encoding="utf-8"))
         assert queue["items"]
         assert all("v1_value" not in item for item in queue["items"])
-        assert all(item["source_truth_status"] == "NOT_ADJUDICATED" for item in queue["items"])
-        assert ITEMS_PATH.read_text(encoding="utf-8").strip() == ""
+        assert all("v2_value" not in item for item in queue["items"])
+        assert all(item["split"] == "DEV" for item in queue["items"])
+
+
+def test_t10_items_are_blind_source_records() -> None:
+    lines = [line for line in ITEMS_PATH.read_text(encoding="utf-8").splitlines() if line.strip()]
+    assert len(lines) == 40
+    holdout = set(json.loads(SPLIT_PATH.read_text(encoding="utf-8"))["holdout"])
+    for line in lines:
+        item = SourceTruthItem.model_validate_json(line)
+        dumped = item.model_dump(mode="json")
+        assert "v1_value" not in dumped
+        assert "v2_value" not in dumped
+        assert item.split == "DEV"
+        assert item.issuer_id not in holdout
+        assert item.metric_code in SOURCE_TARGET_METRICS
+        assert item.source_presence.value in {"REPORTED", "NOT_REPORTED", "AMBIGUOUS"}
+        assert item.adjudication_status.value == "REVIEWER_1_COMPLETE"
 
 
 def test_source_truth_item_is_source_not_policy() -> None:

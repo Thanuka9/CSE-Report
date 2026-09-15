@@ -65,8 +65,8 @@ def test_g05_explicit_marker_is_required() -> None:
     assert detect_statement_regions(unmarked)[0].page_end == 1
 
 
-def test_g09_eps_note_without_group_currently_infers_company() -> None:
-    """Current production rule. Absence of Group is not source-confirmed Company evidence."""
+def test_g09_eps_note_without_group_does_not_infer_company() -> None:
+    """G09 KEEP: absence of Group is not Company."""
 
     document = geometric_document(
         (
@@ -77,7 +77,7 @@ def test_g09_eps_note_without_group_currently_infers_company() -> None:
     )
     statement = bind_column_context(document, build_statements(document)[0])
     assert statement.statement_type.value == "EPS_NOTE"
-    assert all(column.entity_scope is EntityScope.COMPANY for column in statement.columns)
+    assert all(column.entity_scope is None for column in statement.columns)
 
 
 def test_period_ended_without_months_does_not_invent_duration() -> None:

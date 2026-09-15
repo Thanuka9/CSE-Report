@@ -5,15 +5,12 @@
 
 ## Status on this branch
 
-Items 1–4 and 9 are investigation infrastructure and are implemented. Canonical
-outputs are written under `outputs/v2_extraction_baseline` and
-`outputs/v2_extraction_experiments` from one freeze identity, including run-level
-`candidate_trace.parquet`, `source_facts.parquet/jsonl`,
-`derived_facts.parquet/jsonl`, `production_selection.parquet`, and
-`issue_ledger.parquet`. CandidateTrace rows include `candidate_id` and
-`source_fact_id`. Items 5–8 and 10
-stay blocked until T10 source truth exists. Do not start T10 yet. Do not promote
-V2. Do not lower `min_draft_publishable = 8924`.
+Items 1–7 and 9 are investigation work on this branch. Item 5 (T10) is Reviewer 1
+complete on the 40 DEV queue. Item 6 decided G01/G03/G09 KEEP; G02/G04–G08 stay
+UNTESTED. Item 7 bake-offs remain H0/U0/P0-P1 diagnostic; H2/U2/P2 are not built.
+Item 8 is partial (G01 issuer-name and G09 EPS inference removed). Item 10 stays
+blocked. Do not inspect holdout. Do not promote V2. Do not lower
+`min_draft_publishable = 8924`.
 
 ## 1. Run a fresh full-pipeline A/B baseline
 

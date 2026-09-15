@@ -18,7 +18,7 @@
       "count": 131,
       "unit": "source-target facts",
       "why": "V1 emitted a target metric V2 did not. Could be V2 miss or V1 false positive.",
-      "next": "T10 blind source adjudication on DEV. Queue is tests/v2/source_truth/t10_review_queue.json. items.jsonl stays empty."
+      "next": "Score remaining REFERENCE_ONLY rows against T10-style PDF review. Do not copy V1-only values into items.jsonl."
     },
     {
       "rank": 3,
@@ -26,7 +26,7 @@
       "count": 60,
       "unit": "source-target facts",
       "why": "Same identity, different normalized value. Could be scale, duration, or wrong cell.",
-      "next": "T10 plus header/unit bake-off on those rows. First T10 queue items are DEV VALUE_DISAGREEMENT."
+      "next": "T10 VALUE_DISAGREEMENT on DEV is in items.jsonl. Iterate only on source-confirmed mismatches; do not tune against V1."
     },
     {
       "rank": 4,
@@ -42,7 +42,7 @@
       "count": 965,
       "unit": "source-target facts",
       "why": "V2 SourceFacts with no V1 comparator row. Includes comparatives and extra entity columns now that source extraction no longer filters by expected production entity.",
-      "next": "Score production-selected facts separately from all-source facts in T10."
+      "next": "Keep source facts and production selection separate. T10 scores SourceFacts, not publication output."
     },
     {
       "rank": 6,

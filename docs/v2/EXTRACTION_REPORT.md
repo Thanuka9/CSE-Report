@@ -18,5 +18,8 @@ Production engine remains V1. Coverage floor remains 8924.
 - T10 queue items: 40
 - Prototypes built: H2=False U2=False P2=False
 
-Gates remain UNTESTED until T10 human source adjudication.
+T10: 40 DEV items in `tests/v2/source_truth/items.jsonl` (Reviewer 1 PDF-page
+review). G01/G03/G09 KEEP. G02/G04–G08 remain UNTESTED.
+T10 vs V2 SourceFacts: 30 TP, 1 value mismatch (ATL TOP_LINE), 8 G01-withheld
+unlabeled REPORTED rows, 0 duration inventions. Not certification.
 T25–T29 (holdout, frozen universe, certification, cutover) are blocked.

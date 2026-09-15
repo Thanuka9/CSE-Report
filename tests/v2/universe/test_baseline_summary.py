@@ -58,6 +58,18 @@ def test_experiment_summary_is_diagnostic() -> None:
     assert "not gold" in payload["note"].casefold() or "Diagnostic" in payload["note"]
 
 
+def test_t10_score_artifact_is_not_certification() -> None:
+    path = ROOT / "tests" / "v2" / "universe" / "t10_score.json"
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    assert payload["item_count"] == 40
+    assert payload["gates"]["G01"]["decision"] == "KEEP"
+    assert payload["gates"]["G03"]["decision"] == "KEEP"
+    assert payload["gates"]["G09"]["decision"] == "KEEP"
+    assert payload["gates"]["G02"]["decision"] == "UNTESTED"
+    assert payload["gates"]["score"]["not_certification"] is True
+    assert "holdout" in payload["note"].casefold()
+
+
 def test_investigation_status_blocks_cutover() -> None:
     text = (ROOT / "docs" / "v2" / "EXTRACTION_INVESTIGATION_STATUS.md").read_text(encoding="utf-8")
     assert "T29 Resume cutover" in text

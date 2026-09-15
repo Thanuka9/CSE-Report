@@ -14,8 +14,8 @@ from cse_financial_etl.v2.contracts.enums import (
 from cse_financial_etl.v2.market.quarter_end_price import resolve_last_traded_as_of_quarter_end
 from cse_financial_etl.v2.orchestration.filing_pipeline import run_filing_pipeline
 from cse_financial_etl.v2.production.adapter import _from_source, select_pipeline_facts
-from cse_financial_etl.v2.taxonomy.registry import load_registry
 from cse_financial_etl.v2.production.engine import extract_for_production
+from cse_financial_etl.v2.taxonomy.registry import load_registry
 from tests.v2.helpers import geometric_document, source_fact
 
 
@@ -23,7 +23,7 @@ def test_app_config_defaults_to_v1_engine() -> None:
     assert AppConfig().extraction_engine == "v1"
 
 
-def test_investor_navps_publishes_company() -> None:
+def test_investor_navps_does_not_infer_company() -> None:
     document = geometric_document(
         (
             ((40.0, "INVESTOR INFORMATION"),),
@@ -36,16 +36,10 @@ def test_investor_navps_publishes_company() -> None:
         document, issuer_id="HAYL.N0000"
     )
     assert any(item.statement_type is StatementType.EPS_NOTE for item in statements)
-    navps = [
-        fact
-        for fact in facts
-        if fact.metric_code == "NAVPS" and fact.publication_status is PublicationStatus.ELIGIBLE
-    ]
-    assert navps
-    assert any(
-        fact.entity_scope is EntityScope.COMPANY
-        and fact.normalized_value == Decimal("148.27")
-        for fact in navps
+    navps = [fact for fact in facts if fact.metric_code == "NAVPS"]
+    assert all(fact.entity_scope is not EntityScope.COMPANY for fact in navps)
+    assert not any(
+        fact.publication_status is PublicationStatus.ELIGIBLE for fact in navps
     )
 
 

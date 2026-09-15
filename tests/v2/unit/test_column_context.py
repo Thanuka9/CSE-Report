@@ -3,7 +3,12 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
-from cse_financial_etl.v2.contracts.enums import ComparisonRole, EntityScope, StatementType, UnitDimension
+from cse_financial_etl.v2.contracts.enums import (
+    ComparisonRole,
+    EntityScope,
+    StatementType,
+    UnitDimension,
+)
 from cse_financial_etl.v2.contracts.statement import CanonicalStatement, StatementColumn
 from cse_financial_etl.v2.resolution.column_context import (
     _fail_closed_partial_monetary_columns,
@@ -531,7 +536,7 @@ def test_issuer_plc_company_does_not_flip_group_company_headers() -> None:
     ]
 
 
-def test_company_in_issuer_name_alone_still_binds_company() -> None:
+def test_company_in_issuer_name_alone_does_not_bind_company() -> None:
     document = geometric_document(
         (
             ((40.0, "Ceylon Tobacco Company PLC"),),
@@ -546,7 +551,7 @@ def test_company_in_issuer_name_alone_still_binds_company() -> None:
         column for column in bound.columns if column.unit_dimension is UnitDimension.MONETARY
     ]
     assert monetary
-    assert monetary[0].entity_scope is EntityScope.COMPANY
+    assert monetary[0].entity_scope is None
 
 
 def test_group_company_order_ignores_owners_of_the_company_body_row() -> None:

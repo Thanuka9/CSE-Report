@@ -30,6 +30,7 @@ Derived metrics and market prices are out of scope for source-extraction recall.
 ## Hard source rules (not optional)
 
 - Never invent entity, period, or unit.
+- Issuer-name `… Company PLC` / `… Bank PLC` is not column entity evidence.
 - Never convert GROUP → COMPANY.
 - `TOTAL_LIABILITIES` is explicit-source-only. Assets − equity is not source truth.
 - Q4 flow must be **reported**. `FY − 9M` is not a source PAT/PBT/OP/TOP_LINE.

@@ -220,13 +220,6 @@ def bind_column_context(
         position = monetary_indices.index(index)
         period_for_column = _period_for_position(position, period_dates, monetary_count)
         entity = _entity_for_position(position, monetary_count, blob, entity_banners)
-        if (
-            statement.statement_type is StatementType.EPS_NOTE
-            and entity is None
-            and not re.search(r"\b(?:group|consolidated)\b", blob, re.I)
-        ):
-            # Listed-issuer share metrics on an investor/EPS page with no Group split.
-            entity = EntityScope.COMPANY
         duration = None
         if statement.statement_type is not StatementType.BALANCE_SHEET:
             duration = _duration_for_position(position, monetary_count, blob, duration_banners)
@@ -568,7 +561,13 @@ def _entity_banners(
     column_headers = [(x, scope) for x, scope, issuer_only in found if not issuer_only]
     if column_headers:
         return column_headers
-    return [(x, scope) for x, scope, _issuer in found]
+    return []
+
+
+_PLC_ISSUER_NAME = re.compile(
+    r"[\w&.'’/-]+(?:\s+[\w&.'’/-]+){0,12}\s+plc\b",
+    re.I,
+)
 
 
 def _issuer_name_entity_line(text: str) -> bool:
@@ -576,6 +575,10 @@ def _issuer_name_entity_line(text: str) -> bool:
         return False
     distinct = {scope for scope, pattern in _ENTITY_PATTERNS if pattern.search(text)}
     return len(distinct) <= 1
+
+
+def _strip_issuer_name_phrases(text: str) -> str:
+    return _PLC_ISSUER_NAME.sub(" ", text)
 
 
 def _dates_in_text(text: str) -> list[date]:
@@ -776,7 +779,7 @@ def _entity_for_position(
     if left is not None and right is not None and monetary_count >= 4:
         midpoint = monetary_count // 2
         return left if position < midpoint else right
-    return parse_entity_scope(blob)
+    return parse_entity_scope(_strip_issuer_name_phrases(blob))
 
 
 def _paired_entities(blob: str) -> tuple[EntityScope | None, EntityScope | None]:

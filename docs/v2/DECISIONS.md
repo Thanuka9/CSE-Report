@@ -342,3 +342,14 @@ Each nontrivial deviation from `AGENT_IMPLEMENTATION_PLAN.md` is recorded here. 
 - **Evidence:** `tests/v2/universe/baseline_run_summary.json`, `tests/v2/universe/locked_source_manifest.json`, `tests/v2/universe/defect_family_ranking.json`.
 - **Affected modules:** `v2/diagnostics/baseline.py`, `lineage.py`, `issue_ledger.py`, `gate_ablation.py`, `page_routing.py`, `discovery.py`.
 - **Temporary/permanent:** Baseline artefacts are the investigation pin. Gate KEEP/NARROW/REPLACE/REMOVE remains UNTESTED until source truth exists.
+
+---
+
+## 2026-09-15 — T10 DEV source truth and G01/G03/G09 KEEP
+
+- **Decision:** Record 40 DEV SourceTruthItems from PDF-page review into `items.jsonl`. Do not copy V1/V2 values. KEEP G01 (issuer-name and document heading are not entity), KEEP G03 (do not invent duration; exact-quarter stays publication policy), KEEP G09 (do not infer COMPANY on EPS_NOTE from missing Group). Leave G02/G04–G08 UNTESTED. Do not inspect holdout. Do not promote V2.
+- **Reason:** T10 unlabeled REPORTED rows (ABL/CBNK/CTC) and explicit Company/Group EPS rows contradict inferred entity. GREG `Period ended` has no month count.
+- **Alternatives:** Infer Company from silence; copy letterhead Bank/Company; invent 3M duration; start holdout gold.
+- **Evidence:** `tests/v2/source_truth/items.jsonl`, `docs/v2/EXTRACTION_GATE_DECISIONS.md`, `tests/v2/universe/t10_score.json`.
+- **Affected modules:** `v2/resolution/column_context.py`, `v2/diagnostics/t10_score.py`, `tests/v2/source_truth/`.
+- **Temporary/permanent:** T10 Reviewer 1 record is the DEV investigation pin. Not certification.

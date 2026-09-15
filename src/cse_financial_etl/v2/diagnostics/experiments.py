@@ -153,8 +153,9 @@ def build_t10_review_queue(
     items = [item[4] for item in ranked[:limit]]
     return {
         "note": (
-            "T10 blind review queue. Not source truth and not publication gold. "
-            "items.jsonl stays empty until a human records source presence."
+            "T10 blind review queue pointers. Not source truth and not gold. "
+            "Source presence lives in items.jsonl after Reviewer 1 PDF-page review. "
+            "Do not copy V1 or V2 values into items."
         ),
         "limit": limit,
         "item_count": len(items),
@@ -215,8 +216,8 @@ def build_defect_ranking(
                 "unit": "source-target facts",
                 "why": "V1 emitted a target metric V2 did not. Could be V2 miss or V1 false positive.",
                 "next": (
-                    "T10 blind source adjudication on DEV. Queue is "
-                    "tests/v2/source_truth/t10_review_queue.json. items.jsonl stays empty."
+                    "Score remaining REFERENCE_ONLY rows against T10-style PDF review. "
+                    "Do not copy V1-only values into items.jsonl."
                 ),
             },
             {
@@ -226,8 +227,8 @@ def build_defect_ranking(
                 "unit": "source-target facts",
                 "why": "Same identity, different normalized value. Could be scale, duration, or wrong cell.",
                 "next": (
-                    "T10 plus header/unit bake-off on those rows. First T10 queue items "
-                    "are DEV VALUE_DISAGREEMENT."
+                    "T10 VALUE_DISAGREEMENT on DEV is in items.jsonl. Iterate only on "
+                    "source-confirmed mismatches; do not tune against V1."
                 ),
             },
             {
@@ -251,7 +252,10 @@ def build_defect_ranking(
                     "entity columns now that source extraction no longer filters by expected "
                     "production entity."
                 ),
-                "next": "Score production-selected facts separately from all-source facts in T10.",
+                "next": (
+                    "Keep source facts and production selection separate. T10 scores "
+                    "SourceFacts, not publication output."
+                ),
             },
             {
                 "rank": 6,
@@ -479,6 +483,6 @@ def _extraction_report(summary: dict[str, Any]) -> str:
         f"- T10 queue items: {summary.get('t10_queue_item_count')}\n"
         f"- Prototypes built: H2={summary['prototypes']['h2']} "
         f"U2={summary['prototypes']['u2']} P2={summary['prototypes']['p2']}\n\n"
-        "Gates remain UNTESTED until T10 human source adjudication.\n"
+        "G01/G03/G09 KEEP after T10. G02/G04–G08 remain UNTESTED.\n"
         "T25–T29 (holdout, frozen universe, certification, cutover) are blocked.\n"
     )
