@@ -32,6 +32,11 @@
     "SFCL.N0000",
     "TYRE.N0000"
   ],
+  "diagnosis": {
+    "N02": "docs/v2/investigations/N02_LITE_TRACE.md",
+    "N03": "docs/v2/investigations/N03_SFCL_TRACE.md",
+    "N04": "docs/v2/investigations/N04_ROOT_CAUSE_FAMILIES.md"
+  },
   "promote_to_dev_regression": [
     {
       "issuer_id": "LITE.N0000",
@@ -42,18 +47,20 @@
         "PAT": "79190000",
         "OPERATING_PROFIT": "156042000"
       },
-      "truth_entity": "GROUP"
+      "truth_entity": "GROUP",
+      "first_failure_stage": "entity ownership",
+      "root_cause_family": "header graph / column ownership (Group subtitle dropped from heading band)"
     },
     {
       "issuer_id": "SFCL.N0000",
       "metric_codes": ["TOP_LINE", "PAT"],
-      "result": "VALUE_OR_ENTITY_MISMATCH",
-      "truth": {
+      "result": "VALUE_OR_ENTITY_MISMATCH_VS_MISLABELED_TRUTH",
+      "truth_corrected_n03": {
+        "entity_scope": "COMPANY",
         "TOP_LINE": "2572716568",
         "PAT": "344406148"
       },
-      "truth_entity": "GROUP",
-      "note": "Critical wrong facts; primary hypothesis header/column ownership"
+      "note": "PDF Company|Group: V2 matched PDF; holdout had Company values labeled GROUP. Truth corrected N03. Not a V2 left/right swap."
     }
   ],
   "retain_as_g01_fail_closed_evidence": [

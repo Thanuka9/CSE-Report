@@ -32,8 +32,11 @@ Recovery plan: `docs/v2/NEXT_ENGINEERING_STEPS_AND_PROJECT_RECOVERY_PLAN.md` (au
 | T21 Generalized fix | DONE | G01 issuer-name; G09 EPS inference; insurance GWP contribution alias |
 | T22 Permanent regression | DONE | `tests/v2/regression/test_insurance_gwp_top_line.py` |
 | T23 Rerun DEV scoring | DONE | `t10_score.json` — entity-resolved recall 1.0 after GWP fix |
-| T24 Iterate | **REOPENED** | Unseen holdout exposed new defect families (LITE FN; SFCL critical wrong) |
-| T25 HOLDOUT gold | **FAILED** | 24 items; TP 11; FN 3; critical wrong 2; entity-resolved recall **68.75%**; `t25_holdout_score.json` |
+| T24 Iterate | **REOPENED** | Unseen holdout exposed new defect families (LITE FN; SFCL truth mislabel + header evidence gap) |
+| T25 HOLDOUT gold | **FAILED** | 24 items; TP 11; FN 3; critical wrong 2 vs original truth; entity-resolved recall **68.75%**; freeze `t25_failed_holdout_freeze.json` |
+| N02 LITE diagnosis | DONE | First failure **entity ownership**; Group subtitle dropped from heading band — `investigations/N02_LITE_TRACE.md` |
+| N03 SFCL diagnosis | DONE | V2 matched PDF Company\|Group; holdout truth mislabeled — corrected to COMPANY; `investigations/N03_SFCL_TRACE.md` |
+| N04 Root-cause families | DONE | F1 header/column ownership (P0); F3 duration spans; F2 evidence propagation — `investigations/N04_ROOT_CAUSE_FAMILIES.md` |
 | T26 Frozen-universe A/B | **OPEN (artefact-blocked)** | Sept-10 artefacts missing; Sept-05 pin is diagnostic only — **not** acceptance |
 | T27 SOURCE_VALIDATED_BASELINE | PARTIAL / PROVISIONAL | T10 + failed T25 only; floor stays 8924 |
 | T28 Certification | **BLOCKED ON ENGINEERING** | Holdout failed; gates unresolved; NOT CERTIFIED |

@@ -374,3 +374,12 @@ Each nontrivial deviation from `AGENT_IMPLEMENTATION_PLAN.md` is recorded here. 
 - **Evidence:** `docs/v2/NEXT_ENGINEERING_STEPS_AND_PROJECT_RECOVERY_PLAN.md`, `t25_holdout_score.json`, `t25_failed_holdout_freeze.json`.
 - **Affected modules:** status docs; forthcoming LITE/SFCL regressions and header/column ownership work.
 - **Temporary/permanent:** Recovery plan is the active engineering sequence until a new holdout passes.
+
+---
+
+## 2026-09-16 — N02/N03 diagnosis + SFCL truth correction
+
+- **Decision:** Record LITE/SFCL CandidateTrace diagnoses. LITE FNs are real extraction defects (Group subtitle dropped → ENTITY_UNRESOLVED). SFCL “critical wrong” vs original holdout labels were **truth authoring** (Company values labeled GROUP); correct SFCL items to `entity_scope=COMPANY` per PDF. Classify F1 header/column ownership as P0 generalized family. Do not issuer-patch.
+- **Reason:** PDF Company|Group layout matches V2 for SFCL; LITE page subtitle never entered heading-band context.
+- **Evidence:** `docs/v2/investigations/N02_LITE_TRACE.md`, `N03_SFCL_TRACE.md`, `N04_ROOT_CAUSE_FAMILIES.md`, corrected `items.jsonl` SFCL rows.
+- **Temporary/permanent:** Truth correction is permanent for SFCL HOLDOUT rows; extraction fix for F1 is forthcoming.
