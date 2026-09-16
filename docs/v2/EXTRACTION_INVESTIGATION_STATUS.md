@@ -6,6 +6,9 @@ Coverage floor stays `min_draft_publishable = 8924`. V1 is not source truth.
 
 Investigation base SHA: `91a9c68bf940d3d9c2a86245f127de88ad4b4b6d`.
 Branch: `v2/extraction-investigation`.
+Recovery plan: `docs/v2/NEXT_ENGINEERING_STEPS_AND_PROJECT_RECOVERY_PLAN.md` (audited head `99e658c`).
+
+**Verdict:** Architecture improved; first unseen holdout **FAILED**. Not engineering-complete. Not OFFICIAL-only.
 
 | Task | Status | Evidence |
 |---|---|---|
@@ -17,7 +20,7 @@ Branch: `v2/extraction-investigation`.
 | T05–T09 Locked-33 baseline | DONE | 33/33 deterministic; SourceFacts proven-entity only |
 | T10 Blind adjudication | DONE | 40 DEV items in `items.jsonl` |
 | T11 G02 ablation | DIAGNOSTIC | Cascade = per_column; decision UNTESTED |
-| T12 Header H0/H1/H2 | H0 ONLY | H2 not built |
+| T12 Header H0/H1/H2 | H0 ONLY | H2 not built; SFCL reopen (N03/N09) |
 | T13 Unit U0/U1/U2 | U0 ONLY | U2 not built |
 | T14 Page router P0/P1/P2 | P1 OPT-IN | P2 not built; OCR packaging proven via Docker smoke |
 | T15 Continuation | DIAGNOSTIC | UNTESTED |
@@ -29,22 +32,24 @@ Branch: `v2/extraction-investigation`.
 | T21 Generalized fix | DONE | G01 issuer-name; G09 EPS inference; insurance GWP contribution alias |
 | T22 Permanent regression | DONE | `tests/v2/regression/test_insurance_gwp_top_line.py` |
 | T23 Rerun DEV scoring | DONE | `t10_score.json` — entity-resolved recall 1.0 after GWP fix |
-| T24 Iterate | DONE | Major T10 cluster closed; G02/G04–G08 remain UNTESTED |
-| T25 HOLDOUT gold | DONE | 24 HOLDOUT items; score in `t25_holdout_score.json`; **no retune from holdout** |
-| T26 Frozen-universe A/B | ENGINEERING CLOSED (FAIL-CLOSED) | Sept-10 artefacts missing; Sept-05 pin diagnostic `t26_frozen_universe_diagnostic.json` |
-| T27 SOURCE_VALIDATED_BASELINE | PARTIAL | `docs/v2/SOURCE_VALIDATED_BASELINE.md` from T10+T25 only; floor stays 8924 |
-| T28 Certification | NOT CERTIFIED | Awaiting **OFFICIAL** review |
-| T29 Resume cutover | BLOCKED ON OFFICIAL ONLY | All engineering checklist items closed (incl. fail-closed 13/15); human OFFICIAL remains |
+| T24 Iterate | **REOPENED** | Unseen holdout exposed new defect families (LITE FN; SFCL critical wrong) |
+| T25 HOLDOUT gold | **FAILED** | 24 items; TP 11; FN 3; critical wrong 2; entity-resolved recall **68.75%**; `t25_holdout_score.json` |
+| T26 Frozen-universe A/B | **OPEN (artefact-blocked)** | Sept-10 artefacts missing; Sept-05 pin is diagnostic only — **not** acceptance |
+| T27 SOURCE_VALIDATED_BASELINE | PARTIAL / PROVISIONAL | T10 + failed T25 only; floor stays 8924 |
+| T28 Certification | **BLOCKED ON ENGINEERING** | Holdout failed; gates unresolved; NOT CERTIFIED |
+| T29 Resume cutover | **BLOCKED ON ENGINEERING + OFFICIAL** | Not OFFICIAL-only |
 
 ## Hard stops
 
 - Do not fill `items.jsonl` from V1 or V2 outputs.
 - Do not claim plan §37.
 - Do not lower coverage floors.
-- Do not enable P1 as production without Tesseract proof (Docker OCR smoke closes packaging).
-- Do not choose H2/U2/P2; they are not built.
-- Do not retune rules from HOLDOUT misses.
+- Do not promote V2 or delete V1.
+- Do not reuse the failed T25 12-file set as the final holdout.
+- Do not treat fail-closed diagnostics as acceptance passes.
+- Do not claim OFFICIAL review is the only remaining blocker.
+- Do not patch LITE/SFCL with issuer-specific constants.
 
-## Cutover document
+## Next
 
-`docs/v2/CUTOVER_CHECKLIST.md` — engineering complete; **sole remaining gate is OFFICIAL human review**.
+Execute N00–N24 in `docs/v2/NEXT_ENGINEERING_STEPS_AND_PROJECT_RECOVERY_PLAN.md`.

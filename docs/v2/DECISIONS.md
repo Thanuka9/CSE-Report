@@ -363,3 +363,14 @@ Each nontrivial deviation from `AGENT_IMPLEMENTATION_PLAN.md` is recorded here. 
 - **Alternatives:** Promote V2; lower 8924; invent holdout entity from letterhead; claim certification.
 - **Evidence:** `items.jsonl` HOLDOUT rows, `t25_holdout_score.json`, certification report.
 - **Temporary/permanent:** Holdout gold is the locked evaluation pin. Cutover remains blocked.
+
+---
+
+## 2026-09-16 — Recovery: T25 FAILED; reopen engineering (not OFFICIAL-only)
+
+- **Decision:** Correct overstated status. T24 = **REOPENED**; T25 = **FAILED** (entity-resolved recall 68.75%; FN 3 LITE; critical wrong 2 SFCL); T28 = **BLOCKED ON ENGINEERING**; T29 = **BLOCKED ON ENGINEERING + OFFICIAL**. Uncheck cutover items 12/13/15/17 as open institutional gates. Promote LITE/SFCL into DEV/regression after CandidateTrace diagnosis. Select a **new** unseen holdout later. Keep engine V1 and floor 8924. Fail-closed ≠ acceptance.
+- **Reason:** Claiming “engineering complete / OFFICIAL-only” after a failed first holdout was false. Critical wrong facts reopen extraction engineering.
+- **Alternatives:** Keep OFFICIAL-only narrative; patch LITE/SFCL with issuer constants; reuse failed holdout as final holdout; lower 8924.
+- **Evidence:** `docs/v2/NEXT_ENGINEERING_STEPS_AND_PROJECT_RECOVERY_PLAN.md`, `t25_holdout_score.json`, `t25_failed_holdout_freeze.json`.
+- **Affected modules:** status docs; forthcoming LITE/SFCL regressions and header/column ownership work.
+- **Temporary/permanent:** Recovery plan is the active engineering sequence until a new holdout passes.

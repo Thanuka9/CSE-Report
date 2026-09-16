@@ -142,28 +142,29 @@ Evidence:
 - [x] Fact-identity shadow diff with class counts by metric/reason/issuer/parser/sector
 - [x] CLI: `scripts/v2_shadow_diff.py`, `scripts/v2_universe_shadow.py`
 - [x] Pinned best-available V1 snapshot `outputs/normalized_facts_2026-09-05.csv` (`tests/v2/golden/universe_pin.json`)
-- [x] T26 frozen-universe diagnostic recorded (fail-closed; not Sept-10 acceptance)
+- [x] T26 frozen-universe **diagnostic** recorded (Sept-05 pin only; **not** Sept-10 acceptance; checklist 13 remains open)
 
 Evidence:
 - tests: `tests/v2/unit/test_golden_shadow_cutover.py`, `tests/v2/unit/test_universe_shadow.py`
 - artefact: `tests/v2/universe/t26_frozen_universe_diagnostic.json` (Sept-05 pin; Sept-10 missing; NEW 139 / LOST 22 / UNCHANGED 15)
-- remaining risks: the Sept-10 frozen snapshot is still not in-repo; checklist item 13 is engineering-closed, institutional fail-closed
+- remaining risks: Sept-10 freeze still missing; fail-closed diagnostic ≠ acceptance
 
 ## Phase 15 — Cutover
 - [x] Production extraction engine is **V1** (`configs/app.yml` `extraction.engine: v1`); `engine: v2` is the challenger until gold and universe gates pass
 - [x] `assert_v1_remains_default` still refuses V1 deletion when `ready=True`
 - [x] V2 workbook publish path + `workbook_dispatch` wired (`production_workbook.py`, `run_production_pipeline.py`; tests `test_production_workbook_routing`, `test_workbook_dispatch`)
-- [ ] **Pending:** institutional **OFFICIAL** review (sole human gate); V2 default / V1 deletion not started
+- [ ] **Pending engineering recovery:** T25 holdout FAILED (recall 68.75%; LITE FN; SFCL critical wrong) — see `docs/v2/NEXT_ENGINEERING_STEPS_AND_PROJECT_RECOVERY_PLAN.md`
+- [ ] **Pending after engineering:** institutional **OFFICIAL** review; V2 default / V1 deletion not started
 
 Evidence:
 - tests: `tests/v2/unit/test_golden_shadow_cutover.py`, `tests/v2/unit/test_release_context.py`, `tests/v2/unit/test_production_engine.py`
-- remaining risks: raising `ready=True` in a future change must not delete V1 production code until OFFICIAL review passes
+- remaining risks: do not claim OFFICIAL-only; critical wrong facts reopen extraction work before cutover
 
 ---
 
-## Plan audit (2026-09-13)
+## Plan audit (2026-09-13; status corrected 2026-09-16)
 
-Checked `CSE_V2_CURSOR_AGI_IMPLEMENTATION_PLAN.md` §§0–44 against the isolated V2 tree. Production extraction engine is V1; V2 is challenger-only. Coverage floor is still `min_draft_publishable = 8924`. V1 `extract_filing` remains importable. Cutover `ready` stays false until **OFFICIAL review** (checklist item 17). Engineering evidence for checklist 12/13/15/18–20 is recorded fail-closed.
+Checked `CSE_V2_CURSOR_AGI_IMPLEMENTATION_PLAN.md` §§0–44 against the isolated V2 tree. Production extraction engine is V1; V2 is challenger-only. Coverage floor is still `min_draft_publishable = 8924`. V1 `extract_filing` remains importable. Cutover `ready` stays false. **T25 failed; engineering incomplete; not OFFICIAL-only.**
 
 ### Hard rules with tests
 Never invent entity/period/unit; never convert GROUP→COMPANY; non-quarter FLOW withheld; Q4/cumulative FLOW fail-closed; `TOTAL_LIABILITIES` not derived; workbook Snapshot cells numeric-or-blank; explicit `ReleaseContext`; V2 does not call `set_release_mode`; OFFICIAL omits `REVIEW` facts; closing market price is not `LAST_TRADED_PRICE`.
@@ -181,17 +182,19 @@ Extra vs plan (allowed): `v2/governance/`, `diagnostics/golden.py`, `shadow.py`,
 
 Tests live under `tests/v2/unit`, `tests/v2/property`, `tests/v2/golden`. Plan dirs `tests/v2/fixtures`, `regression`, and `universe` were not created as separate trees.
 
-### Engineering closed (institutional fail-closed where noted)
-- Plan §32 / Phase 13 / checklist 12: T10/T25 investigation gold scored; locked 33 probe **209/237**; not §37 institutional gold — **fail-closed**
-- Plan §14 / Phase 14 / checklist 13: T26 diagnostic on 2026-09-05 pin; September-10 artefacts absent — **fail-closed**
-- Plan §15 / checklist 15: 2026-09-09 V2 challenger **3,684** vs floor **8,924** — **fail-closed**; production default V1
-- Checklist 18–20: OCR packaging path, regime lineage, V2 workbook dispatch — engineering complete
+### Open institutional / engineering gates
+- Checklist 12: T10 useful; T25 **FAILED** (68.75% recall; 2 critical wrong) — not §37 gold
+- Checklist 13: T26 Sept-05 diagnostic only; September-10 artefacts absent — **open**
+- Checklist 15: 2026-09-09 V2 challenger **3,684** vs floor **8,924** — fail signal, **not** a pass
+- Checklist 17: OFFICIAL review required **after** engineering completion
+- Checklist 18–20: OCR packaging, regime lineage, V2 workbook dispatch — engineering done
 
-### Sole remaining human gate
-- Checklist 17 / Phase 15: **Pending institutional OFFICIAL review and signed approval**; then V1 deletion only after rollback window post-cutover
+### Active recovery
+- Follow `docs/v2/NEXT_ENGINEERING_STEPS_AND_PROJECT_RECOVERY_PLAN.md` (N00–N24)
+- T24 REOPENED; T25 FAILED; T28 BLOCKED ON ENGINEERING; T29 BLOCKED ON ENGINEERING + OFFICIAL
 
-### Deferred, not launch-blocking
-- Plan §24: Paddle OCR is still deferred. Tesseract OCR is implemented and packaged in the production Dockerfile; checklist item 18 is engineering-closed (universe scanned-PDF coverage not claimed).
+### Deferred
+- Plan §24: Paddle OCR deferred; Tesseract packaged (item 18)
 - Plan §25–26: Table Transformer / BGE / rankers
 
 ### Closed vs earlier audit
@@ -199,6 +202,6 @@ Tests live under `tests/v2/unit`, `tests/v2/property`, `tests/v2/golden`. Plan d
 - Plan §33: Abans/CDB/Softlogic geometric fail-closed tests plus named PDFs when present; SDF/RENU stay out of the lock
 - Phase 15 step 1: production default remains V1; V2 is `engine: v2` challenger only
 
-V2 cutover is **not** authorized: institutional acceptance on items 12–13–15 failed closed; certification is NOT CERTIFIED pending **OFFICIAL** review.
+V2 cutover is **not** authorized. Certification is **NOT CERTIFIED — BLOCKED ON ENGINEERING**.
 
-Extraction investigation status (T00–T29) is `docs/v2/EXTRACTION_INVESTIGATION_STATUS.md`. T00–T26 engineering evidence recorded. T28 NOT CERTIFIED. T29 blocked on checklist item 17 only. Production engine stays V1.
+Extraction investigation status: `docs/v2/EXTRACTION_INVESTIGATION_STATUS.md`. Production engine stays V1.

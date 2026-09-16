@@ -15,11 +15,12 @@ Production engine remains V1. Coverage floor remains 8924.
 - G02 cascade suppressed: 0
 - G03 FLOW duration missing: 36
 - P1 OCR applied: False
-- T10 queue items: 40
+- T10 truth items: 40
 - Prototypes built: H2=False U2=False P2=False
 
 T10 DEV: 40 items; entity-resolved recall 1.0 after GWP contribution alias.
-T25 HOLDOUT: 24 items scored diagnostically; no retune.
-G01/G03/G09 KEEP. G02/G04–G08 remain UNTESTED.
-T26 diagnostic recorded (fail-closed; Sept-10 missing). Certification and cutover remain blocked pending **OFFICIAL** review.
-See `docs/v2/EXTRACTION_CERTIFICATION_REPORT.md` (NOT CERTIFIED) and `docs/v2/CUTOVER_CHECKLIST.md` item 17.
+T25 HOLDOUT: **FAILED** — 24 items; TP 11; FN 3 (LITE); critical wrong 2 (SFCL); entity-resolved recall 68.75%.
+T24 REOPENED. T28 BLOCKED ON ENGINEERING. T29 BLOCKED ON ENGINEERING + OFFICIAL.
+Do not claim OFFICIAL-only. Fail-closed ≠ acceptance.
+See `docs/v2/NEXT_ENGINEERING_STEPS_AND_PROJECT_RECOVERY_PLAN.md`,
+`docs/v2/EXTRACTION_CERTIFICATION_REPORT.md` (NOT CERTIFIED), and `docs/v2/CUTOVER_CHECKLIST.md`.
