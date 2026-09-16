@@ -24,8 +24,14 @@ def extract_for_production(
 
     chosen = str(engine or "v1").strip().lower()
     if chosen == "v2":
+        sidecar = kwargs.pop("v2_native_sidecar", None)
         return extract_filing_v2(
-            pdf_path, issuer_name, symbol, period_end, issuers=issuers
+            pdf_path,
+            issuer_name,
+            symbol,
+            period_end,
+            issuers=issuers,
+            v2_native_sidecar=sidecar,
         )
     if issuers is not None:
         kwargs = {**kwargs, "issuers": issuers}

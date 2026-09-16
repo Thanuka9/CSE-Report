@@ -276,6 +276,7 @@ def _extract_financial_facts(
         period_end,
         engine="v2",
         issuers=options.get("issuers"),
+        v2_native_sidecar=options.get("v2_native_sidecar"),
     )
 
 

@@ -1,0 +1,65 @@
+{
+  "note": "FAIL-CLOSED diagnostic on best-available V1 snapshot. NOT September-10 frozen-universe acceptance. NOT certification.",
+  "pin": {
+    "snapshot_id": "normalized_facts_2026-09-05",
+    "relative_path": "outputs/normalized_facts_2026-09-05.csv",
+    "kind": "best-available-live-v1-snapshot",
+    "pinned_on": "2026-09-13",
+    "not_frozen_september_10": true,
+    "note": "Best available in-repo V1 fact CSV. This is not the frozen September-10 universe artefact required by plan Phase 14 acceptance."
+  },
+  "pdf_limit": 5,
+  "overlapping_pdf_count": 5,
+  "counts": {
+    "NEW": 139,
+    "LOST": 22,
+    "UNCHANGED": 15
+  },
+  "by_metric": {
+    "OPERATING_PROFIT": {
+      "NEW": 17,
+      "UNCHANGED": 3
+    },
+    "PAT": {
+      "NEW": 17,
+      "UNCHANGED": 3,
+      "LOST": 2
+    },
+    "TOTAL_LIABILITIES": {
+      "NEW": 12
+    },
+    "PBT": {
+      "NEW": 17,
+      "LOST": 2,
+      "UNCHANGED": 3
+    },
+    "NPM": {
+      "LOST": 5
+    },
+    "TOP_LINE": {
+      "NEW": 16,
+      "UNCHANGED": 2,
+      "LOST": 3
+    },
+    "EPS_BASIC": {
+      "NEW": 18,
+      "UNCHANGED": 2,
+      "LOST": 2
+    },
+    "EPS_DILUTED": {
+      "LOST": 2,
+      "NEW": 18,
+      "UNCHANGED": 2
+    },
+    "TOTAL_ASSETS": {
+      "NEW": 12
+    },
+    "EPS_SELECTED": {
+      "LOST": 4
+    },
+    "NAVPS": {
+      "NEW": 12,
+      "LOST": 2
+    }
+  }
+}

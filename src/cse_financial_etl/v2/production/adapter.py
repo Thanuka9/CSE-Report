@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -24,19 +26,22 @@ _ENTITY_TO_V1 = {
 }
 
 
-def extract_filing_v2(
+@dataclass(frozen=True, slots=True)
+class V2ProductionExtraction:
+    production_facts: list[ExtractedFact]
+    source_facts: tuple[SourceFact, ...]
+    derived_facts: tuple[DerivedFact, ...]
+
+
+def extract_filing_v2_bundle(
     pdf_path: Path,
     issuer_name: str,
     symbol: str,
     period_end: date,
     *,
     issuers: dict[str, Any] | None = None,
-) -> list[ExtractedFact]:
-    """Run the V2 column-owned extractor and emit production ExtractedFact rows.
-
-    Query targets select among already-proven facts. They never invent entity,
-    period, or unit, and GROUP is never relabelled COMPANY.
-    """
+) -> V2ProductionExtraction:
+    """Run V2 extraction and return both native facts and V1-shaped pipeline rows."""
 
     _statements, source, derived, _metrics = run_pdf_pipeline(
         pdf_path,
@@ -58,7 +63,52 @@ def extract_filing_v2(
         rows.append(
             _from_derived(derived_fact, issuer_name=issuer_name, symbol=symbol, registry=registry)
         )
-    return rows
+    return V2ProductionExtraction(
+        production_facts=rows,
+        source_facts=tuple(source),
+        derived_facts=tuple(derived),
+    )
+
+
+def write_v2_native_sidecar(path: Path, bundle: V2ProductionExtraction) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "source_facts": [fact.model_dump(mode="json") for fact in bundle.source_facts],
+        "derived_facts": [fact.model_dump(mode="json") for fact in bundle.derived_facts],
+    }
+    path.write_text(json.dumps(payload), encoding="utf-8")
+
+
+def read_v2_native_sidecar(path: Path) -> tuple[tuple[SourceFact, ...], tuple[DerivedFact, ...]]:
+    if not path.exists():
+        return (), ()
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    source = tuple(SourceFact.model_validate(item) for item in payload.get("source_facts") or ())
+    derived = tuple(DerivedFact.model_validate(item) for item in payload.get("derived_facts") or ())
+    return source, derived
+
+
+def extract_filing_v2(
+    pdf_path: Path,
+    issuer_name: str,
+    symbol: str,
+    period_end: date,
+    *,
+    issuers: dict[str, Any] | None = None,
+    v2_native_sidecar: Path | None = None,
+) -> list[ExtractedFact]:
+    """Run the V2 column-owned extractor and emit production ExtractedFact rows.
+
+    Query targets select among already-proven facts. They never invent entity,
+    period, or unit, and GROUP is never relabelled COMPANY.
+    """
+
+    bundle = extract_filing_v2_bundle(
+        pdf_path, issuer_name, symbol, period_end, issuers=issuers
+    )
+    if v2_native_sidecar is not None:
+        write_v2_native_sidecar(v2_native_sidecar, bundle)
+    return bundle.production_facts
 
 
 def _expected_entity(issuer_name: str, issuers: dict[str, Any] | None) -> EntityScope | None:

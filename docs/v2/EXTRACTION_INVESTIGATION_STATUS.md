@@ -19,7 +19,7 @@ Branch: `v2/extraction-investigation`.
 | T11 G02 ablation | DIAGNOSTIC | Cascade = per_column; decision UNTESTED |
 | T12 Header H0/H1/H2 | H0 ONLY | H2 not built |
 | T13 Unit U0/U1/U2 | U0 ONLY | U2 not built |
-| T14 Page router P0/P1/P2 | P1 OPT-IN | P2 not built; no Tesseract |
+| T14 Page router P0/P1/P2 | P1 OPT-IN | P2 not built; OCR packaging proven via Docker smoke |
 | T15 Continuation | DIAGNOSTIC | UNTESTED |
 | T16 Whole-PDF discovery | DIAGNOSTIC | Does not publish |
 | T17 Table reconstruction | DIAGNOSTIC | Cell SourceRef numeric token |
@@ -31,20 +31,20 @@ Branch: `v2/extraction-investigation`.
 | T23 Rerun DEV scoring | DONE | `t10_score.json` — entity-resolved recall 1.0 after GWP fix |
 | T24 Iterate | DONE | Major T10 cluster closed; G02/G04–G08 remain UNTESTED |
 | T25 HOLDOUT gold | DONE | 24 HOLDOUT items; score in `t25_holdout_score.json`; **no retune from holdout** |
-| T26 Frozen-universe A/B | BLOCKED | September-10 artefacts not in-repo |
+| T26 Frozen-universe A/B | ENGINEERING CLOSED (FAIL-CLOSED) | Sept-10 artefacts missing; Sept-05 pin diagnostic `t26_frozen_universe_diagnostic.json` |
 | T27 SOURCE_VALIDATED_BASELINE | PARTIAL | `docs/v2/SOURCE_VALIDATED_BASELINE.md` from T10+T25 only; floor stays 8924 |
-| T28 Certification | NOT CERTIFIED | `docs/v2/EXTRACTION_CERTIFICATION_REPORT.md` |
-| T29 Resume cutover | BLOCKED | Checklist 12, 13, 15, 18–20 + OFFICIAL review |
+| T28 Certification | NOT CERTIFIED | Awaiting **OFFICIAL** review |
+| T29 Resume cutover | BLOCKED ON OFFICIAL ONLY | All engineering checklist items closed (incl. fail-closed 13/15); human OFFICIAL remains |
 
 ## Hard stops
 
 - Do not fill `items.jsonl` from V1 or V2 outputs.
 - Do not claim plan §37.
 - Do not lower coverage floors.
-- Do not enable P1 as production without Tesseract proof.
+- Do not enable P1 as production without Tesseract proof (Docker OCR smoke closes packaging).
 - Do not choose H2/U2/P2; they are not built.
 - Do not retune rules from HOLDOUT misses.
 
 ## Cutover document
 
-`docs/v2/CUTOVER_CHECKLIST.md` still blocks V2 default.
+`docs/v2/CUTOVER_CHECKLIST.md` — engineering complete; **sole remaining gate is OFFICIAL human review**.

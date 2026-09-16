@@ -21,5 +21,5 @@ Production engine remains V1. Coverage floor remains 8924.
 T10 DEV: 40 items; entity-resolved recall 1.0 after GWP contribution alias.
 T25 HOLDOUT: 24 items scored diagnostically; no retune.
 G01/G03/G09 KEEP. G02/G04–G08 remain UNTESTED.
-T26 September-10 frozen universe, certification, and cutover remain blocked.
-See `docs/v2/EXTRACTION_CERTIFICATION_REPORT.md` (NOT CERTIFIED).
+T26 diagnostic recorded (fail-closed; Sept-10 missing). Certification and cutover remain blocked pending **OFFICIAL** review.
+See `docs/v2/EXTRACTION_CERTIFICATION_REPORT.md` (NOT CERTIFIED) and `docs/v2/CUTOVER_CHECKLIST.md` item 17.

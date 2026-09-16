@@ -8,7 +8,7 @@ Do not set `configs/app.yml` `extraction.engine: v2`.
 Investigation base SHA: `91a9c68bf940d3d9c2a86245f127de88ad4b4b6d`.
 Branch: `v2/extraction-investigation`.
 
-## What passed
+## What passed (engineering)
 
 | Gate | Result |
 |---|---|
@@ -18,6 +18,10 @@ Branch: `v2/extraction-investigation`.
 | T25 HOLDOUT gold sample (24 items) | DONE (evaluation only; no retune) |
 | G01 / G03 / G09 | KEEP |
 | Locked-33 A/B determinism | DONE (prior baseline) |
+| T26 frozen-universe diagnostic | FAIL-CLOSED (Sept-10 missing; Sept-05 pin only) |
+| Checklist 15 current-universe | FAIL-CLOSED (3,684 vs floor 8,924) |
+| Checklist 18 OCR packaging | DONE (Dockerfile + container smoke) |
+| Checklist 20 V2 publish path | DONE (opt-in `engine=v2`; default V1) |
 | Engine default | V1 |
 
 ## Scoring snapshot
@@ -32,11 +36,11 @@ Branch: `v2/extraction-investigation`.
 - Entity-resolved recall **0.6875** (diagnostic only)
 - **No rule changes** from these holdout misses
 
-### Still blocked for certification
+### Remaining for certification
 
-- September-10 frozen-universe A/B missing
-- G02/G04–G08 UNTESTED
-- Coverage floor redesign / OCR packaging / OFFICIAL review
+**OFFICIAL human review only** — institutional gold / fail-closed T26–T27 acceptance / promote-or-hold decision.
+
+G02/G04–G08 remain UNTESTED (not blocking engineering close; disclose in OFFICIAL).
 
 ## Hard stops still in force
 
@@ -50,6 +54,8 @@ Branch: `v2/extraction-investigation`.
 - `docs/v2/SOURCE_VALIDATED_BASELINE.md`
 - `docs/v2/EXTRACTION_GATE_DECISIONS.md`
 - `docs/v2/EXTRACTION_INVESTIGATION_STATUS.md`
+- `docs/v2/CUTOVER_CHECKLIST.md`
 - `tests/v2/source_truth/items.jsonl`
 - `tests/v2/universe/t10_score.json`
 - `tests/v2/universe/t25_holdout_score.json`
+- `tests/v2/universe/t26_frozen_universe_diagnostic.json`

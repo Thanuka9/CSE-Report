@@ -40,7 +40,7 @@ from cse_financial_etl.extraction.statement_extractor import (
 )
 from cse_financial_etl.extraction.unit_detector import configure_unit_patterns
 from cse_financial_etl.reporting.dashboard import generate_run_dashboard
-from cse_financial_etl.reporting.excel import generate_excel
+from cse_financial_etl.reporting.production_workbook import generate_production_workbook
 from cse_financial_etl.sources.cse import (
     DownloadedFiling,
     Filing,
@@ -165,6 +165,7 @@ def extract_filing(
             period_end,
             engine="v2",
             issuers=kwargs.get("issuers"),
+            v2_native_sidecar=kwargs.get("v2_native_sidecar"),
         )
     return extract_filing_v1(
         pdf_path,
@@ -421,6 +422,10 @@ class Pipeline:
 
         self.progress(f"[4/7] Extracting statements from {len(downloaded)} PDFs")
         extracted_results: list[tuple[DownloadedFiling, list[ExtractedFact]]] = []
+        from cse_financial_etl.v2.contracts.facts import DerivedFact, SourceFact
+
+        v2_source_facts: list[SourceFact] = []
+        v2_derived_facts: list[DerivedFact] = []
 
         def extract_kwargs_for(item: DownloadedFiling) -> dict[str, Any]:
             diagnostics_dir = self.data / "tmp" / run_id / item.sha256[:16]
@@ -434,9 +439,21 @@ class Pipeline:
                 engine=chosen_engine,
             )
 
-        def extract_one(item: DownloadedFiling) -> tuple[DownloadedFiling, list[ExtractedFact]]:
+        def extract_one(
+            item: DownloadedFiling,
+        ) -> tuple[
+            DownloadedFiling,
+            list[ExtractedFact],
+            tuple[SourceFact, ...],
+            tuple[DerivedFact, ...],
+        ]:
             diagnostics_dir = self.data / "tmp" / run_id / item.sha256[:16]
             kwargs = extract_kwargs_for(item)
+            if chosen_engine == "v2":
+                kwargs = {
+                    **kwargs,
+                    "v2_native_sidecar": diagnostics_dir / "v2_native_facts.json",
+                }
             facts = extract_filing(
                 item.local_path,
                 item.filing.issuer_name,
@@ -444,6 +461,14 @@ class Pipeline:
                 item.filing.period_end,
                 **kwargs,
             )
+            native_source: tuple[SourceFact, ...] = ()
+            native_derived: tuple[DerivedFact, ...] = ()
+            if chosen_engine == "v2":
+                from cse_financial_etl.v2.production.adapter import read_v2_native_sidecar
+
+                native_source, native_derived = read_v2_native_sidecar(
+                    diagnostics_dir / "v2_native_facts.json"
+                )
             quality_path = diagnostics_dir / "document_quality.json"
             if quality_path.exists():
                 bronze_path = (
@@ -451,14 +476,18 @@ class Pipeline:
                 )
                 bronze_path.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(quality_path, bronze_path)
-            return item, facts
+            return item, facts, native_source, native_derived
 
         with ThreadPoolExecutor(max_workers=extraction_workers) as executor:
             extraction_futures = {executor.submit(extract_one, item): item for item in downloaded}
             for index, extraction_future in enumerate(as_completed(extraction_futures), start=1):
                 item = extraction_futures[extraction_future]
                 try:
-                    downloaded_item, facts = extraction_future.result()
+                    downloaded_item, facts, native_source, native_derived = extraction_future.result()
+                    if native_source:
+                        v2_source_facts.extend(native_source)
+                    if native_derived:
+                        v2_derived_facts.extend(native_derived)
                     extracted_results.append((downloaded_item, facts))
                 except Exception as exc:
                     errors.append(
@@ -482,6 +511,19 @@ class Pipeline:
                     self.progress(f"      extracted {index}/{len(extraction_futures)}")
 
         extracted_results = derive_ratio_facts(extracted_results, display_periods=target_periods)
+        if chosen_engine == "v2":
+            from cse_financial_etl.v2.production.facts_store import write_v2_publication_facts
+
+            source_path, derived_path = write_v2_publication_facts(
+                self.root,
+                as_of_date,
+                source_facts=v2_source_facts,
+                derived_facts=v2_derived_facts,
+            )
+            self.progress(
+                f"      persisted V2 publication facts ({len(v2_source_facts)} source, "
+                f"{len(v2_derived_facts)} derived) under {source_path.name}"
+            )
         for downloaded_item, facts in extracted_results:
             self.repository.save_filing_and_facts(downloaded_item, facts)
 
@@ -812,8 +854,19 @@ class Pipeline:
         }
         workbook_path: Path | None = None
         if not skip_excel:
-            workbook_path = generate_excel(self.root, as_of_date, target_periods, run_id)
+            workbook_path = generate_production_workbook(
+                self.root,
+                as_of_date,
+                target_periods,
+                run_id,
+                engine=chosen_engine,
+                app_config=self.app_config,
+                v2_source_facts=tuple(v2_source_facts) if chosen_engine == "v2" else None,
+                v2_derived_facts=tuple(v2_derived_facts) if chosen_engine == "v2" else None,
+            )
             statistics["workbook"] = str(workbook_path)
+            if chosen_engine == "v2":
+                statistics["workbook_renderer"] = "v2.publish_production_workbook"
         dashboard_path = generate_run_dashboard(
             self.root, as_of_date, target_periods, run_id, run_dir, statistics
         )
