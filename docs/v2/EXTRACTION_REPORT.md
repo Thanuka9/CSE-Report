@@ -23,5 +23,5 @@ Verified path: `docs/v2/VERIFIED_OPEN_WORK_AND_FINAL_ENGINEERING_PATH.md`.
 
 G01/G03/G09 KEEP. G02/G04–G08 remain UNTESTED.
 First T25 holdout retired after F1/F3 + SFCL truth fix.
-**Next:** N17 blind adjudication on `holdout_v2_identity_manifest.json` (do not score N16 before truth).
+**Next:** N17 human blind adjudication — `docs/v2/N17_BLIND_ADJUDICATION.md` + `n17_blind_review_queue.json` (do not score N16 before truth).
 N13 CI/PR and N14 universe challenger remain open. N20 Sept-10 artefacts missing.

@@ -2,7 +2,8 @@
 
 **Repository:** `Thanuka9/CSE-Report`  
 **Branch:** `v2/extraction-investigation`  
-**Latest verified head:** `a537f8fd83663b1d21a70b400428869256e882bf`  
+**Latest verified head (F3 checkpoint):** `a537f8fd83663b1d21a70b400428869256e882bf`  
+**N11/N12 clean locked-33 SHA:** `2ff5d1ff1b04d0fbe559dc33d438e9072d030879` (freeze `ef4b200`)  
 **Production engine:** `v1`  
 **Coverage floor:** `min_draft_publishable = 8924`  
 **Status:** NOT CERTIFIED / NOT READY FOR CUTOVER
@@ -122,6 +123,13 @@ Do not score this set before N17 blind truth exists.
 
 This is the next human/source-truth step.
 
+Package prepared (blank; not gold):
+
+```text
+docs/v2/N17_BLIND_ADJUDICATION.md
+tests/v2/source_truth/n17_blind_review_queue.json
+```
+
 Reviewer must not see:
 
 ```text
@@ -235,38 +243,19 @@ If N18 fails:
 
 Never retune on N16 and then call N16 the final passing holdout.
 
-# 6. OPEN — N11 Clean-SHA baseline
+# 6. DONE — N11 Clean-SHA baseline
 
-The committed baseline still references an older dirty working-tree run rather than current head `a537f8fd...`.
+Completed on clean SHA `2ff5d1ff1b04d0fbe559dc33d438e9072d030879`:
 
-Required:
-1. commit all intended changes,
-2. ensure clean working tree,
-3. rerun the locked-33 full baseline from disk,
-4. record exact `actual_code_sha`,
-5. prove A/B determinism.
+- `working_tree_dirty=false`
+- `all_deterministic=true`
+- locked-33 baseline regenerated from disk
 
-Required outputs:
+Canonical pointer: `tests/v2/universe/baseline_run_summary.json`.
 
-```text
-run_manifest.json
-source_manifest.json
-candidate_trace.parquet
-source_facts.parquet
-derived_facts.parquet
-production_selection.parquet
-issue_ledger.parquet
-issue_summary.csv
-experiment_summary.json
-defect_family_ranking.json
-extraction_report.md
-```
+# 7. DONE — N12 Canonical regeneration
 
-Every artifact must identify the same clean code SHA and source snapshot.
-
-# 7. OPEN — N12 Canonical regeneration
-
-After N11, regenerate the canonical committed summaries so they all describe one code state:
+Canonical summaries reconciled on the N11 SHA (freeze commit `ef4b200`):
 
 ```text
 tests/v2/universe/investigation_freeze.json
@@ -276,8 +265,6 @@ tests/v2/universe/defect_family_ranking.json
 docs/v2/EXTRACTION_REPORT.md
 docs/v2/EXTRACTION_INVESTIGATION_STATUS.md
 ```
-
-Do not leave mixed `actual_code_sha` values across canonical artifacts.
 
 # 8. OPEN — N13 GitHub CI
 
@@ -509,7 +496,9 @@ Do not:
 # 18. Current verified state
 
 ```text
-Latest head                       a537f8fd83663b1d21a70b400428869256e882bf
+F3 checkpoint                     a537f8fd83663b1d21a70b400428869256e882bf
+N11/N12 clean SHA                 2ff5d1ff1b04d0fbe559dc33d438e9072d030879
+Freeze refresh                    ef4b200
 
 LITE root cause                   diagnosed
 LITE F1/F3 fixes                  landed
@@ -527,12 +516,12 @@ N09 header diagnostic             H0 only
 H1/H2                             not built
 
 N16 new holdout                   selected, 13 filings
-N17 blind adjudication            NOT STARTED
+N17 blind adjudication            PACKAGE READY (human fill pending)
 N18 score                         BLOCKED ON N17
 
-N11 clean baseline                OPEN
-N12 canonical regeneration        OPEN
-N13 CI                            OPEN
+N11 clean baseline                DONE
+N12 canonical regeneration        DONE
+N13 CI                            OPEN (branch pushed; PR needs gh/token)
 N14 full-universe challenger      OPEN
 
 N20 Sept-10 exact replay          OPEN / artifacts missing

@@ -7,9 +7,9 @@ Coverage floor stays `min_draft_publishable = 8924`. V1 is not source truth.
 Investigation base SHA: `91a9c68bf940d3d9c2a86245f127de88ad4b4b6d`.
 Branch: `v2/extraction-investigation`.
 Recovery plan: `docs/v2/NEXT_ENGINEERING_STEPS_AND_PROJECT_RECOVERY_PLAN.md`.
-Verified open-work path: `docs/v2/VERIFIED_OPEN_WORK_AND_FINAL_ENGINEERING_PATH.md` (checkpoint `a537f8f`).
+Verified open-work path: `docs/v2/VERIFIED_OPEN_WORK_AND_FINAL_ENGINEERING_PATH.md` (engineering head `0d844aa`+).
 
-**Verdict:** Architecture improved; first T25 holdout **retired** after F1/F3 + SFCL truth fix. Not engineering-complete. Not OFFICIAL-only. **Next human step: N17** blind adjudication of `holdout_v2_identity_manifest.json`.
+**Verdict:** Architecture improved; first T25 holdout **retired** after F1/F3 + SFCL truth fix. Not engineering-complete. Not OFFICIAL-only. **Next human step: N17** blind adjudication (`docs/v2/N17_BLIND_ADJUDICATION.md`).
 
 | Task | Status | Evidence |
 |---|---|---|
@@ -26,8 +26,12 @@ Verified open-work path: `docs/v2/VERIFIED_OPEN_WORK_AND_FINAL_ENGINEERING_PATH.
 | N09 Header bake-off | DONE (H0 only) | `tests/v2/universe/n09_header_bakeoff.json` — H1/H2 not built |
 | N10 Unit/page/continuation | PARTIAL | Existing U0/G05 unit bakeoffs; U2/P2 not built |
 | F3 duration ownership | **FIX LANDED** | Ignore `period ended` date cues as false 9M banners |
+| N11 Clean-SHA baseline | **DONE** | `baseline_run_summary.json` — `actual_code_sha=2ff5d1f…`, `all_deterministic=true` |
+| N12 Canonical regen | **DONE** | Freeze `ef4b200` + report `0d844aa` |
+| N13 CI / PR | **OPEN** | Branch pushed; no GitHub token in this environment to open PR |
+| N14 Universe challenger | **OPEN** | Prior 3,684 vs 8,924 predates F1/F3 |
 | N16 New holdout identity | DONE (identity only) | `holdout_v2_identity_manifest.json` — 13 filings; **do not score until N17** |
-| N17 Blind gold | **NOT STARTED** | |
+| N17 Blind gold | **PACKAGE READY / NOT ADJUDICATED** | `n17_blind_review_queue.json` + `N17_BLIND_ADJUDICATION.md` |
 | T26 Frozen-universe | OPEN | Sept-10 artefacts missing |
 | T27 Baseline | PARTIAL | Floor stays 8924 |
 | T28 Certification | **BLOCKED ON ENGINEERING** | |
@@ -43,12 +47,6 @@ Verified open-work path: `docs/v2/VERIFIED_OPEN_WORK_AND_FINAL_ENGINEERING_PATH.
 - Do not treat fail-closed as acceptance.
 - Do not claim OFFICIAL-only.
 
-## N11/N12 checkpoint
-
-- Locked-33 baseline regenerated on clean SHA (aseline_run_summary.json, ll_deterministic=true).
-- Experiment summary regenerated (experiment_summary.json); H2/U2/P2 still false.
-- N17 blind gold still required before N18.
-
 ## Next
 
-N17 blind-adjudicate `holdout_v2_identity_manifest.json` → N18 score → N11–N14 clean baseline/CI/universe as capacity allows → N20 Sept-10 when artefacts exist → N23 OFFICIAL.
+N17 human blind-adjudicate → N18 score → N13 CI green → N14 current-universe V2 challenger → N20 Sept-10 when artefacts exist → OFFICIAL.

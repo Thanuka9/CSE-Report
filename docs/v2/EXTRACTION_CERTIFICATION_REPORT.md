@@ -8,8 +8,10 @@ Do not set `configs/app.yml` `extraction.engine: v2`.
 Investigation base SHA: `91a9c68bf940d3d9c2a86245f127de88ad4b4b6d`.
 Branch: `v2/extraction-investigation`.
 Verified engineering checkpoint: `a537f8fd83663b1d21a70b400428869256e882bf`.
+N11/N12 clean locked-33 SHA: `2ff5d1ff1b04d0fbe559dc33d438e9072d030879` (freeze `ef4b200`).
 
 Final path: `docs/v2/VERIFIED_OPEN_WORK_AND_FINAL_ENGINEERING_PATH.md`.
+N17 package: `docs/v2/N17_BLIND_ADJUDICATION.md`.
 
 ## Verdict
 
@@ -55,10 +57,10 @@ N16 identity locked (13 filings) — holdout_v2_identity_manifest.json
 
 | Gate | Result |
 |---|---|
-| N17 / N18 new unseen holdout | PENDING / BLOCKED ON N17 |
-| N11 clean-SHA locked-33 baseline | OPEN |
-| N12 canonical artefact regen | OPEN |
-| N13 CI green | OPEN |
+| N17 / N18 new unseen holdout | PACKAGE READY / BLOCKED ON human blind gold |
+| N11 clean-SHA locked-33 baseline | DONE (`2ff5d1f…`, deterministic) |
+| N12 canonical artefact regen | DONE |
+| N13 CI green | OPEN (branch pushed; PR not opened — no `gh`/token here) |
 | N14 current-universe V2 challenger | OPEN (prior 3,684 vs 8,924 predates F1/F3) |
 | G02 / G04–G08 | UNTESTED vs source truth |
 | H1 / H2 | not built |
