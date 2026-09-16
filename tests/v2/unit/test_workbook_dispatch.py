@@ -18,6 +18,11 @@ def test_resolve_engine_defaults_to_v1() -> None:
     assert resolve_extraction_engine("v1", override="v2") == "v2"
 
 
+def test_resolve_engine_rejects_invalid() -> None:
+    with pytest.raises(ValueError, match="v1 or v2"):
+        resolve_extraction_engine("v3")
+
+
 def test_v1_dispatch_uses_v1_publisher(tmp_path: Path) -> None:
     target = tmp_path / "v1.xlsx"
 

@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 import pytest
 
-from cse_financial_etl.config import AppConfig
+from cse_financial_etl.config import AppConfig, load_app_config
 from cse_financial_etl.reporting.production_workbook import (
     generate_production_workbook,
     resolve_extraction_engine,
@@ -102,3 +102,56 @@ def test_invalid_engine_raises() -> None:
     config = AppConfig(extraction_engine="v1")
     with pytest.raises(ValueError, match="v1 or v2"):
         resolve_extraction_engine(config, "v3")
+
+
+def test_repo_app_config_keeps_extraction_engine_v1() -> None:
+    project_root = Path(__file__).resolve().parents[2]
+    config = load_app_config(project_root)
+    assert config.extraction_engine == "v1"
+
+
+def test_v1_workbook_uses_generate_excel_when_engine_from_config_default(
+    tmp_path: Path,
+) -> None:
+    config = AppConfig(extraction_engine="v1", release_mode="DRAFT")
+    chosen = resolve_extraction_engine(config, None)
+    assert chosen == "v1"
+    expected = tmp_path / "outputs" / "workbooks" / "v1-default.xlsx"
+    with (
+        patch(
+            "cse_financial_etl.reporting.production_workbook.generate_excel",
+            return_value=expected,
+        ) as generate_excel,
+        patch(
+            "cse_financial_etl.reporting.production_workbook.publish_production_workbook",
+        ) as publish,
+    ):
+        path = generate_production_workbook(
+            tmp_path,
+            date(2026, 9, 9),
+            (date(2026, 6, 30),),
+            "run-config-v1",
+            engine=chosen,
+            app_config=config,
+        )
+    generate_excel.assert_called_once_with(
+        tmp_path,
+        date(2026, 9, 9),
+        (date(2026, 6, 30),),
+        "run-config-v1",
+    )
+    publish.assert_not_called()
+    assert path == expected
+
+
+def test_generate_production_workbook_rejects_invalid_engine(tmp_path: Path) -> None:
+    config = AppConfig(extraction_engine="v1")
+    with pytest.raises(ValueError, match="v1 or v2"):
+        generate_production_workbook(
+            tmp_path,
+            date(2026, 9, 9),
+            (date(2026, 6, 30),),
+            "run-bad",
+            engine="experimental",
+            app_config=config,
+        )
