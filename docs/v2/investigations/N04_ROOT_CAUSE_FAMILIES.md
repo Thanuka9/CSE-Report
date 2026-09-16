@@ -1,26 +1,24 @@
 # N04 — Generalized root-cause classification (LITE + SFCL)
 
-After N02/N03 CandidateTrace diagnosis. No issuer-specific patches.
+After N02/N03 CandidateTrace diagnosis and N06 F1 fix.
 
 ## Families
 
-| ID | Family | Evidence | Affects | Priority |
+| ID | Family | Status | Evidence | Priority |
 |---|---|---|---|---|
-| F1 | **Header graph / column ownership** — entity-bearing statement subtitles dropped from heading-band context | N02 LITE: `Comprehensive Income - Group 31st December 2025` excluded (`_ACCOUNT_LINE` + year); all target columns `ENTITY_UNRESOLVED` → FN | LITE TOP_LINE / PAT / OPERATING_PROFIT | **P0 extract** |
-| F2 | **Header graph / evidence propagation** — Company/Group banners resolve positionally but CandidateTrace `header_evidence` only shows statement title | N03 SFCL: banners correct; trace not auditable | Auditability; H0/H1/H2 bake-off | **P1** |
-| F3 | **Duration ownership / merged quarter–YTD spans** | N02 LITE latent: truth cells get `duration_months=9` while adjacent col gets 3 | LITE after F1 fixed | **P0 after F1** |
-| F4 | **Holdout truth authoring** (not V2 left/right swap) | N03 SFCL: Company-column values labeled GROUP; V2 matched PDF | T25 “critical wrong” count | **P0 truth correction** (done in items.jsonl) |
+| F1 | **Header graph / column ownership** — entity-bearing statement subtitles dropped from heading-band context | **FIX LANDED** (`column_context._is_entity_bearing_subtitle`) | N02 LITE; regressions `test_lite_group_header_ownership.py` | Done |
+| F2 | **Header graph / evidence propagation** — CandidateTrace should retain Company/Group banner text | **PARTIAL** — entity_evidence now prefers banner texts | N03 SFCL | P1 |
+| F3 | **Duration ownership / merged quarter–YTD spans** | **OPEN** | N02 LITE latent: quarter cells can still be labeled 9M | P0 next |
+| F4 | **Holdout truth authoring** | **CORRECTED** | N03 SFCL Company values mislabeled GROUP → COMPANY | Done |
 
-## Not first-failure for these cases
+## N07 score rerun (dirty SHA; inspected holdout)
 
-Page routing, statement/table/row reconstruction, concept matching, unit/scale, SourceFact admission after entity resolves (LITE never reached admission).
+| Split | TP | FN | Critical wrong | Entity-resolved recall |
+|---|---|---|---|---|
+| DEV (T10) | 31 | 0 | 0 | 1.0 |
+| HOLDOUT (T25, after F1 + SFCL truth fix) | 16 | 0 | 0 | 1.0 |
 
-## Next engineering (N05–N06)
-
-1. Permanent real-PDF regressions for LITE (expect GROUP SourceFacts once F1 fixed) and SFCL (COMPANY values or GROUP sibling values per corrected truth).
-2. Generalized fix for F1: keep entity-bearing subtitles in heading context / entity banners without issuer constants.
-3. Then duration span ownership (F3); header evidence propagation (F2) for H bake-off.
-4. Do **not** reuse the failed T25 12-file set as final holdout.
+**Not certification.** Failed T25 set was inspected and partially corrected; do **not** reuse as final unseen holdout (recovery plan §5/§14).
 
 ## Artefacts
 
@@ -28,3 +26,6 @@ Page routing, statement/table/row reconstruction, concept matching, unit/scale, 
 - `docs/v2/investigations/N03_SFCL_TRACE.md`
 - `tests/v2/universe/n02_lite_trace.json`
 - `tests/v2/universe/n03_sfcl_trace.json`
+- `tests/v2/regression/test_lite_group_header_ownership.py`
+- `tests/v2/regression/test_sfcl_company_group_ownership.py`
+- `tests/v2/universe/t10_score.json` / `t25_holdout_score.json` (N07 rerun)

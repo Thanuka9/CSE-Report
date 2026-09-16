@@ -382,4 +382,15 @@ Each nontrivial deviation from `AGENT_IMPLEMENTATION_PLAN.md` is recorded here. 
 - **Decision:** Record LITE/SFCL CandidateTrace diagnoses. LITE FNs are real extraction defects (Group subtitle dropped → ENTITY_UNRESOLVED). SFCL “critical wrong” vs original holdout labels were **truth authoring** (Company values labeled GROUP); correct SFCL items to `entity_scope=COMPANY` per PDF. Classify F1 header/column ownership as P0 generalized family. Do not issuer-patch.
 - **Reason:** PDF Company|Group layout matches V2 for SFCL; LITE page subtitle never entered heading-band context.
 - **Evidence:** `docs/v2/investigations/N02_LITE_TRACE.md`, `N03_SFCL_TRACE.md`, `N04_ROOT_CAUSE_FAMILIES.md`, corrected `items.jsonl` SFCL rows.
-- **Temporary/permanent:** Truth correction is permanent for SFCL HOLDOUT rows; extraction fix for F1 is forthcoming.
+- **Temporary/permanent:** Truth correction is permanent for SFCL HOLDOUT rows; generalized F1 keep-rule landed separately (see entry below).
+
+---
+
+## 2026-09-16 — F1 heading-band keep-rule for entity-bearing subtitles
+
+- **Decision:** In heading-band assembly, keep lines that are entity-bearing statement subtitles (Group/Company on a statement title) even when they also match account-line or calendar-year heuristics. Do not keep generic account rows that merely mention Group/Company. No issuer-specific constants.
+- **Reason:** N02 LITE dropped `Comprehensive Income - Group …` from heading context, so Group columns stayed `ENTITY_UNRESOLVED` and TOP_LINE/PAT/OPERATING_PROFIT never admitted.
+- **Alternatives:** LITE-only subtitle allowlist; copy query-target entity; issuer constants.
+- **Evidence:** `v2/resolution/column_context.py` (`_is_entity_bearing_subtitle`, `_heading_context_lines`); `tests/v2/regression/test_lite_group_header_ownership.py`; `tests/v2/unit/test_column_context.py`.
+- **Affected modules:** `v2/resolution/column_context.py`.
+- **Temporary/permanent:** Permanent generalized header rule. F3 duration span ownership for LITE remains open. N07 inspected-holdout re-score: TP 16 / FN 0 / critical 0 / recall 1.0 — **not** a new unseen holdout and **not** certification.

@@ -783,3 +783,101 @@ def test_group_only_page_does_not_take_bank_from_issuer_name() -> None:
     ]
     assert monetary
     assert all(column.entity_scope is EntityScope.GROUP for column in monetary)
+
+
+def test_group_subtitle_with_year_token_stays_in_heading_context() -> None:
+    """F1: account-like subtitle + year token must keep entity cues (e.g. Group)."""
+
+    from cse_financial_etl.v2.resolution.column_context import _heading_context_lines
+
+    # Year must be its own token so parse_numeric hits — matching the LITE drop path.
+    document = geometric_document(
+        (
+            (
+                (40.0, "Comprehensive"),
+                (140.0, "Income"),
+                (200.0, "-"),
+                (220.0, "Group"),
+                (280.0, "31st"),
+                (320.0, "December"),
+                (400.0, "2025"),
+            ),
+            ((40.0, "For the three months ended 31 December"), (280.0, "2025"), (360.0, "2024")),
+            ((40.0, "Rs.'000"),),
+            ((40.0, "Revenue"), (200.0, "889,239"), (300.0, "700,000")),
+            ((40.0, "Profit from Operating Activities"), (200.0, "156,042"), (300.0, "100,000")),
+            ((40.0, "Net Profit for the Period"), (200.0, "79,190"), (300.0, "50,000")),
+        ),
+        title="Statement of Profit or Loss and Other",
+    )
+    heading_texts = [line.text for line in _heading_context_lines(document.pages[0])]
+    assert any("Group" in text for text in heading_texts)
+
+    bound = bind_column_context(document, build_statements(document)[0])
+    monetary = [
+        column for column in bound.columns if column.unit_dimension is UnitDimension.MONETARY
+    ]
+    assert monetary
+    assert all(column.entity_scope is EntityScope.GROUP for column in monetary)
+    # F2: entity_evidence prefers the Group banner line over statement title alone.
+    assert any(
+        "Group" in (ref.raw_text or "")
+        for column in monetary
+        for ref in column.entity_evidence
+    )
+
+
+def test_account_like_subtitle_without_entity_cue_still_dropped() -> None:
+    """Without Group/Company/Bank cues, account-like + year heading lines stay dropped."""
+
+    from cse_financial_etl.v2.resolution.column_context import _heading_context_lines
+
+    document = geometric_document(
+        (
+            (
+                (40.0, "Comprehensive"),
+                (140.0, "Income"),
+                (280.0, "31st"),
+                (320.0, "December"),
+                (400.0, "2025"),
+            ),
+            ((40.0, "Company"),),
+            ((40.0, "For the three months ended 31 December 2025"),),
+            ((40.0, "Rs.'000"),),
+            ((40.0, "Revenue"), (300.0, "1,234")),
+        ),
+        title="Statement of Profit or Loss and Other",
+    )
+    heading_texts = [line.text for line in _heading_context_lines(document.pages[0])]
+    assert not any(
+        "Comprehensive" in text and "Income" in text and "Group" not in text
+        for text in heading_texts
+        if "Company" not in text
+    )
+    # Explicit Company banner still binds (separate line).
+    bound = bind_column_context(document, build_statements(document)[0])
+    monetary = [
+        column for column in bound.columns if column.unit_dimension is UnitDimension.MONETARY
+    ]
+    assert monetary
+    assert monetary[0].entity_scope is EntityScope.COMPANY
+
+
+def test_issuer_name_plc_line_still_does_not_invent_company_entity() -> None:
+    document = geometric_document(
+        (
+            ((40.0, "Laxapana Holdings PLC"),),
+            ((40.0, "For the three months ended 30 June 2026"),),
+            ((40.0, "Rs."),),
+            ((40.0, "Revenue"), (300.0, "1,234")),
+        ),
+        title="Statement of profit or loss",
+    )
+    statement = bind_column_context(document, build_statements(document)[0])
+    monetary = [
+        column
+        for column in statement.columns
+        if column.unit_dimension is UnitDimension.MONETARY
+    ]
+    assert monetary
+    assert all(column.entity_scope is None for column in monetary)

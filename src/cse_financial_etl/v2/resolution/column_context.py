@@ -14,6 +14,7 @@ from cse_financial_etl.v2.contracts.enums import (
     StatementType,
     UnitDimension,
 )
+from cse_financial_etl.v2.contracts.provenance import SourceRef
 from cse_financial_etl.v2.contracts.statement import CanonicalStatement, StatementColumn
 from cse_financial_etl.v2.statements.detector import (
     HEADING_BAND_LINES,
@@ -193,6 +194,7 @@ def bind_column_context(
     monetary_count = len(monetary_indices)
     duration_banners = _duration_banners(document, region)
     entity_banners = _entity_banners(document, region)
+    entity_banner_texts = _entity_banner_texts(document, region)
     date_banners = _date_banners(document, region)
     banner_dates = [parsed for _x, parsed in date_banners]
     if banner_dates and len(banner_dates) == monetary_count:
@@ -241,7 +243,7 @@ def bind_column_context(
             StatementColumn(
                 column_id=column.column_id,
                 entity_scope=entity,
-                entity_evidence=evidence if entity is not None else (),
+                entity_evidence=_entity_evidence_refs(entity, evidence, entity_banner_texts),
                 period_end=period_for_column,
                 period_evidence=evidence if period_for_column is not None else (),
                 duration_months=duration,
@@ -382,17 +384,50 @@ _NINE_WORD = re.compile(r"\bnine\b", re.I)
 _MONTHS_WORD = re.compile(r"\bmonths?\b", re.I)
 
 
+def _has_entity_scope_cue(text: str) -> bool:
+    """True when text carries an explicit Group/Company/Bank/Consolidated banner.
+
+    Issuer-name-only lines (e.g. ``Foo PLC``) are excluded so G01 stay fail-closed.
+    """
+
+    if _issuer_name_entity_line(text):
+        return False
+    return any(pattern.search(text) for _scope, pattern in _ENTITY_PATTERNS)
+
+
+def _is_entity_bearing_subtitle(line: CanonicalLine) -> bool:
+    """Keep Group/Company statement subtitles; do not keep account rows mentioning Group."""
+
+    if not _has_entity_scope_cue(line.text):
+        return False
+    values = [
+        parsed
+        for token in line.tokens
+        if (parsed := parse_numeric(token.text)) is not None
+    ]
+    if len(values) >= 2:
+        return False
+    if len(values) == 1:
+        value = values[0]
+        # Allow a calendar year on a subtitle; reject a lone monetary amount.
+        return bool(1900 <= abs(value) <= 2100 and value == value.to_integral())
+    return True
+
+
 def _heading_context_lines(page: CanonicalPage) -> list[CanonicalLine]:
     lines: list[CanonicalLine] = []
     for index, line in enumerate(page.lines):
         if _skip_context_line(line):
             continue
         if index < HEADING_BAND_LINES:
+            # Keep entity-bearing statement subtitles even when they also look
+            # account-like (e.g. "Comprehensive Income - Group 31st December 2025").
             if (
                 _ACCOUNT_LINE.search(line.text)
                 and any(parse_numeric(token.text) is not None for token in line.tokens)
                 and not _STATEMENT_TITLE.search(line.text)
                 and not _UNIT_CUE.search(line.text)
+                and not _is_entity_bearing_subtitle(line)
             ):
                 continue
             lines.append(line)
@@ -410,6 +445,8 @@ def _skip_context_line(line: CanonicalLine) -> bool:
     if _JUNK_HEADER.search(line.text) or _NON_HEADER_LABEL.search(line.text):
         return True
     if _STATEMENT_TITLE.search(line.text):
+        return False
+    if _is_entity_bearing_subtitle(line):
         return False
     if _dates_in_text(line.text):
         return False
@@ -562,6 +599,58 @@ def _entity_banners(
     if column_headers:
         return column_headers
     return []
+
+
+def _entity_banner_texts(
+    document: CanonicalDocument, region: StatementRegion | None
+) -> tuple[str, ...]:
+    """Distinct heading lines that contributed non-issuer entity banners."""
+
+    texts: list[str] = []
+    seen: set[str] = set()
+    for line in _iter_heading_lines(document, region):
+        if _issuer_name_entity_line(line.text):
+            continue
+        if not any(pattern.search(line.text) for _scope, pattern in _ENTITY_PATTERNS):
+            continue
+        key = line.text.strip()
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        texts.append(key)
+    return tuple(texts)
+
+
+def _evidence_from_texts(
+    template: tuple[SourceRef, ...], texts: tuple[str, ...]
+) -> tuple[SourceRef, ...]:
+    """Prefer entity-banner raw_text on a copy of an existing SourceRef template."""
+
+    if not texts or not template:
+        return ()
+    base = template[0]
+    return tuple(base.model_copy(update={"raw_text": text}) for text in texts)
+
+
+def _entity_evidence_refs(
+    entity: EntityScope | None,
+    fallback: tuple[SourceRef, ...],
+    banner_texts: tuple[str, ...],
+) -> tuple[SourceRef, ...]:
+    """Prefer banner lines that mention the bound entity over statement.title alone."""
+
+    if entity is None:
+        return ()
+    matching = tuple(
+        text
+        for text in banner_texts
+        if any(
+            scope is entity and pattern.search(text) for scope, pattern in _ENTITY_PATTERNS
+        )
+    )
+    preferred = matching or banner_texts
+    from_banners = _evidence_from_texts(fallback, preferred)
+    return from_banners or fallback
 
 
 _PLC_ISSUER_NAME = re.compile(
@@ -810,6 +899,11 @@ def _duration_for_position(
     blob: str,
     banners: list[tuple[float, int]] | None = None,
 ) -> int | None:
+    # TODO(F3): After F1 entity ownership is fixed, merged quarter/YTD duration
+    # banners can still mis-assign columns when banner x-order does not match
+    # true span ownership (e.g. leftmost monetary column gets 9M while an
+    # adjacent column gets 3M). Needs a generalized duration-span fix — do not
+    # guess from issuer-specific layouts.
     from_banners = _cycle_durations(
         position, monetary_count, [months for _x, months in banners or ()]
     )

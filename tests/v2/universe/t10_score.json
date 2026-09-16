@@ -75,7 +75,7 @@
     "GREG.N0000"
   ],
   "investigation_base_sha": "91a9c68bf940d3d9c2a86245f127de88ad4b4b6d",
-  "actual_code_sha": "ffc7d1096b15d3052ec3efd4ace9c313c4e6ab76:dirty:7d58c3d45346",
+  "actual_code_sha": "d3b6d03e129b66dca4ad59d931c235c113b1e22d:dirty:eb4b648640cc",
   "mismatch_examples": [
     {
       "issuer_id": "ABL.N0000",
