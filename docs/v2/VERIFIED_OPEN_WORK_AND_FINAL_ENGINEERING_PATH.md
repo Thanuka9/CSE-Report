@@ -292,44 +292,29 @@ Require green:
 
 Local testing alone is not final branch validation.
 
-# 9. OPEN — N14 Full-universe V2 challenger
+# 9. DONE (fail-closed) — N14 Full-universe V2 challenger
 
-The latest full-universe signal remains the older failed challenger:
-
-```text
-3,684 draft-publishable
-vs
-8,924 historical coverage alarm
-```
-
-That predates the latest F1/F3 work.
-
-After N11-N13, run a fresh current-universe challenger with `--engine v2` while production default remains V1.
-
-Report separately:
+Fresh post-F1/F3 offline challenger (`--engine v2`, production default still V1):
 
 ```text
-PDFs attempted
-PDFs extracted
-PDFs quarantined
-OCR-required failures
-SourceFacts
-DerivedFacts
-production-selected facts
-draft-publishable facts
-concept unresolved
-entity unresolved
-period unresolved
-duration unresolved
-comparison unresolved
-unit unresolved
-conflict-withheld facts
-duplicate-selection facts
+PDFs attempted              829
+PDFs extracted              786
+PDFs quarantined              0
+OCR-required failures        43  (OCR_REQUIRED_NOT_AVAILABLE)
+EXTRACTED                  3100
+EXTRACTED_DERIVED           794
+EXTRACTED+DERIVED          3894  (floor 8932)
+draft-publishable          3748  (floor 8924)
+prior challenger           3684  (delta +64)
+acceptance                 ENGINEERING_FAILURES_PRESENT
 ```
+
+Evidence: `tests/v2/universe/n14_challenger_2026-09-09.json` and `n14_universe_acceptance_2026-09-09.json`.
 
 Do not judge the universe only by one aggregate publishable count.
-
+Do not lower 8924. Do not promote V2.
 The 8924 number remains a governance alarm, not source truth.
+Cluster analysis of remaining gaps (OCR packaging + unresolved families) remains open before certification.
 
 # 10. STILL OPEN — material gate evidence
 
@@ -527,8 +512,8 @@ N18 score                         BLOCKED ON N17
 
 N11 clean baseline                DONE
 N12 canonical regeneration        DONE
-N13 CI                            OPEN (branch pushed; PR needs gh/token)
-N14 full-universe challenger      OPEN
+N13 CI                            OPEN (branch pushed; PR needs gh auth)
+N14 full-universe challenger      DONE fail-closed (3748 vs 8924)
 
 N20 Sept-10 exact replay          OPEN / artifacts missing
 Certification                     BLOCKED

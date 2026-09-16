@@ -28,8 +28,8 @@ Verified open-work path: `docs/v2/VERIFIED_OPEN_WORK_AND_FINAL_ENGINEERING_PATH.
 | F3 duration ownership | **FIX LANDED** | Ignore `period ended` date cues as false 9M banners |
 | N11 Clean-SHA baseline | **DONE** | `baseline_run_summary.json` — `actual_code_sha=2ff5d1f…`, `all_deterministic=true` |
 | N12 Canonical regen | **DONE** | Freeze `ef4b200` + report `0d844aa` |
-| N13 CI / PR | **OPEN** | Branch pushed; no GitHub token in this environment to open PR |
-| N14 Universe challenger | **OPEN** | Prior 3,684 vs 8,924 predates F1/F3 |
+| N13 CI / PR | **OPEN** | Branch pushed; `gh` not authenticated — [compare](https://github.com/Thanuka9/CSE-Report/compare/main...v2/extraction-investigation?expand=1) |
+| N14 Universe challenger | **DONE (fail-closed)** | Post-F1/F3: draft-publishable **3,748** vs floor **8,924** (+64 vs prior 3,684); 43 OCR_REQUIRED_NOT_AVAILABLE — `n14_challenger_2026-09-09.json` |
 | N16 New holdout identity | DONE (identity only) | `holdout_v2_identity_manifest.json` — 13 filings; **do not score until N17** |
 | N17 Blind gold | **PACKAGE READY / NOT ADJUDICATED** | `n17_blind_review_queue.json` + `N17_BLIND_ADJUDICATION.md` |
 | T26 Frozen-universe | OPEN | Sept-10 artefacts missing |
@@ -49,4 +49,4 @@ Verified open-work path: `docs/v2/VERIFIED_OPEN_WORK_AND_FINAL_ENGINEERING_PATH.
 
 ## Next
 
-N17 human blind-adjudicate → N18 score → N13 CI green → N14 current-universe V2 challenger → N20 Sept-10 when artefacts exist → OFFICIAL.
+N17 human blind-adjudicate → N18 score → N13 CI green (needs `gh auth`) → N14 cluster analysis (OCR + unresolved) → N20 Sept-10 when artefacts exist → OFFICIAL.

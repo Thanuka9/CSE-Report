@@ -60,8 +60,8 @@ N16 identity locked (13 filings) — holdout_v2_identity_manifest.json
 | N17 / N18 new unseen holdout | PACKAGE READY / BLOCKED ON human blind gold |
 | N11 clean-SHA locked-33 baseline | DONE (`2ff5d1f…`, deterministic) |
 | N12 canonical artefact regen | DONE |
-| N13 CI green | OPEN (branch pushed; PR not opened — no `gh`/token here) |
-| N14 current-universe V2 challenger | OPEN (prior 3,684 vs 8,924 predates F1/F3) |
+| N13 CI green | OPEN (branch pushed; PR needs `gh auth login`) |
+| N14 current-universe V2 challenger | DONE fail-closed (3,748 vs 8,924; +64 vs prior; 43 OCR unavailable) |
 | G02 / G04–G08 | UNTESTED vs source truth |
 | H1 / H2 | not built |
 | N20 Sept-10 exact replay | OPEN (artefacts missing) |

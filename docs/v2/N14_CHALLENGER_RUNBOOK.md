@@ -51,3 +51,19 @@ Copy-Item outputs/universe_acceptance_2026-09-09.json $out -Force
 - Do not lower `min_draft_publishable`.
 - Do not treat fail-closed coverage alone as source truth.
 - Do not start N14 mid-N17 truth authoring if that would retune extraction rules.
+
+## Latest completed run (2026-09-16)
+
+Offline `--engine v2` on `2026-09-09`:
+
+| Metric | Value |
+|---|---|
+| draft-publishable | 3748 / 8924 |
+| EXTRACTED+DERIVED | 3894 / 8932 |
+| PDFs attempted / extracted | 829 / 786 |
+| OCR_REQUIRED_NOT_AVAILABLE | 43 |
+| acceptance | ENGINEERING_FAILURES_PRESENT |
+| delta vs prior challenger | +64 |
+
+Canonical copies: `tests/v2/universe/n14_challenger_2026-09-09.json`, `n14_universe_acceptance_2026-09-09.json`.
+Production default remains V1.

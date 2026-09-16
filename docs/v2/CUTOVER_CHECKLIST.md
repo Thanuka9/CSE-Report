@@ -27,7 +27,7 @@ Final holdout path: **N16 identity locked → N17 blind truth pending → N18 sc
 12. [ ] Golden corpus quality gates pass on institutional CSE filings (T10 DEV useful; locked 33 probe 209/237; first T25 **retired** after repair; **N16/N17/N18** is the final holdout path — not §37 yet).
 13. [ ] Frozen-universe acceptance passes. (Sept-10 artefacts missing; Sept-05 pin is **diagnostic only**.)
 14. [x] Repeated fixed-input runs are deterministic (N11/N12 clean-SHA locked-33: `all_deterministic=true`).
-15. [ ] Current-universe run succeeds. (Prior V2 challenger 3,684 vs floor **8,924** predates F1/F3; fresh N14 required.)
+15. [ ] Current-universe run succeeds. (N14 post-F1/F3 V2 challenger: draft-publishable **3,748** vs floor **8,924**; still fail-closed. See `n14_challenger_2026-09-09.json`.)
 16. [x] V2 DRAFT workbook contains correct numeric data (synthetic e2e).
 17. [ ] OFFICIAL human review — only after engineering acceptance (N17–N18 pass, N13–N14, certification). Not the sole open gate.
 
@@ -45,7 +45,7 @@ See `docs/v2/VERIFIED_OPEN_WORK_AND_FINAL_ENGINEERING_PATH.md`:
 - **N18** score new holdout without retuning mid-score
 - **N11/N12** DONE (clean-SHA locked-33 + canonical regen)
 - **N13** CI green / PR (branch on origin; open compare URL if needed)
-- **N14** fresh current-universe V2 challenger
+- **N14** DONE fail-closed (3,748 / 8,924; OCR gaps remain) — cluster analysis still open
 - G02/G04–G08 source-truth decisions if material; H1/H2 only if needed after F1/F3
 - **N20** Sept-10 exact replay when artefacts exist
 
