@@ -39,15 +39,20 @@ def test_dev_holdout_queue_has_no_expected_values() -> None:
 
 def test_t10_items_are_blind_source_records() -> None:
     lines = [line for line in ITEMS_PATH.read_text(encoding="utf-8").splitlines() if line.strip()]
-    assert len(lines) == 40
     holdout = set(json.loads(SPLIT_PATH.read_text(encoding="utf-8"))["holdout"])
-    for line in lines:
-        item = SourceTruthItem.model_validate_json(line)
+    items = [SourceTruthItem.model_validate_json(line) for line in lines]
+    assert len(items) == 64
+    assert sum(1 for item in items if item.split == "DEV") == 40
+    assert sum(1 for item in items if item.split == "HOLDOUT") == 24
+    for item in items:
         dumped = item.model_dump(mode="json")
         assert "v1_value" not in dumped
         assert "v2_value" not in dumped
-        assert item.split == "DEV"
-        assert item.issuer_id not in holdout
+        assert item.split in {"DEV", "HOLDOUT"}
+        if item.split == "DEV":
+            assert item.issuer_id not in holdout
+        else:
+            assert item.issuer_id in holdout
         assert item.metric_code in SOURCE_TARGET_METRICS
         assert item.source_presence.value in {"REPORTED", "NOT_REPORTED", "AMBIGUOUS"}
         assert item.adjudication_status.value == "REVIEWER_1_COMPLETE"

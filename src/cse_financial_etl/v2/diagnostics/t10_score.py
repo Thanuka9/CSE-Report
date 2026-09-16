@@ -265,10 +265,47 @@ def collect_t10_v2_facts(root: Path, items: list[SourceTruthItem]) -> list[dict[
     return facts
 
 
-def score_t10_filings(root: Path) -> dict[str, Any]:
+def collect_holdout_v2_facts(root: Path, items: list[SourceTruthItem]) -> list[dict[str, Any]]:
+    """Score holdout PDFs from the identity manifest only. Do not retune from misses."""
+
+    wanted = {item.issuer_id for item in items}
+    manifest = json.loads(
+        (root / "tests" / "v2" / "source_truth" / "holdout_manifest.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    facts: list[dict[str, Any]] = []
+    for row in manifest.get("items") or ():
+        if not isinstance(row, dict):
+            continue
+        issuer_id = str(row.get("issuer_id") or "")
+        if issuer_id not in wanted:
+            continue
+        pdf_path = root / str(row.get("local_file") or "")
+        if not pdf_path.is_file():
+            continue
+        filing_version_id = str(row.get("filing_version_id") or issuer_id)
+        document = read_document(pdf_path, filing_version_id=filing_version_id)
+        result = run_filing_pipeline(
+            document,
+            issuer_id=issuer_id,
+            issuer_name=str(row.get("legal_name") or ""),
+            issuer_type=str(row.get("issuer_type") or ""),
+        )
+        facts.extend(source_fact_to_mapping(fact) for fact in result.source_facts)
+    return facts
+
+
+def score_t10_filings(root: Path, *, split: str | None = "DEV") -> dict[str, Any]:
     items = load_t10_items(root / "tests" / "v2" / "source_truth" / "items.jsonl")
-    facts = collect_t10_v2_facts(root, items)
+    if split is not None:
+        items = [item for item in items if item.split == split]
+    if split == "HOLDOUT":
+        facts = collect_holdout_v2_facts(root, items)
+    else:
+        facts = collect_t10_v2_facts(root, items)
     payload = score_t10_items(items, facts)
+    payload["split"] = split
     payload["v2_source_fact_count"] = len(facts)
     payload["issuers"] = sorted({item.issuer_id for item in items})
     return payload

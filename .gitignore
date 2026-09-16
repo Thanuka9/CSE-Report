@@ -25,3 +25,4 @@ outputs/**
 # Native geometry cache (recomputed from source and extractor versions)
 .stage_cache/
 _t10_pages/
+_holdout_pages/

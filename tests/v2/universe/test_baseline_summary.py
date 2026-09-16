@@ -70,6 +70,20 @@ def test_t10_score_artifact_is_not_certification() -> None:
     assert "holdout" in payload["note"].casefold()
 
 
+def test_t25_holdout_score_is_diagnostic_not_cutover() -> None:
+    path = ROOT / "tests" / "v2" / "universe" / "t25_holdout_score.json"
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    assert payload["split"] == "HOLDOUT"
+    assert payload["item_count"] == 24
+    assert payload["gates"]["score"]["not_certification"] is True
+    cert = (ROOT / "docs" / "v2" / "EXTRACTION_CERTIFICATION_REPORT.md").read_text(
+        encoding="utf-8"
+    )
+    assert "NOT CERTIFIED" in cert
+    assert "extraction.engine: v2" in cert
+
+
+
 def test_investigation_status_blocks_cutover() -> None:
     text = (ROOT / "docs" / "v2" / "EXTRACTION_INVESTIGATION_STATUS.md").read_text(encoding="utf-8")
     assert "T29 Resume cutover" in text

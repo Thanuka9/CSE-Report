@@ -353,3 +353,13 @@ Each nontrivial deviation from `AGENT_IMPLEMENTATION_PLAN.md` is recorded here. 
 - **Evidence:** `tests/v2/source_truth/items.jsonl`, `docs/v2/EXTRACTION_GATE_DECISIONS.md`, `tests/v2/universe/t10_score.json`.
 - **Affected modules:** `v2/resolution/column_context.py`, `v2/diagnostics/t10_score.py`, `tests/v2/source_truth/`.
 - **Temporary/permanent:** T10 Reviewer 1 record is the DEV investigation pin. Not certification.
+
+---
+
+## 2026-09-16 — T25 holdout gold + certification stop
+
+- **Decision:** Record 24 HOLDOUT SourceTruthItems after freezing DEV rules. Score holdout diagnostically. Do not retune from holdout. Publish `SOURCE_VALIDATED_BASELINE.md` and `EXTRACTION_CERTIFICATION_REPORT.md` as **NOT CERTIFIED**. Leave T26–T29 blocked. Keep engine V1 and floor 8924.
+- **Reason:** Test program requires holdout evaluation and an explicit certification gate before cutover. September-10 frozen universe is still missing.
+- **Alternatives:** Promote V2; lower 8924; invent holdout entity from letterhead; claim certification.
+- **Evidence:** `items.jsonl` HOLDOUT rows, `t25_holdout_score.json`, certification report.
+- **Temporary/permanent:** Holdout gold is the locked evaluation pin. Cutover remains blocked.

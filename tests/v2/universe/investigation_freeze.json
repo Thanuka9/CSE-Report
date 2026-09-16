@@ -10,7 +10,7 @@
   "platform": "Windows-11-AMD64",
   "uv_lock_sha256": "d87a5d20b884732fc9271c1679caa806e511ebcb6a60dd122ffc9b9c49fc3a71",
   "config_hash": "38c00fb784e06830e4b9860edddbc4f56dafa0c147aacdb1a53dced6e3489821",
-  "concept_registry_hash": "6d12215077b9155931642b5f7f95fffaabb927df122234662f5ab65131948135",
+  "concept_registry_hash": "eba8d69f1f5ffed1e35c6a38a49530c6744be3229d005b8fb08d49930cc49894",
   "pymupdf_version": "1.28.2",
   "tesseract_version": null,
   "pytesseract_version": null,
@@ -20,7 +20,7 @@
     "uv.lock": "d87a5d20b884732fc9271c1679caa806e511ebcb6a60dd122ffc9b9c49fc3a71",
     "configs/app.yml": "38c00fb784e06830e4b9860edddbc4f56dafa0c147aacdb1a53dced6e3489821",
     "configs/coverage_baseline.yml": "7dd2c962f52f180e11b95510161b2919ec4eac44f861d54f40c6525e8b99bc30",
-    "src/cse_financial_etl/v2/taxonomy/registry.py": "6d12215077b9155931642b5f7f95fffaabb927df122234662f5ab65131948135",
+    "src/cse_financial_etl/v2/taxonomy/registry.py": "eba8d69f1f5ffed1e35c6a38a49530c6744be3229d005b8fb08d49930cc49894",
     "tests/v2/golden/real_filings_lock.json": "f99733fd0770e4bb9629c9110b9c8cbdab297c68b334b70754e752d0274795d6",
     "tests/v2/universe/locked_source_manifest.json": "7bab3c98cf6bdde906ad0a464885d32437a05f42925e80b49b4d4c8469c306dc"
   },

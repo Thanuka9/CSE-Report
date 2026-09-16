@@ -119,7 +119,7 @@ Regime source concepts (registry):
 - BANK distinct source lines, not substitutes for Gross income: Interest income; Total operating income
 - FINANCE_COMPANY: Total income, Net operating income, Income (exact), Gross income, Interest income, Total operating income
 - SLFRS17: Insurance revenue
-- SLFRS4: Gross written premium, Net earned premium
+- SLFRS4: Gross written premium, Gross written contribution (premium), Net earned premium
 
 Generic issuer class `INSURANCE` is **not** proof of SLFRS 4 or 17. Record
 `source_concept` / `matched_alias`. Leave `accounting_regime` unresolved unless

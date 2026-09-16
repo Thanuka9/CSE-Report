@@ -1,0 +1,178 @@
+{
+  "item_count": 24,
+  "reported": 20,
+  "entity_resolved_reported": 16,
+  "ambiguous": 4,
+  "tp": 11,
+  "value_or_entity_mismatch": 2,
+  "fn": 3,
+  "g01_withheld": 4,
+  "duration_invented_on_null_truth": 0,
+  "recall_vs_entity_resolved": 0.6875,
+  "critical_wrong_facts": 2,
+  "note": "T10 truth vs V2 SourceFacts. Unlabeled REPORTED rows are G01 withheld, not value errors. Publication gates are not applied to truth. Not certification and not holdout.",
+  "gates": {
+    "G01": {
+      "decision": "KEEP",
+      "rule": "Unresolved entity withholds. Do not copy issuer-name or document heading as entity. GROUP is never COMPANY.",
+      "evidence": "4 T10 REPORTED rows have null entity_scope (ABL/CBNK/CTC unlabeled columns). V2 withheld 4 as SourceFacts."
+    },
+    "G02": {
+      "decision": "UNTESTED",
+      "rule": "Partial-context cascade remains production default.",
+      "evidence": "T10 queue was VALUE_DISAGREEMENT, not cascade suppression."
+    },
+    "G03": {
+      "decision": "KEEP",
+      "rule": "Do not invent duration from Period ended. Exact-quarter remains publication policy, not source presence.",
+      "evidence": "0 GREG T10 rows have duration_months null. V2 duration inventions on null-truth rows: 0."
+    },
+    "G04": {
+      "decision": "UNTESTED",
+      "evidence": "No T10 OTHER-page adjudication."
+    },
+    "G05": {
+      "decision": "UNTESTED",
+      "evidence": "No T10 continuation adjudication."
+    },
+    "G06": {
+      "decision": "UNTESTED",
+      "evidence": "No T10 conflict-group adjudication."
+    },
+    "G07": {
+      "decision": "UNTESTED",
+      "evidence": "No T10 collapsed-row adjudication."
+    },
+    "G08": {
+      "decision": "UNTESTED",
+      "evidence": "Production selection is measured separately from source truth."
+    },
+    "G09": {
+      "decision": "KEEP",
+      "rule": "Absence of Group is not Company. Do not infer COMPANY on EPS_NOTE.",
+      "evidence": "CIC EPS is COMPANY because the statement says Company. ATL/DIMO/GREG EPS are GROUP because they say Group. Silence is not Company."
+    },
+    "score": {
+      "tp": 11,
+      "value_or_entity_mismatch": 2,
+      "fn": 3,
+      "g01_withheld": 4,
+      "not_certification": true
+    }
+  },
+  "split": "HOLDOUT",
+  "v2_source_fact_count": 560,
+  "issuers": [
+    "BBH.N0000",
+    "GUAR.N0000",
+    "HARI.N0000",
+    "HAYC.N0000",
+    "HBS.N0000",
+    "HNBF.N0000",
+    "LALU.N0000",
+    "LHL.N0000",
+    "LITE.N0000",
+    "NAMU.N0000",
+    "SFCL.N0000",
+    "TYRE.N0000"
+  ],
+  "investigation_base_sha": "91a9c68bf940d3d9c2a86245f127de88ad4b4b6d",
+  "actual_code_sha": "ffc7d1096b15d3052ec3efd4ace9c313c4e6ab76:dirty:7d58c3d45346",
+  "mismatch_examples": [
+    {
+      "issuer_id": "LITE.N0000",
+      "metric_code": "TOP_LINE",
+      "result": "FN",
+      "truth": "889239000",
+      "truth_entity": "GROUP"
+    },
+    {
+      "issuer_id": "LITE.N0000",
+      "metric_code": "PAT",
+      "result": "FN",
+      "truth": "79190000",
+      "truth_entity": "GROUP"
+    },
+    {
+      "issuer_id": "LITE.N0000",
+      "metric_code": "OPERATING_PROFIT",
+      "result": "FN",
+      "truth": "156042000",
+      "truth_entity": "GROUP"
+    },
+    {
+      "issuer_id": "HNBF.N0000",
+      "metric_code": "TOP_LINE",
+      "result": "G01_WITHHELD",
+      "truth": "4843069643",
+      "truth_entity": null
+    },
+    {
+      "issuer_id": "HNBF.N0000",
+      "metric_code": "PAT",
+      "result": "G01_WITHHELD",
+      "truth": "531228514",
+      "truth_entity": null
+    },
+    {
+      "issuer_id": "SFCL.N0000",
+      "metric_code": "TOP_LINE",
+      "result": "VALUE_OR_ENTITY_MISMATCH",
+      "truth": "2572716568",
+      "truth_entity": "GROUP",
+      "v2_values": [
+        "2572716568",
+        "2652539436",
+        "2664529998",
+        "2748482811",
+        "2383260021",
+        "2275175168"
+      ],
+      "v2_entities": [
+        "COMPANY",
+        "COMPANY",
+        "GROUP",
+        "GROUP",
+        "COMPANY",
+        "COMPANY"
+      ]
+    },
+    {
+      "issuer_id": "SFCL.N0000",
+      "metric_code": "PAT",
+      "result": "VALUE_OR_ENTITY_MISMATCH",
+      "truth": "344406148",
+      "truth_entity": "GROUP",
+      "v2_values": [
+        "344406148",
+        "599564750",
+        "390951093",
+        "657143868",
+        "344406148",
+        "599564750"
+      ],
+      "v2_entities": [
+        "COMPANY",
+        "COMPANY",
+        "GROUP",
+        "GROUP",
+        "COMPANY",
+        "COMPANY"
+      ]
+    },
+    {
+      "issuer_id": "NAMU.N0000",
+      "metric_code": "TOP_LINE",
+      "result": "G01_WITHHELD",
+      "truth": "1130973000",
+      "truth_entity": null
+    },
+    {
+      "issuer_id": "NAMU.N0000",
+      "metric_code": "PAT",
+      "result": "G01_WITHHELD",
+      "truth": "404314000",
+      "truth_entity": null
+    }
+  ]
+}

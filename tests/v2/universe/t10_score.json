@@ -3,13 +3,13 @@
   "reported": 39,
   "entity_resolved_reported": 31,
   "ambiguous": 1,
-  "tp": 30,
-  "value_or_entity_mismatch": 1,
+  "tp": 31,
+  "value_or_entity_mismatch": 0,
   "fn": 0,
   "g01_withheld": 8,
   "duration_invented_on_null_truth": 0,
-  "recall_vs_entity_resolved": 0.9677,
-  "critical_wrong_facts": 1,
+  "recall_vs_entity_resolved": 1.0,
+  "critical_wrong_facts": 0,
   "note": "T10 truth vs V2 SourceFacts. Unlabeled REPORTED rows are G01 withheld, not value errors. Publication gates are not applied to truth. Not certification and not holdout.",
   "gates": {
     "G01": {
@@ -53,14 +53,15 @@
       "evidence": "CIC EPS is COMPANY because the statement says Company. ATL/DIMO/GREG EPS are GROUP because they say Group. Silence is not Company."
     },
     "score": {
-      "tp": 30,
-      "value_or_entity_mismatch": 1,
+      "tp": 31,
+      "value_or_entity_mismatch": 0,
       "fn": 0,
       "g01_withheld": 8,
       "not_certification": true
     }
   },
-  "v2_source_fact_count": 437,
+  "split": "DEV",
+  "v2_source_fact_count": 446,
   "issuers": [
     "ABL.N0000",
     "ACL.N0000",
@@ -74,7 +75,7 @@
     "GREG.N0000"
   ],
   "investigation_base_sha": "91a9c68bf940d3d9c2a86245f127de88ad4b4b6d",
-  "actual_code_sha": "34d080e9d5f50a871b311a08ad9b56f6c4af5080:dirty:a67ce7deb993",
+  "actual_code_sha": "ffc7d1096b15d3052ec3efd4ace9c313c4e6ab76:dirty:7d58c3d45346",
   "mismatch_examples": [
     {
       "issuer_id": "ABL.N0000",
@@ -89,29 +90,6 @@
       "result": "G01_WITHHELD",
       "truth": "189157871000",
       "truth_entity": null
-    },
-    {
-      "issuer_id": "ATL.N0000",
-      "metric_code": "TOP_LINE",
-      "result": "VALUE_OR_ENTITY_MISMATCH",
-      "truth": "3974507328",
-      "truth_entity": "GROUP",
-      "v2_values": [
-        "7",
-        "6927326428",
-        "5687198437",
-        "3028247472",
-        "2326878590",
-        "590276255"
-      ],
-      "v2_entities": [
-        "GROUP",
-        "GROUP",
-        "GROUP",
-        "COMPANY",
-        "COMPANY",
-        "GROUP"
-      ]
     },
     {
       "issuer_id": "CBNK.N0000",

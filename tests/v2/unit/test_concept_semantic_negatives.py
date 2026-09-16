@@ -94,6 +94,15 @@ def test_narrative_operating_income_is_not_top_line() -> None:
     assert income[0].metric_code is None
 
 
+def test_gross_written_contribution_is_insurance_top_line() -> None:
+    matcher = RegistryMatcher()
+    hits = matcher.candidates(
+        StatementRow(row_id="r1", raw_label="Gross written contribution (premium)"),
+        statement_type=StatementType.INCOME_STATEMENT,
+    )
+    assert hits[0].metric_code == "TOP_LINE"
+
+
 def test_attributable_equity_is_not_total_equity() -> None:
     matcher = RegistryMatcher()
     hits = matcher.candidates(

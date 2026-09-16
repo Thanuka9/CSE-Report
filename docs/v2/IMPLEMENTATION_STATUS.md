@@ -195,4 +195,4 @@ Tests live under `tests/v2/unit`, `tests/v2/property`, `tests/v2/golden`. Plan d
 
 V2 is **not** complete under plan §44 items 12, 13, and 15. Those are the human/artefact leftovers.
 
-Extraction investigation status (T00–T29) is `docs/v2/EXTRACTION_INVESTIGATION_STATUS.md`. T00–T10 and T20 are done. T11–T24 are diagnostic or partial. T25–T29 remain artefact-blocked. Production engine stays V1.
+Extraction investigation status (T00–T29) is `docs/v2/EXTRACTION_INVESTIGATION_STATUS.md`. T00–T25 and T21–T24 are done or partial. T26 remains artefact-blocked. T27 is provisional only. T28 is NOT CERTIFIED. T29 cutover stays blocked. Production engine stays V1.
