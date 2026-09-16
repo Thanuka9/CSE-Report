@@ -564,6 +564,11 @@ def _duration_banners(
         for match in _QUARTER_WORD.finditer(line.text):
             found.append((_match_x(line, match), 3))
         for match in _PERIOD_WORD.finditer(line.text):
+            # "For the period ended <date>" is a period-end cue, not a YTD
+            # duration banner. Bare column headers like "Period" beside
+            # "Quarter" still participate in duration pairing.
+            if re.search(r"\bperiod\s+ended\b", line.text, re.I):
+                continue
             found.append((_match_x(line, match), 0))
     found.sort(key=lambda item: item[0])
     has_explicit_quarter = any(_QUARTER_WORD.search(line.text) for line in lines)
@@ -899,11 +904,6 @@ def _duration_for_position(
     blob: str,
     banners: list[tuple[float, int]] | None = None,
 ) -> int | None:
-    # TODO(F3): After F1 entity ownership is fixed, merged quarter/YTD duration
-    # banners can still mis-assign columns when banner x-order does not match
-    # true span ownership (e.g. leftmost monetary column gets 9M while an
-    # adjacent column gets 3M). Needs a generalized duration-span fix — do not
-    # guess from issuer-specific layouts.
     from_banners = _cycle_durations(
         position, monetary_count, [months for _x, months in banners or ()]
     )

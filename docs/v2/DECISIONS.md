@@ -394,3 +394,13 @@ Each nontrivial deviation from `AGENT_IMPLEMENTATION_PLAN.md` is recorded here. 
 - **Evidence:** `v2/resolution/column_context.py` (`_is_entity_bearing_subtitle`, `_heading_context_lines`); `tests/v2/regression/test_lite_group_header_ownership.py`; `tests/v2/unit/test_column_context.py`.
 - **Affected modules:** `v2/resolution/column_context.py`.
 - **Temporary/permanent:** Permanent generalized header rule. F3 duration span ownership for LITE remains open. N07 inspected-holdout re-score: TP 16 / FN 0 / critical 0 / recall 1.0 — **not** a new unseen holdout and **not** certification.
+
+
+---
+
+## 2026-09-16 — F3: period-ended date cue is not a YTD duration banner
+
+- **Decision:** Do not emit duration banners from \period ended\ phrases. Bare column headers \Period\ beside \Quarter\ still pair as 6M/3M. Keep engine V1 and floor 8924.
+- **Reason:** LITE \For the Period ended … Quarter Ended Nine Months Ended\ falsely mapped leftmost columns to 9M.
+- **Evidence:** \column_context._duration_banners\; LITE real-PDF duration_months=3; \	est_period_ended_date_cue_does_not_steal_quarter_columns\.
+- **Temporary/permanent:** Permanent generalized rule.

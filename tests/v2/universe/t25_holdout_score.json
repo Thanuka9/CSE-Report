@@ -77,7 +77,7 @@
     "TYRE.N0000"
   ],
   "investigation_base_sha": "91a9c68bf940d3d9c2a86245f127de88ad4b4b6d",
-  "actual_code_sha": "d3b6d03e129b66dca4ad59d931c235c113b1e22d:dirty:c4e62b6a5d8d",
+  "actual_code_sha": "99278edbc8e1b225453be988ec61563538c17aa2:dirty:bdde74ebdd5c",
   "mismatch_examples": [
     {
       "issuer_id": "HNBF.N0000",

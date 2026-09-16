@@ -881,3 +881,49 @@ def test_issuer_name_plc_line_still_does_not_invent_company_entity() -> None:
     ]
     assert monetary
     assert all(column.entity_scope is None for column in monetary)
+
+def test_period_ended_date_cue_does_not_steal_quarter_columns() -> None:
+    """F3: merged Period-ended + Quarter + Nine Months — quarter columns own 3M.
+
+    Mirrors LITE page-5 geometry: a left 'For the Period ended' date cue must
+    not become a false 9M banner that 1:1-maps onto the leftmost monetary column.
+    """
+
+    document = geometric_document(
+        (
+            ((40.0, "Group"),),
+            (
+                (45.0, "For the Period ended 31st"),
+                (220.0, "Quarter Ended"),
+                (400.0, "Nine Months Ended"),
+            ),
+            ((45.0, "December"),),
+            (
+                (200.0, "2025"),
+                (280.0, "2024"),
+                (400.0, "2025"),
+                (480.0, "2024"),
+            ),
+            (
+                (190.0, "Rs.'000"),
+                (270.0, "Rs.'000"),
+                (390.0, "Rs.'000"),
+                (470.0, "Rs.'000"),
+            ),
+            (
+                (40.0, "Revenue"),
+                (200.0, "889,239"),
+                (280.0, "700,000"),
+                (400.0, "2,450,908"),
+                (480.0, "2,000,000"),
+            ),
+        ),
+        title="Statement of Profit or Loss and Other",
+    )
+    statement = bind_column_context(document, build_statements(document)[0])
+    monetary = [
+        column
+        for column in statement.columns
+        if column.unit_dimension is UnitDimension.MONETARY
+    ]
+    assert [column.duration_months for column in monetary[:4]] == [3, 3, 9, 9]

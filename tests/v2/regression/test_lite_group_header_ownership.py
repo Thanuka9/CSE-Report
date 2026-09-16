@@ -1,8 +1,7 @@
-"""Permanent real-PDF regression: LITE Group header ownership (N02 / F1).
+"""Permanent real-PDF regression: LITE Group header ownership (N02 / F1 / F3).
 
-Expects SourceFacts for page-5 Group CURRENT cells once F1 is present
-(entity-bearing statement subtitles retained in heading context). Duration=3
-is F3 and is intentionally not asserted here.
+Expects SourceFacts for page-5 Group CURRENT quarter cells once F1 (entity
+subtitle) and F3 (quarter duration ownership) are present.
 """
 
 from __future__ import annotations
@@ -57,9 +56,9 @@ def test_geometric_group_subtitle_admits_group_source_facts() -> None:
         document, issuer_id=ISSUER_ID
     )
     for metric_code, expected in GROUP_CURRENT:
-        assert _matching_group_current(facts, metric_code=metric_code, expected=expected), (
-            f"missing GROUP {metric_code}={expected}"
-        )
+        matches = _matching_group_current(facts, metric_code=metric_code, expected=expected)
+        assert matches, f"missing GROUP {metric_code}={expected}"
+        assert all(fact.duration_months == 3 for fact in matches)
 
 
 @pytest.mark.parametrize(
@@ -83,4 +82,8 @@ def test_lite_real_pdf_group_source_facts(metric_code: str, expected: Decimal) -
     assert matches, (
         f"{ISSUER_ID} {metric_code} GROUP {expected} missing from "
         f"{[(f.entity_scope, str(f.normalized_value), f.comparison_role) for f in facts if f.metric_code == metric_code]}"
+    )
+    assert all(fact.duration_months == 3 for fact in matches), (
+        f"{ISSUER_ID} {metric_code} expected duration_months=3, got "
+        f"{[fact.duration_months for fact in matches]}"
     )
