@@ -2,7 +2,16 @@
 
 Do not mark institutional cutover complete because code exists. Production extraction stays on V1; V2 is the challenger (`engine=v2`).
 
-**Status correction (recovery plan):** V2 is **NOT** engineering-complete and **NOT** blocked on OFFICIAL review only. First unseen holdout (T25) **FAILED** (entity-resolved recall 68.75%; 2 critical wrong facts). Fail-closed diagnostics are safe behavior, **not** acceptance passes.
+**Verified path:** `docs/v2/VERIFIED_OPEN_WORK_AND_FINAL_ENGINEERING_PATH.md` (checkpoint `a537f8f`). V2 is **NOT CERTIFIED** and **NOT** ready for cutover. OFFICIAL is **not** the only open blocker.
+
+## First T25 holdout (retired)
+
+```text
+FAILED initially → investigated → LITE F1/F3 fixed → SFCL truth corrected
+→ rescored 1.0 on inspected entity-resolved facts → permanently retired
+```
+
+Final holdout path: **N16 identity locked → N17 blind truth pending → N18 scoring pending**.
 
 1. [x] One canonical document representation is used by the V2 core.
 2. [x] Source context is owned by columns, not reconstructed after metric matching.
@@ -15,34 +24,37 @@ Do not mark institutional cutover complete because code exists. Production extra
 9. [x] Release mode is explicit `ReleaseContext`.
 10. [x] Coverage floors cannot silently decrease.
 11. [x] Workbook output reconciles to release facts.
-12. [ ] Golden corpus quality gates pass on institutional CSE filings (T10 DEV useful; locked 33 probe 209/237 recall 88.19%; T25 holdout **FAILED** — not §37 institutional gold).
-13. [ ] Frozen-universe acceptance passes. (Sept-10 artefacts missing; Sept-05 pin + `t26_frozen_universe_diagnostic.json` are **diagnostic only**, not acceptance.)
-14. [x] Repeated fixed-input runs are deterministic.
-15. [ ] Current-universe run succeeds. (2026-09-09 V2 challenger: 3,684 draft-publishable vs floor **8,924**; `ENGINEERING_FAILURES_PRESENT`. Fail-closed signal — **not** a pass.)
+12. [ ] Golden corpus quality gates pass on institutional CSE filings (T10 DEV useful; locked 33 probe 209/237; first T25 **retired** after repair; **N16/N17/N18** is the final holdout path — not §37 yet).
+13. [ ] Frozen-universe acceptance passes. (Sept-10 artefacts missing; Sept-05 pin is **diagnostic only**.)
+14. [x] Repeated fixed-input runs are deterministic (prior baseline; N11 clean-SHA regen still open).
+15. [ ] Current-universe run succeeds. (Prior V2 challenger 3,684 vs floor **8,924** predates F1/F3; fresh N14 required.)
 16. [x] V2 DRAFT workbook contains correct numeric data (synthetic e2e).
-17. [ ] OFFICIAL human review — required **after** engineering completion (holdout pass + healthy universe + certification). Not the sole open gate today.
+17. [ ] OFFICIAL human review — only after engineering acceptance (N17–N18 pass, N11–N14, certification). Not the sole open gate.
 
-18. [x] Production OCR runtime packaging proven (Dockerfile + `cse-etl:ocr-smoke-v2` smoke PASS; `tests/v2/universe/t18_ocr_docker_smoke.json`).
-19. [x] Source accounting-regime lineage on SourceFact (engineering). Generic INSURANCE does not fabricate SLFRS4/SLFRS17. Human gold regime checks remain under item 12 / OFFICIAL.
-20. [x] Production V2 publication path wired for opt-in `engine=v2` (`production_workbook` / `run_production_pipeline`; default remains V1).
+18. [x] Production OCR runtime packaging proven (`t18_ocr_docker_smoke.json`).
+19. [x] Source accounting-regime lineage on SourceFact (engineering).
+20. [x] Production V2 publication path wired for opt-in `engine=v2` (default remains V1).
 
-Production extraction engine is **V1** (`configs/app.yml` `extraction.engine: v1`). Do not delete V1. Do not set `extraction.engine: v2` or cutover `ready=True` until engineering gates 12/13/15 and OFFICIAL review (17) pass.
+Production extraction engine is **V1**. Do not set `extraction.engine: v2` or cutover `ready=True` until engineering gates and OFFICIAL review pass.
 
-## Engineering recovery (before OFFICIAL)
+## Open engineering (before OFFICIAL)
 
-See `docs/v2/NEXT_ENGINEERING_STEPS_AND_PROJECT_RECOVERY_PLAN.md`:
+See `docs/v2/VERIFIED_OPEN_WORK_AND_FINAL_ENGINEERING_PATH.md`:
 
-- T24 REOPENED; T25 FAILED; diagnose LITE FN + SFCL critical wrong
-- Promote failed holdout cases into DEV/regression; select a **new** unseen holdout
-- Header H0/H1/H2 bake-off; finish G02/G04–G08 experiments
-- Clean-SHA baseline + CI + current-universe challenger rerun
+- **N17** blind adjudication on `holdout_v2_identity_manifest.json` (human; no V1/V2 peeking)
+- **N18** score new holdout without retuning mid-score
+- **N11/N12** clean-SHA locked-33 baseline + canonical regen
+- **N13** CI green / PR
+- **N14** fresh current-universe V2 challenger
+- G02/G04–G08 source-truth decisions if material; H1/H2 only if needed after F1/F3
+- **N20** Sept-10 exact replay when artefacts exist
 
 ## Phase 15 remaining
 
 1. [ ] Make V2 extraction the default (blocked on engineering + OFFICIAL).
 2. [x] Keep V1 extraction as the production default; V2 is challenger-only.
-3. [ ] Run another full frozen-universe acceptance (needs Sept-10 artefacts).
-4. [ ] Run the current snapshot to a passing acceptance (floor 8924).
-5. [ ] Generate DRAFT output from a passing current-universe run.
-6. [ ] Complete required OFFICIAL human review (after engineering completion).
-7. [ ] Remove obsolete V1 extraction paths only after the rollback window closes.
+3. [ ] Full frozen-universe acceptance (needs Sept-10 artefacts).
+4. [ ] Current snapshot passing acceptance (floor 8924).
+5. [ ] DRAFT from a passing current-universe run.
+6. [ ] OFFICIAL human review (after engineering completion).
+7. [ ] Remove obsolete V1 paths only after rollback window closes.

@@ -7,8 +7,9 @@ Coverage floor stays `min_draft_publishable = 8924`. V1 is not source truth.
 Investigation base SHA: `91a9c68bf940d3d9c2a86245f127de88ad4b4b6d`.
 Branch: `v2/extraction-investigation`.
 Recovery plan: `docs/v2/NEXT_ENGINEERING_STEPS_AND_PROJECT_RECOVERY_PLAN.md`.
+Verified open-work path: `docs/v2/VERIFIED_OPEN_WORK_AND_FINAL_ENGINEERING_PATH.md` (checkpoint `a537f8f`).
 
-**Verdict:** Architecture improved; first unseen holdout **FAILED** then repaired on inspected set. Not engineering-complete. Not OFFICIAL-only. New holdout (N16) pending blind gold (N17).
+**Verdict:** Architecture improved; first T25 holdout **retired** after F1/F3 + SFCL truth fix. Not engineering-complete. Not OFFICIAL-only. **Next human step: N17** blind adjudication of `holdout_v2_identity_manifest.json`.
 
 | Task | Status | Evidence |
 |---|---|---|
