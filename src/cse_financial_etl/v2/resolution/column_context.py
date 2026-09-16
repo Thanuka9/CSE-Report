@@ -203,6 +203,7 @@ def bind_column_context(
         period_dates = banner_dates[-monetary_count:]
     else:
         period_dates = dates or banner_dates
+    monetary_xs = _monetary_column_xs(statement, monetary_indices)
     columns: list[StatementColumn] = []
     for index, column in enumerate(statement.columns):
         kind = kinds[index]
@@ -224,7 +225,13 @@ def bind_column_context(
         entity = _entity_for_position(position, monetary_count, blob, entity_banners)
         duration = None
         if statement.statement_type is not StatementType.BALANCE_SHEET:
-            duration = _duration_for_position(position, monetary_count, blob, duration_banners)
+            duration = _duration_for_position(
+                position,
+                monetary_count,
+                blob,
+                duration_banners,
+                column_xs=monetary_xs,
+            )
             if duration is None:
                 duration = parse_duration_months(cover)
         role = _role_for_period(
@@ -898,14 +905,69 @@ def _paired_entities(blob: str) -> tuple[EntityScope | None, EntityScope | None]
     return None, None
 
 
+def _monetary_column_xs(
+    statement: CanonicalStatement, monetary_indices: list[int]
+) -> list[float] | None:
+    """Median cell-center x for each monetary column; None when geometry is incomplete."""
+
+    xs: list[float] = []
+    for index in monetary_indices:
+        column_id = statement.columns[index].column_id
+        centers = [
+            (cell.source_ref.bbox[0] + cell.source_ref.bbox[2]) / 2.0
+            for row in statement.rows
+            for cell in row.cells
+            if cell.column_id == column_id and cell.source_ref.bbox is not None
+        ]
+        if not centers:
+            return None
+        centers.sort()
+        xs.append(centers[len(centers) // 2])
+    return xs
+
+
+def _duration_from_banner_geometry(
+    position: int,
+    column_xs: list[float],
+    banners: list[tuple[float, int]],
+) -> int | None:
+    """Nearest in-field duration banner owns the column (merged quarter/YTD spans).
+
+    Banners whose x falls outside the monetary column field are ignored so left-side
+    period-end date cues cannot steal ownership from an explicit Quarter/3M banner.
+    Wider repeating Bank|Group duration cycles stay on order-based pair cycling.
+    """
+
+    if position < 0 or position >= len(column_xs) or len(column_xs) < 2 or len(banners) < 2:
+        return None
+    if len(column_xs) > 4 and len(column_xs) % 4 == 0:
+        return None
+    min_c = min(column_xs)
+    max_c = max(column_xs)
+    gap = (max_c - min_c) / max(len(column_xs) - 1, 1)
+    margin = max(gap, 40.0)
+    in_field = [(x, months) for x, months in banners if min_c - margin <= x <= max_c + margin]
+    families = {months for _x, months in in_field}
+    if len(families) < 2:
+        return None
+    column_x = column_xs[position]
+    return min(in_field, key=lambda item: abs(item[0] - column_x))[1]
+
+
 def _duration_for_position(
     position: int,
     monetary_count: int,
     blob: str,
     banners: list[tuple[float, int]] | None = None,
+    column_xs: list[float] | None = None,
 ) -> int | None:
+    banner_list = list(banners or ())
+    if column_xs is not None and len(column_xs) == monetary_count:
+        from_geometry = _duration_from_banner_geometry(position, column_xs, banner_list)
+        if from_geometry is not None:
+            return from_geometry
     from_banners = _cycle_durations(
-        position, monetary_count, [months for _x, months in banners or ()]
+        position, monetary_count, [months for _x, months in banner_list]
     )
     if from_banners is not None:
         return from_banners
