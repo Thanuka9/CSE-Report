@@ -1,10 +1,10 @@
 {
   "schema_version": "v2.0.0",
   "investigation_base_sha": "91a9c68bf940d3d9c2a86245f127de88ad4b4b6d",
-  "actual_code_sha": "e92689dabc400e3609e64a9d50512e99d9374dec:dirty:0e06ef8bd0b3",
-  "code_sha": "e92689dabc400e3609e64a9d50512e99d9374dec",
+  "actual_code_sha": "515ea8818e8fddca45869a9ed931509789929a93",
+  "code_sha": "515ea8818e8fddca45869a9ed931509789929a93",
   "branch": "v2/extraction-investigation",
-  "working_tree_dirty": true,
+  "working_tree_dirty": false,
   "source_snapshot_id": "7bab3c98cf6bdde906ad0a464885d32437a05f42925e80b49b4d4c8469c306dc",
   "python_version": "3.12.0",
   "platform": "Windows-11-AMD64",
