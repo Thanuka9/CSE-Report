@@ -268,9 +268,15 @@ docs/v2/EXTRACTION_INVESTIGATION_STATUS.md
 
 # 8. OPEN — N13 GitHub CI
 
-There is still no GitHub Actions run and no PR for `v2/extraction-investigation`.
+Branch `v2/extraction-investigation` is pushed to origin (`f70434a`+).
 
-Open a PR or dispatch the workflow.
+PR open is blocked in this environment (`gh` installed but not authenticated; no `GH_TOKEN`).
+
+Create PR manually:
+
+```text
+https://github.com/Thanuka9/CSE-Report/compare/main...v2/extraction-investigation?expand=1
+```
 
 Require green:
 - Ruff
