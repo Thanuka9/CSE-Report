@@ -43,6 +43,12 @@ Verified open-work path: `docs/v2/VERIFIED_OPEN_WORK_AND_FINAL_ENGINEERING_PATH.
 - Do not treat fail-closed as acceptance.
 - Do not claim OFFICIAL-only.
 
+## N11/N12 checkpoint
+
+- Locked-33 baseline regenerated on clean SHA (aseline_run_summary.json, ll_deterministic=true).
+- Experiment summary regenerated (experiment_summary.json); H2/U2/P2 still false.
+- N17 blind gold still required before N18.
+
 ## Next
 
 N17 blind-adjudicate `holdout_v2_identity_manifest.json` → N18 score → N11–N14 clean baseline/CI/universe as capacity allows → N20 Sept-10 when artefacts exist → N23 OFFICIAL.
