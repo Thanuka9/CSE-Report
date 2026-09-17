@@ -25,7 +25,7 @@ No-patches recovery strategy: `docs/v2/EXTRACTION_RECOVERY_STRATEGY_NO_PATCHES.m
 | N07 Score rerun | DONE | DEV + inspected HOLDOUT recall 1.0 |
 | N08 Gate experiments | DONE (diagnostic) | `tests/v2/universe/n08_gate_experiment_summary.json` — G02/G04–G08 remain UNTESTED |
 | N09 Header bake-off | H0 wins | H1 built/measured, not promoted — `n09_header_bakeoff.json` |
-| R3 H1 header adapter | **BUILT / NOT PROMOTED** | `header_h1.py`; LITE H0 72 facts vs H1 0 — see `R3_HEADER_H1.md` |
+| R3 H1 header adapter | **R3.1 DONE / NOT PROMOTED** | LITE facts 40 vs H0 72; SFCL 56=56; keep H0 — `R3_HEADER_H1.md` |
 | N10 Unit/page/continuation | PARTIAL | Existing U0/G05 unit bakeoffs; U2/P2 not built |
 | F3 duration ownership | **FIX LANDED** | Ignore `period ended` date cues as false 9M banners |
 | N11 Clean-SHA baseline | **DONE** | `baseline_run_summary.json` — `actual_code_sha=2ff5d1f…`, `all_deterministic=true` |
@@ -54,4 +54,4 @@ No-patches recovery strategy: `docs/v2/EXTRACTION_RECOVERY_STRATEGY_NO_PATCHES.m
 
 ## Next
 
-R3.1 improve H1 period/date leaf binding until it beats H0 on LITE/SFCL + locked-33 → then re-bake-off → N17 parallel → units port (R4) only after header decision.
+**R4** port V1 scoped unit resolver into V2. H1 stays challenger-only until it beats H0. N17 blind gold remains parallel.

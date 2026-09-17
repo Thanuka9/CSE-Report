@@ -45,6 +45,25 @@ def test_h1_does_not_copy_expected_entity_into_unlabelled_columns() -> None:
     assert all(column.entity_scope is None for column in statement.columns)
 
 
+def test_h1_composes_year_only_columns_with_shared_header_day_month() -> None:
+    """Year leaves + one shared DATE phrase complete period_end (LITE-like)."""
+
+    document = geometric_document(
+        (
+            ((40.0, "Group"),),
+            ((220.0, "Quarter Ended"), (340.0, "Quarter Ended")),
+            ((220.0, "2025"), (340.0, "2024")),
+            ((40.0, "31st December 2025"),),
+            ((40.0, "Rs '000"),),
+            ((40.0, "Profit for the period"), (220.0, "100"), (340.0, "90")),
+        )
+    )
+    statement = bind_column_context(document, build_statements(document)[0], header_engine="H1")
+    periods = [column.period_end for column in statement.columns if column.period_end is not None]
+    assert periods, "expected year+day-month composition"
+    assert any(column.entity_scope is EntityScope.GROUP for column in statement.columns)
+
+
 def test_h0_default_unchanged_on_bind() -> None:
     document = geometric_document(
         (

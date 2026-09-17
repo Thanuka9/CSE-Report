@@ -13,7 +13,11 @@ from decimal import Decimal
 from typing import Literal
 
 from cse_financial_etl.compiler.header_tree import compile_header
-from cse_financial_etl.compiler.structure_normalizer import normalize_date
+from cse_financial_etl.compiler.structure_normalizer import (
+    compose_date,
+    normalize_date,
+    parse_day_month,
+)
 from cse_financial_etl.document.document_ir import (
     BBox,
     HeaderPhraseIR,
@@ -32,6 +36,7 @@ from cse_financial_etl.v2.contracts.enums import (
 from cse_financial_etl.v2.contracts.provenance import SourceRef
 from cse_financial_etl.v2.contracts.statement import CanonicalStatement, StatementColumn
 from cse_financial_etl.v2.resolution.column_context import (
+    _column_kinds,
     _fail_closed_partial_monetary_columns,
     context_blob,
     parse_unit,
@@ -97,8 +102,26 @@ def bind_column_context_h1(
         )
 
     default_unit = parse_unit(blob)
+    calendar_day_month = _unique_header_day_month(table.header_phrases)
+    kinds = _column_kinds(statement)
     columns: list[StatementColumn] = []
-    for statement_column, compiled in zip(statement.columns, value_cols, strict=True):
+    for index, (statement_column, compiled) in enumerate(
+        zip(statement.columns, value_cols, strict=True)
+    ):
+        kind = kinds[index] if index < len(kinds) else "monetary"
+        if kind == "note":
+            columns.append(StatementColumn(column_id=statement_column.column_id))
+            continue
+        if kind == "percent":
+            columns.append(
+                StatementColumn(
+                    column_id=statement_column.column_id,
+                    unit_dimension=UnitDimension.PERCENTAGE,
+                    monetary_scale=Decimal("1"),
+                    unit_evidence=evidence,
+                )
+            )
+            continue
         columns.append(
             _map_compiled_column(
                 statement_column,
@@ -106,12 +129,83 @@ def bind_column_context_h1(
                 evidence=evidence,
                 default_unit=default_unit,
                 statement_type=statement.statement_type,
+                calendar_day_month=calendar_day_month,
             )
         )
 
+    columns = _assign_comparison_roles(columns)
     if partial_monetary == "cascade":
         columns = _fail_closed_partial_monetary_columns(statement, columns)
     return statement.model_copy(update={"columns": tuple(columns)})
+
+
+def _unique_header_day_month(
+    phrases: tuple[HeaderPhraseIR, ...],
+) -> tuple[int, int] | None:
+    """Single shared day/month printed in header DATE/DURATION phrases.
+
+    Used to complete year-only columns when the calendar day/month leaf is
+    geometrically bound to only one side of a multi-column header. Evidence
+    comes from header phrases, not caption silent fill or query context.
+    """
+
+    found: set[tuple[int, int]] = set()
+    for phrase in phrases:
+        if phrase.kind not in {"DATE", "DAYMONTH", "DURATION"}:
+            continue
+        full = normalize_date(phrase.text)
+        if full is not None:
+            found.add((full.day, full.month))
+            continue
+        day_month = parse_day_month(phrase.text)
+        if day_month is not None:
+            found.add(day_month)
+    if len(found) == 1:
+        return next(iter(found))
+    return None
+
+
+def _assign_comparison_roles(columns: list[StatementColumn]) -> list[StatementColumn]:
+    """CURRENT/COMPARATIVE from sibling header dates after period completion."""
+
+    groups: dict[tuple[object, object], list[int]] = {}
+    for index, column in enumerate(columns):
+        if column.unit_dimension is UnitDimension.PERCENTAGE:
+            continue
+        if column.period_end is None:
+            continue
+        key = (column.entity_scope, column.duration_months)
+        groups.setdefault(key, []).append(index)
+
+    role_by_index: dict[int, ComparisonRole] = {}
+    for indices in groups.values():
+        dated = [columns[i] for i in indices if columns[i].period_end is not None]
+        if len(dated) != len(indices):
+            continue
+        latest = max(col.period_end for col in dated if col.period_end is not None)
+        for index in indices:
+            period = columns[index].period_end
+            if period is None:
+                continue
+            role_by_index[index] = (
+                ComparisonRole.CURRENT if period == latest else ComparisonRole.COMPARATIVE
+            )
+
+    out: list[StatementColumn] = []
+    for index, column in enumerate(columns):
+        role = role_by_index.get(index)
+        if role is None or column.comparison_role is not None:
+            out.append(column)
+            continue
+        out.append(
+            column.model_copy(
+                update={
+                    "comparison_role": role,
+                    "comparison_evidence": column.period_evidence,
+                }
+            )
+        )
+    return out
 
 
 def _map_compiled_column(
@@ -121,6 +215,7 @@ def _map_compiled_column(
     evidence: tuple[SourceRef, ...],
     default_unit: tuple[str | None, Decimal | None, UnitDimension | None],
     statement_type: StatementType,
+    calendar_day_month: tuple[int, int] | None = None,
 ) -> StatementColumn:
     entity_raw = getattr(compiled, "entity", None)
     entity_ev = getattr(compiled, "evidence", {}) or {}
@@ -143,6 +238,11 @@ def _map_compiled_column(
             embedded = normalize_date(str(duration_ev.get("text") or ""))
             if embedded is not None:
                 period_end = embedded
+    # Year-only leaves + one shared header day/month (evidence-backed DATE phrase).
+    if period_end is None and calendar_day_month is not None:
+        year = entity_ev.get("period_year_only")
+        if isinstance(year, int):
+            period_end = compose_date(year, calendar_day_month[1], calendar_day_month[0])
 
     duration = getattr(compiled, "duration_months", None)
     duration_source = (entity_ev.get("duration") or {}).get("source")

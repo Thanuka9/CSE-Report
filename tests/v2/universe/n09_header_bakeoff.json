@@ -1,11 +1,13 @@
 {
-  "recovery_step": "N09/R3",
+  "recovery_step": "N09/R3.1",
   "title": "Header engine bake-off (H0/H1/H2)",
-  "case_count": 1,
-  "sample": "LITE.N0000-2025-12-31 real PDF (spot check after H1 scaffold)",
+  "samples": [
+    "LITE.N0000-2025-12-31",
+    "SFCL.N0000-2025-12-31"
+  ],
   "tooling": {
     "module": "cse_financial_etl.v2.diagnostics.bakeoffs",
-    "entry": "pipeline_bakeoff / header_h0_metrics / header_h1_metrics",
+    "h1_module": "cse_financial_etl.v2.resolution.header_h1",
     "unit_tests": [
       "tests/v2/unit/test_header_unit_gate_bakeoffs.py",
       "tests/v2/unit/test_header_h1_bakeoff.py"
@@ -14,9 +16,9 @@
   "engines": {
     "H0": {
       "status": "MEASURED",
-      "description": "Current V2 column-context binder (production path / default).",
       "promoted": true,
-      "metrics": {
+      "description": "Current V2 column-context binder (production default).",
+      "lite": {
         "columns": 23,
         "entity_resolved": 18,
         "period_resolved": 18,
@@ -24,36 +26,47 @@
         "comparison_resolved": 18,
         "unit_resolved": 22,
         "source_facts": 72
+      },
+      "sfcl": {
+        "columns": 40,
+        "entity_resolved": 32,
+        "period_resolved": 32,
+        "source_facts": 56
       }
     },
     "H1": {
       "status": "MEASURED_NOT_PROMOTED",
-      "description": "V1 compile_header geometry adapted onto CanonicalStatement.",
       "built": true,
       "promoted": false,
-      "module": "cse_financial_etl.v2.resolution.header_h1",
-      "metrics": {
+      "description": "V1 compile_header geometry adapter + R3.1 year/day-month completion.",
+      "lite": {
         "columns": 23,
         "entity_resolved": 8,
-        "period_resolved": 9,
+        "period_resolved": 16,
         "duration_resolved": 8,
-        "comparison_resolved": 8,
-        "unit_resolved": 23,
-        "source_facts": 0
+        "comparison_resolved": 16,
+        "unit_resolved": 22,
+        "source_facts": 40,
+        "group_current_target_facts": "recovered"
       },
-      "note": "Trails H0 on LITE. Period leaf binding on V2 column geometry is the next H1 fix (R3.1)."
+      "sfcl": {
+        "columns": 40,
+        "entity_resolved": 26,
+        "period_resolved": 30,
+        "source_facts": 56
+      },
+      "note": "Improved vs R3 scaffold (LITE facts 0→40) but does not beat H0 on LITE."
     },
     "H2": {
       "status": "UNTESTED",
-      "description": "HeaderGraph / ColumnHeaderPath prototype.",
-      "built": false,
-      "note": "Do not invent H2. Build only after H1 promotion decision."
+      "built": false
     }
   },
   "decision": {
     "header_engine": "H0",
     "replace_h0_with_h1": false,
-    "reason": "H1 is harnessed and unit-tested but loses to H0 on LITE resolution/SourceFacts. Keep H0 default."
+    "reason": "H1 not promoted: trails H0 entity/coverage on LITE despite SFCL fact parity."
   },
-  "note": "Diagnostic only. Do not promote V2 production engine. Do not lower 8924."
+  "next": "R4 scoped unit resolver port; H1 remains challenger-only",
+  "note": "Do not promote V2 production engine. Do not lower 8924."
 }

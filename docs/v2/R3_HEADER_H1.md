@@ -1,32 +1,43 @@
 # R3 — H1 Header Engine (V1 geometry adapter)
 
-**Status:** BUILT / MEASURED / **NOT PROMOTED**  
-**Default production header engine:** **H0** (`bind_column_context` default)  
+**Status:** R3.1 COMPLETE — BUILT / IMPROVED / **NOT PROMOTED**  
+**Default production header engine:** **H0**  
 **Production extraction:** `engine: v1` / floor `8924`
 
 ## What landed
 
-- `v2/resolution/header_h1.py` — adapts V1 `compile_header` onto V2 `CanonicalStatement`
-- `header_engine="H0"|"H1"` on `bind_column_context` and `run_filing_pipeline`
-- Bake-off emits both `h0` and `h1` metrics (`pipeline_bakeoff`)
-- Unit tests: `tests/v2/unit/test_header_h1_bakeoff.py`
-- Rejects table-title/caption silent fills; does not copy query-target metadata
+- `v2/resolution/header_h1.py` — V1 `compile_header` adapted onto V2 statements
+- `header_engine="H0"|"H1"` on bind + filing pipeline (default **H0**)
+- R3.1: year-only columns complete from a **unique shared header DATE/day-month** phrase; comparison roles assigned after period completion; percent/note columns respected
+- Rejects table-title/caption silent fills; no query-target copy
 
-## Bake-off signal (LITE real PDF)
+## Bake-off (post R3.1)
 
-| Engine | entity_resolved | period_resolved | duration_resolved | SourceFacts |
-|---|---:|---:|---:|---:|
-| H0 | 18/23 | 18 | 14 | 72 |
-| H1 | 8/23 | 9 | 8 | 0 |
+### LITE.N0000-2025-12-31
 
-H1 does **not** beat H0. Stop-condition from recovery strategy applies: do not promote.
+| Engine | entity | period | duration | comparison | SourceFacts | Group CURRENT TOP_LINE/OP/PAT |
+|---|---:|---:|---:|---:|---:|---|
+| H0 | 18/23 | 18 | 14 | 18 | **72** | yes |
+| H1 | 8/23 | 16 | 8 | 16 | 40 | yes |
 
-## Hard stops
+### SFCL.N0000-2025-12-31
 
-- Do not set H1 as default until it beats H0 on DEV + LITE/SFCL + locked-33 resolution rates without critical wrong facts.
-- Do not invent clean-sheet H2.
-- Do not lower 8924 / promote V2 production engine.
+| Engine | entity | period | SourceFacts |
+|---|---:|---:|---:|
+| H0 | 32/40 | 32 | **56** |
+| H1 | 26/40 | 30 | **56** |
 
-## Next (R3.1)
+## Decision
 
-Improve H1 period/date leaf binding on V2 reconstructed column geometry (income statements currently resolve entity/duration but miss period → admission fails). Re-run H0 vs H1 on LITE/SFCL + locked-33 before any promotion decision.
+```text
+header_engine = H0 (keep)
+replace_h0_with_h1 = false
+```
+
+H1 recovered from 0→40 LITE facts and matches SFCL fact count, but still trails H0 on LITE coverage/entity resolution. Recovery stop-condition: do not promote until H1 **beats** H0 without critical wrong facts.
+
+## Next recovery step
+
+**R4** — port V1 scoped `UnitEvidenceResolver` into V2 (cell-level ROW→COLUMN→TABLE→PAGE), while H1 remains challenger-only pending further header entity parity.
+
+N17 blind adjudication remains parallel and independent.
