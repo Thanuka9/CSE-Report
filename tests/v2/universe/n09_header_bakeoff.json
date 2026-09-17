@@ -1,66 +1,59 @@
 {
-  "recovery_step": "N09",
+  "recovery_step": "N09/R3",
   "title": "Header engine bake-off (H0/H1/H2)",
-  "case_count": 33,
-  "run_id": "locked-experiments-99278edbc8e1b225453be988ec61563538c17aa2:dirty:6a8e857e9626",
-  "investigation_base_sha": "91a9c68bf940d3d9c2a86245f127de88ad4b4b6d",
-  "actual_code_sha": "99278edbc8e1b225453be988ec61563538c17aa2:dirty:6a8e857e9626",
-  "source_snapshot_id": "7bab3c98cf6bdde906ad0a464885d32437a05f42925e80b49b4d4c8469c306dc",
+  "case_count": 1,
+  "sample": "LITE.N0000-2025-12-31 real PDF (spot check after H1 scaffold)",
   "tooling": {
     "module": "cse_financial_etl.v2.diagnostics.bakeoffs",
-    "entry": "pipeline_bakeoff / header_h0_metrics",
-    "raw_outputs": {
-      "bakeoffs_json": "outputs/v2_n08_n09/bakeoffs.json",
-      "header_engine_csv": "outputs/v2_n08_n09/header_engine_bakeoff.csv",
-      "experiment_summary": "outputs/v2_n08_n09/experiment_summary.json"
-    },
+    "entry": "pipeline_bakeoff / header_h0_metrics / header_h1_metrics",
     "unit_tests": [
-      "tests/v2/unit/test_header_unit_gate_bakeoffs.py"
+      "tests/v2/unit/test_header_unit_gate_bakeoffs.py",
+      "tests/v2/unit/test_header_h1_bakeoff.py"
     ]
   },
   "engines": {
     "H0": {
       "status": "MEASURED",
-      "description": "Current V2 column-context binder (production path).",
+      "description": "Current V2 column-context binder (production path / default).",
+      "promoted": true,
       "metrics": {
-        "columns": 891,
-        "entity_resolved": 588,
-        "period_resolved": 715,
-        "duration_resolved": 494,
-        "comparison_resolved": 715,
-        "unit_resolved": 873,
-        "entity_resolution_rate_num": 588,
-        "entity_resolution_rate_den": 891
+        "columns": 23,
+        "entity_resolved": 18,
+        "period_resolved": 18,
+        "duration_resolved": 14,
+        "comparison_resolved": 18,
+        "unit_resolved": 22,
+        "source_facts": 72
       }
     },
     "H1": {
-      "status": "UNTESTED",
-      "description": "V1 hierarchical geometry techniques.",
-      "built": false,
-      "note": "No H1 bake-off harness in v2/diagnostics/bakeoffs.py. Not run."
+      "status": "MEASURED_NOT_PROMOTED",
+      "description": "V1 compile_header geometry adapted onto CanonicalStatement.",
+      "built": true,
+      "promoted": false,
+      "module": "cse_financial_etl.v2.resolution.header_h1",
+      "metrics": {
+        "columns": 23,
+        "entity_resolved": 8,
+        "period_resolved": 9,
+        "duration_resolved": 8,
+        "comparison_resolved": 8,
+        "unit_resolved": 23,
+        "source_facts": 0
+      },
+      "note": "Trails H0 on LITE. Period leaf binding on V2 column geometry is the next H1 fix (R3.1)."
     },
     "H2": {
       "status": "UNTESTED",
       "description": "HeaderGraph / ColumnHeaderPath prototype.",
       "built": false,
-      "note": "H2 is not built. Do not invent results. bakeoffs.pipeline_bakeoff sets h2_built=False."
+      "note": "Do not invent H2. Build only after H1 promotion decision."
     }
   },
-  "prototypes": {
-    "h2": false,
-    "u2": false,
-    "p2": false
-  },
   "decision": {
-    "header_engine": "H0_ONLY",
-    "replace_h0_with_h2": false,
-    "reason": "Only H0 is instrumented on locked-33. H1 not harnessed. H2 not built. No source-truth bake-off winner beyond staying on H0."
+    "header_engine": "H0",
+    "replace_h0_with_h1": false,
+    "reason": "H1 is harnessed and unit-tested but loses to H0 on LITE resolution/SourceFacts. Keep H0 default."
   },
-  "related_unit_u0": {
-    "unit_unresolved_columns": 18,
-    "cents_evidence_columns": 0,
-    "usd_columns": 0,
-    "note": "U0 census only; U2 UnitEvidenceResolver not built."
-  },
-  "note": "Diagnostic only. Do not promote V2. Do not claim H2 exists. SFCL/header ownership regressions remain separate from this census."
+  "note": "Diagnostic only. Do not promote V2 production engine. Do not lower 8924."
 }

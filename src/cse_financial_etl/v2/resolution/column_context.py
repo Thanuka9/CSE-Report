@@ -177,8 +177,24 @@ def bind_column_context(
     expected_entity_scope: EntityScope | None = None,
     target_period_end: date | None = None,
     partial_monetary: Literal["cascade", "per_column"] = "cascade",
+    header_engine: Literal["H0", "H1"] = "H0",
 ) -> CanonicalStatement:
-    """Fill column context from heading evidence only. Query targets are not source."""
+    """Fill column context from heading evidence only. Query targets are not source.
+
+    ``header_engine="H0"`` is the production V2 binder.
+    ``header_engine="H1"`` runs the V1-geometry adapter (challenger / bake-off only).
+    """
+
+    if header_engine == "H1":
+        from cse_financial_etl.v2.resolution.header_h1 import bind_column_context_h1
+
+        return bind_column_context_h1(
+            document,
+            statement,
+            expected_entity_scope=expected_entity_scope,
+            target_period_end=target_period_end,
+            partial_monetary=partial_monetary,
+        )
 
     del expected_entity_scope, target_period_end  # never copied into source columns
     regions = detect_statement_regions(document)

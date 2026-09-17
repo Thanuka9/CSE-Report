@@ -72,18 +72,21 @@ def run_filing_pipeline(
     candidate_trace_path: Path | None = None,
     run_id: str | None = None,
     code_sha: str | None = None,
+    header_engine: str = "H0",
 ) -> FilingPipelineResult:
     regime = accounting_regime or accounting_regime_for(
         issuer_id=issuer_id, issuer_name=issuer_name, issuer_type=issuer_type
     )
     regions = detect_statement_regions(document)
     reconstructed = reconstruct_statements(document, regions)
+    engine = "H1" if str(header_engine).upper() == "H1" else "H0"
     statements = tuple(
         bind_column_context(
             document,
             statement,
             expected_entity_scope=expected_entity_scope,
             target_period_end=target_period_end,
+            header_engine=engine,  # type: ignore[arg-type]
         )
         for statement in reconstructed
     )

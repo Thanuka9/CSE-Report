@@ -16,7 +16,7 @@ No-patches recovery strategy: `docs/v2/EXTRACTION_RECOVERY_STRATEGY_NO_PATCHES.m
 |---|---|---|
 | T00–T10 / T21–T23 | DONE | Prior investigation artefacts |
 | T11 G02 ablation | DIAGNOSTIC | UNTESTED — `n08_gate_experiment_summary.json` |
-| T12 Header H0/H1/H2 | H0 MEASURED | H1/H2 not built — `n09_header_bakeoff.json` |
+| T12 Header H0/H1/H2 | H0 default; H1 built | H1 measured on LITE, **not promoted** — `R3_HEADER_H1.md` |
 | T24 Iterate | **IN PROGRESS** | F1+F3 landed; new unseen holdout required |
 | T25 HOLDOUT (first) | **FAILED then inspected** | Original 68.75%; after F1/F3 + SFCL truth fix recall 1.0 on inspected set — **not** final holdout |
 | N02–N04 | DONE | `docs/v2/investigations/` |
@@ -24,7 +24,8 @@ No-patches recovery strategy: `docs/v2/EXTRACTION_RECOVERY_STRATEGY_NO_PATCHES.m
 | N06 F1 fix | DONE | Entity-bearing subtitle keep-rule |
 | N07 Score rerun | DONE | DEV + inspected HOLDOUT recall 1.0 |
 | N08 Gate experiments | DONE (diagnostic) | `tests/v2/universe/n08_gate_experiment_summary.json` — G02/G04–G08 remain UNTESTED |
-| N09 Header bake-off | DONE (H0 only) | `tests/v2/universe/n09_header_bakeoff.json` — H1/H2 not built |
+| N09 Header bake-off | H0 wins | H1 built/measured, not promoted — `n09_header_bakeoff.json` |
+| R3 H1 header adapter | **BUILT / NOT PROMOTED** | `header_h1.py`; LITE H0 72 facts vs H1 0 — see `R3_HEADER_H1.md` |
 | N10 Unit/page/continuation | PARTIAL | Existing U0/G05 unit bakeoffs; U2/P2 not built |
 | F3 duration ownership | **FIX LANDED** | Ignore `period ended` date cues as false 9M banners |
 | N11 Clean-SHA baseline | **DONE** | `baseline_run_summary.json` — `actual_code_sha=2ff5d1f…`, `all_deterministic=true` |
@@ -53,4 +54,4 @@ No-patches recovery strategy: `docs/v2/EXTRACTION_RECOVERY_STRATEGY_NO_PATCHES.m
 
 ## Next
 
-R3 V1-derived H1 header transplant (bake-off vs H0) after ranking R2 families → N17 human blind-adjudicate in parallel → N18 score → N13 CI (`gh auth`) → OCR packaging for remaining 43 → OFFICIAL only after parity + holdout.
+R3.1 improve H1 period/date leaf binding until it beats H0 on LITE/SFCL + locked-33 → then re-bake-off → N17 parallel → units port (R4) only after header decision.

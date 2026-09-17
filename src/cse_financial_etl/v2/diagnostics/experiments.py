@@ -299,15 +299,20 @@ def run_locked_experiments(
     t10 = build_t10_review_queue(load_existing_ledgers(ledger_dir), split=split_payload)
     lineage_totals: Counter[str] = Counter()
     h0_totals: Counter[str] = Counter()
+    h1_totals: Counter[str] = Counter()
     g03_totals: Counter[str] = Counter()
     g05_totals: Counter[str] = Counter()
     g08_totals: Counter[str] = Counter()
     u0_totals: Counter[str] = Counter()
     g01_unresolved = 0
     g01_document_cue = 0
+    h1_built = False
     for row in bakeoff_rows:
         lineage_totals.update(row["lineage"])
         h0_totals.update(row["h0"])
+        if row.get("h1"):
+            h1_totals.update(row["h1"])
+        h1_built = h1_built or bool(row.get("h1_built"))
         g03_totals.update(row["g03"])
         g05_totals.update(row["g05"])
         g08_totals.update(row["g08"])
@@ -337,6 +342,9 @@ def run_locked_experiments(
         },
         "lineage": dict(lineage_totals),
         "h0": dict(h0_totals),
+        "h1": dict(h1_totals),
+        "h1_built": h1_built,
+        "h1_promoted": False,
         "u0": dict(u0_totals),
         "g01": {
             "unresolved_entity_columns": g01_unresolved,
@@ -350,7 +358,8 @@ def run_locked_experiments(
         "t10_queue_item_count": t10["item_count"],
         "note": (
             "Diagnostic only. Gates remain UNTESTED. P1 is not production. "
-            "H2/U2/P2 are not built. Discovery does not publish. T10 queue is not gold."
+            "H1 is built as V1-geometry adapter but not promoted. H2/U2/P2 are not built. "
+            "Discovery does not publish. T10 queue is not gold."
         ),
     }
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -438,7 +447,16 @@ def _write_section27_tables(
     _write_csv(out_dir / "g02_ablation.csv", g02_rows)
     _write_csv(
         out_dir / "header_engine_bakeoff.csv",
-        [{"engine": "H0", "prototype_h2": False, **summary["h0"]}],
+        [
+            {"engine": "H0", "prototype_h2": False, "promoted": True, **summary["h0"]},
+            {
+                "engine": "H1",
+                "prototype_h2": False,
+                "built": summary.get("h1_built", False),
+                "promoted": False,
+                **summary.get("h1", {}),
+            },
+        ],
     )
     _write_csv(
         out_dir / "unit_resolver_bakeoff.csv",

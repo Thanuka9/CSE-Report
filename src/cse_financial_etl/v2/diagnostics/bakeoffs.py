@@ -1,4 +1,4 @@
-"""H0/U0/G01/G03/G05 diagnostic bake-offs. Prototypes H2/U2/P2 are not built."""
+"""H0/H1/U0/G01/G03/G05 diagnostic bake-offs. Prototype H2/U2/P2 are not built."""
 
 from __future__ import annotations
 
@@ -14,11 +14,14 @@ from cse_financial_etl.v2.diagnostics.real_filings import RealFilingCase
 from cse_financial_etl.v2.orchestration.filing_pipeline import run_filing_pipeline
 from cse_financial_etl.v2.resolution.column_context import (
     _cover_heading,
+    bind_column_context,
     context_resolution_metrics,
     parse_entity_scope,
     parse_unit,
 )
+from cse_financial_etl.v2.resolution.header_h1 import header_h1_metrics
 from cse_financial_etl.v2.statements.detector import detect_statement_regions
+from cse_financial_etl.v2.statements.table_reconstructor import reconstruct_statements
 from cse_financial_etl.v2.taxonomy.registry import load_registry
 
 
@@ -130,6 +133,18 @@ def pipeline_bakeoff(case: RealFilingCase, document: CanonicalDocument) -> dict[
         target_period_end=case.period_end,
         issuer_name=case.issuer_name,
         issuer_type=case.issuer_type,
+        header_engine="H0",
+    )
+    regions = detect_statement_regions(document)
+    h1_statements = tuple(
+        bind_column_context(
+            document,
+            statement,
+            expected_entity_scope=case.entity_scope,
+            target_period_end=case.period_end,
+            header_engine="H1",
+        )
+        for statement in reconstruct_statements(document, regions)
     )
     lineage = Counter(
         audit_source_fact(fact, document=document, expected_pdf_sha=document.source_sha256).value
@@ -140,6 +155,8 @@ def pipeline_bakeoff(case: RealFilingCase, document: CanonicalDocument) -> dict[
         "source_fact_count": len(source),
         "lineage": dict(lineage),
         "h0": header_h0_metrics(statements),
+        "h1": header_h1_metrics(h1_statements),
+        "h1_built": True,
         "u0": unit_u0_census(statements),
         "g01": g01_unlabelled_entity_census(document, statements),
         "g03": g03_flow_census(source),
