@@ -73,6 +73,7 @@ def run_filing_pipeline(
     run_id: str | None = None,
     code_sha: str | None = None,
     header_engine: str = "H0",
+    unit_engine: str = "U0",
 ) -> FilingPipelineResult:
     regime = accounting_regime or accounting_regime_for(
         issuer_id=issuer_id, issuer_name=issuer_name, issuer_type=issuer_type
@@ -80,6 +81,7 @@ def run_filing_pipeline(
     regions = detect_statement_regions(document)
     reconstructed = reconstruct_statements(document, regions)
     engine = "H1" if str(header_engine).upper() == "H1" else "H0"
+    units = "U1" if str(unit_engine).upper() == "U1" else "U0"
     statements = tuple(
         bind_column_context(
             document,
@@ -93,7 +95,12 @@ def run_filing_pipeline(
     candidates = tuple(
         candidate
         for statement in statements
-        for candidate in build_candidates(statement, accounting_regime=regime)
+        for candidate in build_candidates(
+            statement,
+            accounting_regime=regime,
+            document=document,
+            unit_engine=units,  # type: ignore[arg-type]
+        )
     )
     source = resolve_source_facts(
         candidates,
@@ -184,6 +191,8 @@ def run_pdf_pipeline(
     candidate_trace_path: Path | None = None,
     run_id: str | None = None,
     code_sha: str | None = None,
+    header_engine: str = "H0",
+    unit_engine: str = "U0",
 ) -> FilingPipelineResult:
     document = read_document(pdf_path, filing_version_id=filing_version_id, force_ocr=force_ocr)
     return run_filing_pipeline(
@@ -197,4 +206,6 @@ def run_pdf_pipeline(
         candidate_trace_path=candidate_trace_path,
         run_id=run_id,
         code_sha=code_sha,
+        header_engine=header_engine,
+        unit_engine=unit_engine,
     )

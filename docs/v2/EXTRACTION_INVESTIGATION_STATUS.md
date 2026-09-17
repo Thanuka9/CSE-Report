@@ -26,6 +26,10 @@ No-patches recovery strategy: `docs/v2/EXTRACTION_RECOVERY_STRATEGY_NO_PATCHES.m
 | N08 Gate experiments | DONE (diagnostic) | `tests/v2/universe/n08_gate_experiment_summary.json` — G02/G04–G08 remain UNTESTED |
 | N09 Header bake-off | H0 wins | H1 built/measured, not promoted — `n09_header_bakeoff.json` |
 | R3 H1 header adapter | **R3.1 DONE / NOT PROMOTED** | LITE facts 40 vs H0 72; SFCL 56=56; keep H0 — `R3_HEADER_H1.md` |
+| R4 Unit U1 resolver | **BUILT / NOT PROMOTED** | Scoped V1 units on candidates; LITE facts 72=72; keep U0 — `R4_UNIT_U1.md` |
+| R5 Structural differential | **MEASURED** | V1 denser tables/cells on LITE/SFCL — `R5_STRUCTURAL_DIFFERENTIAL.md` |
+| R6 Concept aliases | **DEFERRED** | Wait for structure parity (R5 ports) |
+| R7 Universe remeasure | **DEFERRED** | After H1/U1 promotion or material structure ports; N14 freeze remains baseline |
 | N10 Unit/page/continuation | PARTIAL | Existing U0/G05 unit bakeoffs; U2/P2 not built |
 | F3 duration ownership | **FIX LANDED** | Ignore `period ended` date cues as false 9M banners |
 | N11 Clean-SHA baseline | **DONE** | `baseline_run_summary.json` — `actual_code_sha=2ff5d1f…`, `all_deterministic=true` |
@@ -54,4 +58,4 @@ No-patches recovery strategy: `docs/v2/EXTRACTION_RECOVERY_STRATEGY_NO_PATCHES.m
 
 ## Next
 
-**R4** port V1 scoped unit resolver into V2. H1 stays challenger-only until it beats H0. N17 blind gold remains parallel.
+Port generalized V1 table/continuation wins from R5 (no issuer patches) → re-bake H1/U1 → N17 parallel → full-universe remeasure only after a promoted transplant.

@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import Literal
 
 from cse_financial_etl.v2.contracts.concepts import ConceptCandidate
+from cse_financial_etl.v2.contracts.document import CanonicalDocument
 from cse_financial_etl.v2.contracts.enums import (
     AccountingRegime,
     ComparisonRole,
@@ -78,7 +80,11 @@ def build_candidates(
     *,
     matcher: RegistryMatcher | None = None,
     accounting_regime: AccountingRegime | None = None,
+    document: CanonicalDocument | None = None,
+    unit_engine: Literal["U0", "U1"] = "U0",
 ) -> tuple[FactCandidate, ...]:
+    from cse_financial_etl.v2.resolution.unit_u1 import apply_u1_unit
+
     matcher = matcher or RegistryMatcher()
     columns = {column.column_id: column for column in statement.columns}
     candidates: list[FactCandidate] = []
@@ -105,6 +111,14 @@ def build_candidates(
                         "concept_status": ResolutionStatus.UNRESOLVED,
                         "reason_codes": (*candidate.reason_codes, "AMBIGUOUS_ROW_VALUES"),
                     }
+                )
+            if unit_engine == "U1":
+                candidate = apply_u1_unit(
+                    candidate,
+                    row=row,
+                    column=column,
+                    statement=statement,
+                    document=document,
                 )
             candidates.append(candidate)
     return tuple(candidates)
