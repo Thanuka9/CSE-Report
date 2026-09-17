@@ -32,7 +32,7 @@ No-patches recovery strategy: `docs/v2/EXTRACTION_RECOVERY_STRATEGY_NO_PATCHES.m
 | N13 CI / PR | **OPEN** | Branch pushed; `gh` not authenticated — [compare](https://github.com/Thanuka9/CSE-Report/compare/main...v2/extraction-investigation?expand=1) |
 | N14 Universe challenger | **DONE (fail-closed)** | Post-F1/F3: draft-publishable **3,748** vs floor **8,924** (+64 vs prior 3,684); 43 OCR_REQUIRED_NOT_AVAILABLE — `n14_challenger_2026-09-09.json` |
 | R0 Direction freeze | **DONE** | `R0_DIRECTION_FREEZE.md` + strategy copied |
-| R1 V1↔V2 matrix | **DONE (draft)** | `V1_V2_EXTRACTION_COMPONENT_MATRIX.md` — header/unit PORT_V1 next |
+| R1 V1↔V2 matrix | **LOCKED** | `V1_V2_EXTRACTION_COMPONENT_MATRIX.md` — H1 header MERGE/PORT next; reject NDB/silent-fill debt |
 | R2 First-failure census | **SEED only** | locked-33 seed — `r2_seed_first_failure_locked33.json`; full-universe still open |
 | N16 New holdout identity | DONE (identity only) | `holdout_v2_identity_manifest.json` — 13 filings; **do not score until N17** |
 | N17 Blind gold | **PACKAGE READY / NOT ADJUDICATED** | `n17_blind_review_queue.json` + `N17_BLIND_ADJUDICATION.md` |
