@@ -39,17 +39,20 @@ FLOW REPORTED rows use `duration_months=3` only (no year substituted for Q4).
 
 ## Lock identifiers
 
-Recorded in the lock commit (fill after commit):
+Recorded in the lock commit:
 
-- **gold commit SHA:** _(set in this file after `git commit`)_
+- **gold commit SHA:** `639454a2d211153062dc9d4e4cb6dbd7de9852fd`
 - **gold file SHA256:** see manifest `gold_sha256`
 - **contract SHA256:** see manifest `source_contract_sha256`
 - **13 PDF SHA256s:** see manifest `pdf_sha256`
 
 ## Next (N18)
 
-1. Run N18 exactly once against this locked gold — do not tune V2 first  
-2. Freeze/commit the untouched first N18 score immediately  
+1. ~~Run N18 exactly once against this locked gold — do not tune V2 first~~ **DONE**
+2. ~~Freeze/commit the untouched first N18 score immediately~~ see score commit
 3. Only then inspect failures  
+
+First N18 score artifact: `tests/v2/universe/n18_ai_blind_first_score.json`  
+(TP 23 / FN 68 / critical_wrong 8 / source-reported recall 0.20 — frozen untouched; investigate after score commit.)
 
 Hard stops remain: do not promote V2 / lower 8924; do not invent values; do not silently rewrite gold.
