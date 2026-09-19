@@ -1,0 +1,101 @@
+{
+  "id": "n17-ai-blind-gold",
+  "recovery_step": "N17",
+  "status": "AI_BLIND_GOLD_LOCKED",
+  "gold_locked": true,
+  "reviewer_1": "chatgpt-blind-source-review-2026-09-19",
+  "adjudication_status": "AI_REVIEWER_1_COMPLETE",
+  "method": "AI_BLIND_SOURCE_PDF_REVIEW",
+  "generated_at": "2026-09-19T16:18:10.211439+00:00",
+  "source_contract": "docs/v2/SOURCE_METRIC_TRUTH_CONTRACT.md",
+  "source_contract_sha256": "ee8a7be9c700bc13d11491a114381a6b6fa92f883ac11eff1054132053c9a0ee",
+  "plan": "docs/v2/N17_AI_BLIND_ADJUDICATION_AND_FINAL_EXECUTION_PLAN.md",
+  "row_count": 130,
+  "expected_row_count": 130,
+  "presence_counts": {
+    "REPORTED": 115,
+    "NOT_REPORTED": 15,
+    "AMBIGUOUS": 0
+  },
+  "pdf_sha256": {
+    "PABC.N0000-2025-12-31": {
+      "pdf_sha256": "877a4a55b2a5d2bf2de36c98b7d0025c9874f47b53ae3652a3bff8b1900762ca",
+      "local_file": "data/raw/filings/PAN_ASIA_BANKING_CORPORATION_PLC/2025-12-31_388_1771296738916.pdf",
+      "verified_match": true
+    },
+    "UBC.N0000-2025-12-31": {
+      "pdf_sha256": "0760adbaa3ff8a7dee3da318604aee2c5939c58962d88cfe8ae31db6a4becc1d",
+      "local_file": "data/raw/filings/UNION_BANK_OF_COLOMBO_PLC/2025-12-31_1047_1772185273952.pdf",
+      "verified_match": true
+    },
+    "SDB.N0000-2025-12-31": {
+      "pdf_sha256": "b1485b20467af08844d4e217eeb57bc38e7ccaf9c7eba0a7675f675d26c32c84",
+      "local_file": "data/raw/filings/SANASA_DEVELOPMENT_BANK_PLC/2025-12-31_1182_1774523982162.pdf",
+      "verified_match": true
+    },
+    "COCR.N0000-2025-12-31": {
+      "pdf_sha256": "da7d49dfdad31d3793b45c00417ded7c0e2a95134c5e5c368ad2d774ff51a0bc",
+      "local_file": "data/raw/filings/COMMERCIAL_CREDIT_AND_FINANCE_PLC/2025-12-31_1063_1769763958153.12.2025.pdf",
+      "verified_match": true
+    },
+    "AMCL.N0000-2025-12-31": {
+      "pdf_sha256": "ca6e497b57a17938913e8fe3be0971a670b503c2811713e51ebc613470f2e962",
+      "local_file": "data/raw/filings/AMW_CAPITAL_LEASING_AND_FINANCE_PLC/2025-12-31_1065_1772201635667.pdf",
+      "verified_match": true
+    },
+    "AFSL.N0000-2025-12-31": {
+      "pdf_sha256": "8f48a4d0ddc7bfa8f8a043edb7d3ae716f1ddb222738b93a399e703095a14f64",
+      "local_file": "data/raw/filings/ABANS_FINANCE_PLC/2025-12-31_1069_1769765134754.pdf",
+      "verified_match": true
+    },
+    "LGIL.N0000-2025-12-31": {
+      "pdf_sha256": "0d12b9dbc46c76757b48d1fde327cfe7ded69c89540f7763886b79ffb4c7c52f",
+      "local_file": "data/raw/filings/LOLC_GENERAL_INSURANCE_PLC/2025-12-31_2693_1772202294584.pdf",
+      "verified_match": true
+    },
+    "ATLL.N0000-2025-12-31": {
+      "pdf_sha256": "24c652d8e1c4c94a1d270afbfcc7ce6d8ddc3dd22d36576160f61450ebd99f3f",
+      "local_file": "data/raw/filings/AMANA_TAKAFUL_LIFE_PLC/2025-12-31_1484_1772183843734.pdf",
+      "verified_match": true
+    },
+    "HUNA.N0000-2025-12-31": {
+      "pdf_sha256": "fdb337ad0ebf6626720ff226fa6d840df99c3b37dfcf553789d5fb00e7747b05",
+      "local_file": "data/raw/filings/HUNAS_HOLDINGS_PLC/2025-12-31_50277_fdb337ad0ebf6626.pdf",
+      "verified_match": true
+    },
+    "CINS.N0000-2025-12-31": {
+      "pdf_sha256": "20881df1b9d03f83a8f49005a269fde16b460cf1209a2be221a939083a22db61",
+      "local_file": "data/raw/filings/CEYLINCO_HOLDINGS_PLC/2025-12-31_367_1772186187252.pdf",
+      "verified_match": true
+    },
+    "JFP.N0000-2025-12-31": {
+      "pdf_sha256": "94f8ab4caad8b231fa7797e557b863430f902495750b8ca15995cd96b2dbb5a1",
+      "local_file": "data/raw/filings/JF_PACKAGING_PLC/2025-12-31_3399_1770982754537.pdf",
+      "verified_match": true
+    },
+    "NHL.N0000-2025-12-31": {
+      "pdf_sha256": "99b49279aa43c8a6143f10c374550e4367e39003aa1c1a22b4463c07bea99620",
+      "local_file": "data/raw/filings/NAWALOKA_HOSPITALS_PLC/2025-12-31_50433_99b49279aa43c8a6.pdf",
+      "verified_match": true
+    },
+    "SCAP.N0000-2025-12-31": {
+      "pdf_sha256": "30009d83b0f44934558b1871ad49769b71a177c17222f5852d71fb41bbd18113",
+      "local_file": "data/raw/filings/SOFTLOGIC_CAPITAL_PLC/2025-12-31_1100_1770886960059.pdf",
+      "verified_match": true
+    }
+  },
+  "duplicate_keys_overwritten": 30,
+  "validation_errors": [],
+  "validation_error_count": 0,
+  "missing_slots": [],
+  "isolation_statement": "V1/V2 outputs, CandidateTrace, SourceFacts, workbook, and selector outputs were not consulted for adjudication of these 13 holdout PDFs.",
+  "hard_rules": [
+    "Do not run N18 until gold is committed and frozen",
+    "Do not promote V2 / lower 8924",
+    "Do not invent Q4 / TOTAL_LIABILITIES / GROUP\u2192COMPANY"
+  ],
+  "gold_file": "tests/v2/source_truth/n17_ai_blind_gold.jsonl",
+  "gold_sha256": "9ef5221fe7f4900011d12149a2df0faddb7113b5fe63324c593c6cfa13686fdd",
+  "locked_at": "2026-09-19T16:18:28.238982+00:00",
+  "lock_statement": "N17 AI blind gold locked for N18. Do not modify gold after this lock; issue versioned corrections only. Isolation: V1/V2 outputs were not consulted."
+}
