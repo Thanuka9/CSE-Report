@@ -69,10 +69,15 @@ def _as_entity(value: object) -> str | None:
 
 
 def _load_items(path: Path) -> list[SourceTruthItem]:
+    """Load locked gold. Coerce known unit alias MONEY→MONETARY without rewriting gold."""
     rows: list[SourceTruthItem] = []
     for line in path.read_text(encoding="utf-8").splitlines():
-        if line.strip():
-            rows.append(SourceTruthItem.model_validate_json(line))
+        if not line.strip():
+            continue
+        payload = json.loads(line)
+        if payload.get("unit_dimension") == "MONEY":
+            payload["unit_dimension"] = "MONETARY"
+        rows.append(SourceTruthItem.model_validate(payload))
     return rows
 
 

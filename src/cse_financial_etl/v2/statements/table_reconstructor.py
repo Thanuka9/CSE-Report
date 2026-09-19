@@ -122,6 +122,17 @@ def _intervals_for_body(
     if not counts:
         return clustered
     modal = Counter(counts).most_common(1)[0][0]
+    # Dual-entity Group|Company (or Bank) layouts often have sparse 2–3-value rows
+    # mixed with true 4/6-value monetary rows. Prefer the high-arity structure so
+    # Company/Bank columns are not collapsed into the Group cluster.
+    high_counts = [count for count in counts if count >= 4]
+    if high_counts:
+        high_modal = Counter(high_counts).most_common(1)[0][0]
+        sample = max(
+            (values for _page, _line, _label, values in body if len(values) == high_modal),
+            key=lambda values: values[-1][0] - values[0][0],
+        )
+        return [(x - 12.0, x + 12.0) for x, _text in sample]
     if modal < 4:
         return clustered
     sample = max(
@@ -214,7 +225,13 @@ def _reconstruct_region(
         page = pages.get(page_number)
         if page is None:
             continue
-        for line in page.lines:
+        for line_index, line in enumerate(page.lines):
+            if region.segment_start_line is not None and page_number == region.page_start:
+                if line_index < region.segment_start_line:
+                    continue
+            if region.segment_end_line is not None and page_number == region.page_end:
+                if line_index >= region.segment_end_line:
+                    continue
             lines.append((page_number, line))
     if not lines:
         return None
