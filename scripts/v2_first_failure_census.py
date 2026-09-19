@@ -138,7 +138,7 @@ def main() -> int:
     waterfall = {
         "ordered_stages": list(payload["first_failure_stage_counts"].items()),
         "resolution_unresolved": {
-            key: payload.get(f"{key}_counts", {}).get("UNRESOLVED", 0)
+            key: payload.get(f"{key}_status_counts", {}).get("UNRESOLVED", 0)
             for key in ("entity", "period", "duration", "comparison", "unit", "concept")
         },
     }
