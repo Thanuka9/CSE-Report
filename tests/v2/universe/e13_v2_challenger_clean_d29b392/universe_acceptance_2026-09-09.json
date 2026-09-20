@@ -1,0 +1,844 @@
+{
+  "run_id": "9a535b06-e2d0-486b-8d77-39c2ad74f1af",
+  "git_commit_sha": "d29b392486c7a7a6fd8f6861c7e2430e2f6d68ef",
+  "issuer_count": 281,
+  "downloaded_filing_count": 829,
+  "extracted_filing_count": 820,
+  "pipeline_error_count": 9,
+  "quarantined_pipeline_error_count": 0,
+  "quarantined_pipeline_errors": [],
+  "unhandled_pipeline_error_count": 9,
+  "unhandled_pipeline_errors": [
+    {
+      "issuer_name": "COLOMBO LAND AND DEVELOPMENT COMPANY PLC",
+      "symbol": "CLND.N0000",
+      "period_end": "2025-12-31",
+      "stage": "EXTRACTION",
+      "error": "NativeParseError: PDF contains no pages\nTraceback (most recent call last):\n  File \"D:\\Report\\src\\cse_financial_etl\\extraction\\resilient_runner.py\", line 296, in _financial_worker\n    facts = _extract_financial_facts(\n            ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\extraction\\resilient_runner.py\", line 272, in _extract_financial_facts\n    return extract_for_production(\n           ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\production\\engine.py\", line 28, in extract_for_production\n    return extract_filing_v2(\n           ^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\production\\adapter.py\", line 106, in extract_filing_v2\n    bundle = extract_filing_v2_bundle(\n             ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\production\\adapter.py\", line 46, in extract_filing_v2_bundle\n    _statements, source, derived, _metrics = run_pdf_pipeline(\n                                             ^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\orchestration\\filing_pipeline.py\", line 197, in run_pdf_pipeline\n    document = read_document(pdf_path, filing_version_id=filing_version_id, force_ocr=force_ocr)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\document\\router.py\", line 99, in read_document\n    native = read_native_pdf(pdf_path, filing_version_id=filing_version_id)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\document\\native_reader.py\", line 112, in read_native_pdf\n    raise NativeParseError(\"PDF contains no pages\")\ncse_financial_etl.v2.exceptions.NativeParseError: PDF contains no pages\n"
+    },
+    {
+      "issuer_name": "GESTETNER OF CEYLON PLC",
+      "symbol": "GEST.N0000",
+      "period_end": "2025-12-31",
+      "stage": "EXTRACTION",
+      "error": "NativeParseError: PDF contains no pages\nTraceback (most recent call last):\n  File \"D:\\Report\\src\\cse_financial_etl\\extraction\\resilient_runner.py\", line 296, in _financial_worker\n    facts = _extract_financial_facts(\n            ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\extraction\\resilient_runner.py\", line 272, in _extract_financial_facts\n    return extract_for_production(\n           ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\production\\engine.py\", line 28, in extract_for_production\n    return extract_filing_v2(\n           ^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\production\\adapter.py\", line 106, in extract_filing_v2\n    bundle = extract_filing_v2_bundle(\n             ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\production\\adapter.py\", line 46, in extract_filing_v2_bundle\n    _statements, source, derived, _metrics = run_pdf_pipeline(\n                                             ^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\orchestration\\filing_pipeline.py\", line 197, in run_pdf_pipeline\n    document = read_document(pdf_path, filing_version_id=filing_version_id, force_ocr=force_ocr)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\document\\router.py\", line 99, in read_document\n    native = read_native_pdf(pdf_path, filing_version_id=filing_version_id)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\document\\native_reader.py\", line 112, in read_native_pdf\n    raise NativeParseError(\"PDF contains no pages\")\ncse_financial_etl.v2.exceptions.NativeParseError: PDF contains no pages\n"
+    },
+    {
+      "issuer_name": "E M L CONSULTANTS PLC",
+      "symbol": "EML.N0000",
+      "period_end": "2025-12-31",
+      "stage": "EXTRACTION",
+      "error": "NativeParseError: PDF contains no pages\nTraceback (most recent call last):\n  File \"D:\\Report\\src\\cse_financial_etl\\extraction\\resilient_runner.py\", line 296, in _financial_worker\n    facts = _extract_financial_facts(\n            ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\extraction\\resilient_runner.py\", line 272, in _extract_financial_facts\n    return extract_for_production(\n           ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\production\\engine.py\", line 28, in extract_for_production\n    return extract_filing_v2(\n           ^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\production\\adapter.py\", line 106, in extract_filing_v2\n    bundle = extract_filing_v2_bundle(\n             ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\production\\adapter.py\", line 46, in extract_filing_v2_bundle\n    _statements, source, derived, _metrics = run_pdf_pipeline(\n                                             ^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\orchestration\\filing_pipeline.py\", line 197, in run_pdf_pipeline\n    document = read_document(pdf_path, filing_version_id=filing_version_id, force_ocr=force_ocr)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\document\\router.py\", line 99, in read_document\n    native = read_native_pdf(pdf_path, filing_version_id=filing_version_id)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\document\\native_reader.py\", line 112, in read_native_pdf\n    raise NativeParseError(\"PDF contains no pages\")\ncse_financial_etl.v2.exceptions.NativeParseError: PDF contains no pages\n"
+    },
+    {
+      "issuer_name": "E M L CONSULTANTS PLC",
+      "symbol": "EML.N0000",
+      "period_end": "2026-06-30",
+      "stage": "EXTRACTION",
+      "error": "NativeParseError: PDF contains no pages\nTraceback (most recent call last):\n  File \"D:\\Report\\src\\cse_financial_etl\\extraction\\resilient_runner.py\", line 296, in _financial_worker\n    facts = _extract_financial_facts(\n            ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\extraction\\resilient_runner.py\", line 272, in _extract_financial_facts\n    return extract_for_production(\n           ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\production\\engine.py\", line 28, in extract_for_production\n    return extract_filing_v2(\n           ^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\production\\adapter.py\", line 106, in extract_filing_v2\n    bundle = extract_filing_v2_bundle(\n             ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\production\\adapter.py\", line 46, in extract_filing_v2_bundle\n    _statements, source, derived, _metrics = run_pdf_pipeline(\n                                             ^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\orchestration\\filing_pipeline.py\", line 197, in run_pdf_pipeline\n    document = read_document(pdf_path, filing_version_id=filing_version_id, force_ocr=force_ocr)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\document\\router.py\", line 99, in read_document\n    native = read_native_pdf(pdf_path, filing_version_id=filing_version_id)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\document\\native_reader.py\", line 112, in read_native_pdf\n    raise NativeParseError(\"PDF contains no pages\")\ncse_financial_etl.v2.exceptions.NativeParseError: PDF contains no pages\n"
+    },
+    {
+      "issuer_name": "MULLER & PHIPPS (CEYLON) PLC",
+      "symbol": "MULL.N0000",
+      "period_end": "2026-06-30",
+      "stage": "EXTRACTION",
+      "error": "NativeParseError: PyMuPDF failed to parse D:\\Report\\data\\raw\\filings\\MULLER_PHIPPS_CEYLON_PLC\\2026-06-30_52223_3b3c00df728f81b9.pdf: Failed to open file 'D:\\\\Report\\\\data\\\\raw\\\\filings\\\\MULLER_PHIPPS_CEYLON_PLC\\\\2026-06-30_52223_3b3c00df728f81b9.pdf' as type pdf.\nTraceback (most recent call last):\n  File \"C:\\Users\\Thanuka\\AppData\\Roaming\\Python\\Python312\\site-packages\\pymupdf\\__init__.py\", line 3013, in __init__\n    doc = mupdf.fz_open_document_with_stream_and_dir(suffix, fz_stream, archive.this)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\Thanuka\\AppData\\Roaming\\Python\\Python312\\site-packages\\pymupdf\\mupdf.py\", line 53426, in fz_open_document_with_stream_and_dir\n    return _mupdf.fz_open_document_with_stream_and_dir(magic, stream, dir)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\npymupdf.mupdf.FzErrorSyntax: code=8: invalid key in dict\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\document\\native_reader.py\", line 109, in read_native_pdf\n    with fitz.open(pdf_path) as document:  # type: ignore[no-untyped-call]\n         ^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\Thanuka\\AppData\\Roaming\\Python\\Python312\\site-packages\\pymupdf\\__init__.py\", line 3016, in __init__\n    raise FileDataError(f'Failed to open file {filename!r} as type {suffix}.') from e\npymupdf.FileDataError: Failed to open file 'D:\\\\Report\\\\data\\\\raw\\\\filings\\\\MULLER_PHIPPS_CEYLON_PLC\\\\2026-06-30_52223_3b3c00df728f81b9.pdf' as type pdf.\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"D:\\Report\\src\\cse_financial_etl\\extraction\\resilient_runner.py\", line 296, in _financial_worker\n    facts = _extract_financial_facts(\n            ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\extraction\\resilient_runner.py\", line 272, in _extract_financial_facts\n    return extract_for_production(\n           ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\production\\engine.py\", line 28, in extract_for_production\n    return extract_filing_v2(\n           ^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\production\\adapter.py\", line 106, in extract_filing_v2\n    bundle = extract_filing_v2_bundle(\n             ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\production\\adapter.py\", line 46, in extract_filing_v2_bundle\n    _statements, source, derived, _metrics = run_pdf_pipeline(\n                                             ^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\orchestration\\filing_pipeline.py\", line 197, in run_pdf_pipeline\n    document = read_document(pdf_path, filing_version_id=filing_version_id, force_ocr=force_ocr)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\document\\router.py\", line 99, in read_document\n    native = read_native_pdf(pdf_path, filing_version_id=filing_version_id)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\document\\native_reader.py\", line 129, in read_native_pdf\n    raise NativeParseError(f\"PyMuPDF failed to parse {pdf_path}: {exc}\") from exc\ncse_financial_etl.v2.exceptions.NativeParseError: PyMuPDF failed to parse D:\\Report\\data\\raw\\filings\\MULLER_PHIPPS_CEYLON_PLC\\2026-06-30_52223_3b3c00df728f81b9.pdf: Failed to open file 'D:\\\\Report\\\\data\\\\raw\\\\filings\\\\MULLER_PHIPPS_CEYLON_PLC\\\\2026-06-30_52223_3b3c00df728f81b9.pdf' as type pdf.\n"
+    },
+    {
+      "issuer_name": "MERCANTILE SHIPPING COMPANY PLC",
+      "symbol": "MSL.N0000",
+      "period_end": "2025-12-31",
+      "stage": "EXTRACTION",
+      "error": "NativeParseError: PDF contains no pages\nTraceback (most recent call last):\n  File \"D:\\Report\\src\\cse_financial_etl\\extraction\\resilient_runner.py\", line 296, in _financial_worker\n    facts = _extract_financial_facts(\n            ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\extraction\\resilient_runner.py\", line 272, in _extract_financial_facts\n    return extract_for_production(\n           ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\production\\engine.py\", line 28, in extract_for_production\n    return extract_filing_v2(\n           ^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\production\\adapter.py\", line 106, in extract_filing_v2\n    bundle = extract_filing_v2_bundle(\n             ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\production\\adapter.py\", line 46, in extract_filing_v2_bundle\n    _statements, source, derived, _metrics = run_pdf_pipeline(\n                                             ^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\orchestration\\filing_pipeline.py\", line 197, in run_pdf_pipeline\n    document = read_document(pdf_path, filing_version_id=filing_version_id, force_ocr=force_ocr)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\document\\router.py\", line 99, in read_document\n    native = read_native_pdf(pdf_path, filing_version_id=filing_version_id)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\document\\native_reader.py\", line 112, in read_native_pdf\n    raise NativeParseError(\"PDF contains no pages\")\ncse_financial_etl.v2.exceptions.NativeParseError: PDF contains no pages\n"
+    },
+    {
+      "issuer_name": "MERCANTILE SHIPPING COMPANY PLC",
+      "symbol": "MSL.N0000",
+      "period_end": "2026-03-31",
+      "stage": "EXTRACTION",
+      "error": "NativeParseError: PDF contains no pages\nTraceback (most recent call last):\n  File \"D:\\Report\\src\\cse_financial_etl\\extraction\\resilient_runner.py\", line 296, in _financial_worker\n    facts = _extract_financial_facts(\n            ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\extraction\\resilient_runner.py\", line 272, in _extract_financial_facts\n    return extract_for_production(\n           ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\production\\engine.py\", line 28, in extract_for_production\n    return extract_filing_v2(\n           ^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\production\\adapter.py\", line 106, in extract_filing_v2\n    bundle = extract_filing_v2_bundle(\n             ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\production\\adapter.py\", line 46, in extract_filing_v2_bundle\n    _statements, source, derived, _metrics = run_pdf_pipeline(\n                                             ^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\orchestration\\filing_pipeline.py\", line 197, in run_pdf_pipeline\n    document = read_document(pdf_path, filing_version_id=filing_version_id, force_ocr=force_ocr)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\document\\router.py\", line 99, in read_document\n    native = read_native_pdf(pdf_path, filing_version_id=filing_version_id)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\document\\native_reader.py\", line 112, in read_native_pdf\n    raise NativeParseError(\"PDF contains no pages\")\ncse_financial_etl.v2.exceptions.NativeParseError: PDF contains no pages\n"
+    },
+    {
+      "issuer_name": "PARAGON CEYLON PLC",
+      "symbol": "PARA.N0000",
+      "period_end": "2026-03-31",
+      "stage": "EXTRACTION",
+      "error": "NativeParseError: PDF contains no pages\nTraceback (most recent call last):\n  File \"D:\\Report\\src\\cse_financial_etl\\extraction\\resilient_runner.py\", line 296, in _financial_worker\n    facts = _extract_financial_facts(\n            ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\extraction\\resilient_runner.py\", line 272, in _extract_financial_facts\n    return extract_for_production(\n           ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\production\\engine.py\", line 28, in extract_for_production\n    return extract_filing_v2(\n           ^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\production\\adapter.py\", line 106, in extract_filing_v2\n    bundle = extract_filing_v2_bundle(\n             ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\production\\adapter.py\", line 46, in extract_filing_v2_bundle\n    _statements, source, derived, _metrics = run_pdf_pipeline(\n                                             ^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\orchestration\\filing_pipeline.py\", line 197, in run_pdf_pipeline\n    document = read_document(pdf_path, filing_version_id=filing_version_id, force_ocr=force_ocr)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\document\\router.py\", line 99, in read_document\n    native = read_native_pdf(pdf_path, filing_version_id=filing_version_id)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\document\\native_reader.py\", line 112, in read_native_pdf\n    raise NativeParseError(\"PDF contains no pages\")\ncse_financial_etl.v2.exceptions.NativeParseError: PDF contains no pages\n"
+    },
+    {
+      "issuer_name": "MERCANTILE SHIPPING COMPANY PLC",
+      "symbol": "MSL.N0000",
+      "period_end": "2026-06-30",
+      "stage": "EXTRACTION",
+      "error": "NativeParseError: PDF contains no pages\nTraceback (most recent call last):\n  File \"D:\\Report\\src\\cse_financial_etl\\extraction\\resilient_runner.py\", line 296, in _financial_worker\n    facts = _extract_financial_facts(\n            ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\extraction\\resilient_runner.py\", line 272, in _extract_financial_facts\n    return extract_for_production(\n           ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\production\\engine.py\", line 28, in extract_for_production\n    return extract_filing_v2(\n           ^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\production\\adapter.py\", line 106, in extract_filing_v2\n    bundle = extract_filing_v2_bundle(\n             ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\production\\adapter.py\", line 46, in extract_filing_v2_bundle\n    _statements, source, derived, _metrics = run_pdf_pipeline(\n                                             ^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\orchestration\\filing_pipeline.py\", line 197, in run_pdf_pipeline\n    document = read_document(pdf_path, filing_version_id=filing_version_id, force_ocr=force_ocr)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\document\\router.py\", line 99, in read_document\n    native = read_native_pdf(pdf_path, filing_version_id=filing_version_id)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Report\\src\\cse_financial_etl\\v2\\document\\native_reader.py\", line 112, in read_native_pdf\n    raise NativeParseError(\"PDF contains no pages\")\ncse_financial_etl.v2.exceptions.NativeParseError: PDF contains no pages\n"
+    }
+  ],
+  "max_quarantined_extraction_timeouts": 3,
+  "fact_status_counts": {
+    "EXTRACTED": 3200,
+    "EXTRACTED_DERIVED": 813,
+    "INSUFFICIENT_INPUT": 1181,
+    "IMPLAUSIBLE_DERIVED_RATIO": 2,
+    "VALIDATION_FAILED": 12,
+    "UNIT_NOT_RESOLVED": 6,
+    "ZERO_EQUITY": 3,
+    "NON_POSITIVE_DENOMINATOR": 1
+  },
+  "draft_publishable_count": 3854,
+  "coverage": {
+    "draft_publishable_count": 3854,
+    "by_metric": {
+      "DEBT_TO_EQUITY": 162,
+      "EPS_BASIC": 302,
+      "EPS_DILUTED": 45,
+      "EPS_SELECTED": 290,
+      "NAVPS": 390,
+      "NPM": 245,
+      "OPERATING_PROFIT": 248,
+      "PAT": 306,
+      "PBT": 328,
+      "ROA": 154,
+      "ROE": 252,
+      "TOP_LINE": 294,
+      "TOTAL_ASSETS": 255,
+      "TOTAL_EQUITY": 416,
+      "TOTAL_LIABILITIES": 167
+    },
+    "by_sector_metric": {
+      "BANK": {
+        "DEBT_TO_EQUITY": 26,
+        "EPS_BASIC": 21,
+        "EPS_DILUTED": 12,
+        "EPS_SELECTED": 21,
+        "NAVPS": 23,
+        "NPM": 16,
+        "OPERATING_PROFIT": 21,
+        "PAT": 17,
+        "PBT": 19,
+        "ROA": 17,
+        "ROE": 17,
+        "TOP_LINE": 21,
+        "TOTAL_ASSETS": 26,
+        "TOTAL_EQUITY": 26,
+        "TOTAL_LIABILITIES": 26
+      },
+      "FINANCE_COMPANY": {
+        "DEBT_TO_EQUITY": 23,
+        "EPS_BASIC": 19,
+        "EPS_DILUTED": 3,
+        "EPS_SELECTED": 19,
+        "NAVPS": 23,
+        "NPM": 22,
+        "OPERATING_PROFIT": 19,
+        "PAT": 23,
+        "PBT": 20,
+        "ROA": 16,
+        "ROE": 16,
+        "TOP_LINE": 25,
+        "TOTAL_ASSETS": 23,
+        "TOTAL_EQUITY": 23,
+        "TOTAL_LIABILITIES": 23
+      },
+      "GENERAL": {
+        "DEBT_TO_EQUITY": 108,
+        "EPS_BASIC": 254,
+        "EPS_DILUTED": 26,
+        "EPS_SELECTED": 242,
+        "NAVPS": 341,
+        "NPM": 203,
+        "OPERATING_PROFIT": 206,
+        "PAT": 262,
+        "PBT": 282,
+        "ROA": 117,
+        "ROE": 215,
+        "TOP_LINE": 240,
+        "TOTAL_ASSETS": 201,
+        "TOTAL_EQUITY": 361,
+        "TOTAL_LIABILITIES": 113
+      },
+      "INSURANCE": {
+        "DEBT_TO_EQUITY": 5,
+        "EPS_BASIC": 8,
+        "EPS_DILUTED": 4,
+        "EPS_SELECTED": 8,
+        "NAVPS": 3,
+        "NPM": 4,
+        "OPERATING_PROFIT": 2,
+        "PAT": 4,
+        "PBT": 7,
+        "ROA": 4,
+        "ROE": 4,
+        "TOP_LINE": 8,
+        "TOTAL_ASSETS": 5,
+        "TOTAL_EQUITY": 6,
+        "TOTAL_LIABILITIES": 5
+      }
+    }
+  },
+  "coverage_regression_count": 76,
+  "coverage_regressions": [
+    {
+      "code": "METRIC_COVERAGE_REGRESSION",
+      "metric_code": "DEBT_TO_EQUITY",
+      "actual": 162,
+      "floor": 447
+    },
+    {
+      "code": "METRIC_COVERAGE_REGRESSION",
+      "metric_code": "EPS_BASIC",
+      "actual": 302,
+      "floor": 660
+    },
+    {
+      "code": "METRIC_COVERAGE_REGRESSION",
+      "metric_code": "EPS_DILUTED",
+      "actual": 45,
+      "floor": 188
+    },
+    {
+      "code": "METRIC_COVERAGE_REGRESSION",
+      "metric_code": "EPS_SELECTED",
+      "actual": 290,
+      "floor": 666
+    },
+    {
+      "code": "METRIC_COVERAGE_REGRESSION",
+      "metric_code": "NAVPS",
+      "actual": 390,
+      "floor": 710
+    },
+    {
+      "code": "METRIC_COVERAGE_REGRESSION",
+      "metric_code": "NPM",
+      "actual": 245,
+      "floor": 627
+    },
+    {
+      "code": "METRIC_COVERAGE_REGRESSION",
+      "metric_code": "OPERATING_PROFIT",
+      "actual": 248,
+      "floor": 549
+    },
+    {
+      "code": "METRIC_COVERAGE_REGRESSION",
+      "metric_code": "PAT",
+      "actual": 306,
+      "floor": 675
+    },
+    {
+      "code": "METRIC_COVERAGE_REGRESSION",
+      "metric_code": "PBT",
+      "actual": 328,
+      "floor": 677
+    },
+    {
+      "code": "METRIC_COVERAGE_REGRESSION",
+      "metric_code": "ROA",
+      "actual": 154,
+      "floor": 600
+    },
+    {
+      "code": "METRIC_COVERAGE_REGRESSION",
+      "metric_code": "ROE",
+      "actual": 252,
+      "floor": 569
+    },
+    {
+      "code": "METRIC_COVERAGE_REGRESSION",
+      "metric_code": "TOP_LINE",
+      "actual": 294,
+      "floor": 683
+    },
+    {
+      "code": "METRIC_COVERAGE_REGRESSION",
+      "metric_code": "TOTAL_ASSETS",
+      "actual": 255,
+      "floor": 712
+    },
+    {
+      "code": "METRIC_COVERAGE_REGRESSION",
+      "metric_code": "TOTAL_EQUITY",
+      "actual": 416,
+      "floor": 690
+    },
+    {
+      "code": "METRIC_COVERAGE_REGRESSION",
+      "metric_code": "TOTAL_LIABILITIES",
+      "actual": 167,
+      "floor": 471
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "BANK",
+      "metric_code": "DEBT_TO_EQUITY",
+      "actual": 26,
+      "floor": 35
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "BANK",
+      "metric_code": "EPS_BASIC",
+      "actual": 21,
+      "floor": 30
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "BANK",
+      "metric_code": "EPS_DILUTED",
+      "actual": 12,
+      "floor": 26
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "BANK",
+      "metric_code": "EPS_SELECTED",
+      "actual": 21,
+      "floor": 30
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "BANK",
+      "metric_code": "NAVPS",
+      "actual": 23,
+      "floor": 35
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "BANK",
+      "metric_code": "NPM",
+      "actual": 16,
+      "floor": 33
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "BANK",
+      "metric_code": "OPERATING_PROFIT",
+      "actual": 21,
+      "floor": 31
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "BANK",
+      "metric_code": "PAT",
+      "actual": 17,
+      "floor": 33
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "BANK",
+      "metric_code": "PBT",
+      "actual": 19,
+      "floor": 32
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "BANK",
+      "metric_code": "ROA",
+      "actual": 17,
+      "floor": 33
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "BANK",
+      "metric_code": "ROE",
+      "actual": 17,
+      "floor": 33
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "BANK",
+      "metric_code": "TOP_LINE",
+      "actual": 21,
+      "floor": 33
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "BANK",
+      "metric_code": "TOTAL_ASSETS",
+      "actual": 26,
+      "floor": 35
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "BANK",
+      "metric_code": "TOTAL_EQUITY",
+      "actual": 26,
+      "floor": 35
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "BANK",
+      "metric_code": "TOTAL_LIABILITIES",
+      "actual": 26,
+      "floor": 35
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "FINANCE_COMPANY",
+      "metric_code": "DEBT_TO_EQUITY",
+      "actual": 23,
+      "floor": 66
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "FINANCE_COMPANY",
+      "metric_code": "EPS_BASIC",
+      "actual": 19,
+      "floor": 58
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "FINANCE_COMPANY",
+      "metric_code": "EPS_DILUTED",
+      "actual": 3,
+      "floor": 20
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "FINANCE_COMPANY",
+      "metric_code": "EPS_SELECTED",
+      "actual": 19,
+      "floor": 58
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "FINANCE_COMPANY",
+      "metric_code": "NAVPS",
+      "actual": 23,
+      "floor": 64
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "FINANCE_COMPANY",
+      "metric_code": "NPM",
+      "actual": 22,
+      "floor": 62
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "FINANCE_COMPANY",
+      "metric_code": "OPERATING_PROFIT",
+      "actual": 19,
+      "floor": 59
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "FINANCE_COMPANY",
+      "metric_code": "PAT",
+      "actual": 23,
+      "floor": 65
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "FINANCE_COMPANY",
+      "metric_code": "PBT",
+      "actual": 20,
+      "floor": 66
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "FINANCE_COMPANY",
+      "metric_code": "ROA",
+      "actual": 16,
+      "floor": 57
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "FINANCE_COMPANY",
+      "metric_code": "ROE",
+      "actual": 16,
+      "floor": 57
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "FINANCE_COMPANY",
+      "metric_code": "TOP_LINE",
+      "actual": 25,
+      "floor": 65
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "FINANCE_COMPANY",
+      "metric_code": "TOTAL_ASSETS",
+      "actual": 23,
+      "floor": 66
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "FINANCE_COMPANY",
+      "metric_code": "TOTAL_EQUITY",
+      "actual": 23,
+      "floor": 66
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "FINANCE_COMPANY",
+      "metric_code": "TOTAL_LIABILITIES",
+      "actual": 23,
+      "floor": 66
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "INSURANCE",
+      "metric_code": "DEBT_TO_EQUITY",
+      "actual": 5,
+      "floor": 25
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "INSURANCE",
+      "metric_code": "EPS_BASIC",
+      "actual": 8,
+      "floor": 24
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "INSURANCE",
+      "metric_code": "EPS_DILUTED",
+      "actual": 4,
+      "floor": 13
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "INSURANCE",
+      "metric_code": "EPS_SELECTED",
+      "actual": 8,
+      "floor": 26
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "INSURANCE",
+      "metric_code": "NAVPS",
+      "actual": 3,
+      "floor": 30
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "INSURANCE",
+      "metric_code": "NPM",
+      "actual": 4,
+      "floor": 24
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "INSURANCE",
+      "metric_code": "OPERATING_PROFIT",
+      "actual": 2,
+      "floor": 6
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "INSURANCE",
+      "metric_code": "PAT",
+      "actual": 4,
+      "floor": 25
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "INSURANCE",
+      "metric_code": "PBT",
+      "actual": 7,
+      "floor": 25
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "INSURANCE",
+      "metric_code": "ROA",
+      "actual": 4,
+      "floor": 22
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "INSURANCE",
+      "metric_code": "ROE",
+      "actual": 4,
+      "floor": 21
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "INSURANCE",
+      "metric_code": "TOP_LINE",
+      "actual": 8,
+      "floor": 25
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "INSURANCE",
+      "metric_code": "TOTAL_ASSETS",
+      "actual": 5,
+      "floor": 29
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "INSURANCE",
+      "metric_code": "TOTAL_EQUITY",
+      "actual": 6,
+      "floor": 30
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "INSURANCE",
+      "metric_code": "TOTAL_LIABILITIES",
+      "actual": 5,
+      "floor": 26
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "GENERAL",
+      "metric_code": "DEBT_TO_EQUITY",
+      "actual": 108,
+      "floor": 321
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "GENERAL",
+      "metric_code": "EPS_BASIC",
+      "actual": 254,
+      "floor": 548
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "GENERAL",
+      "metric_code": "EPS_DILUTED",
+      "actual": 26,
+      "floor": 129
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "GENERAL",
+      "metric_code": "EPS_SELECTED",
+      "actual": 242,
+      "floor": 552
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "GENERAL",
+      "metric_code": "NAVPS",
+      "actual": 341,
+      "floor": 581
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "GENERAL",
+      "metric_code": "NPM",
+      "actual": 203,
+      "floor": 508
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "GENERAL",
+      "metric_code": "OPERATING_PROFIT",
+      "actual": 206,
+      "floor": 453
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "GENERAL",
+      "metric_code": "PAT",
+      "actual": 262,
+      "floor": 552
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "GENERAL",
+      "metric_code": "PBT",
+      "actual": 282,
+      "floor": 554
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "GENERAL",
+      "metric_code": "ROA",
+      "actual": 117,
+      "floor": 488
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "GENERAL",
+      "metric_code": "ROE",
+      "actual": 215,
+      "floor": 458
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "GENERAL",
+      "metric_code": "TOP_LINE",
+      "actual": 240,
+      "floor": 560
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "GENERAL",
+      "metric_code": "TOTAL_ASSETS",
+      "actual": 201,
+      "floor": 582
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "GENERAL",
+      "metric_code": "TOTAL_EQUITY",
+      "actual": 361,
+      "floor": 559
+    },
+    {
+      "code": "SECTOR_METRIC_COVERAGE_REGRESSION",
+      "issuer_type": "GENERAL",
+      "metric_code": "TOTAL_LIABILITIES",
+      "actual": 113,
+      "floor": 344
+    },
+    {
+      "code": "PUBLISHABLE_COVERAGE_REGRESSION",
+      "actual": 3854,
+      "floor": 8924
+    }
+  ],
+  "universe_regression_count": 2,
+  "universe_regressions": [
+    {
+      "code": "EXTRACTED_FILING_REGRESSION",
+      "manifest_field": "extracted_filing_count",
+      "actual": 820,
+      "floor": 826
+    },
+    {
+      "code": "FACT_COVERAGE_REGRESSION",
+      "manifest_field": "EXTRACTED+EXTRACTED_DERIVED",
+      "actual": 4013,
+      "floor": 8932
+    }
+  ],
+  "retry_summary": {
+    "attempts": 3,
+    "recovered": 3,
+    "filings": 3
+  },
+  "engineering_gate_count": 7,
+  "engineering_gates": [
+    {
+      "code": "GOLD_WRONG_POPULATED",
+      "issuer_name": "CIC HOLDINGS PLC",
+      "symbol": "CIC.N0000",
+      "period_end": "2025-12-31",
+      "metric_code": "TOP_LINE",
+      "detail": "expected 5816610000.00 actual None"
+    },
+    {
+      "code": "GOLD_WRONG_POPULATED",
+      "issuer_name": "CIC HOLDINGS PLC",
+      "symbol": "CIC.N0000",
+      "period_end": "2025-12-31",
+      "metric_code": "OPERATING_PROFIT",
+      "detail": "expected 861020000.00 actual None"
+    },
+    {
+      "code": "GOLD_WRONG_POPULATED",
+      "issuer_name": "CIC HOLDINGS PLC",
+      "symbol": "CIC.N0000",
+      "period_end": "2025-12-31",
+      "metric_code": "PBT",
+      "detail": "expected 430310000.00 actual None"
+    },
+    {
+      "code": "GOLD_WRONG_POPULATED",
+      "issuer_name": "CIC HOLDINGS PLC",
+      "symbol": "CIC.N0000",
+      "period_end": "2025-12-31",
+      "metric_code": "PAT",
+      "detail": "expected 300790000.00 actual None"
+    },
+    {
+      "code": "GOLD_WRONG_POPULATED",
+      "issuer_name": "CIC HOLDINGS PLC",
+      "symbol": "CIC.N0000",
+      "period_end": "2025-12-31",
+      "metric_code": "EPS_BASIC",
+      "detail": "expected 0.16 actual None"
+    },
+    {
+      "code": "COVERAGE_REGRESSION",
+      "issuer_name": "",
+      "symbol": "",
+      "period_end": null,
+      "metric_code": null,
+      "detail": "EXTRACTED+DERIVED=4013 below floor 8932"
+    },
+    {
+      "code": "PUBLISHABLE_COVERAGE_REGRESSION",
+      "issuer_name": "",
+      "symbol": "",
+      "period_end": null,
+      "metric_code": null,
+      "detail": "draft_publishable=3854 below floor 8924"
+    }
+  ],
+  "external_proof_gates": [
+    {
+      "code": "GOLD_SAMPLE_INCOMPLETE",
+      "issuer_name": "",
+      "symbol": "",
+      "period_end": null,
+      "metric_code": null,
+      "detail": "gold sample_size=38 below required 100"
+    },
+    {
+      "code": "GOLD_ISSUER_SAMPLE_INCOMPLETE",
+      "issuer_name": "",
+      "symbol": "",
+      "period_end": null,
+      "metric_code": null,
+      "detail": "manual_issuer_count=4 below required 100"
+    }
+  ],
+  "review_failure_families": {
+    "INSUFFICIENT_INPUT": 1169,
+    "HISTORICAL_PRICE_NOT_AVAILABLE": 128,
+    "PENDING_FILING": 14,
+    "VALIDATION_FAILED": 13,
+    "EXTRACTION_FAILED": 9,
+    "GOLD_WRONG_POPULATED": 5,
+    "ZERO_EQUITY": 3,
+    "IMPLAUSIBLE_DERIVED_RATIO": 2,
+    "CROSS_FILING_MISMATCH": 2,
+    "NON_POSITIVE_DENOMINATOR": 1,
+    "GOLD_SAMPLE_INCOMPLETE": 1,
+    "GOLD_ISSUER_SAMPLE_INCOMPLETE": 1,
+    "COVERAGE_REGRESSION": 1,
+    "PUBLISHABLE_COVERAGE_REGRESSION": 1
+  },
+  "acceptance": "ENGINEERING_FAILURES_PRESENT",
+  "production_runtime": {
+    "source_mode": "OFFLINE_REPLAY",
+    "issuer_master": "D:\\Report\\outputs\\issuer_master_2026-09-09.json",
+    "metric_definitions": "D:\\Report\\outputs\\metric_definitions_2026-09-09.json",
+    "quarter_model": "REPORTED_THREE_MONTH_QUARTERS_ONLY",
+    "r4_hardening": {
+      "schema_version": 1,
+      "no_database": true,
+      "xbrl": "NOT_IMPLEMENTED_UNTIL_OFFICIALLY_AVAILABLE",
+      "row_changes": {
+        "filing_price_semantic_withheld": 755,
+        "closing_price_withheld": 32
+      },
+      "canonical_master": "D:\\Report\\outputs\\issuer_security_master_2026-09-09.json",
+      "expected_disclosures": "D:\\Report\\outputs\\expected_disclosures_2026-09-09.json",
+      "fact_semantics": "D:\\Report\\outputs\\fact_semantics_2026-09-09.jsonl",
+      "metric_definitions": "D:\\Report\\outputs\\metric_definitions_2026-09-09.json",
+      "quarantine_integrity": {
+        "checked": 0,
+        "mismatches": 0,
+        "pins_path": "D:\\Report\\data\\quarantine\\known_timeout_pins.json",
+        "mismatch_rows": []
+      },
+      "reported_q4_only": true,
+      "price_semantic": "LAST_TRADED_ONLY",
+      "bank_nil_policy": "explicit nil on verified exact-quarter Bank statement only; blank/dash never zero"
+    },
+    "database_required": false,
+    "xbrl_enabled": false,
+    "gold_promotion": {
+      "promoted": false,
+      "reason": "ENGINEERING_FAILURES_PRESENT"
+    }
+  }
+}

@@ -1,0 +1,289 @@
+{
+  "id": "e02-universe-candidate-trace",
+  "recovery_step": "E02",
+  "status": "COMPLETE",
+  "engine_code_sha": "d29b392486c7a7a6fd8f6861c7e2430e2f6d68ef",
+  "investigation_base_sha": "91a9c68bf940d3d9c2a86245f127de88ad4b4b6d",
+  "periods": [
+    "2025-12-31",
+    "2026-03-31",
+    "2026-06-30"
+  ],
+  "filings_attempted": 1641,
+  "filings_ok": 1631,
+  "filings_error": 10,
+  "target_metric_candidate_rows": 105032,
+  "target_metric_slot_rows_including_row_not_found": 108666,
+  "statement_layout_rows": 8758,
+  "n18_taxonomy_counts_candidates": {
+    "ENTITY_UNRESOLVED": 26470,
+    "CONCEPT_UNRESOLVED": 8983,
+    "NONE": 19450,
+    "VALIDATION_WITHHELD": 20141,
+    "SOURCEFACT_WITHHELD": 29034,
+    "UNIT_UNRESOLVED": 576,
+    "PERIOD_UNRESOLVED": 378
+  },
+  "n18_taxonomy_counts_slots": {
+    "ENTITY_UNRESOLVED": 26470,
+    "CONCEPT_UNRESOLVED": 8983,
+    "NO_TARGET_CANDIDATE": 3634,
+    "NONE": 19450,
+    "VALIDATION_WITHHELD": 20141,
+    "SOURCEFACT_WITHHELD": 29034,
+    "UNIT_UNRESOLVED": 576,
+    "PERIOD_UNRESOLVED": 378
+  },
+  "first_failure_stage_counts": {
+    "ENTITY_UNRESOLVED": 26470,
+    "CONCEPT_UNRESOLVED": 8983,
+    "NONE": 19450,
+    "VALIDATION": 20141,
+    "PUBLICATION": 29034,
+    "UNIT_UNRESOLVED": 538,
+    "UNIT_DIMENSION_MISMATCH": 38,
+    "PERIOD_UNRESOLVED": 378
+  },
+  "entity_status_counts": {
+    "UNRESOLVED": 28487,
+    "RESOLVED": 76545
+  },
+  "entity_layout_pattern_counts": {
+    "UNLABELLED_COLUMNS": 2279,
+    "SINGLE_GROUP_BANNER": 1809,
+    "SINGLE_COMPANY_BANNER": 1710,
+    "GROUP_AND_COMPANY_BOTH_EXPLICIT": 2608,
+    "SINGLE_BANK_BANNER": 138,
+    "GROUP_AND_BANK_BOTH_EXPLICIT": 210,
+    "OTHER_OR_MIXED": 4
+  },
+  "entity_banner_count_ne_monetary_column_count": 6195,
+  "continuation_with_inherited_entity_schema": 0,
+  "n18_comparison": {
+    "note": "WRONG_ENTITY cannot be counted from universe without source truth. Use N18 confirmed WRONG_ENTITY=7 and universe dual-entity layouts + ENTITY_UNRESOLVED as prevalence evidence.",
+    "n18_confirmed": {
+      "ENTITY_UNRESOLVED": 36,
+      "WRONG_ENTITY": 7,
+      "ROW_NOT_FOUND": 26
+    },
+    "universe_ENTITY_UNRESOLVED_candidates": 26470,
+    "universe_ENTITY_UNRESOLVED_slots": 26470,
+    "universe_NO_TARGET_CANDIDATE_slots": 3634,
+    "universe_GROUP_AND_COMPANY_both_explicit_statements": 2608,
+    "universe_GROUP_AND_BANK_both_explicit_statements": 210,
+    "entity_unresolved_status_on_target_candidates": 28487,
+    "green_light_entity_fix": true
+  },
+  "by_metric": {
+    "ENTITY_UNRESOLVED": {
+      "TOP_LINE": 5721,
+      "OPERATING_PROFIT": 2414,
+      "PBT": 5337,
+      "PAT": 4486,
+      "EPS_BASIC": 2413,
+      "TOTAL_ASSETS": 1894,
+      "TOTAL_EQUITY": 1174,
+      "TOTAL_LIABILITIES": 1550,
+      "NAVPS": 1196,
+      "EPS_DILUTED": 285
+    },
+    "CONCEPT_UNRESOLVED": {
+      "TOTAL_EQUITY": 5993,
+      "OPERATING_PROFIT": 223,
+      "PBT": 445,
+      "PAT": 1892,
+      "EPS_BASIC": 139,
+      "TOTAL_ASSETS": 59,
+      "TOP_LINE": 134,
+      "TOTAL_LIABILITIES": 50,
+      "NAVPS": 44,
+      "EPS_DILUTED": 4
+    },
+    "NO_TARGET_CANDIDATE": {
+      "EPS_DILUTED": 1426,
+      "NAVPS": 281,
+      "TOP_LINE": 196,
+      "PBT": 93,
+      "TOTAL_EQUITY": 119,
+      "TOTAL_ASSETS": 121,
+      "TOTAL_LIABILITIES": 511,
+      "PAT": 203,
+      "EPS_BASIC": 179,
+      "OPERATING_PROFIT": 505
+    },
+    "NONE": {
+      "TOP_LINE": 1823,
+      "OPERATING_PROFIT": 1034,
+      "PBT": 1943,
+      "PAT": 2184,
+      "EPS_BASIC": 1371,
+      "TOTAL_ASSETS": 2308,
+      "TOTAL_EQUITY": 3698,
+      "TOTAL_LIABILITIES": 1514,
+      "NAVPS": 3352,
+      "EPS_DILUTED": 223
+    },
+    "VALIDATION_WITHHELD": {
+      "TOP_LINE": 4742,
+      "OPERATING_PROFIT": 2416,
+      "PBT": 4924,
+      "PAT": 4753,
+      "EPS_BASIC": 2899,
+      "EPS_DILUTED": 407
+    },
+    "SOURCEFACT_WITHHELD": {
+      "TOP_LINE": 3473,
+      "OPERATING_PROFIT": 2036,
+      "PBT": 3999,
+      "PAT": 4243,
+      "EPS_BASIC": 2652,
+      "TOTAL_ASSETS": 6002,
+      "TOTAL_LIABILITIES": 4830,
+      "EPS_DILUTED": 317,
+      "TOTAL_EQUITY": 928,
+      "NAVPS": 554
+    },
+    "UNIT_UNRESOLVED": {
+      "TOTAL_ASSETS": 72,
+      "TOTAL_EQUITY": 12,
+      "TOTAL_LIABILITIES": 48,
+      "NAVPS": 12,
+      "TOP_LINE": 114,
+      "PBT": 84,
+      "PAT": 132,
+      "EPS_BASIC": 14,
+      "OPERATING_PROFIT": 88
+    },
+    "PERIOD_UNRESOLVED": {
+      "TOTAL_ASSETS": 44,
+      "TOTAL_EQUITY": 32,
+      "TOTAL_LIABILITIES": 24,
+      "NAVPS": 32,
+      "TOP_LINE": 66,
+      "OPERATING_PROFIT": 66,
+      "PBT": 66,
+      "EPS_BASIC": 48
+    }
+  },
+  "by_issuer_type": {
+    "ENTITY_UNRESOLVED": {
+      "GENERAL": 16784,
+      "FINANCE_COMPANY": 5558,
+      "BANK": 2514,
+      "INSURANCE": 1614
+    },
+    "CONCEPT_UNRESOLVED": {
+      "GENERAL": 7689,
+      "FINANCE_COMPANY": 542,
+      "BANK": 418,
+      "INSURANCE": 334
+    },
+    "NO_TARGET_CANDIDATE": {
+      "GENERAL": 3186,
+      "FINANCE_COMPANY": 268,
+      "BANK": 58,
+      "INSURANCE": 122
+    },
+    "NONE": {
+      "GENERAL": 15788,
+      "FINANCE_COMPANY": 1724,
+      "INSURANCE": 392,
+      "BANK": 1546
+    },
+    "VALIDATION_WITHHELD": {
+      "GENERAL": 15767,
+      "FINANCE_COMPANY": 2358,
+      "INSURANCE": 702,
+      "BANK": 1314
+    },
+    "SOURCEFACT_WITHHELD": {
+      "GENERAL": 25524,
+      "FINANCE_COMPANY": 1628,
+      "INSURANCE": 648,
+      "BANK": 1234
+    },
+    "UNIT_UNRESOLVED": {
+      "INSURANCE": 86,
+      "GENERAL": 490
+    },
+    "PERIOD_UNRESOLVED": {
+      "GENERAL": 378
+    }
+  },
+  "by_statement_type": {
+    "ENTITY_UNRESOLVED": {
+      "INCOME_STATEMENT": 20586,
+      "BALANCE_SHEET": 5544,
+      "EPS_NOTE": 340
+    },
+    "CONCEPT_UNRESOLVED": {
+      "BALANCE_SHEET": 6146,
+      "INCOME_STATEMENT": 2825,
+      "EPS_NOTE": 12
+    },
+    "NONE": {
+      "INCOME_STATEMENT": 8574,
+      "BALANCE_SHEET": 10850,
+      "EPS_NOTE": 26
+    },
+    "VALIDATION_WITHHELD": {
+      "INCOME_STATEMENT": 20137,
+      "EPS_NOTE": 4
+    },
+    "SOURCEFACT_WITHHELD": {
+      "INCOME_STATEMENT": 16706,
+      "BALANCE_SHEET": 12298,
+      "EPS_NOTE": 30
+    },
+    "UNIT_UNRESOLVED": {
+      "BALANCE_SHEET": 144,
+      "INCOME_STATEMENT": 432
+    },
+    "PERIOD_UNRESOLVED": {
+      "BALANCE_SHEET": 132,
+      "INCOME_STATEMENT": 246
+    }
+  },
+  "errors_sample": [
+    {
+      "filing_version_id": "COLOMBO_LAND_AND_DEVELOPMENT_COMPANY_PLC-2025-12-31",
+      "error": "NativeParseError: PDF contains no pages"
+    },
+    {
+      "filing_version_id": "E_M_L_CONSULTANTS_PLC-2025-12-31",
+      "error": "NativeParseError: PDF contains no pages"
+    },
+    {
+      "filing_version_id": "E_M_L_CONSULTANTS_PLC-2026-06-30",
+      "error": "NativeParseError: PDF contains no pages"
+    },
+    {
+      "filing_version_id": "GESTETNER_OF_CEYLON_PLC-2025-12-31",
+      "error": "NativeParseError: PDF contains no pages"
+    },
+    {
+      "filing_version_id": "LANKA_CERAMIC_PLC-2025-12-31",
+      "error": "NativeParseError: PyMuPDF failed to parse D:\\Report\\data\\raw\\filings\\LANKA_CERAMIC_PLC\\2025-12-31_50011_e3b0c44298fc1c14.pdf: Cannot open empty file: filename='D:\\\\Report\\\\data\\\\raw\\\\filings\\\\LANKA_CERAMIC_PLC\\\\2025-12-31_50011_e3b0c44298fc1c14.pdf'."
+    },
+    {
+      "filing_version_id": "MERCANTILE_SHIPPING_COMPANY_PLC-2025-12-31",
+      "error": "NativeParseError: PDF contains no pages"
+    },
+    {
+      "filing_version_id": "MERCANTILE_SHIPPING_COMPANY_PLC-2026-03-31",
+      "error": "NativeParseError: PDF contains no pages"
+    },
+    {
+      "filing_version_id": "MERCANTILE_SHIPPING_COMPANY_PLC-2026-06-30",
+      "error": "NativeParseError: PDF contains no pages"
+    },
+    {
+      "filing_version_id": "MULLER_PHIPPS_CEYLON_PLC-2026-06-30",
+      "error": "NativeParseError: PyMuPDF failed to parse D:\\Report\\data\\raw\\filings\\MULLER_PHIPPS_CEYLON_PLC\\2026-06-30_52223_3b3c00df728f81b9.pdf: Failed to open file 'D:\\\\Report\\\\data\\\\raw\\\\filings\\\\MULLER_PHIPPS_CEYLON_PLC\\\\2026-06-30_52223_3b3c00df728f81b9.pdf' as type pdf."
+    },
+    {
+      "filing_version_id": "PARAGON_CEYLON_PLC-2026-03-31",
+      "error": "NativeParseError: PDF contains no pages"
+    }
+  ]
+}
