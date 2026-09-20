@@ -63,17 +63,56 @@ _TRAILING_NOISE = re.compile(
     r"|\s*:\s*basic(?:\s+diluted)?)\s*$",
     re.IGNORECASE,
 )
+# OCR / table bleed after a clean account label (applied only to source labels).
+_TRAILING_OCR_JUNK = re.compile(
+    r"(?:\s*\|+\s*)+$"
+    r"|(?:\s+\d+o(?:\s*/\s*|\s+)o(?:\s+[\d,().a-z]+)*)$"
+    r"|(?:\s+[a-z]*\d[a-z\d]*(?:\s+[|\d,().a-z]+)*)$"
+    r"|(?:\s+\d[\d,]*(?:\.\d+)?%?(?:\s+\d[\d,]*(?:\.\d+)?%?)*)$",
+    re.IGNORECASE,
+)
+_LABEL_ONLY_TRAILING = re.compile(
+    r"(?:\s+(?:for\s+the\s+period|annualized|annualised)"
+    r"|\s+to\s+equity\s+holders)\s*$",
+    re.IGNORECASE,
+)
 
 
-def _norm(text: str) -> str:
+def _norm(text: str, *, label_cleanup: bool = False) -> str:
     cleaned = text.casefold().replace("/", " ").replace("-", " ")
-    cleaned = re.sub(r"[.:]+$", "", cleaned)
+    cleaned = cleaned.replace("|", " ").replace("'", "").replace("’", "")
+    cleaned = re.sub(r"^[\[\(]+", "", cleaned)
+    cleaned = " ".join(cleaned.split())
     while True:
         nxt = _TRAILING_NOISE.sub("", cleaned)
+        if label_cleanup:
+            nxt = _TRAILING_OCR_JUNK.sub("", nxt)
+        # Strip dangling punctuation only — never bare ")" which breaks
+        # "(basic and diluted)" / "(Rs.)" before the next noise pass.
+        nxt = re.sub(r"[,.:;]+$", "", nxt)
         nxt = " ".join(nxt.split())
-        if nxt == " ".join(cleaned.split()):
+        if nxt == cleaned:
             return nxt
         cleaned = nxt
+
+
+def normalize_label(label: str) -> str:
+    """Normalize a source row label for matching (includes OCR cleanup)."""
+    return _norm(label, label_cleanup=True)
+
+
+def _alias_lookup_keys(label: str) -> tuple[str, ...]:
+    """Exact key plus qualifier-stripped / re-noised variants for source labels."""
+    primary = normalize_label(label)
+    keys: list[str] = [primary]
+    stripped = _LABEL_ONLY_TRAILING.sub("", primary).strip()
+    stripped = " ".join(stripped.split())
+    if stripped and stripped not in keys:
+        keys.append(stripped)
+        renoised = _norm(stripped, label_cleanup=True)
+        if renoised and renoised not in keys:
+            keys.append(renoised)
+    return tuple(keys)
 
 
 CORE_CONCEPTS: tuple[ConceptDefinition, ...] = (
@@ -116,7 +155,11 @@ CORE_CONCEPTS: tuple[ConceptDefinition, ...] = (
         exact_aliases=(
             "Profit before tax",
             "Profit before income tax",
+            "Profit before income tax expense",
             "Profit before taxation",
+            "Profit before taxation from operations",
+            "Net profit/(loss) before taxation",
+            "Net profit before taxation",
             "Profit before tax for the period",
             "Profit before Tax from continued operations",
             "Profit/(Loss) Before Tax from Continuing Operations",
@@ -144,14 +187,27 @@ CORE_CONCEPTS: tuple[ConceptDefinition, ...] = (
             "Operating profit/(loss)",
             "Operating profit before tax on financial services",
             "Operating profit before taxes on financial services",
+            "Operating profit/(loss) before VAT on financial services & SSCL",
+            "Operating profit/(loss) before VAT on financial services and SSCL",
             "Profit before tax on financial services",
             "Profit before taxes on financial services",
             "Profit before value added tax (VAT) & social security contribution Levy (SSCL) on financial services",
             "Profit before value added tax (VAT) and social security contribution levy (SSCL) on financial services",
             "Profit before VAT & SSCL on financial services",
             "Profit before VAT and SSCL on financial services",
+            "Profit before Social Security Contribution Levy / Value Added Tax on financial services",
+            "Profit before Social Security Contribution Levy and Value Added Tax on financial services",
         ),
-        forbidden_aliases=("EBITDA", "Operating profit after taxes on financial services"),
+        forbidden_aliases=(
+            "EBITDA",
+            "Operating profit after taxes on financial services",
+            "Operating profit/(loss) after VAT on financial services & SSCL",
+            "Operating profit/(loss) after VAT on financial services and SSCL",
+            "Operating profit/(loss) after VAT on financial services and SCCL",
+            "Operating profit after VAT on financial services & SSCL",
+            "Operating profit after VAT on financial services and SSCL",
+            "Operating profit after VAT on financial services and SCCL",
+        ),
     ),
     ConceptDefinition(
         code="TOP_LINE",
@@ -212,6 +268,8 @@ CORE_CONCEPTS: tuple[ConceptDefinition, ...] = (
             "Basic/Diluted earnings per ordinary share",
             "Basic/Diluted earnings per share",
             "Basic/Diluted earnings/(deficit) per share",
+            "Basic and diluted earnings per share",
+            "Basic / diluted earnings per share",
             "Earnings per share basic",
             "Earning per share basic",
             "Earnings per share basic diluted",
@@ -243,6 +301,7 @@ CORE_CONCEPTS: tuple[ConceptDefinition, ...] = (
         exact_aliases=(
             "Net assets per share",
             "Net asset value per share",
+            "Net assets value per share",
             "Net asset value per ordinary share",
             "Net book value per share",
             "Net asset per share",
@@ -255,7 +314,13 @@ CORE_CONCEPTS: tuple[ConceptDefinition, ...] = (
         statement_types=(StatementType.BALANCE_SHEET,),
         period_behavior=PeriodBehavior.STOCK,
         unit_dimension=UnitDimension.MONETARY,
-        exact_aliases=("Total equity", "Shareholders funds", "Total shareholders funds"),
+        exact_aliases=(
+            "Total equity",
+            "Shareholders funds",
+            "Total shareholders funds",
+            "Total shareholders' funds",
+            "Shareholders' funds",
+        ),
         forbidden_aliases=(
             "Equity attributable to owners",
             "Equity attributable to owners of the parent",
@@ -399,7 +464,15 @@ class ConceptRegistry:
         return None if hit is None else hit.concept
 
     def match_alias(self, label: str, *, regimes: tuple[str, ...] = ()) -> AliasMatch | None:
-        key = _norm(label)
+        for key in _alias_lookup_keys(label):
+            hit = self._match_normalized(key, label=label, regimes=regimes)
+            if hit is not None:
+                return hit
+        return None
+
+    def _match_normalized(
+        self, key: str, *, label: str, regimes: tuple[str, ...]
+    ) -> AliasMatch | None:
         code = self._alias_index.get(key)
         if code is not None:
             return AliasMatch(
@@ -444,11 +517,11 @@ class ConceptRegistry:
         return choices
 
     def is_regime_alias(self, label: str) -> bool:
-        key = _norm(label)
+        key = normalize_label(label)
         return any(key in bucket for bucket in self._regime_alias_index.values())
 
     def is_forbidden(self, label: str) -> bool:
-        key = _norm(label)
+        key = normalize_label(label)
         return any(
             key == _norm(item) for concept in self.concepts for item in concept.forbidden_aliases
         )
@@ -456,7 +529,3 @@ class ConceptRegistry:
 
 def load_registry() -> ConceptRegistry:
     return ConceptRegistry()
-
-
-def normalize_label(label: str) -> str:
-    return _norm(label)

@@ -215,7 +215,11 @@ def resolve_source_facts(
             publication = PublicationStatus.WITHHELD
             reasons.append("CUMULATIVE_ONLY")
         scale = candidate.monetary_scale or Decimal("1")
+        # Per-share concepts must not inherit statement-level Rs/'000 MONETARY
+        # column units — gold and contracts expect UnitDimension.PER_SHARE.
+        fact_unit = candidate.unit_dimension
         if concept.unit_dimension is UnitDimension.PER_SHARE:
+            fact_unit = UnitDimension.PER_SHARE
             # Cents/share normalize to Rs/share. Do not inherit statement Rs/'000.
             scale = scale if scale == Decimal("0.01") else Decimal("1")
             normalized = candidate.raw_value * scale
@@ -244,7 +248,7 @@ def resolve_source_facts(
                 normalized_value=normalized,
                 currency=candidate.currency,
                 source_scale=scale,
-                unit_dimension=candidate.unit_dimension,
+                unit_dimension=fact_unit,
                 source_ref=candidate.source_ref,
                 validation_status=ValidationStatus.NOT_VALIDATED,
                 review_status=ReviewStatus.REVIEW,

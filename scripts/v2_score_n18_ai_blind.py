@@ -149,14 +149,24 @@ def score_n18(items: list[SourceTruthItem], facts: list[dict[str, Any]]) -> dict
             )
             continue
 
-        # Prefer exact value+entity match; else best candidate for mismatch taxonomy.
+        # Prefer exact value+entity match; among ties, prefer gold period/duration/unit.
         exact = [
             f
             for f in candidates
             if _same_number(item.normalized_value, f.get("normalized_value"))
             and _as_entity(f.get("entity_scope")) == truth_entity
         ]
-        chosen = exact[0] if exact else candidates[0]
+
+        def _meta_rank(fact: dict[str, Any]) -> tuple[int, int, int]:
+            return (
+                0 if _as_date(fact.get("period_end")) == truth_period else 1,
+                0 if _as_int(fact.get("duration_months")) == truth_duration else 1,
+                0
+                if truth_unit is None or str(fact.get("unit_dimension") or "") == truth_unit
+                else 1,
+            )
+
+        chosen = sorted(exact, key=_meta_rank)[0] if exact else candidates[0]
         flags: list[str] = []
         if not _same_number(item.normalized_value, chosen.get("normalized_value")):
             flags.append("value")

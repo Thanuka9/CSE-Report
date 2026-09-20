@@ -663,7 +663,29 @@ def _date_banners(
         for match, parsed in _iter_date_matches(line.text):
             found.append((_match_x(line, match), parsed))
     found.sort(key=lambda item: item[0])
-    return found
+    return _dedupe_nearby_date_banners(found)
+
+
+def _dedupe_nearby_date_banners(
+    banners: list[tuple[float, date]], *, min_gap: float = 15.0
+) -> list[tuple[float, date]]:
+    """Collapse title/date-row collisions that share nearly the same x.
+
+    NHL-style grids emit an extra ``31st December 2025`` from a duration title
+    within a few points of the real ``31.12.2024`` column date. Keeping the
+    rightward banner preserves the date-row token.
+    """
+
+    if not banners:
+        return banners
+    out: list[tuple[float, date]] = [banners[0]]
+    for x, parsed in banners[1:]:
+        prev_x, _prev = out[-1]
+        if x - prev_x < min_gap:
+            out[-1] = (x, parsed)
+        else:
+            out.append((x, parsed))
+    return out
 
 
 def _iter_date_matches(text: str) -> list[tuple[re.Match[str], date]]:

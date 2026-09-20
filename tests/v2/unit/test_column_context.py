@@ -927,3 +927,90 @@ def test_period_ended_date_cue_does_not_steal_quarter_columns() -> None:
         if column.unit_dimension is UnitDimension.MONETARY
     ]
     assert [column.duration_months for column in monetary[:4]] == [3, 3, 9, 9]
+
+
+def test_nearby_date_banner_collision_keeps_date_row_pair() -> None:
+    """Title date colliding with a dotted column date must not rotate pairs.
+
+    NHL: eight monetary columns with repeating 2025/2024 dates, plus an extra
+    named title date within a few points of the real ``31.12.2024`` token.
+    """
+
+    from cse_financial_etl.v2.resolution.column_context import _dedupe_nearby_date_banners
+
+    banners = [
+        (200.0, date(2025, 12, 31)),
+        (280.0, date(2024, 12, 31)),
+        (360.0, date(2025, 12, 31)),
+        (426.0, date(2025, 12, 31)),  # spurious title collision
+        (433.0, date(2024, 12, 31)),
+        (520.0, date(2025, 12, 31)),
+        (600.0, date(2024, 12, 31)),
+        (680.0, date(2025, 12, 31)),
+        (760.0, date(2024, 12, 31)),
+    ]
+    deduped = _dedupe_nearby_date_banners(banners)
+    assert len(deduped) == 8
+    assert [parsed for _x, parsed in deduped] == [
+        date(2025, 12, 31),
+        date(2024, 12, 31),
+        date(2025, 12, 31),
+        date(2024, 12, 31),
+        date(2025, 12, 31),
+        date(2024, 12, 31),
+        date(2025, 12, 31),
+        date(2024, 12, 31),
+    ]
+
+    document = geometric_document(
+        (
+            ((40.0, "Group"), (420.0, "Company")),
+            (
+                (200.0, "Quarter ended"),
+                (360.0, "Nine Month Ended"),
+                (520.0, "Quarter ended"),
+                (680.0, "Nine Month Ended"),
+            ),
+            (
+                (200.0, "31.12.2025"),
+                (280.0, "31.12.2024"),
+                (360.0, "31.12.2025"),
+                (425.0, "31st December 2025"),
+                (433.0, "31.12.2024"),
+                (520.0, "31.12.2025"),
+                (600.0, "31.12.2024"),
+                (680.0, "31.12.2025"),
+                (760.0, "31.12.2024"),
+            ),
+            ((40.0, "Rs'000"),),
+            (
+                (40.0, "Revenue"),
+                (200.0, "3,438,428"),
+                (280.0, "2,594,528"),
+                (360.0, "9,935,019"),
+                (433.0, "8,326,242"),
+                (520.0, "1,762,732"),
+                (600.0, "1,313,792"),
+                (680.0, "5,106,508"),
+                (760.0, "4,168,655"),
+            ),
+        ),
+        title="Consolidated Statement of Comprehensive Income",
+    )
+    statement = bind_column_context(document, build_statements(document)[0])
+    monetary = [
+        column
+        for column in statement.columns
+        if column.unit_dimension is UnitDimension.MONETARY
+    ]
+    assert len(monetary) == 8
+    assert [column.period_end for column in monetary] == [
+        date(2025, 12, 31),
+        date(2024, 12, 31),
+        date(2025, 12, 31),
+        date(2024, 12, 31),
+        date(2025, 12, 31),
+        date(2024, 12, 31),
+        date(2025, 12, 31),
+        date(2024, 12, 31),
+    ]

@@ -1,0 +1,504 @@
+{
+  "id": "n18-ai-blind-first-score",
+  "recovery_step": "N18",
+  "status": "FIRST_SCORE_FROZEN_UNTOUCHED",
+  "gold_path": "tests/v2/source_truth/n17_ai_blind_gold.jsonl",
+  "gold_commit_sha": "f32a3d18a05a21cab584f789b5ee3a79f9d811ba",
+  "engine_code_sha": "f32a3d18a05a21cab584f789b5ee3a79f9d811ba:dirty:cf71b39dd487",
+  "investigation_base_sha": "91a9c68bf940d3d9c2a86245f127de88ad4b4b6d",
+  "total_slots": 130,
+  "reported_scored_count": 115,
+  "not_reported_count": 15,
+  "ambiguous_count": 0,
+  "tp": 49,
+  "fn": 66,
+  "value_mismatch": 0,
+  "entity_mismatch": 0,
+  "period_mismatch": 0,
+  "duration_mismatch": 0,
+  "unit_mismatch": 0,
+  "critical_wrong": 0,
+  "source_reported_recall": 0.426087,
+  "numeric_correctness": 1.0,
+  "v2_source_fact_count": 400,
+  "issuers": [
+    "AFSL.N0000",
+    "AMCL.N0000",
+    "ATLL.N0000",
+    "CINS.N0000",
+    "COCR.N0000",
+    "HUNA.N0000",
+    "JFP.N0000",
+    "LGIL.N0000",
+    "NHL.N0000",
+    "PABC.N0000",
+    "SCAP.N0000",
+    "SDB.N0000",
+    "UBC.N0000"
+  ],
+  "mismatch_examples": [
+    {
+      "issuer_id": "AFSL.N0000",
+      "filing_version_id": "AFSL.N0000-2025-12-31",
+      "metric_code": "EPS_BASIC",
+      "result": "FN",
+      "truth": "2.78"
+    },
+    {
+      "issuer_id": "AFSL.N0000",
+      "filing_version_id": "AFSL.N0000-2025-12-31",
+      "metric_code": "NAVPS",
+      "result": "FN",
+      "truth": "54.61"
+    },
+    {
+      "issuer_id": "AFSL.N0000",
+      "filing_version_id": "AFSL.N0000-2025-12-31",
+      "metric_code": "OPERATING_PROFIT",
+      "result": "FN",
+      "truth": "432765388"
+    },
+    {
+      "issuer_id": "AFSL.N0000",
+      "filing_version_id": "AFSL.N0000-2025-12-31",
+      "metric_code": "PAT",
+      "result": "FN",
+      "truth": "205013594"
+    },
+    {
+      "issuer_id": "AFSL.N0000",
+      "filing_version_id": "AFSL.N0000-2025-12-31",
+      "metric_code": "PBT",
+      "result": "FN",
+      "truth": "330201470"
+    },
+    {
+      "issuer_id": "AFSL.N0000",
+      "filing_version_id": "AFSL.N0000-2025-12-31",
+      "metric_code": "TOP_LINE",
+      "result": "FN",
+      "truth": "1170386379"
+    },
+    {
+      "issuer_id": "AFSL.N0000",
+      "filing_version_id": "AFSL.N0000-2025-12-31",
+      "metric_code": "TOTAL_ASSETS",
+      "result": "FN",
+      "truth": "18237743694"
+    },
+    {
+      "issuer_id": "AFSL.N0000",
+      "filing_version_id": "AFSL.N0000-2025-12-31",
+      "metric_code": "TOTAL_EQUITY",
+      "result": "FN",
+      "truth": "4024661568"
+    },
+    {
+      "issuer_id": "AFSL.N0000",
+      "filing_version_id": "AFSL.N0000-2025-12-31",
+      "metric_code": "TOTAL_LIABILITIES",
+      "result": "FN",
+      "truth": "14213082126"
+    },
+    {
+      "issuer_id": "AMCL.N0000",
+      "filing_version_id": "AMCL.N0000-2025-12-31",
+      "metric_code": "EPS_BASIC",
+      "result": "FN",
+      "truth": "4.34"
+    },
+    {
+      "issuer_id": "AMCL.N0000",
+      "filing_version_id": "AMCL.N0000-2025-12-31",
+      "metric_code": "NAVPS",
+      "result": "FN",
+      "truth": "195.59"
+    },
+    {
+      "issuer_id": "AMCL.N0000",
+      "filing_version_id": "AMCL.N0000-2025-12-31",
+      "metric_code": "OPERATING_PROFIT",
+      "result": "FN",
+      "truth": "151435038"
+    },
+    {
+      "issuer_id": "AMCL.N0000",
+      "filing_version_id": "AMCL.N0000-2025-12-31",
+      "metric_code": "PAT",
+      "result": "FN",
+      "truth": "86834025"
+    },
+    {
+      "issuer_id": "AMCL.N0000",
+      "filing_version_id": "AMCL.N0000-2025-12-31",
+      "metric_code": "PBT",
+      "result": "FN",
+      "truth": "113461234"
+    },
+    {
+      "issuer_id": "AMCL.N0000",
+      "filing_version_id": "AMCL.N0000-2025-12-31",
+      "metric_code": "TOP_LINE",
+      "result": "FN",
+      "truth": "457406003"
+    },
+    {
+      "issuer_id": "AMCL.N0000",
+      "filing_version_id": "AMCL.N0000-2025-12-31",
+      "metric_code": "TOTAL_ASSETS",
+      "result": "FN",
+      "truth": "12294690699"
+    },
+    {
+      "issuer_id": "AMCL.N0000",
+      "filing_version_id": "AMCL.N0000-2025-12-31",
+      "metric_code": "TOTAL_EQUITY",
+      "result": "FN",
+      "truth": "3911846281"
+    },
+    {
+      "issuer_id": "AMCL.N0000",
+      "filing_version_id": "AMCL.N0000-2025-12-31",
+      "metric_code": "TOTAL_LIABILITIES",
+      "result": "FN",
+      "truth": "8382844418"
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "filing_version_id": "ATLL.N0000-2025-12-31",
+      "metric_code": "EPS_BASIC",
+      "result": "FN",
+      "truth": "-0.07"
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "filing_version_id": "ATLL.N0000-2025-12-31",
+      "metric_code": "EPS_DILUTED",
+      "result": "FN",
+      "truth": "-0.07"
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "filing_version_id": "ATLL.N0000-2025-12-31",
+      "metric_code": "NAVPS",
+      "result": "FN",
+      "truth": "13.06"
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "filing_version_id": "ATLL.N0000-2025-12-31",
+      "metric_code": "OPERATING_PROFIT",
+      "result": "FN",
+      "truth": "-1111778"
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "filing_version_id": "ATLL.N0000-2025-12-31",
+      "metric_code": "PAT",
+      "result": "FN",
+      "truth": "-3253721"
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "filing_version_id": "ATLL.N0000-2025-12-31",
+      "metric_code": "PBT",
+      "result": "FN",
+      "truth": "-3253721"
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "filing_version_id": "ATLL.N0000-2025-12-31",
+      "metric_code": "TOP_LINE",
+      "result": "FN",
+      "truth": "502448835"
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "filing_version_id": "ATLL.N0000-2025-12-31",
+      "metric_code": "TOTAL_ASSETS",
+      "result": "FN",
+      "truth": "5796314142"
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "filing_version_id": "ATLL.N0000-2025-12-31",
+      "metric_code": "TOTAL_EQUITY",
+      "result": "FN",
+      "truth": "652793947"
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "filing_version_id": "ATLL.N0000-2025-12-31",
+      "metric_code": "TOTAL_LIABILITIES",
+      "result": "FN",
+      "truth": "5143520196"
+    },
+    {
+      "issuer_id": "CINS.N0000",
+      "filing_version_id": "CINS.N0000-2025-12-31",
+      "metric_code": "NAVPS",
+      "result": "FN",
+      "truth": "727.84"
+    },
+    {
+      "issuer_id": "CINS.N0000",
+      "filing_version_id": "CINS.N0000-2025-12-31",
+      "metric_code": "TOP_LINE",
+      "result": "FN",
+      "truth": "374714000"
+    },
+    {
+      "issuer_id": "COCR.N0000",
+      "filing_version_id": "COCR.N0000-2025-12-31",
+      "metric_code": "EPS_BASIC",
+      "result": "FN",
+      "truth": "5.90"
+    },
+    {
+      "issuer_id": "COCR.N0000",
+      "filing_version_id": "COCR.N0000-2025-12-31",
+      "metric_code": "OPERATING_PROFIT",
+      "result": "FN",
+      "truth": "3681170368"
+    },
+    {
+      "issuer_id": "COCR.N0000",
+      "filing_version_id": "COCR.N0000-2025-12-31",
+      "metric_code": "PAT",
+      "result": "FN",
+      "truth": "1877424233"
+    },
+    {
+      "issuer_id": "COCR.N0000",
+      "filing_version_id": "COCR.N0000-2025-12-31",
+      "metric_code": "PBT",
+      "result": "FN",
+      "truth": "2882632242"
+    },
+    {
+      "issuer_id": "COCR.N0000",
+      "filing_version_id": "COCR.N0000-2025-12-31",
+      "metric_code": "TOP_LINE",
+      "result": "FN",
+      "truth": "8315262702"
+    },
+    {
+      "issuer_id": "HUNA.N0000",
+      "filing_version_id": "HUNA.N0000-2025-12-31",
+      "metric_code": "EPS_BASIC",
+      "result": "FN",
+      "truth": "-0.06"
+    },
+    {
+      "issuer_id": "HUNA.N0000",
+      "filing_version_id": "HUNA.N0000-2025-12-31",
+      "metric_code": "PAT",
+      "result": "FN",
+      "truth": "-48136203"
+    },
+    {
+      "issuer_id": "HUNA.N0000",
+      "filing_version_id": "HUNA.N0000-2025-12-31",
+      "metric_code": "PBT",
+      "result": "FN",
+      "truth": "-48136203"
+    },
+    {
+      "issuer_id": "HUNA.N0000",
+      "filing_version_id": "HUNA.N0000-2025-12-31",
+      "metric_code": "TOTAL_EQUITY",
+      "result": "FN",
+      "truth": "2879319509"
+    },
+    {
+      "issuer_id": "LGIL.N0000",
+      "filing_version_id": "LGIL.N0000-2025-12-31",
+      "metric_code": "EPS_BASIC",
+      "result": "FN",
+      "truth": "-0.48"
+    },
+    {
+      "issuer_id": "LGIL.N0000",
+      "filing_version_id": "LGIL.N0000-2025-12-31",
+      "metric_code": "EPS_DILUTED",
+      "result": "FN",
+      "truth": "-0.48"
+    },
+    {
+      "issuer_id": "LGIL.N0000",
+      "filing_version_id": "LGIL.N0000-2025-12-31",
+      "metric_code": "NAVPS",
+      "result": "FN",
+      "truth": "5.56"
+    },
+    {
+      "issuer_id": "LGIL.N0000",
+      "filing_version_id": "LGIL.N0000-2025-12-31",
+      "metric_code": "PAT",
+      "result": "FN",
+      "truth": "-581632000"
+    },
+    {
+      "issuer_id": "LGIL.N0000",
+      "filing_version_id": "LGIL.N0000-2025-12-31",
+      "metric_code": "PBT",
+      "result": "FN",
+      "truth": "-752698000"
+    },
+    {
+      "issuer_id": "LGIL.N0000",
+      "filing_version_id": "LGIL.N0000-2025-12-31",
+      "metric_code": "TOP_LINE",
+      "result": "FN",
+      "truth": "3024892000"
+    },
+    {
+      "issuer_id": "LGIL.N0000",
+      "filing_version_id": "LGIL.N0000-2025-12-31",
+      "metric_code": "TOTAL_ASSETS",
+      "result": "FN",
+      "truth": "31241327000"
+    },
+    {
+      "issuer_id": "LGIL.N0000",
+      "filing_version_id": "LGIL.N0000-2025-12-31",
+      "metric_code": "TOTAL_EQUITY",
+      "result": "FN",
+      "truth": "6670770000"
+    },
+    {
+      "issuer_id": "LGIL.N0000",
+      "filing_version_id": "LGIL.N0000-2025-12-31",
+      "metric_code": "TOTAL_LIABILITIES",
+      "result": "FN",
+      "truth": "24570557000"
+    },
+    {
+      "issuer_id": "PABC.N0000",
+      "filing_version_id": "PABC.N0000-2025-12-31",
+      "metric_code": "EPS_BASIC",
+      "result": "FN",
+      "truth": "2.22"
+    },
+    {
+      "issuer_id": "PABC.N0000",
+      "filing_version_id": "PABC.N0000-2025-12-31",
+      "metric_code": "EPS_DILUTED",
+      "result": "FN",
+      "truth": "2.22"
+    },
+    {
+      "issuer_id": "PABC.N0000",
+      "filing_version_id": "PABC.N0000-2025-12-31",
+      "metric_code": "NAVPS",
+      "result": "FN",
+      "truth": "68.67"
+    },
+    {
+      "issuer_id": "PABC.N0000",
+      "filing_version_id": "PABC.N0000-2025-12-31",
+      "metric_code": "OPERATING_PROFIT",
+      "result": "FN",
+      "truth": "1943397000"
+    },
+    {
+      "issuer_id": "PABC.N0000",
+      "filing_version_id": "PABC.N0000-2025-12-31",
+      "metric_code": "PAT",
+      "result": "FN",
+      "truth": "981161000"
+    },
+    {
+      "issuer_id": "PABC.N0000",
+      "filing_version_id": "PABC.N0000-2025-12-31",
+      "metric_code": "PBT",
+      "result": "FN",
+      "truth": "1493734000"
+    },
+    {
+      "issuer_id": "PABC.N0000",
+      "filing_version_id": "PABC.N0000-2025-12-31",
+      "metric_code": "TOTAL_ASSETS",
+      "result": "FN",
+      "truth": "308015795000"
+    },
+    {
+      "issuer_id": "PABC.N0000",
+      "filing_version_id": "PABC.N0000-2025-12-31",
+      "metric_code": "TOTAL_EQUITY",
+      "result": "FN",
+      "truth": "30390170000"
+    },
+    {
+      "issuer_id": "PABC.N0000",
+      "filing_version_id": "PABC.N0000-2025-12-31",
+      "metric_code": "TOTAL_LIABILITIES",
+      "result": "FN",
+      "truth": "277625625000"
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "filing_version_id": "SDB.N0000-2025-12-31",
+      "metric_code": "EPS_BASIC",
+      "result": "FN",
+      "truth": "0.92"
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "filing_version_id": "SDB.N0000-2025-12-31",
+      "metric_code": "EPS_DILUTED",
+      "result": "FN",
+      "truth": "0.92"
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "filing_version_id": "SDB.N0000-2025-12-31",
+      "metric_code": "NAVPS",
+      "result": "FN",
+      "truth": "90.18"
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "filing_version_id": "SDB.N0000-2025-12-31",
+      "metric_code": "OPERATING_PROFIT",
+      "result": "FN",
+      "truth": "550523000"
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "filing_version_id": "SDB.N0000-2025-12-31",
+      "metric_code": "PAT",
+      "result": "FN",
+      "truth": "151264000"
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "filing_version_id": "SDB.N0000-2025-12-31",
+      "metric_code": "PBT",
+      "result": "FN",
+      "truth": "376323000"
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "filing_version_id": "SDB.N0000-2025-12-31",
+      "metric_code": "TOTAL_ASSETS",
+      "result": "FN",
+      "truth": "146958097000"
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "filing_version_id": "SDB.N0000-2025-12-31",
+      "metric_code": "TOTAL_EQUITY",
+      "result": "FN",
+      "truth": "14804406000"
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "filing_version_id": "SDB.N0000-2025-12-31",
+      "metric_code": "TOTAL_LIABILITIES",
+      "result": "FN",
+      "truth": "132153690000"
+    }
+  ],
+  "note": "Untouched first N18 score against locked n17_ai_blind_gold. Do not retune V2 before freezing this artifact."
+}
