@@ -26,9 +26,14 @@ from cse_financial_etl.v2.resolution.column_context import (
     _column_kinds,
     _entity_banners,
 )
-from cse_financial_etl.v2.statements.continuation import detect_continuation_bridge_links
 from cse_financial_etl.v2.statements.detector import detect_statement_regions
 from cse_financial_etl.v2.taxonomy.matcher import accounting_regime_for
+
+try:
+    from cse_financial_etl.v2.statements.continuation import detect_continuation_bridge_links
+except ImportError:  # pragma: no cover - optional until continuation lands
+    def detect_continuation_bridge_links(document, regions):  # type: ignore[no-redef]
+        return ()
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUT = Path("tests/v2/universe/e02_universe_candidate_trace")

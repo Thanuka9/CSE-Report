@@ -87,6 +87,9 @@ class StatementRegion(BaseModel):
     heading_text: str
     source_refs: tuple[SourceRef, ...] = Field(min_length=1)
     reason_codes: tuple[str, ...] = ()
+    # Optional in-page segment bounds (continuation bridges). Default None = full page span.
+    segment_start_line: int | None = None
+    segment_end_line: int | None = None
 
 
 def detect_statement_regions(document: CanonicalDocument) -> tuple[StatementRegion, ...]:
