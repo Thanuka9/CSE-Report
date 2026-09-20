@@ -61,6 +61,18 @@ N18_COMPARE = {
 }
 
 
+def classify_n18_taxonomy(*, stage: str, duration_status: str | None, metric: str) -> str:
+    """A candidate-level diagnostic, not proof of a source-reported target fact."""
+    family = STAGE_TO_N18.get(stage, stage)
+    if (
+        metric not in STOCK_TARGET_METRICS
+        and duration_status == "UNRESOLVED"
+        and family == "NONE"
+    ):
+        return "DURATION_UNRESOLVED"
+    return family
+
+
 @dataclass(frozen=True)
 class FilingJob:
     pdf_path: str
@@ -210,15 +222,11 @@ def process_one(job_dict: dict[str, str]) -> dict[str, Any]:
                 continue
             metrics_seen.add(metric)
             stage = _enum_val(tr.first_failure_stage) or "NONE"
-            n18 = STAGE_TO_N18.get(stage, stage)
-            # A flow duration can fail independently of FirstFailureStage.
-            # STOCK target metrics are point-in-time; null duration is expected.
-            if (
-                metric not in STOCK_TARGET_METRICS
-                and _enum_val(tr.duration_status) == "UNRESOLVED"
-                and n18 == "NONE"
-            ):
-                n18 = "DURATION_UNRESOLVED"
+            n18 = classify_n18_taxonomy(
+                stage=stage,
+                duration_status=_enum_val(tr.duration_status),
+                metric=metric,
+            )
             candidates.append(
                 {
                     "filing_version_id": filing_version_id,
