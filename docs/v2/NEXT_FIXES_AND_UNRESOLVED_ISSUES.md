@@ -71,15 +71,18 @@ Artifact: `tests/v2/universe/n18_regression_after_ubc_op_fix.json`
 
 ## Remaining execution order
 
-1. ~~UBC source/candidate diagnosis~~ **DONE**
-2. ~~Generalized wrap + OP-before-VAT + period banner alignment~~ **DONE (tests green)**
-3. ~~Zero critical wrong on former N18~~ **DONE**
-4. ~~Recover 26 source-verified missing rows~~ **PARTIAL** — see FN26 below
-5. ~~Resolve residual period / unit mismatches~~ **DONE** (period=0, unit=0 on former N18)
-6. ~~Clean-SHA full-universe E02 rerun (corrected taxonomy)~~ **DONE** (dirty-tree challenger SHA — commit when ready) + E13 challenger next
-7. V1 parity loop
-8. Fresh unseen holdout (only after major P0/P1 families)
-9. OCR quarantine recovery, CI, replay, certification, cutover
+> **Direction change (2026-09-20):** see `docs/v2/CSE_V1_TO_V2_ACTUAL_UNIVERSE_RECOVERY.md`.
+> Stop optimizing for tiny former-N18 TP deltas. Primary path is same-input V1/V2
+> gap ledger + V1 physical source-observation union into V2 (challenger-only).
+
+1. ~~UBC / FN26 / period-unit / IS discovery / clean E02+E13 record~~ **DONE** (see commits through `1cfb6d5`)
+2. **ENTITY_UNRESOLVED unlabeled IS grids** — diagnosed: inventing COMPANY/BANK from issuer is forbidden; mass unresolved is missing header/table geometry evidence. **Pivot to V1 physical observations** rather than another entity patch.
+3. **Freeze same-input PDF SHA manifest** — scaffolded `reports/v1_v2_same_input/same_input_2026-09-09/`
+4. **Implement V1→V2 source-observation provider + union flag** — in progress / landed scaffold
+5. Same-input V1 vs V2 fact ledger + gap categories (BOTH_SAME / V1_ONLY_SOURCE_VALID / …)
+6. Full-universe V2-only vs V1-assisted ablation; measure additional correct publishable facts
+7. Only then remaining former-N18 FN as regression/safety
+8. Fresh unseen holdout, CI, certification, cutover (V1 stays production)
 
 ## FN26 triage (NO_TARGET_CANDIDATE vs true miss)
 

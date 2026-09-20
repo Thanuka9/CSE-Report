@@ -74,6 +74,8 @@ def run_filing_pipeline(
     code_sha: str | None = None,
     header_engine: str = "H0",
     unit_engine: str = "U0",
+    v1_source_observations: bool = False,
+    pdf_path: Path | None = None,
 ) -> FilingPipelineResult:
     regime = accounting_regime or accounting_regime_for(
         issuer_id=issuer_id, issuer_name=issuer_name, issuer_type=issuer_type
@@ -102,6 +104,22 @@ def run_filing_pipeline(
             unit_engine=units,  # type: ignore[arg-type]
         )
     )
+    if v1_source_observations and pdf_path is not None:
+        from cse_financial_etl.v2.challenger.observation_union import (
+            observations_to_discovery_candidates,
+            union_candidates,
+        )
+        from cse_financial_etl.v2.challenger.v1_source_observations import (
+            collect_v1_source_observations,
+        )
+
+        observations = collect_v1_source_observations(
+            Path(pdf_path),
+            filing_version_id=document.filing_version_id,
+            filing_id=issuer_id,
+        )
+        v1_candidates = observations_to_discovery_candidates(observations)
+        candidates = union_candidates(candidates, v1_candidates)
     source = resolve_source_facts(
         candidates,
         issuer_id=issuer_id,
@@ -193,6 +211,7 @@ def run_pdf_pipeline(
     code_sha: str | None = None,
     header_engine: str = "H0",
     unit_engine: str = "U0",
+    v1_source_observations: bool = False,
 ) -> FilingPipelineResult:
     document = read_document(pdf_path, filing_version_id=filing_version_id, force_ocr=force_ocr)
     return run_filing_pipeline(
@@ -208,4 +227,6 @@ def run_pdf_pipeline(
         code_sha=code_sha,
         header_engine=header_engine,
         unit_engine=unit_engine,
+        v1_source_observations=v1_source_observations,
+        pdf_path=pdf_path,
     )

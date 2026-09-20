@@ -1,0 +1,12 @@
+{
+  "id": "v1-v2-gap-summary",
+  "run_id": "same_input_2026-09-09",
+  "status": "SCAFFOLD",
+  "note": "Categories BOTH_SAME / V1_ONLY_SOURCE_VALID / etc. require a same-input V1 vs V2 fact ledger run — not yet measured.",
+  "entity_unresolved_diagnosis": {
+    "e02_unlabelled_columns_proxy": "large",
+    "decision": "Do not invent COMPANY/BANK from issuer identity on unlabeled grids",
+    "next": "Recover missing header/table geometry via V1 physical source observations, then V2-verify"
+  },
+  "counts": {}
+}
