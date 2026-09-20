@@ -34,6 +34,12 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUT = Path("tests/v2/universe/e02_universe_candidate_trace")
 PERIODS = ("2025-12-31", "2026-03-31", "2026-06-30")
 
+# STOCK metrics have no flow duration. An unresolved duration on these is correct,
+# not evidence of missing 3M/6M/9M context.
+STOCK_TARGET_METRICS = frozenset(
+    {"NAVPS", "TOTAL_EQUITY", "TOTAL_ASSETS", "TOTAL_LIABILITIES"}
+)
+
 # Map engine FirstFailureStage (+ status dims) onto N18 recovery taxonomy labels.
 STAGE_TO_N18 = {
     "ENTITY_UNRESOLVED": "ENTITY_UNRESOLVED",
@@ -205,10 +211,13 @@ def process_one(job_dict: dict[str, str]) -> dict[str, Any]:
             metrics_seen.add(metric)
             stage = _enum_val(tr.first_failure_stage) or "NONE"
             n18 = STAGE_TO_N18.get(stage, stage)
-            # Duration unresolved is a status dimension (no FirstFailureStage value).
-            if _enum_val(tr.duration_status) == "UNRESOLVED" and n18 == "NONE":
-                n18 = "DURATION_UNRESOLVED"
-            elif _enum_val(tr.duration_status) == "UNRESOLVED" and stage == "NONE":
+            # A flow duration can fail independently of FirstFailureStage.
+            # STOCK target metrics are point-in-time; null duration is expected.
+            if (
+                metric not in STOCK_TARGET_METRICS
+                and _enum_val(tr.duration_status) == "UNRESOLVED"
+                and n18 == "NONE"
+            ):
                 n18 = "DURATION_UNRESOLVED"
             candidates.append(
                 {
@@ -229,7 +238,8 @@ def process_one(job_dict: dict[str, str]) -> dict[str, Any]:
                     "entity_scope": _enum_val(tr.entity_scope),
                 }
             )
-        # Target slots with no candidate at all → ROW_NOT_FOUND
+        # No target candidate is a search signal, NOT proof a reported row was lost.
+        # ROW_NOT_FOUND requires independently reviewed source presence.
         row_not_found = []
         for metric in SOURCE_TARGET_METRICS:
             if metric not in metrics_seen:
@@ -241,8 +251,8 @@ def process_one(job_dict: dict[str, str]) -> dict[str, Any]:
                         "period": period,
                         "metric_code": metric,
                         "statement_type": "",
-                        "first_failure_stage": "ROW_NOT_FOUND",
-                        "n18_family": "ROW_NOT_FOUND",
+                        "first_failure_stage": "NO_TARGET_CANDIDATE",
+                        "n18_family": "NO_TARGET_CANDIDATE",
                         "entity_status": "",
                         "period_status": "",
                         "duration_status": "",
@@ -365,7 +375,7 @@ def aggregate(results: list[dict[str, Any]], out_dir: Path, freeze: Any) -> dict
             "n18_confirmed": N18_COMPARE,
             "universe_ENTITY_UNRESOLVED_candidates": n18_counts.get("ENTITY_UNRESOLVED", 0),
             "universe_ENTITY_UNRESOLVED_slots": n18_slot_counts.get("ENTITY_UNRESOLVED", 0),
-            "universe_ROW_NOT_FOUND_slots": n18_slot_counts.get("ROW_NOT_FOUND", 0),
+            "universe_NO_TARGET_CANDIDATE_slots": n18_slot_counts.get("NO_TARGET_CANDIDATE", 0),
             "universe_GROUP_AND_COMPANY_both_explicit_statements": dual_group_company,
             "universe_GROUP_AND_BANK_both_explicit_statements": dual_group_bank,
             "entity_unresolved_status_on_target_candidates": entity_status.get("UNRESOLVED", 0),
