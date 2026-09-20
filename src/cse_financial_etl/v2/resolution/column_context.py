@@ -219,7 +219,19 @@ def bind_column_context(
     if banner_dates and len(banner_dates) == monetary_count:
         period_dates = banner_dates
     elif len(set(banner_dates)) >= 2 and len(banner_dates) > monetary_count > 0:
-        period_dates = banner_dates[-monetary_count:]
+        trailing = banner_dates[-monetary_count:]
+        leading = banner_dates[:monetary_count]
+        # Extra title/cover date appended after an alternating current/prior grid
+        # (len == monetary_count + 1) rotates pairs if we take the trailing slice.
+        if (
+            len(banner_dates) == monetary_count + 1
+            and banner_dates[0] != banner_dates[1]
+            and trailing[0] == banner_dates[1]
+            and leading[0] == banner_dates[0]
+        ):
+            period_dates = leading
+        else:
+            period_dates = trailing
     else:
         period_dates = dates or banner_dates
     monetary_xs = _monetary_column_xs(statement, monetary_indices)

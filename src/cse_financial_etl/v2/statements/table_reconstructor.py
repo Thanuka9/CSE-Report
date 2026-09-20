@@ -142,6 +142,12 @@ def _intervals_for_body(
     return [(x - 12.0, x + 12.0) for x, _text in sample]
 
 
+_INCOMPLETE_PENDING = re.compile(
+    r"(?:[&,/]|-|–|—)\s*$|\b(?:and|or|of|the|before|after|on|for|&)\s*$",
+    re.IGNORECASE,
+)
+
+
 def _merged_label(pending: str | None, label: str) -> str:
     label = label.strip()
     if not pending:
@@ -152,6 +158,10 @@ def _merged_label(pending: str | None, label: str) -> str:
         parent = pending.rstrip(" -–—")
         qualifier = label.lstrip(" -–—")
         return f"{parent} {qualifier}".strip()
+    # Wrapped account labels: pending line had no values; continuation often
+    # starts lowercase or pending ends mid-phrase ("... VAT) & social security").
+    if label[:1].islower() or _INCOMPLETE_PENDING.search(pending.strip()):
+        return f"{pending.strip()} {label}".strip()
     return label
 
 
