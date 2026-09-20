@@ -50,6 +50,16 @@ _SHARE_PARENT = re.compile(
     r"earnings?\s*(?:/\s*\(\s*loss\s*\))?\s*per share|earning per share",
     re.IGNORECASE,
 )
+_OTHER_METRIC_HINT = re.compile(
+    r"(?:net\s+asset(?:s|\s+value)?\s+per\s+share|earnings?\s+per\s+share\s*\(?\s*eps|"
+    r"basic\s+(?:earnings?|loss)\s+per\s+share|investor\s+ratios|key\s+ratios)",
+    re.IGNORECASE,
+)
+_OTHER_STOP = re.compile(
+    r"list of (?:the )?shareholders|20\s+largest shareholders",
+    re.IGNORECASE,
+)
+
 _SHARE_QUALIFIER = re.compile(
     r"^(?:[-–—]\s*)?(?:basic|diluted)(?:\s*/\s*diluted)?\b",
     re.IGNORECASE,
@@ -217,11 +227,37 @@ def reconstruct_statements(
     statements: list[CanonicalStatement] = []
     for region in regions:
         if region.statement_type == StatementType.OTHER_FINANCIAL_STATEMENT:
-            continue
+            if not _other_region_has_target_metrics(pages, region):
+                continue
         statement = _reconstruct_region(document, pages, region)
         if statement is not None:
             statements.append(statement)
     return tuple(statements)
+
+
+def _other_region_has_target_metrics(
+    pages: dict[int, CanonicalPage],
+    region: StatementRegion,
+) -> bool:
+    """Reconstruct OTHER pages only when they print target per-share / ratio lines.
+
+    Avoids turning general notes and shareholder lists into statement noise.
+    """
+
+    for page_number in range(region.page_start, region.page_end + 1):
+        page = pages.get(page_number)
+        if page is None:
+            continue
+        for line_index, line in enumerate(page.lines):
+            if region.segment_start_line is not None and page_number == region.page_start:
+                if line_index < region.segment_start_line:
+                    continue
+            if region.segment_end_line is not None and page_number == region.page_end:
+                if line_index >= region.segment_end_line:
+                    continue
+            if _OTHER_METRIC_HINT.search(line.text or ""):
+                return True
+    return False
 
 
 def _reconstruct_region(
@@ -245,6 +281,16 @@ def _reconstruct_region(
             lines.append((page_number, line))
     if not lines:
         return None
+
+    if region.statement_type == StatementType.OTHER_FINANCIAL_STATEMENT:
+        truncated: list[tuple[int, CanonicalLine]] = []
+        for page_number, line in lines:
+            if _OTHER_STOP.search(line.text or ""):
+                break
+            truncated.append((page_number, line))
+        lines = truncated
+        if not lines:
+            return None
 
     body: list[tuple[int, CanonicalLine, str, list[tuple[float, str]]]] = []
     headers: list[tuple[int, CanonicalLine]] = []

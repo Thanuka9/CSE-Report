@@ -583,15 +583,27 @@ def main() -> int:
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--reconcile-only", action="store_true")
     parser.add_argument(
+        "--out-subdir",
+        type=str,
+        default="",
+        help="Optional subdirectory under reports/v1_v2_same_input for this run",
+    )
+    parser.add_argument(
         "--reuse-cohort",
         action="store_true",
         help="Reuse pinned_cohort.json when it already selects 829 filings",
     )
     args = parser.parse_args()
 
-    out_dir = ROOT / "reports" / "v1_v2_same_input" / RUN_ID
+    out_dir = ROOT / "reports" / "v1_v2_same_input" / (args.out_subdir or RUN_ID)
     out_dir.mkdir(parents=True, exist_ok=True)
-    cohort_path = out_dir / "pinned_cohort.json"
+    cohort_path = (ROOT / "reports" / "v1_v2_same_input" / RUN_ID / "pinned_cohort.json")
+    if args.out_subdir:
+        # Prefer copying cohort from the canonical run dir
+        local_cohort = out_dir / "pinned_cohort.json"
+        if not local_cohort.is_file() and cohort_path.is_file():
+            local_cohort.write_text(cohort_path.read_text(encoding="utf-8"), encoding="utf-8")
+        cohort_path = local_cohort if local_cohort.is_file() else cohort_path
     if args.reuse_cohort and cohort_path.is_file():
         cohort = json.loads(cohort_path.read_text(encoding="utf-8"))
         print(
@@ -608,7 +620,7 @@ def main() -> int:
     if args.reconcile_only:
         return 0
 
-    print(f"measuring three-way limit={args.limit or 'ALL'} workers={args.workers}")
+    print(f"measuring three-way limit={args.limit or 'ALL'} workers={args.workers} out={out_dir}")
     measured = measure_cohort(cohort, limit=args.limit, workers=args.workers)
     summary = measured["summary"]
     (out_dir / "three_way_measure_summary.json").write_text(
@@ -621,7 +633,7 @@ def main() -> int:
         json.dumps(
             {
                 "id": "v1-v2-gap-summary",
-                "run_id": RUN_ID,
+                "run_id": args.out_subdir or RUN_ID,
                 "status": "MEASURED_THREE_WAY",
                 "pinned_cohort_count": cohort.get("filings_selected"),
                 "selection_count_matches_e13_829": cohort.get("selection_count_matches_e13_829"),

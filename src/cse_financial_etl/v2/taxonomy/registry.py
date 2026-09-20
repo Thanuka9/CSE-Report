@@ -58,6 +58,9 @@ class AliasMatch(NamedTuple):
 _TRAILING_NOISE = re.compile(
     r"(?:\s*\((?:lkr|rs\.?|rs\.?\s*'?000|rupees?|in\s+lkr|in\s+rs\.?)\)"
     r"|\s+in\s+(?:lkr|rs\.?)"
+    # YoY / variance callouts glued onto account labels by PDF extractors.
+    r"|\s*\(\s*-?\d+(?:\.\d+)?\s*%\s*\)"
+    r"|\s+-?\d+(?:\.\d+)?\s*%"
     r"|\s*\(note\s*-?\s*\d+(?:\.\d+)*\)"
     r"|\s*\((?:basic(?:\s+and\s+diluted)?|diluted)\)"
     r"|\s*:\s*basic(?:\s+diluted)?)\s*$",
@@ -76,6 +79,7 @@ _LABEL_ONLY_TRAILING = re.compile(
     r"|\s+to\s+equity\s+holders)\s*$",
     re.IGNORECASE,
 )
+_RESTATED_PREFIX = re.compile(r"^restated\s+", re.IGNORECASE)
 
 
 def _norm(text: str, *, label_cleanup: bool = False) -> str:
@@ -112,6 +116,11 @@ def _alias_lookup_keys(label: str) -> tuple[str, ...]:
         renoised = _norm(stripped, label_cleanup=True)
         if renoised and renoised not in keys:
             keys.append(renoised)
+    for key in list(keys):
+        unrestated = _RESTATED_PREFIX.sub("", key).strip()
+        unrestated = " ".join(unrestated.split())
+        if unrestated and unrestated not in keys:
+            keys.append(unrestated)
     return tuple(keys)
 
 
@@ -125,19 +134,25 @@ CORE_CONCEPTS: tuple[ConceptDefinition, ...] = (
         unit_dimension=UnitDimension.MONETARY,
         exact_aliases=(
             "Profit for the period",
+            "Profit for the year",
             "Profit after tax",
             "Profit after taxation",
             "Net profit for the period",
+            "Net profit for the year",
             "Profit / (loss) for the period",
             "Profit/(loss) for the period",
             "Profit / (loss) for the Period",
+            "Profit / (loss) for the year",
+            "Profit/(loss) for the year",
             "Profit after Tax from continued operations for the period",
             "Profit/(Loss) for the Period from Continuing Operations",
             "Profit/ (Loss) for the period from continuing operations",
             "Profit for the period from continuing operations",
             "Loss for the period",
+            "Loss for the year",
             "(Loss)/ Profit for the period",
             "(Loss)/Profit for the period",
+            "(Loss)/Profit for the year",
         ),
         forbidden_aliases=(
             "Profit attributable to owners",
@@ -264,8 +279,14 @@ CORE_CONCEPTS: tuple[ConceptDefinition, ...] = (
             "Basic earnings/(loss) per share",
             "Basic earning per share",
             "Earning per share",
+            "Basic loss per share",
+            "Basic Loss Per Share",
+            "Restated Basic Earning per Share",
+            "Restated Basic Earnings per Share",
+            "Restated basic earnings per share",
             "Earnings per share : Basic/Diluted",
             "Basic/Diluted earnings per ordinary share",
+            "Basic/Diluted Earnings per Ordinary Share (Rs.)",
             "Basic/Diluted earnings per share",
             "Basic/Diluted earnings/(deficit) per share",
             "Basic and diluted earnings per share",
@@ -295,12 +316,18 @@ CORE_CONCEPTS: tuple[ConceptDefinition, ...] = (
         code="NAVPS",
         display_name="Net Assets Per Share",
         metric_type="MONETARY_PER_SHARE",
-        statement_types=(StatementType.BALANCE_SHEET, StatementType.EPS_NOTE),
+        statement_types=(
+            StatementType.BALANCE_SHEET,
+            StatementType.EPS_NOTE,
+            StatementType.OTHER_FINANCIAL_STATEMENT,
+        ),
         period_behavior=PeriodBehavior.POINT_IN_TIME,
         unit_dimension=UnitDimension.PER_SHARE,
         exact_aliases=(
             "Net assets per share",
             "Net asset value per share",
+            "Net Asset Value per Share LKR",
+            "Net Asset Value per Share - LKR",
             "Net assets value per share",
             "Net asset value per ordinary share",
             "Net book value per share",

@@ -1,0 +1,192 @@
+{
+  "n": 30,
+  "classes": {
+    "V2_CELL_ENTITY_UNRESOLVED_LIKELY_V1_INVENT": 15,
+    "V2_ELIGIBLE_SELECTION_OR_IDENTITY_GAP": 1,
+    "V2_NO_CONCEPT_OR_CELL": 12,
+    "V2_CANDIDATE_OTHER_ADMISSION": 2
+  },
+  "rows": [
+    {
+      "issuer": "CARGILLS_BANK_PLC",
+      "metric": "EPS_BASIC",
+      "v1_ent": "BANK",
+      "class": "V2_CELL_ENTITY_UNRESOLVED_LIKELY_V1_INVENT"
+    },
+    {
+      "issuer": "MERCHANT_BANK_OF_SRI_LANKA_FINANCE_PLC",
+      "metric": "EPS_BASIC",
+      "v1_ent": "COMPANY",
+      "class": "V2_ELIGIBLE_SELECTION_OR_IDENTITY_GAP"
+    },
+    {
+      "issuer": "SEYLAN_BANK_PLC",
+      "metric": "EPS_DILUTED",
+      "v1_ent": "BANK",
+      "class": "V2_NO_CONCEPT_OR_CELL"
+    },
+    {
+      "issuer": "MERCHANT_BANK_OF_SRI_LANKA_FINANCE_PLC",
+      "metric": "EPS_DILUTED",
+      "v1_ent": "COMPANY",
+      "class": "V2_NO_CONCEPT_OR_CELL"
+    },
+    {
+      "issuer": "AMANA_BANK_PLC",
+      "metric": "NAVPS",
+      "v1_ent": "BANK",
+      "class": "V2_CELL_ENTITY_UNRESOLVED_LIKELY_V1_INVENT"
+    },
+    {
+      "issuer": "HOUSING_DEVELOPMENT_FINANCE_CORPORATION_",
+      "metric": "OPERATING_PROFIT",
+      "v1_ent": "BANK",
+      "class": "V2_NO_CONCEPT_OR_CELL"
+    },
+    {
+      "issuer": "HOUSING_DEVELOPMENT_FINANCE_CORPORATION_",
+      "metric": "OPERATING_PROFIT",
+      "v1_ent": "COMPANY",
+      "class": "V2_NO_CONCEPT_OR_CELL"
+    },
+    {
+      "issuer": "AMANA_BANK_PLC",
+      "metric": "PAT",
+      "v1_ent": "BANK",
+      "class": "V2_CELL_ENTITY_UNRESOLVED_LIKELY_V1_INVENT"
+    },
+    {
+      "issuer": "HOUSING_DEVELOPMENT_FINANCE_CORPORATION_",
+      "metric": "PBT",
+      "v1_ent": "BANK",
+      "class": "V2_CANDIDATE_OTHER_ADMISSION"
+    },
+    {
+      "issuer": "HOUSING_DEVELOPMENT_FINANCE_CORPORATION_",
+      "metric": "PBT",
+      "v1_ent": "COMPANY",
+      "class": "V2_CANDIDATE_OTHER_ADMISSION"
+    },
+    {
+      "issuer": "AMANA_BANK_PLC",
+      "metric": "TOP_LINE",
+      "v1_ent": "BANK",
+      "class": "V2_CELL_ENTITY_UNRESOLVED_LIKELY_V1_INVENT"
+    },
+    {
+      "issuer": "AMANA_BANK_PLC",
+      "metric": "TOTAL_ASSETS",
+      "v1_ent": "BANK",
+      "class": "V2_CELL_ENTITY_UNRESOLVED_LIKELY_V1_INVENT"
+    },
+    {
+      "issuer": "AMANA_BANK_PLC",
+      "metric": "TOTAL_EQUITY",
+      "v1_ent": "BANK",
+      "class": "V2_CELL_ENTITY_UNRESOLVED_LIKELY_V1_INVENT"
+    },
+    {
+      "issuer": "CARGILLS_BANK_PLC",
+      "metric": "TOTAL_LIABILITIES",
+      "v1_ent": "BANK",
+      "class": "V2_CELL_ENTITY_UNRESOLVED_LIKELY_V1_INVENT"
+    },
+    {
+      "issuer": "LANKA_CREDIT_AND_BUSINESS_FINANCE_PLC",
+      "metric": "EPS_BASIC",
+      "v1_ent": "COMPANY",
+      "class": "V2_CELL_ENTITY_UNRESOLVED_LIKELY_V1_INVENT"
+    },
+    {
+      "issuer": "LOLC_GENERAL_INSURANCE_PLC",
+      "metric": "EPS_DILUTED",
+      "v1_ent": "COMPANY",
+      "class": "V2_NO_CONCEPT_OR_CELL"
+    },
+    {
+      "issuer": "JANASHAKTHI_INSURANCE_PLC",
+      "metric": "NAVPS",
+      "v1_ent": "COMPANY",
+      "class": "V2_NO_CONCEPT_OR_CELL"
+    },
+    {
+      "issuer": "INSUREME_INSURANCE_BROKERS_PLC",
+      "metric": "OPERATING_PROFIT",
+      "v1_ent": "COMPANY",
+      "class": "V2_NO_CONCEPT_OR_CELL"
+    },
+    {
+      "issuer": "CITIZENS_DEVELOPMENT_BUSINESS_FINANCE_PL",
+      "metric": "PAT",
+      "v1_ent": "COMPANY",
+      "class": "V2_CELL_ENTITY_UNRESOLVED_LIKELY_V1_INVENT"
+    },
+    {
+      "issuer": "CAPITAL_ALLIANCE_PLC",
+      "metric": "PBT",
+      "v1_ent": "COMPANY",
+      "class": "V2_CELL_ENTITY_UNRESOLVED_LIKELY_V1_INVENT"
+    },
+    {
+      "issuer": "DIALOG_FINANCE_PLC",
+      "metric": "TOP_LINE",
+      "v1_ent": "COMPANY",
+      "class": "V2_CELL_ENTITY_UNRESOLVED_LIKELY_V1_INVENT"
+    },
+    {
+      "issuer": "SARVODAYA_DEVELOPMENT_FINANCE_PLC",
+      "metric": "TOTAL_ASSETS",
+      "v1_ent": "COMPANY",
+      "class": "V2_CELL_ENTITY_UNRESOLVED_LIKELY_V1_INVENT"
+    },
+    {
+      "issuer": "SOFTLOGIC_FINANCE_PLC",
+      "metric": "TOTAL_EQUITY",
+      "v1_ent": "COMPANY",
+      "class": "V2_CELL_ENTITY_UNRESOLVED_LIKELY_V1_INVENT"
+    },
+    {
+      "issuer": "First_Capital_Treasuries_PLC",
+      "metric": "TOTAL_LIABILITIES",
+      "v1_ent": "COMPANY",
+      "class": "V2_CELL_ENTITY_UNRESOLVED_LIKELY_V1_INVENT"
+    },
+    {
+      "issuer": "GALADARI_HOTELS_LANKA_PLC",
+      "metric": "EPS_BASIC",
+      "v1_ent": "COMPANY",
+      "class": "V2_NO_CONCEPT_OR_CELL"
+    },
+    {
+      "issuer": "NAWALOKA_HOSPITALS_PLC",
+      "metric": "EPS_DILUTED",
+      "v1_ent": "COMPANY",
+      "class": "V2_NO_CONCEPT_OR_CELL"
+    },
+    {
+      "issuer": "CABLE_SOLUTIONS_PLC",
+      "metric": "NAVPS",
+      "v1_ent": "COMPANY",
+      "class": "V2_NO_CONCEPT_OR_CELL"
+    },
+    {
+      "issuer": "MAHAWELI_REACH_HOTELS_PLC",
+      "metric": "OPERATING_PROFIT",
+      "v1_ent": "COMPANY",
+      "class": "V2_CELL_ENTITY_UNRESOLVED_LIKELY_V1_INVENT"
+    },
+    {
+      "issuer": "LANKA_CERAMIC_PLC",
+      "metric": "PAT",
+      "v1_ent": "COMPANY",
+      "class": "V2_NO_CONCEPT_OR_CELL"
+    },
+    {
+      "issuer": "THE_AUTODROME_PLC",
+      "metric": "PBT",
+      "v1_ent": "COMPANY",
+      "class": "V2_NO_CONCEPT_OR_CELL"
+    }
+  ],
+  "note": "With correct issuer_type/name. ENTITY_UNRESOLVED on unlabeled Bank/Company legal-name pages is fail-closed by design (test_company_in_issuer_name_alone). Those V1 BANK/COMPANY keys are inventable surplus, not portable recovery."
+}

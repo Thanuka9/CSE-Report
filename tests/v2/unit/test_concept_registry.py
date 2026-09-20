@@ -66,6 +66,15 @@ def test_registry_loads_and_rejects_duplicate_aliases() -> None:
         "Basic / diluted earnings per share to equity holders"
     ) is registry.get("EPS_BASIC")
     assert registry.lookup_alias("Net Assets Value Per Share") is registry.get("NAVPS")
+    assert registry.lookup_alias("Profit for the year") is registry.get("PAT")
+    assert registry.lookup_alias("Loss for the year") is registry.get("PAT")
+    assert registry.lookup_alias("Basic Loss Per Share") is registry.get("EPS_BASIC")
+    assert registry.lookup_alias("Net Asset Value per Share LKR") is registry.get("NAVPS")
+    assert registry.lookup_alias("Profit before taxation (184.4%)") is registry.get("PBT")
+    assert registry.lookup_alias("Profit after taxation (227.8%)") is registry.get("PAT")
+    assert registry.lookup_alias("Restated Basic Earning per Share (LKR)") is registry.get(
+        "EPS_BASIC"
+    )
     duplicate = registry.concepts[0]
     with pytest.raises(RegistryConflictError):
         ConceptRegistry(

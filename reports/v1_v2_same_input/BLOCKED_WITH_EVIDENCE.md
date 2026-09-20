@@ -1,46 +1,51 @@
 # BLOCKED — WITH EVIDENCE (coordinator status)
 
 **Plan:** `docs/v2/CSE_V2_FINAL_AGENT_EXECUTION_PLAN.md`  
-**Branch:** `v2/extraction-investigation` · **git HEAD:** `c5bbe51` (working tree dirty — local recovery not pushed)  
+**Branch:** `v2/extraction-investigation`  
 **Production:** **V1** (unchanged). Floor **8,924** unchanged. **Not READY FOR OFFICIAL DECISION.**
 
 ## Verdict
 
-**BLOCKED — WITH EVIDENCE.** Two consecutive meaningful full-829 experiments recovered only **+3** then **+4** TARGET draft-selected vs V2-only. Per plan §6 hard stop: **suspend further local context/alias stacking** and reopen **physical reader integration / selection architecture** for MISSING_CELL + CONCEPT losses.
+**BLOCKED — WITH EVIDENCE.**
 
-## Frozen baseline (experiment 0 / post unit+nonreg)
+**Failed gate:** like-for-like **source-verified** V1-scale TARGET selected parity, plus remaining certification gates (fresh holdout, full remote CI, lineage, clean replay, workbook, rollback). Do **not** promote V2. Do **not** weaken source truth to close the gap.
 
-`reports/v1_v2_same_input/baseline_freeze_2026-09-20_plus3/`
+Universe TARGET is **no longer flat +3/+4**. Latest full-829 V2-native selected TARGET is **2,883** (**+67** vs freeze 2,816). Remaining deficit is dominated by inventable V1 entity/dual-EPS surplus and true physical/header gaps — not more local bridge patches alone.
 
-| Run | Assisted TARGET | V2 TARGET | Net |
+## Full-829 TARGET draft-selected (pinned 829, 0 filing errors)
+
+| Run | V2-only | Assisted | Net assisted−V2 |
 |---|---:|---:|---:|
-| Freeze (note/share + table unit) | 2,819 | 2,816 | **+3** |
-| Exp 2 ( + unanimous table entity/period) | **2,820** | 2,816 | **+4** |
-| 80-file sample (not universe proof) | 323 | 305 | +18 |
+| Freeze (note/share + table unit) | 2,816 | 2,819 | +3 |
+| Exp 2 (unanimous table fill) | 2,816 | 2,820 | +4 |
+| Alias + YoY% exclusion | 2,862 | 2,898 | +36 |
+| **+ OTHER key-ratio reconstruct** (`alias_pct_other_full829_2026-09-20`) | **2,883** | **2,901** | **+18** |
 
-Do **not** add +4 to E13 3,854. Floor 8,924 untouched.
+`source_plus_derived`: V2 **4,066** / assisted **4,076** (still not identical to E13 **3,854** — see KPI reconcile). Floor **8,924** untouched.
 
-## Phase A (done)
+## What shipped this cycle
 
-`reports/v1_v2_same_input/phase_a_2026-09-20/SOURCE_VALID_GAP_AND_SELECTION_WATERFALL.md`
+1. Registry: PAT year/loss; EPS basic loss / restated; NAVPS `…LKR` / `- LKR` + OTHER ownership  
+2. Label normalize: strip trailing YoY `%` callouts  
+3. Numeric: `%` tokens are not monetary cells (clears false `AMBIGUOUS_ROW_VALUES`)  
+4. Physical: reconstruct OTHER investor/key-ratio pages; stop before shareholder lists  
 
-- ELIGIBLE→selected collapse is largely **selection policy**.
-- V1-only soft slots ≈ 6,096 — engine differential, not PDF-proven correct.
-- Probe first-loss: ENTITY / MISSING_CELL / CONCEPT dominate.
-- Review queue PDF adjudication still pending.
+## Adjudication
 
-## Phase B (hard-stopped after flat exp 2)
+`phase_a_2026-09-20/SOURCE_REVIEW_ADJUDICATION.md` — inventable entity / Basic·Diluted dual-map / values absent from PDF (Cable V1 NAVPS 5.75 vs printed 5.02–5.16) must be excluded from source-valid parity.
 
-Shipped locally (dirty tree): non-regressive union; note/share guards; table units; unanimous entity/period. Safety cases JAT/HAYLEYS/SIGIRIYA remain correct. **Universe lift is not material.**
+## Remaining engineering / certification gates
 
-## Architecture finding (post hard-stop)
+1. Governed disposition of inventable V1 surplus vs recoverable gap  
+2. PDF-adjudicate newly selected +67 for critical-wrong non-regression  
+3. Continue physical/header recovery only where PDF prints entity/period/unit  
+4. E13 same-definition decision; holdout; OCR/quarantine; full CI; lineage; workbook; replay; rollback  
+5. Human OFFICIAL cutover only after gates are green  
 
-AMANA_BANK probe “MISSING_CELL” is often a **misnomer**: V2 already has the numeric cell (`OPERATING_PROFIT` raw `1,366,289`) but **`entity_scope=None`** because the income-statement headers print no Bank/Company/Group. V1 ledger marks `BANK` — likely issuer/regime fill, **not portable** under source-truth guardrails.
+## Artifacts
 
-Additionally, V1 `_assign_roles` cleared CURRENT/COMPARATIVE for an entire duration block when any sibling lacked a full date (year-only / Change%). Bridge now re-derives roles **among dated peers only** (`dated_peer_order_bridge`).
-
-**Implication:** a large share of V1-only BANK/COMPANY keys on unlabeled single-entity statements are **not recoverable** without inventing entity. Recoverable volume is in printed multi-entity headers, missing physical cells, and concept/statement ownership — not another unanimous-context patch.
-
-## Gates not met (checklist)
-
-Identical cohort KPIs exist, but **like-for-like V1 parity**, **8,924 gate**, **unseen holdout**, **clean SHA + remote CI**, **lineage/replay pack**, and **OFFICIAL readiness** all fail. V1 remains production.
+- `reports/v1_v2_same_input/alias_pct_other_full829_2026-09-20/` ← latest authoritative full-829  
+- `reports/v1_v2_same_input/alias_pct_full829_2026-09-20/`  
+- `reports/v1_v2_same_input/alias_pct_limit80_2026-09-20/`  
+- `reports/v1_v2_same_input/phase_a_2026-09-20/`  
+- Freeze: `baseline_freeze_2026-09-20_plus3/`
