@@ -90,6 +90,54 @@ def _unique_by_metric[TFact: SourceFact | DerivedFact](facts: list[TFact]) -> tu
     return tuple(chosen[code] for code in sorted(chosen))
 
 
-def _fact_rank(fact: SourceFact | DerivedFact) -> tuple[int, int, str]:
-    page = getattr(getattr(fact, "source_ref", None), "page_number", 10**6)
-    return (int(page), 0, fact.fact_id)
+def _fact_rank(fact: SourceFact | DerivedFact) -> tuple[int, int, int, int, int, str]:
+    """Prefer primary statement amounts over early highlight cards in Rs Mn/Bn."""
+
+    scale = getattr(fact, "source_scale", None)
+    try:
+        scale_val = abs(float(scale)) if scale is not None else 1.0
+    except (TypeError, ValueError):
+        scale_val = 1.0
+    try:
+        raw = abs(float(getattr(fact, "raw_value", 0) or 0))
+    except (TypeError, ValueError):
+        raw = 0.0
+    try:
+        norm = abs(float(getattr(fact, "normalized_value", 0) or 0))
+    except (TypeError, ValueError):
+        norm = 0.0
+
+    # Natural currency units beat '000 / million / billion summary scales.
+    scale_penalty = 0 if scale_val == 1.0 else 1
+    # Among scaled highlights, prefer smaller scale distortion (Rs'000 over Bn).
+    scale_magnitude = 0 if scale_val == 1.0 else int(scale_val)
+
+    metric = getattr(fact, "metric_code", "") or ""
+    unit = getattr(fact, "unit_dimension", None)
+    per_share = metric in {"EPS_BASIC", "EPS_DILUTED", "NAVPS"} or (
+        unit is not None and "PER_SHARE" in str(unit)
+    )
+    # NAVPS/EPS of tens of millions are mis-bound absolute cells, not per-share.
+    per_share_implausible = 1 if per_share and norm > 10_000 else 0
+
+    page = getattr(getattr(fact, "source_ref", None), "page_number", 10**6) or 10**6
+    if scale_val == 1.0 and not per_share:
+        # Absolute monetary: prefer larger natural-scale statement totals.
+        magnitude_key = -int(min(norm, 10**15))
+        page_key = int(page)
+    elif scale_val == 1.0 and per_share:
+        # Prefer plausible per-share magnitudes (0.09 beats 0.0003; 3.46 beats 1.46).
+        magnitude_key = -int(min(norm * 1_000_000, 10**15))
+        page_key = int(page)
+    else:
+        magnitude_key = -int(min(raw, 10**15))
+        page_key = int(page)
+
+    return (
+        scale_penalty,
+        per_share_implausible,
+        scale_magnitude,
+        magnitude_key,
+        page_key,
+        fact.fact_id,
+    )

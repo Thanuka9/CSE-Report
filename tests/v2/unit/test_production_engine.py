@@ -16,7 +16,7 @@ from cse_financial_etl.v2.orchestration.filing_pipeline import run_filing_pipeli
 from cse_financial_etl.v2.production.adapter import _from_source, select_pipeline_facts
 from cse_financial_etl.v2.production.engine import extract_for_production
 from cse_financial_etl.v2.taxonomy.registry import load_registry
-from tests.v2.helpers import geometric_document, source_fact
+from tests.v2.helpers import geometric_document, source_fact, source_ref
 
 
 def test_app_config_defaults_to_v1_engine() -> None:
@@ -129,7 +129,31 @@ def test_pipeline_facts_allow_group_consolidated_equivalence() -> None:
     assert selected[0].entity_scope is EntityScope.CONSOLIDATED
 
 
-def test_pipeline_facts_drop_comparative_and_non_quarter_flow() -> None:
+def test_pipeline_facts_prefer_natural_scale_over_bn_highlight() -> None:
+    highlight = source_fact(
+        fact_id="bn-pat",
+        normalized_value=Decimal("181200000000"),
+        raw_value=Decimal("181.2"),
+        source_scale=Decimal("1000000000"),
+        source_ref=source_ref(page_number=2, raw_text="181.2"),
+        cell_id="cell-bn",
+    )
+    statement = source_fact(
+        fact_id="stmt-pat",
+        normalized_value=Decimal("429411257"),
+        raw_value=Decimal("429411257"),
+        source_scale=Decimal("1"),
+        source_ref=source_ref(page_number=5, raw_text="429,411,257"),
+        cell_id="cell-stmt",
+    )
+    selected = select_pipeline_facts(
+        (highlight, statement),
+        period_end=date(2026, 6, 30),
+        expected_entity=EntityScope.COMPANY,
+    )
+    assert len(selected) == 1
+    assert selected[0].normalized_value == Decimal("429411257")
+
     comparative = source_fact(
         fact_id="prior",
         comparison_role=ComparisonRole.COMPARATIVE,
