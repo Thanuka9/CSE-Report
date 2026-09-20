@@ -1,10 +1,22 @@
 {
-  "id": "v1-v2-gap-summary",
+  "id": "same-input-three-way-measure",
   "run_id": "same_input_2026-09-09",
-  "status": "MEASURED_THREE_WAY",
-  "pinned_cohort_count": 829,
-  "selection_count_matches_e13_829": true,
-  "counts": {
+  "measured_at": "2026-09-20T13:45:55.837258+00:00",
+  "filings_attempted": 829,
+  "filings_error": 0,
+  "target_metrics": [
+    "EPS_BASIC",
+    "EPS_DILUTED",
+    "NAVPS",
+    "OPERATING_PROFIT",
+    "PAT",
+    "PBT",
+    "TOP_LINE",
+    "TOTAL_ASSETS",
+    "TOTAL_EQUITY",
+    "TOTAL_LIABILITIES"
+  ],
+  "kpi": {
     "v1_target_fact_rows": 8290,
     "v2_eligible_source_facts": 9850,
     "v1_assisted_eligible_source_facts": 9468,
@@ -71,7 +83,5 @@
     "Adapter currently unions DISCOVERY_ONLY candidates; eligible lift requires V2 context verification of those cells.",
     "Draft-publishable here counts TARGET metric SourceFacts with publication_status=ELIGIBLE (source-only, not derived)."
   ],
-  "filings_attempted": 829,
-  "filings_error": 0,
-  "python_note": "Requires CPython >=3.12 (project requires-python)."
+  "errors_sample": []
 }

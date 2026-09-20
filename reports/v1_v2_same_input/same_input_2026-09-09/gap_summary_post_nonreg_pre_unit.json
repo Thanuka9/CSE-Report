@@ -1,0 +1,26 @@
+{
+  "id": "v1-v2-gap-summary",
+  "run_id": "same_input_2026-09-09",
+  "status": "MEASURED_THREE_WAY",
+  "pinned_cohort_count": 829,
+  "selection_count_matches_e13_829": true,
+  "note": "Snapshot after note/share-count + union cell-identity fix; BEFORE table unit-decl bridge. Superseded by later full remeasure.",
+  "counts": {
+    "v1_target_fact_rows": 8290,
+    "v2_eligible_source_facts": 9850,
+    "v1_assisted_eligible_source_facts": 9439,
+    "identical_v1_v2_keys": 1823,
+    "v1_only_keys_vs_v2": 6467,
+    "newly_recovered_keys_by_adapter_vs_v2": 230,
+    "keys_lost_in_assisted_vs_v2": 196,
+    "net_eligible_delta_assisted_minus_v2": -411,
+    "v2_draft_selected_target_sum": 2816,
+    "assisted_draft_selected_target_sum": 2812,
+    "net_draft_selected_delta_assisted_minus_v2": -4,
+    "v2_draft_selected_derived_sum": 1131,
+    "assisted_draft_selected_derived_sum": 1125,
+    "v2_draft_selected_source_plus_derived_sum": 3947,
+    "assisted_draft_selected_source_plus_derived_sum": 3937,
+    "e13_draft_publishable_reference": 3854
+  }
+}

@@ -33,6 +33,21 @@ from cse_financial_etl.v2.taxonomy.registry import ConceptRegistry, load_registr
 FLOW_CODES = frozenset({"PAT", "PBT", "OPERATING_PROFIT", "TOP_LINE", "EPS_BASIC", "EPS_DILUTED"})
 
 
+def _is_note_index_cell(candidate: FactCandidate) -> bool:
+    from cse_financial_etl.v2.challenger.observation_union import looks_like_note_index
+
+    return looks_like_note_index(
+        raw_text=candidate.source_ref.raw_text, raw_value=candidate.raw_value
+    )
+
+
+def _is_share_count_eps(candidate: FactCandidate) -> bool:
+    from cse_financial_etl.v2.challenger.observation_union import looks_like_share_count_not_eps
+
+    metric = None if candidate.concept is None else candidate.concept.metric_code
+    return looks_like_share_count_not_eps(metric_code=metric, raw_value=candidate.raw_value)
+
+
 def _row_line_text(row: StatementRow, cell: StatementCell) -> str:
     if row.source_refs:
         return row.source_refs[0].raw_text or ""
@@ -197,6 +212,10 @@ def resolve_source_facts(
         assert candidate.period_end is not None
         assert candidate.unit_dimension is not None
         assert candidate.raw_value is not None
+        if _is_note_index_cell(candidate):
+            continue
+        if _is_share_count_eps(candidate):
+            continue
         concept = registry.get(candidate.concept.metric_code)
         duration = candidate.duration_months
         if concept.period_behavior in {PeriodBehavior.STOCK, PeriodBehavior.POINT_IN_TIME}:

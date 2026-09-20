@@ -52,8 +52,10 @@ class V1SourceObservation(BaseModel):
 
     @property
     def discovery_only(self) -> bool:
-        return (
-            (not self.publishable)
-            or self.source_ref.bbox is None
-            or "DISCOVERY_ONLY" in self.reason_codes
-        )
+        if self.source_ref.bbox is None:
+            return True
+        if "DISCOVERY_ONLY" in self.reason_codes:
+            return True
+        if "CONTEXT_BRIDGED_SOURCE_OWNED" in self.reason_codes:
+            return False
+        return not self.publishable

@@ -1,0 +1,331 @@
+{
+  "sample_filings": 20,
+  "filings_ok": 20,
+  "observations_sum": 10777,
+  "candidates_sum": 10777,
+  "target_matched_candidates_sum": 669,
+  "first_fail_all": {
+    "CONCEPT_UNRESOLVED": 10079,
+    "ENTITY_UNRESOLVED": 287,
+    "ADMITTED": 199,
+    "PERIOD_UNRESOLVED": 137,
+    "DURATION_UNRESOLVED": 52,
+    "COMPARISON_ROLE_UNRESOLVED": 23
+  },
+  "first_fail_target_matched": {
+    "ENTITY_UNRESOLVED": 260,
+    "ADMITTED": 197,
+    "PERIOD_UNRESOLVED": 137,
+    "DURATION_UNRESOLVED": 52,
+    "COMPARISON_ROLE_UNRESOLVED": 23
+  },
+  "still_discovery_only_by_fail": {
+    "CONCEPT_UNRESOLVED": 7623,
+    "ENTITY_UNRESOLVED": 287,
+    "PERIOD_UNRESOLVED": 137,
+    "COMPARISON_ROLE_UNRESOLVED": 23,
+    "DURATION_UNRESOLVED": 5
+  },
+  "target_still_discovery_only_by_fail": {
+    "ENTITY_UNRESOLVED": 260,
+    "PERIOD_UNRESOLVED": 137,
+    "COMPARISON_ROLE_UNRESOLVED": 23,
+    "DURATION_UNRESOLVED": 5
+  },
+  "priority_note": "Do not engineer on CONCEPT_UNRESOLVED mass (non-target cells). Among target-matched, prioritize PERIOD \u2192 UNIT \u2192 ENTITY; then duration/cmp.",
+  "filings": [
+    {
+      "issuer_dir": "ABANS_ELECTRICALS_PLC",
+      "symbol": "ABAN.N0000",
+      "period_end": "2025-12-31",
+      "observations": 398,
+      "candidates": 398,
+      "first_fail": {
+        "CONCEPT_UNRESOLVED": 383,
+        "ENTITY_UNRESOLVED": 15
+      },
+      "target_first_fail": {
+        "ENTITY_UNRESOLVED": 12
+      }
+    },
+    {
+      "issuer_dir": "ALUMEX_PLC",
+      "symbol": "ALUM.N0000",
+      "period_end": "2026-06-30",
+      "observations": 380,
+      "candidates": 380,
+      "first_fail": {
+        "ENTITY_UNRESOLVED": 29,
+        "CONCEPT_UNRESOLVED": 351
+      },
+      "target_first_fail": {
+        "ENTITY_UNRESOLVED": 27
+      }
+    },
+    {
+      "issuer_dir": "ASIRI_SURGICAL_HOSPITAL_PLC",
+      "symbol": "AMSL.N0000",
+      "period_end": "2026-03-31",
+      "observations": 659,
+      "candidates": 659,
+      "first_fail": {
+        "ENTITY_UNRESOLVED": 30,
+        "CONCEPT_UNRESOLVED": 601,
+        "ADMITTED": 12,
+        "PERIOD_UNRESOLVED": 16
+      },
+      "target_first_fail": {
+        "ENTITY_UNRESOLVED": 28,
+        "ADMITTED": 12,
+        "PERIOD_UNRESOLVED": 16
+      }
+    },
+    {
+      "issuer_dir": "CAPITAL_ALLIANCE_HOLDINGS_PLC",
+      "symbol": "CALH.N0000",
+      "period_end": "2026-03-31",
+      "observations": 1133,
+      "candidates": 1133,
+      "first_fail": {
+        "CONCEPT_UNRESOLVED": 1087,
+        "PERIOD_UNRESOLVED": 17,
+        "ENTITY_UNRESOLVED": 29
+      },
+      "target_first_fail": {
+        "PERIOD_UNRESOLVED": 17,
+        "ENTITY_UNRESOLVED": 29
+      }
+    },
+    {
+      "issuer_dir": "CEYLON_HOTELS_CORPORATION_PLC",
+      "symbol": "CHOT.N0000",
+      "period_end": "2025-12-31",
+      "observations": 636,
+      "candidates": 636,
+      "first_fail": {
+        "CONCEPT_UNRESOLVED": 577,
+        "PERIOD_UNRESOLVED": 32,
+        "ENTITY_UNRESOLVED": 27
+      },
+      "target_first_fail": {
+        "PERIOD_UNRESOLVED": 32,
+        "ENTITY_UNRESOLVED": 25
+      }
+    },
+    {
+      "issuer_dir": "COLOMBO_INVESTMENT_TRUST_PLC",
+      "symbol": "CIT.N0000",
+      "period_end": "2026-06-30",
+      "observations": 217,
+      "candidates": 217,
+      "first_fail": {
+        "CONCEPT_UNRESOLVED": 191,
+        "ENTITY_UNRESOLVED": 26
+      },
+      "target_first_fail": {
+        "ENTITY_UNRESOLVED": 24
+      }
+    },
+    {
+      "issuer_dir": "DIALOG_AXIATA_PLC",
+      "symbol": "DIAL.N0000",
+      "period_end": "2026-03-31",
+      "observations": 693,
+      "candidates": 693,
+      "first_fail": {
+        "CONCEPT_UNRESOLVED": 643,
+        "PERIOD_UNRESOLVED": 20,
+        "ADMITTED": 28,
+        "ENTITY_UNRESOLVED": 2
+      },
+      "target_first_fail": {
+        "PERIOD_UNRESOLVED": 20,
+        "ADMITTED": 28
+      }
+    },
+    {
+      "issuer_dir": "E_B_CREASY_COMPANY_PLC",
+      "symbol": "EBCR.N0000",
+      "period_end": "2025-12-31",
+      "observations": 104,
+      "candidates": 104,
+      "first_fail": {
+        "ENTITY_UNRESOLVED": 30,
+        "CONCEPT_UNRESOLVED": 74
+      },
+      "target_first_fail": {
+        "ENTITY_UNRESOLVED": 30
+      }
+    },
+    {
+      "issuer_dir": "HATTON_PLANTATIONS_PLC",
+      "symbol": "HPL.N0000",
+      "period_end": "2026-06-30",
+      "observations": 967,
+      "candidates": 967,
+      "first_fail": {
+        "CONCEPT_UNRESOLVED": 920,
+        "ENTITY_UNRESOLVED": 11,
+        "ADMITTED": 36
+      },
+      "target_first_fail": {
+        "ENTITY_UNRESOLVED": 9,
+        "ADMITTED": 36
+      }
+    },
+    {
+      "issuer_dir": "HUNTER_COMPANY_PLC",
+      "symbol": "HUNT.N0000",
+      "period_end": "2025-12-31",
+      "observations": 687,
+      "candidates": 687,
+      "first_fail": {
+        "CONCEPT_UNRESOLVED": 619,
+        "PERIOD_UNRESOLVED": 28,
+        "COMPARISON_ROLE_UNRESOLVED": 18,
+        "ADMITTED": 20,
+        "ENTITY_UNRESOLVED": 2
+      },
+      "target_first_fail": {
+        "PERIOD_UNRESOLVED": 28,
+        "COMPARISON_ROLE_UNRESOLVED": 18,
+        "ADMITTED": 20
+      }
+    },
+    {
+      "issuer_dir": "KAPRUKA_HOLDINGS_PLC",
+      "symbol": "KPHL.N0000",
+      "period_end": "2026-03-31",
+      "observations": 823,
+      "candidates": 823,
+      "first_fail": {
+        "CONCEPT_UNRESOLVED": 821,
+        "ADMITTED": 2
+      },
+      "target_first_fail": {}
+    },
+    {
+      "issuer_dir": "LANKA_CREDIT_AND_BUSINESS_FINANCE_PLC",
+      "symbol": "LCBF.N0000",
+      "period_end": "2025-12-31",
+      "observations": 530,
+      "candidates": 530,
+      "first_fail": {
+        "CONCEPT_UNRESOLVED": 492,
+        "ENTITY_UNRESOLVED": 38
+      },
+      "target_first_fail": {
+        "ENTITY_UNRESOLVED": 38
+      }
+    },
+    {
+      "issuer_dir": "LEE_HEDGES_PLC",
+      "symbol": "SHAW.N0000",
+      "period_end": "2026-06-30",
+      "observations": 552,
+      "candidates": 552,
+      "first_fail": {
+        "CONCEPT_UNRESOLVED": 536,
+        "ADMITTED": 16
+      },
+      "target_first_fail": {
+        "ADMITTED": 16
+      }
+    },
+    {
+      "issuer_dir": "MASKELIYA_PLANTATIONS_PLC",
+      "symbol": "MASK.N0000",
+      "period_end": "2026-03-31",
+      "observations": 502,
+      "candidates": 502,
+      "first_fail": {
+        "CONCEPT_UNRESOLVED": 460,
+        "ENTITY_UNRESOLVED": 42
+      },
+      "target_first_fail": {
+        "ENTITY_UNRESOLVED": 38
+      }
+    },
+    {
+      "issuer_dir": "OFFICE_EQUIPMENT_PLC",
+      "symbol": "OFEQ.N0000",
+      "period_end": "2025-12-31",
+      "observations": 676,
+      "candidates": 676,
+      "first_fail": {
+        "DURATION_UNRESOLVED": 40,
+        "PERIOD_UNRESOLVED": 16,
+        "CONCEPT_UNRESOLVED": 578,
+        "ADMITTED": 42
+      },
+      "target_first_fail": {
+        "DURATION_UNRESOLVED": 40,
+        "PERIOD_UNRESOLVED": 16,
+        "ADMITTED": 42
+      }
+    },
+    {
+      "issuer_dir": "PRINTCARE_PLC",
+      "symbol": "CARE.N0000",
+      "period_end": "2026-06-30",
+      "observations": 629,
+      "candidates": 629,
+      "first_fail": {
+        "CONCEPT_UNRESOLVED": 575,
+        "ADMITTED": 27,
+        "COMPARISON_ROLE_UNRESOLVED": 5,
+        "PERIOD_UNRESOLVED": 8,
+        "DURATION_UNRESOLVED": 12,
+        "ENTITY_UNRESOLVED": 2
+      },
+      "target_first_fail": {
+        "ADMITTED": 27,
+        "COMPARISON_ROLE_UNRESOLVED": 5,
+        "PERIOD_UNRESOLVED": 8,
+        "DURATION_UNRESOLVED": 12
+      }
+    },
+    {
+      "issuer_dir": "R_I_L_PROPERTY_PLC",
+      "symbol": "RIL.N0000",
+      "period_end": "2026-03-31",
+      "observations": 0,
+      "candidates": 0,
+      "first_fail": {},
+      "target_first_fail": {}
+    },
+    {
+      "issuer_dir": "SINGER_SRI_LANKA_PLC",
+      "symbol": "SINS.N0000",
+      "period_end": "2025-12-31",
+      "observations": 1191,
+      "candidates": 1191,
+      "first_fail": {
+        "CONCEPT_UNRESOLVED": 1171,
+        "ENTITY_UNRESOLVED": 4,
+        "ADMITTED": 16
+      },
+      "target_first_fail": {
+        "ADMITTED": 16
+      }
+    },
+    {
+      "issuer_dir": "TAL_LANKA_HOTELS_PLC",
+      "symbol": "TAJ.N0000",
+      "period_end": "2026-06-30",
+      "observations": 0,
+      "candidates": 0,
+      "first_fail": {},
+      "target_first_fail": {}
+    },
+    {
+      "issuer_dir": "TOKYO_CEMENT_COMPANY_LANKA_PLC",
+      "symbol": "TKYO.N0000",
+      "period_end": "2026-03-31",
+      "observations": 0,
+      "candidates": 0,
+      "first_fail": {},
+      "target_first_fail": {}
+    }
+  ]
+}

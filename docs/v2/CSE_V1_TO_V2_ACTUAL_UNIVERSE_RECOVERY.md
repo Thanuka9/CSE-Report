@@ -3,7 +3,7 @@
 **Goal: recover V1-scale correct extraction inside V2, without V1's unsafe assumptions.**  
 **Repository:** `Thanuka9/CSE-Report` · **Branch examined:** `v2/extraction-investigation` · **Head examined:** `1cfb6d550959812aa2a3233fee8b3c5d3f1bb317`  
 **Production:** V1 remains default · **Historical draft-publishable floor:** 8,924, unchanged.  
-**Status:** implementation mandate — it is **not** a claim the integrated recovery path has already been built.
+**Status:** `CSE_V2_FINAL_AGENT_EXECUTION_PLAN.md` active. Baseline frozen (+3). Phase A done. Two full-829 context experiments flat (**+3**, **+4**) → **hard stop**. Architecture: many V1-only BANK keys lack printed entity (not portable). Comparison-role dated-peer fix landed. **BLOCKED WITH EVIDENCE** — not parity/cutover. V1 production; floor 8,924. See `reports/v1_v2_same_input/BLOCKED_WITH_EVIDENCE.md`.
 
 ## 1. Stop optimizing the wrong metric
 
@@ -95,16 +95,15 @@ For every ablation, publish this table:
 
 | KPI | V1 baseline | V2-only | V1-assisted V2 |
 |---|---:|---:|---:|
-| Identical PDF SHA count and errors | measured | measured | measured |
-| Deduplicated source target observations | measured | measured | measured |
-| Independently source-validated eligible facts | measured | measured | measured |
-| Correct V1-only gap recovered / remaining | measured | measured | measured |
-| **Additional correct draft-publishable SOURCE facts** | — | baseline | **measured** |
-| Additional correct DERIVED and market facts | — | baseline | separately measured |
-| Total same-definition draft-publishable | measured | baseline | measured |
-| Previously correct facts lost | — | — | measured/explained |
-| Critical wrong / NOT_REPORTED false positives | measured | measured | measured |
-| Withheld after source evidence → resolver → validation → selection → publication | measured | measured | measured |
+| Identical PDF SHA count and errors | 829 / 0 | 829 / 0 | 829 / 0 |
+| Deduplicated source target observations | 8,290 V1 rows | 34,814 SourceFacts | 34,814 SourceFacts (+298,541 DISCOVERY_ONLY candidates) |
+| Independently source-validated eligible facts | *not yet PDF-adjudicated* | 9,838 ELIGIBLE | 9,838 ELIGIBLE |
+| Correct V1-only gap recovered / remaining | 6,466 V1-only keys vs V2 (unadjudicated) | — | **0 recovered** / 6,466 remaining |
+| **Additional correct draft-publishable SOURCE facts** | — | baseline 9,838 | **+0** |
+| Previously correct facts lost | — | — | 0 keys lost vs V2 |
+| Withheld after source evidence → resolver → validation → selection → publication | — | 24,976 WITHHELD SourceFacts | 24,976 WITHHELD; 298,541 discovery pending verify |
+
+**First integrated full-universe measurement (2026-09-20):** scaffold closes the **input** universe gap (812 sha16 freeze → 829 E13 downloads). It does **not** close the **eligible fact** gap via the adapter. Next intervention must make V2 context-verify DISCOVERY_ONLY observations into SourceFacts (entity/period/unit), not add more unanchored candidates.
 
 **Engineering outcome target:** first integrated full-universe run should recover a substantial part of the independently source-validated V1-only gap, provisionally **≥25% of that proven gap**; stretch **≥1,000 additional correct publishable facts if at least that many are genuinely recoverable**. These are targets, **not** fabricated results or guarantees. If the validated gap is smaller, measure the real recoverable fraction. If the union adds 20,000 candidates but few validated/selected facts, the next intervention must target the *measured loss stage*, not another isolated N18 issuer.
 
@@ -131,4 +130,4 @@ A full-universe count without same-input V1 comparison is an operational challen
 
 > Build and measure a V1-assisted source-observation path into V2, not another entity-case patch. Freeze one exact same-PDF-SHA universe, produce a source-verified V1/V2 target-fact gap ledger, adapt V1 physical PDF/table/row/cell observations into V2 SourceRef/FactCandidate before the resolver, and run V2-only vs V1-assisted V2 through unchanged V2 validation, selection and publication. Report **additional correct source-only and draft-publishable facts** separately from derived metrics, count lost correct facts and all withholding stages, and preserve zero critical wrong. Do not use V1 final published values as gold or invent missing entity/period/unit. Do not claim success with a new document, tiny N18 improvement, raw candidates, or an unverified clean-run label. Commit code, tests, input/hash manifests and full-universe measurements. Keep V1 production until certified parity and fresh unseen proof.
 
-**This document is the changed direction. The adapter, comparison and improved full-universe count remain to be IMPLEMENTED and MEASURED; do not mark them complete based on this MD.**
+**This document is the changed direction. The adapter scaffold and same-input three-way measure are in place; eligible recovery from V1 observations remains unproven (net +0 ELIGIBLE). Do not mark recovery complete until DISCOVERY_ONLY candidates pass V2 context verification into additional correct publishable SourceFacts.**
