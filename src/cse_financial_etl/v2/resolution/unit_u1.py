@@ -15,7 +15,6 @@ from cse_financial_etl.compiler.units import (
     PERCENT,
     SCOPE_COLUMN,
     SCOPE_PAGE,
-    SCOPE_ROW,
     SCOPE_TABLE,
     UnitDeclaration,
     concept_dimension,
@@ -26,7 +25,11 @@ from cse_financial_etl.compiler.units import (
 from cse_financial_etl.v2.contracts.document import CanonicalDocument
 from cse_financial_etl.v2.contracts.enums import ResolutionStatus, UnitDimension
 from cse_financial_etl.v2.contracts.facts import FactCandidate
-from cse_financial_etl.v2.contracts.statement import CanonicalStatement, StatementColumn, StatementRow
+from cse_financial_etl.v2.contracts.statement import (
+    CanonicalStatement,
+    StatementColumn,
+    StatementRow,
+)
 
 _DIM_TO_V2 = {
     MONETARY: UnitDimension.MONETARY,

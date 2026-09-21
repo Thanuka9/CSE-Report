@@ -49,6 +49,8 @@ def extract_filing_v2_bundle(
         filing_version_id=f"{symbol}-{period_end.isoformat()}",
         target_period_end=period_end,
         issuer_name=issuer_name,
+        v1_baseline_facts=True,
+        issuers=issuers,
     )
     expected = _expected_entity(issuer_name, issuers)
     source = select_pipeline_facts(source, period_end=period_end, expected_entity=expected)
@@ -97,10 +99,11 @@ def extract_filing_v2(
     issuers: dict[str, Any] | None = None,
     v2_native_sidecar: Path | None = None,
 ) -> list[ExtractedFact]:
-    """Run the V2 column-owned extractor and emit production ExtractedFact rows.
+    """Run the V2 orchestrator with the V1 extractor as the baseline backend.
 
-    Query targets select among already-proven facts. They never invent entity,
-    period, or unit, and GROUP is never relabelled COMPANY.
+    Native V2 recovery may add or replace a fact only with stronger PDF evidence.
+    A valid V1 baseline fact is preserved otherwise. GROUP is never relabelled
+    COMPANY.
     """
 
     bundle = extract_filing_v2_bundle(
@@ -128,6 +131,16 @@ def _from_source(
 ) -> ExtractedFact:
     concept = registry.get(fact.metric_code)
     scale = fact.source_scale or Decimal("1")
+    method = "V2_COLUMN_CONTEXT"
+    reasons = fact.reason_codes
+    if "V1_BASELINE_PRESERVED" in reasons or (
+        "V1_BASELINE" in reasons and "V2_SUPERSEDES_V1" not in reasons
+    ):
+        method = "V1_BASELINE"
+    elif "V2_SUPERSEDES_V1" in reasons:
+        method = "V2_SUPERSEDES_V1"
+    elif "V1_V2_AGREE" in reasons:
+        method = "V1_V2_AGREE"
     return ExtractedFact(
         issuer_name=issuer_name,
         symbol=symbol,
@@ -147,7 +160,7 @@ def _from_source(
         status="EXTRACTED",
         raw_label=fact.source_ref.raw_text,
         source_bbox=None if fact.source_ref.bbox is None else str(fact.source_ref.bbox),
-        extraction_method="V2_COLUMN_CONTEXT",
+        extraction_method=method,
         semantic_model="v2-registry",
         certainty_band="DETERMINISTIC",
         evidence_json='{"evidence_grade":"DETERMINISTIC"}',

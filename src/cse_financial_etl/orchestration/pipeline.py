@@ -514,7 +514,7 @@ class Pipeline:
         if chosen_engine == "v2":
             from cse_financial_etl.v2.production.facts_store import write_v2_publication_facts
 
-            source_path, derived_path = write_v2_publication_facts(
+            source_path, _derived_path = write_v2_publication_facts(
                 self.root,
                 as_of_date,
                 source_facts=v2_source_facts,

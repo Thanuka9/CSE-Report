@@ -269,13 +269,7 @@ def _should_replace(current: FactCandidate, challenger: FactCandidate) -> bool:
     # Only demote a V2 exact-quarter binding when V1 headers mark the same cell
     # as cumulative/period-ended (duration None). Do not trust a bridged non-3
     # duration over V2's quarter — V1 headers can mis-bind Year/Period labels.
-    if (
-        current.duration_months == 3
-        and challenger.duration_months is None
-        and "FLOW_DURATION_UNRESOLVED_OR_CUMULATIVE" in (challenger.reason_codes or ())
-    ):
-        return True
-    return False
+    return bool(current.duration_months == 3 and challenger.duration_months is None and "FLOW_DURATION_UNRESOLVED_OR_CUMULATIVE" in (challenger.reason_codes or ()))
 
 
 def _context_richness(candidate: FactCandidate) -> int:

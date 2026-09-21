@@ -132,7 +132,7 @@ def _intervals_for_body(
     if not counts:
         return clustered
     modal = Counter(counts).most_common(1)[0][0]
-    # Dual-entity Group|Company (or Bank) layouts often have sparse 2–3-value rows
+    # Dual-entity Group|Company (or Bank) layouts often have sparse 2-3-value rows
     # mixed with true 4/6-value monetary rows. Prefer the high-arity structure so
     # Company/Bank columns are not collapsed into the Group cluster.
     high_counts = [count for count in counts if count >= 4]
@@ -226,9 +226,11 @@ def reconstruct_statements(
     pages = {page.page_number: page for page in document.pages}
     statements: list[CanonicalStatement] = []
     for region in regions:
-        if region.statement_type == StatementType.OTHER_FINANCIAL_STATEMENT:
-            if not _other_region_has_target_metrics(pages, region):
-                continue
+        if (
+            region.statement_type == StatementType.OTHER_FINANCIAL_STATEMENT
+            and not _other_region_has_target_metrics(pages, region)
+        ):
+            continue
         statement = _reconstruct_region(document, pages, region)
         if statement is not None:
             statements.append(statement)
@@ -249,12 +251,18 @@ def _other_region_has_target_metrics(
         if page is None:
             continue
         for line_index, line in enumerate(page.lines):
-            if region.segment_start_line is not None and page_number == region.page_start:
-                if line_index < region.segment_start_line:
-                    continue
-            if region.segment_end_line is not None and page_number == region.page_end:
-                if line_index >= region.segment_end_line:
-                    continue
+            if (
+                region.segment_start_line is not None
+                and page_number == region.page_start
+                and line_index < region.segment_start_line
+            ):
+                continue
+            if (
+                region.segment_end_line is not None
+                and page_number == region.page_end
+                and line_index >= region.segment_end_line
+            ):
+                continue
             if _OTHER_METRIC_HINT.search(line.text or ""):
                 return True
     return False
@@ -272,12 +280,18 @@ def _reconstruct_region(
         if page is None:
             continue
         for line_index, line in enumerate(page.lines):
-            if region.segment_start_line is not None and page_number == region.page_start:
-                if line_index < region.segment_start_line:
-                    continue
-            if region.segment_end_line is not None and page_number == region.page_end:
-                if line_index >= region.segment_end_line:
-                    continue
+            if (
+                region.segment_start_line is not None
+                and page_number == region.page_start
+                and line_index < region.segment_start_line
+            ):
+                continue
+            if (
+                region.segment_end_line is not None
+                and page_number == region.page_end
+                and line_index >= region.segment_end_line
+            ):
+                continue
             lines.append((page_number, line))
     if not lines:
         return None

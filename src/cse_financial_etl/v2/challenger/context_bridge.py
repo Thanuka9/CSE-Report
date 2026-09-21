@@ -7,8 +7,8 @@ production entity, or workbook values. Incomplete context stays unresolved.
 from __future__ import annotations
 
 import re
-from datetime import date
 from decimal import Decimal
+from typing import Any
 
 from cse_financial_etl.compiler.header_tree import CompiledHeaderColumn, compile_header
 from cse_financial_etl.compiler.units import (
@@ -22,7 +22,6 @@ from cse_financial_etl.compiler.units import (
 from cse_financial_etl.document.document_ir import TableIR
 from cse_financial_etl.v2.challenger.models import V1SourceObservation
 from cse_financial_etl.v2.contracts.enums import ComparisonRole, EntityScope, UnitDimension
-from cse_financial_etl.v2.contracts.provenance import SourceRef
 
 _TITLE_RULES: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("INCOME_STATEMENT", re.compile(r"profit|income|comprehensive", re.I)),
@@ -68,8 +67,8 @@ def bridge_observation_context(
     *,
     table: TableIR,
     column: CompiledHeaderColumn | None,
-    page_unit_decls: list | None = None,
-    table_unit_decls: list | None = None,
+    page_unit_decls: list[Any] | None = None,
+    table_unit_decls: list[Any] | None = None,
 ) -> V1SourceObservation:
     """Attach source-owned header context to one observation when evidence exists."""
 
@@ -100,21 +99,11 @@ def bridge_observation_context(
     )
     col_decls = list(column.unit_declarations)
     if column.currency or column.scale_factor is not None:
-        from cse_financial_etl.compiler.units import UnitDeclaration, SCOPE_COLUMN
+        from cse_financial_etl.compiler.units import SCOPE_COLUMN, UnitDeclaration
 
         # Synthetic column decl when compile_header already resolved currency/scale on the column.
         if column.currency is not None or column.scale_factor is not None:
-            col_decls = list(col_decls) + [
-                UnitDeclaration(
-                    scope=SCOPE_COLUMN,
-                    owner=column.column_id,
-                    text=" | ".join(column.path) if column.path else column.column_id,
-                    currency=column.currency,
-                    scale=column.scale_factor,
-                    scale_explicit=column.scale_explicit,
-                    page=observation.source_ref.page_number,
-                )
-            ]
+            col_decls = [*list(col_decls), UnitDeclaration(scope=SCOPE_COLUMN, owner=column.column_id, text=" | ".join(column.path) if column.path else column.column_id, currency=column.currency, scale=column.scale_factor, scale_explicit=column.scale_explicit, page=observation.source_ref.page_number)]
     unit_res = resolve_unit(
         dimension if dimension in {MONETARY, PER_SHARE} else MONETARY,
         row=row_decls,
@@ -187,7 +176,7 @@ def bridge_observation_context(
 
 
 def compile_table_columns(table: TableIR, statement_hint: str | None) -> dict[int, CompiledHeaderColumn]:
-    v1_type = _V1_STATEMENT_TYPE.get(statement_hint or "", None)
+    v1_type = _V1_STATEMENT_TYPE.get(statement_hint or "")
     header = compile_header(table, statement_type=v1_type, known=None)
     columns = {col.col_idx: col for col in header.columns}
     return _fill_comparison_roles_among_dated(columns)
@@ -265,7 +254,7 @@ def enrich_observations_with_header_context(
 
     out: list[V1SourceObservation] = []
     columns_cache: dict[str, dict[int, CompiledHeaderColumn]] = {}
-    table_unit_cache: dict[str, list] = {}
+    table_unit_cache: dict[str, list[Any]] = {}
     for obs in observations:
         table = tables_by_id.get(obs.table_id)
         if table is None:
@@ -276,7 +265,7 @@ def enrich_observations_with_header_context(
         if cache_key not in columns_cache:
             columns_cache[cache_key] = compile_table_columns(table, hint)
         if obs.table_id not in table_unit_cache:
-            decls: list = []
+            decls: list[Any] = []
             for i, text in enumerate(table.title_texts or ()):
                 decl = UnitDeclaration.from_text(
                     text,

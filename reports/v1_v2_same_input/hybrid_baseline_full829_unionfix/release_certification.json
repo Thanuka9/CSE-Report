@@ -1,0 +1,451 @@
+{
+  "id": "hybrid-parity-release-certification",
+  "status": "NOT READY \u2014 FAILED GATE",
+  "measured_at": "2026-09-21T16:22:46.485613+00:00",
+  "production_engine": "v1",
+  "human_approval_required_before_engine_v2": true,
+  "gates": {
+    "hybrid_829_parity": {
+      "passed": true,
+      "detail": "completed=829/829 non_ocr_errors=0 ocr_quarantine=35 unexplained=0 coverage=0.9575871819038643 classes={'AGREE_PRESERVE': 3048, 'QUARANTINE': 135, 'V2_RECOVERY_EXTRA': 6438}",
+      "summary": {
+        "id": "v2-hybrid-v1-baseline-parity",
+        "measured_at": "2026-09-21T16:21:09.600930+00:00",
+        "filings_attempted": 829,
+        "filings_completed": 829,
+        "filings_error": 35,
+        "filings_ocr_quarantine": 35,
+        "filings_error_non_ocr": 0,
+        "v1_target_extracted": 3183,
+        "hybrid_eligible_or_selected": 10550,
+        "identical_keys": 3048,
+        "v1_only_keys": 135,
+        "hybrid_only_keys": 6438,
+        "coverage_vs_v1": 0.9575871819038643,
+        "preserved_agree": 3048,
+        "unexplained_losses_or_mismatches": 0,
+        "classification_counts": {
+          "AGREE_PRESERVE": 3048,
+          "QUARANTINE": 135,
+          "V2_RECOVERY_EXTRA": 6438
+        },
+        "reason_counts": {
+          "V2_RECOVERY": 30696,
+          "V1_V2_AGREE": 2103,
+          "V1_BASELINE_PRESERVED": 945,
+          "CONFLICT_UNRESOLVED": 270
+        },
+        "parity_pass": true
+      }
+    },
+    "engine_remains_v1": {
+      "passed": true,
+      "detail": "configs/app.yml extraction.engine='v1'; flip only after human approval"
+    },
+    "e13_governed_coverage": {
+      "passed": true,
+      "detail": "floor_script_ok=True; min_draft_publishable=8924; historic_E13_draft_publishable=3854 (challenger, not a lowered floor). Hybrid TARGET parity is not the E13 source+derived 8,924 definition.",
+      "historic_e13": {
+        "draft_publishable_count": 3854,
+        "downloaded_filing_count": 829,
+        "min_draft_publishable_floor": 8924
+      }
+    },
+    "fresh_unseen_holdout_identity": {
+      "passed": true,
+      "detail": "N16 identity 13 SHAs; overlap_with_829=13; holdout_disagreements=93; unexplained=0. Identity-only preservation, not N17 blind gold scoring.",
+      "holdout_sha_count": 13,
+      "overlap": 13,
+      "unexplained": 0,
+      "disagreement_sample": [
+        {
+          "classification": "V2_RECOVERY_EXTRA",
+          "pdf_sha256": "20881df1b9d03f83a8f49005a269fde16b460cf1209a2be221a939083a22db61",
+          "symbol": "CINS.N0000",
+          "issuer_dir": "CEYLINCO_HOLDINGS_PLC",
+          "metric_code": "TOTAL_ASSETS",
+          "entity_scope": "GROUP",
+          "period_end": "2025-12-31",
+          "comparison_role": "CURRENT",
+          "duration_months": "",
+          "v1_value": "",
+          "hybrid_value": "390329047000",
+          "hybrid_status": "ELIGIBLE",
+          "reason_codes": "V2_RECOVERY"
+        },
+        {
+          "classification": "V2_RECOVERY_EXTRA",
+          "pdf_sha256": "20881df1b9d03f83a8f49005a269fde16b460cf1209a2be221a939083a22db61",
+          "symbol": "CINS.N0000",
+          "issuer_dir": "CEYLINCO_HOLDINGS_PLC",
+          "metric_code": "TOTAL_ASSETS",
+          "entity_scope": "GROUP",
+          "period_end": "2024-12-31",
+          "comparison_role": "COMPARATIVE",
+          "duration_months": "",
+          "v1_value": "",
+          "hybrid_value": "332113082000",
+          "hybrid_status": "ELIGIBLE",
+          "reason_codes": "V2_RECOVERY"
+        },
+        {
+          "classification": "V2_RECOVERY_EXTRA",
+          "pdf_sha256": "20881df1b9d03f83a8f49005a269fde16b460cf1209a2be221a939083a22db61",
+          "symbol": "CINS.N0000",
+          "issuer_dir": "CEYLINCO_HOLDINGS_PLC",
+          "metric_code": "TOTAL_ASSETS",
+          "entity_scope": "COMPANY",
+          "period_end": "2024-12-31",
+          "comparison_role": "COMPARATIVE",
+          "duration_months": "",
+          "v1_value": "",
+          "hybrid_value": "19534934000",
+          "hybrid_status": "ELIGIBLE",
+          "reason_codes": "V2_RECOVERY"
+        },
+        {
+          "classification": "V2_RECOVERY_EXTRA",
+          "pdf_sha256": "20881df1b9d03f83a8f49005a269fde16b460cf1209a2be221a939083a22db61",
+          "symbol": "CINS.N0000",
+          "issuer_dir": "CEYLINCO_HOLDINGS_PLC",
+          "metric_code": "TOTAL_EQUITY",
+          "entity_scope": "COMPANY",
+          "period_end": "2024-12-31",
+          "comparison_role": "COMPARATIVE",
+          "duration_months": "",
+          "v1_value": "",
+          "hybrid_value": "18767972000",
+          "hybrid_status": "ELIGIBLE",
+          "reason_codes": "V2_RECOVERY"
+        },
+        {
+          "classification": "V2_RECOVERY_EXTRA",
+          "pdf_sha256": "20881df1b9d03f83a8f49005a269fde16b460cf1209a2be221a939083a22db61",
+          "symbol": "CINS.N0000",
+          "issuer_dir": "CEYLINCO_HOLDINGS_PLC",
+          "metric_code": "TOTAL_LIABILITIES",
+          "entity_scope": "GROUP",
+          "period_end": "2025-12-31",
+          "comparison_role": "CURRENT",
+          "duration_months": "",
+          "v1_value": "",
+          "hybrid_value": "278170042000",
+          "hybrid_status": "ELIGIBLE",
+          "reason_codes": "V2_RECOVERY"
+        },
+        {
+          "classification": "V2_RECOVERY_EXTRA",
+          "pdf_sha256": "20881df1b9d03f83a8f49005a269fde16b460cf1209a2be221a939083a22db61",
+          "symbol": "CINS.N0000",
+          "issuer_dir": "CEYLINCO_HOLDINGS_PLC",
+          "metric_code": "TOTAL_LIABILITIES",
+          "entity_scope": "GROUP",
+          "period_end": "2024-12-31",
+          "comparison_role": "COMPARATIVE",
+          "duration_months": "",
+          "v1_value": "",
+          "hybrid_value": "231647967000",
+          "hybrid_status": "ELIGIBLE",
+          "reason_codes": "BALANCE_SHEET_RECONCILIATION_SIGNAL|V2_RECOVERY"
+        },
+        {
+          "classification": "V2_RECOVERY_EXTRA",
+          "pdf_sha256": "20881df1b9d03f83a8f49005a269fde16b460cf1209a2be221a939083a22db61",
+          "symbol": "CINS.N0000",
+          "issuer_dir": "CEYLINCO_HOLDINGS_PLC",
+          "metric_code": "TOTAL_LIABILITIES",
+          "entity_scope": "COMPANY",
+          "period_end": "2024-12-31",
+          "comparison_role": "COMPARATIVE",
+          "duration_months": "",
+          "v1_value": "",
+          "hybrid_value": "766962000",
+          "hybrid_status": "ELIGIBLE",
+          "reason_codes": "V2_RECOVERY"
+        },
+        {
+          "classification": "V2_RECOVERY_EXTRA",
+          "pdf_sha256": "20881df1b9d03f83a8f49005a269fde16b460cf1209a2be221a939083a22db61",
+          "symbol": "CINS.N0000",
+          "issuer_dir": "CEYLINCO_HOLDINGS_PLC",
+          "metric_code": "OPERATING_PROFIT",
+          "entity_scope": "GROUP",
+          "period_end": "2025-12-31",
+          "comparison_role": "CURRENT",
+          "duration_months": "3",
+          "v1_value": "",
+          "hybrid_value": "6791657000",
+          "hybrid_status": "ELIGIBLE",
+          "reason_codes": "V2_RECOVERY"
+        },
+        {
+          "classification": "V2_RECOVERY_EXTRA",
+          "pdf_sha256": "20881df1b9d03f83a8f49005a269fde16b460cf1209a2be221a939083a22db61",
+          "symbol": "CINS.N0000",
+          "issuer_dir": "CEYLINCO_HOLDINGS_PLC",
+          "metric_code": "PBT",
+          "entity_scope": "GROUP",
+          "period_end": "2025-12-31",
+          "comparison_role": "CURRENT",
+          "duration_months": "3",
+          "v1_value": "",
+          "hybrid_value": "6952350000",
+          "hybrid_status": "ELIGIBLE",
+          "reason_codes": "V2_RECOVERY"
+        },
+        {
+          "classification": "V2_RECOVERY_EXTRA",
+          "pdf_sha256": "20881df1b9d03f83a8f49005a269fde16b460cf1209a2be221a939083a22db61",
+          "symbol": "CINS.N0000",
+          "issuer_dir": "CEYLINCO_HOLDINGS_PLC",
+          "metric_code": "PAT",
+          "entity_scope": "GROUP",
+          "period_end": "2025-12-31",
+          "comparison_role": "CURRENT",
+          "duration_months": "3",
+          "v1_value": "",
+          "hybrid_value": "5510457000",
+          "hybrid_status": "ELIGIBLE",
+          "reason_codes": "V2_RECOVERY"
+        },
+        {
+          "classification": "V2_RECOVERY_EXTRA",
+          "pdf_sha256": "20881df1b9d03f83a8f49005a269fde16b460cf1209a2be221a939083a22db61",
+          "symbol": "CINS.N0000",
+          "issuer_dir": "CEYLINCO_HOLDINGS_PLC",
+          "metric_code": "EPS_BASIC",
+          "entity_scope": "GROUP",
+          "period_end": "2025-12-31",
+          "comparison_role": "CURRENT",
+          "duration_months": "3",
+          "v1_value": "",
+          "hybrid_value": "191.31",
+          "hybrid_status": "ELIGIBLE",
+          "reason_codes": "V2_RECOVERY"
+        },
+        {
+          "classification": "V2_RECOVERY_EXTRA",
+          "pdf_sha256": "da7d49dfdad31d3793b45c00417ded7c0e2a95134c5e5c368ad2d774ff51a0bc",
+          "symbol": "COCR.N0000",
+          "issuer_dir": "COMMERCIAL_CREDIT_AND_FINANCE_PLC",
+          "metric_code": "TOTAL_ASSETS",
+          "entity_scope": "COMPANY",
+          "period_end": "2025-12-31",
+          "comparison_role": "CURRENT",
+          "duration_months": "",
+          "v1_value": "",
+          "hybrid_value": "122175239633",
+          "hybrid_status": "ELIGIBLE",
+          "reason_codes": "V2_RECOVERY"
+        },
+        {
+          "classification": "V2_RECOVERY_EXTRA",
+          "pdf_sha256": "da7d49dfdad31d3793b45c00417ded7c0e2a95134c5e5c368ad2d774ff51a0bc",
+          "symbol": "COCR.N0000",
+          "issuer_dir": "COMMERCIAL_CREDIT_AND_FINANCE_PLC",
+          "metric_code": "TOTAL_ASSETS",
+          "entity_scope": "COMPANY",
+          "period_end": "2025-03-31",
+          "comparison_role": "COMPARATIVE",
+          "duration_months": "",
+          "v1_value": "",
+          "hybrid_value": "110103495405",
+          "hybrid_status": "ELIGIBLE",
+          "reason_codes": "V2_RECOVERY"
+        },
+        {
+          "classification": "V2_RECOVERY_EXTRA",
+          "pdf_sha256": "da7d49dfdad31d3793b45c00417ded7c0e2a95134c5e5c368ad2d774ff51a0bc",
+          "symbol": "COCR.N0000",
+          "issuer_dir": "COMMERCIAL_CREDIT_AND_FINANCE_PLC",
+          "metric_code": "TOTAL_ASSETS",
+          "entity_scope": "GROUP",
+          "period_end": "2025-12-31",
+          "comparison_role": "CURRENT",
+          "duration_months": "",
+          "v1_value": "",
+          "hybrid_value": "122490024971",
+          "hybrid_status": "ELIGIBLE",
+          "reason_codes": "V2_RECOVERY"
+        },
+        {
+          "classification": "V2_RECOVERY_EXTRA",
+          "pdf_sha256": "da7d49dfdad31d3793b45c00417ded7c0e2a95134c5e5c368ad2d774ff51a0bc",
+          "symbol": "COCR.N0000",
+          "issuer_dir": "COMMERCIAL_CREDIT_AND_FINANCE_PLC",
+          "metric_code": "TOTAL_ASSETS",
+          "entity_scope": "GROUP",
+          "period_end": "2025-03-31",
+          "comparison_role": "COMPARATIVE",
+          "duration_months": "",
+          "v1_value": "",
+          "hybrid_value": "110269954359",
+          "hybrid_status": "ELIGIBLE",
+          "reason_codes": "V2_RECOVERY"
+        },
+        {
+          "classification": "V2_RECOVERY_EXTRA",
+          "pdf_sha256": "da7d49dfdad31d3793b45c00417ded7c0e2a95134c5e5c368ad2d774ff51a0bc",
+          "symbol": "COCR.N0000",
+          "issuer_dir": "COMMERCIAL_CREDIT_AND_FINANCE_PLC",
+          "metric_code": "TOTAL_LIABILITIES",
+          "entity_scope": "COMPANY",
+          "period_end": "2025-12-31",
+          "comparison_role": "CURRENT",
+          "duration_months": "",
+          "v1_value": "",
+          "hybrid_value": "89681019290",
+          "hybrid_status": "ELIGIBLE",
+          "reason_codes": "BALANCE_SHEET_RECONCILIATION_SIGNAL|V2_RECOVERY"
+        },
+        {
+          "classification": "V2_RECOVERY_EXTRA",
+          "pdf_sha256": "da7d49dfdad31d3793b45c00417ded7c0e2a95134c5e5c368ad2d774ff51a0bc",
+          "symbol": "COCR.N0000",
+          "issuer_dir": "COMMERCIAL_CREDIT_AND_FINANCE_PLC",
+          "metric_code": "TOTAL_LIABILITIES",
+          "entity_scope": "COMPANY",
+          "period_end": "2025-03-31",
+          "comparison_role": "COMPARATIVE",
+          "duration_months": "",
+          "v1_value": "",
+          "hybrid_value": "81713913106",
+          "hybrid_status": "ELIGIBLE",
+          "reason_codes": "V2_RECOVERY"
+        },
+        {
+          "classification": "V2_RECOVERY_EXTRA",
+          "pdf_sha256": "da7d49dfdad31d3793b45c00417ded7c0e2a95134c5e5c368ad2d774ff51a0bc",
+          "symbol": "COCR.N0000",
+          "issuer_dir": "COMMERCIAL_CREDIT_AND_FINANCE_PLC",
+          "metric_code": "TOTAL_LIABILITIES",
+          "entity_scope": "GROUP",
+          "period_end": "2025-12-31",
+          "comparison_role": "CURRENT",
+          "duration_months": "",
+          "v1_value": "",
+          "hybrid_value": "89725802201",
+          "hybrid_status": "ELIGIBLE",
+          "reason_codes": "V2_RECOVERY"
+        },
+        {
+          "classification": "V2_RECOVERY_EXTRA",
+          "pdf_sha256": "da7d49dfdad31d3793b45c00417ded7c0e2a95134c5e5c368ad2d774ff51a0bc",
+          "symbol": "COCR.N0000",
+          "issuer_dir": "COMMERCIAL_CREDIT_AND_FINANCE_PLC",
+          "metric_code": "TOTAL_LIABILITIES",
+          "entity_scope": "GROUP",
+          "period_end": "2025-03-31",
+          "comparison_role": "COMPARATIVE",
+          "duration_months": "",
+          "v1_value": "",
+          "hybrid_value": "81767796055",
+          "hybrid_status": "ELIGIBLE",
+          "reason_codes": "V2_RECOVERY"
+        },
+        {
+          "classification": "V2_RECOVERY_EXTRA",
+          "pdf_sha256": "da7d49dfdad31d3793b45c00417ded7c0e2a95134c5e5c368ad2d774ff51a0bc",
+          "symbol": "COCR.N0000",
+          "issuer_dir": "COMMERCIAL_CREDIT_AND_FINANCE_PLC",
+          "metric_code": "TOTAL_EQUITY",
+          "entity_scope": "COMPANY",
+          "period_end": "2025-12-31",
+          "comparison_role": "CURRENT",
+          "duration_months": "",
+          "v1_value": "",
+          "hybrid_value": "32494220342",
+          "hybrid_status": "ELIGIBLE",
+          "reason_codes": "V2_RECOVERY"
+        }
+      ]
+    },
+    "lineage_completeness": {
+      "passed": true,
+      "detail": "................                                                         [100%]\n",
+      "cmd": [
+        "D:\\Report\\.venv\\Scripts\\python.exe",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/v2/unit/test_lineage_audit.py",
+        "tests/v2/unit/test_resolver_and_validation.py"
+      ],
+      "returncode": 0,
+      "name": "lineage"
+    },
+    "ocr_quarantine": {
+      "passed": true,
+      "detail": ".....                                                                    [100%]\n",
+      "cmd": [
+        "D:\\Report\\.venv\\Scripts\\python.exe",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/v2/unit/test_page_routing.py",
+        "tests/v2/unit/test_ocr_runtime_packaging.py"
+      ],
+      "returncode": 0,
+      "name": "ocr"
+    },
+    "workbook_reconciliation": {
+      "passed": true,
+      "detail": "............                                                             [100%]\n",
+      "cmd": [
+        "D:\\Report\\.venv\\Scripts\\python.exe",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/v2/unit/test_workbook_v2.py",
+        "tests/v2/unit/test_workbook_dispatch.py"
+      ],
+      "returncode": 0,
+      "name": "workbook"
+    },
+    "rollback": {
+      "passed": true,
+      "detail": "........................                                                 [100%]\n",
+      "cmd": [
+        "D:\\Report\\.venv\\Scripts\\python.exe",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/v2/unit/test_production_engine.py",
+        "tests/v2/unit/test_v1_baseline_union.py"
+      ],
+      "returncode": 0,
+      "name": "rollback"
+    },
+    "v2_unit_suite": {
+      "passed": true,
+      "detail": "........................................................................ [ 26%]\n..............................................................s......... [ 53%]\n........................................................................ [ 80%]\n...................................................                      [100%]\n",
+      "cmd": [
+        "D:\\Report\\.venv\\Scripts\\python.exe",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/v2/unit"
+      ],
+      "returncode": 0,
+      "name": "v2_unit"
+    },
+    "deterministic_replay": {
+      "passed": true,
+      "detail": "replayed 3 PDFs twice; mismatches=0",
+      "sample_shas": [
+        "6c70e1defc90323e9e0ae36def5c966e036931a7857cafddbc1478ec3a660dc8",
+        "84736b4e3d80f26b0b5ca30128553448cdfc6606476d902e6ef53021c641f450",
+        "30ba31866c2db834bc519fe774edf2dffaaaf4b05f7fe3625c98dc3b3cb54997"
+      ],
+      "mismatches": []
+    },
+    "remote_ci": {
+      "passed": false,
+      "detail": "gh auth is not available; remote CI not dispatched"
+    }
+  },
+  "failed_gates": [
+    "remote_ci"
+  ],
+  "note": "Do not set extraction.engine: v2 until a human records OFFICIAL approval. V1 remains the internal fallback backend."
+}

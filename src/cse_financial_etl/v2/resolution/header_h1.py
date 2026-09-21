@@ -6,6 +6,7 @@ Does not copy query-target metadata. Rejects table-title/caption silent fills.
 
 from __future__ import annotations
 
+import itertools
 import re
 from collections import Counter
 from datetime import date
@@ -335,7 +336,7 @@ def _table_ir_from_statement(
         ys = [min(cell.bbox.y0 for cell in cells) - 40.0, max(cell.bbox.y1 for cell in cells) + 10.0]
     if phrases:
         ys[0] = min(ys[0], min(p.bbox.y0 for p in phrases) - 4.0)
-    table_bbox = BBox(min(xs + [0.0]), ys[0], max(xs + [400.0]), ys[1])
+    table_bbox = BBox(min([*xs, 0.0]), ys[0], max([*xs, 400.0]), ys[1])
 
     return TableIR(
         page_number=page_number,
@@ -423,9 +424,7 @@ def _is_context_header_line(line: CanonicalLine) -> bool:
     if not values:
         return True
     # Pure calendar fragments (day/year) are header, not monetary body cells.
-    if all(re.fullmatch(r"\d{1,2}|19\d{2}|20\d{2}|0{3}", value.replace(",", "")) for value in values):
-        return True
-    return False
+    return bool(all(re.fullmatch(r"\d{1,2}|19\d{2}|20\d{2}|0{3}", value.replace(",", "")) for value in values))
 
 
 def _line_phrases(line: CanonicalLine) -> list[tuple[str, BBox]]:
@@ -441,7 +440,7 @@ def _line_phrases(line: CanonicalLine) -> list[tuple[str, BBox]]:
     typical = sorted(heights)[len(heights) // 2] or 8.0
     gap_limit = max(typical * 1.2, 9.0)
     groups: list[list[CanonicalToken]] = [[tokens[0]]]
-    for prev, token in zip(tokens, tokens[1:], strict=False):
+    for prev, token in itertools.pairwise(tokens):
         gap = token.bbox[0] - prev.bbox[2]
         if gap > gap_limit:
             groups.append([token])

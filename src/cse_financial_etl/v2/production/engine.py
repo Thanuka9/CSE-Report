@@ -20,18 +20,22 @@ def extract_for_production(
     issuers: dict[str, Any] | None = None,
     **kwargs: object,
 ) -> list[ExtractedFact]:
-    """Run V1 by default until cutover. ``engine='v2'`` is the challenger path."""
+    """Run V1 by default until cutover. ``engine='v2'`` is the hybrid
+    orchestrator: V1 baseline facts unioned with native V2 recovery, then V2
+    validation, lineage and production selection.
+    """
 
     chosen = str(engine or "v1").strip().lower()
     if chosen == "v2":
         sidecar = kwargs.pop("v2_native_sidecar", None)
+        sidecar_path = sidecar if isinstance(sidecar, Path) else None
         return extract_filing_v2(
             pdf_path,
             issuer_name,
             symbol,
             period_end,
             issuers=issuers,
-            v2_native_sidecar=sidecar,
+            v2_native_sidecar=sidecar_path,
         )
     if issuers is not None:
         kwargs = {**kwargs, "issuers": issuers}

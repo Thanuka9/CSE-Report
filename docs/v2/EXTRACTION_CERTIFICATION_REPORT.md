@@ -1,9 +1,11 @@
 # V2 Extraction Certification Report
 
-**Status: NOT CERTIFIED — BLOCKED ON ENGINEERING**
+**Status: HYBRID 829 PARITY PASSED — REMOTE CI IS THE OPEN TECHNICAL GATE**
 
-Production extraction remains **V1**. Coverage floor remains **8924**.
-Do not set `configs/app.yml` `extraction.engine: v2`.
+Production extraction remains **V1** until recorded OFFICIAL approval.
+Coverage floor remains **8924**. Do not set `configs/app.yml` `extraction.engine: v2`.
+Header production default remains **H0**. H1 is challenger-only. Hybrid cutover uses
+proven V1 extraction as the baseline backend, so H2 is not a hold item.
 
 Investigation base SHA: `91a9c68bf940d3d9c2a86245f127de88ad4b4b6d`.
 Branch: `v2/extraction-investigation`.
@@ -15,7 +17,10 @@ N17 package: `docs/v2/N17_BLIND_ADJUDICATION.md`.
 
 ## Verdict
 
-V2 is **not** certified and **not** ready for cutover. OFFICIAL is **not** the only blocker.
+829 pinned-file hybrid parity passed (3,183 V1 TARGET facts: 3,048 preserved, 135
+quarantined, 0 unexplained). Remote GitHub CI (`full-production-validation.yml` on
+Ubuntu + Windows) is the remaining technical gate. Do not flip `engine: v2` before
+green CI and recorded OFFICIAL approval. V1 remains the fallback backend.
 
 ## First T25 holdout (retired)
 

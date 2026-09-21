@@ -7,6 +7,7 @@ Outputs are challenger-only inputs for V2 verification.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from cse_financial_etl.document.table_reconstructor import reconstruct_tables
 from cse_financial_etl.ingestion.native_cache import cached_native_document
@@ -35,7 +36,7 @@ def collect_v1_source_observations(
     sha = document.source_sha256
     fid = (filing_id or filing_version_id).strip() or filing_version_id
     raw: list[V1SourceObservation] = []
-    tables_by_id: dict = {}
+    tables_by_id: dict[str, Any] = {}
 
     for page in document.pages:
         for table_index, table in enumerate(page.tables):

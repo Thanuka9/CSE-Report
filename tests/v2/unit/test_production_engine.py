@@ -194,6 +194,43 @@ def test_pipeline_extract_filing_defaults_to_v1(monkeypatch) -> None:
     assert called["v2"] is False
 
 
+def test_rollback_to_v1_leaves_hybrid_off_and_v1_importable(monkeypatch) -> None:
+    called = {"v1": 0, "v2": 0}
+
+    def fake_v1(*_args, **_kwargs):
+        called["v1"] += 1
+        return []
+
+    def fake_v2(*_args, **_kwargs):
+        called["v2"] += 1
+        return []
+
+    monkeypatch.setattr(
+        "cse_financial_etl.v2.production.engine.extract_filing", fake_v1
+    )
+    monkeypatch.setattr(
+        "cse_financial_etl.v2.production.engine.extract_filing_v2", fake_v2
+    )
+    extract_for_production(
+        Path("missing.pdf"), "Acme", "ACM.N0000", date(2026, 6, 30), engine="v2"
+    )
+    extract_for_production(
+        Path("missing.pdf"), "Acme", "ACM.N0000", date(2026, 6, 30), engine="v1"
+    )
+    assert called == {"v1": 1, "v2": 1}
+    from cse_financial_etl.extraction.statement_extractor import extract_filing as v1_backend
+
+    assert callable(v1_backend)
+    import yaml
+
+    app = yaml.safe_load(
+        (Path(__file__).resolve().parents[3] / "configs" / "app.yml").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert app["extraction"]["engine"] == "v1"
+
+
 def test_v1_engine_flag_still_calls_challenger(monkeypatch) -> None:
     called = {"v1": False}
 

@@ -75,7 +75,9 @@ def run_filing_pipeline(
     header_engine: str = "H0",
     unit_engine: str = "U0",
     v1_source_observations: bool = False,
+    v1_baseline_facts: bool = False,
     pdf_path: Path | None = None,
+    issuers: dict[str, Any] | None = None,
 ) -> FilingPipelineResult:
     regime = accounting_regime or accounting_regime_for(
         issuer_id=issuer_id, issuer_name=issuer_name, issuer_type=issuer_type
@@ -126,6 +128,22 @@ def run_filing_pipeline(
         filing_version_id=document.filing_version_id,
     )
     validated = validate_source_facts(source)
+    if v1_baseline_facts and pdf_path is not None and target_period_end is not None:
+        from cse_financial_etl.v2.production.fact_union import union_source_facts
+        from cse_financial_etl.v2.production.v1_baseline import extract_v1_baseline_facts
+
+        v1_source = extract_v1_baseline_facts(
+            Path(pdf_path),
+            issuer_name=issuer_name or issuer_id,
+            symbol=issuer_id,
+            period_end=target_period_end,
+            source_sha256=document.source_sha256,
+            filing_version_id=document.filing_version_id,
+            issuers=issuers,
+        )
+        if target_period_end is not None:
+            v1_source = tuple(fact for fact in v1_source if fact.period_end == target_period_end)
+        validated = validate_source_facts(union_source_facts(validated, v1_source))
     derived = derive_facts(validated)
     query_applied = expected_entity_scope is not None or target_period_end is not None
     if query_applied:
@@ -212,6 +230,8 @@ def run_pdf_pipeline(
     header_engine: str = "H0",
     unit_engine: str = "U0",
     v1_source_observations: bool = False,
+    v1_baseline_facts: bool = False,
+    issuers: dict[str, Any] | None = None,
 ) -> FilingPipelineResult:
     document = read_document(pdf_path, filing_version_id=filing_version_id, force_ocr=force_ocr)
     return run_filing_pipeline(
@@ -228,5 +248,7 @@ def run_pdf_pipeline(
         header_engine=header_engine,
         unit_engine=unit_engine,
         v1_source_observations=v1_source_observations,
+        v1_baseline_facts=v1_baseline_facts,
         pdf_path=pdf_path,
+        issuers=issuers,
     )

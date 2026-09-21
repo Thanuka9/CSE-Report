@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from datetime import date
 from decimal import Decimal
-from typing import Literal
+from typing import Literal, overload
 
 from cse_financial_etl.v2.contracts.document import CanonicalDocument, CanonicalLine, CanonicalPage
 from cse_financial_etl.v2.contracts.enums import (
@@ -319,11 +319,27 @@ def bind_column_contexts(
 ) -> tuple[CanonicalStatement, ...]:
     """Bind all statements and apply evidenced cross-page continuation bridges."""
 
-    from cse_financial_etl.v2.statements.continuation import (
-        ContinuationBridgeLink,
-        bridge_statement_column_context,
-        detect_continuation_bridge_links,
-    )
+    ordered = sorted(statements, key=lambda item: (item.pages[0], item.pages[-1], item.statement_id))
+    bound_by_end: dict[tuple[int, StatementType], CanonicalStatement] = {}
+    bound: list[CanonicalStatement] = []
+    try:
+        from cse_financial_etl.v2.statements.continuation import (  # type: ignore[import-untyped]
+            ContinuationBridgeLink,
+            bridge_statement_column_context,
+            detect_continuation_bridge_links,
+        )
+    except ImportError:
+        return tuple(
+            bind_column_context(
+                document,
+                statement,
+                expected_entity_scope=expected_entity_scope,
+                target_period_end=target_period_end,
+                partial_monetary=partial_monetary,
+                header_engine=header_engine,
+            )
+            for statement in statements
+        )
 
     regions = detect_statement_regions(document)
     region_by_id = {region.region_id: region for region in regions}
@@ -331,18 +347,17 @@ def bind_column_contexts(
     links_by_to: dict[tuple[int, StatementType], ContinuationBridgeLink] = {
         (link.to_page, link.statement_type): link for link in links
     }
-    ordered = sorted(statements, key=lambda item: (item.pages[0], item.pages[-1], item.statement_id))
-    bound_by_end: dict[tuple[int, StatementType], CanonicalStatement] = {}
-    bound: list[CanonicalStatement] = []
-    bind_kwargs = {
-        "expected_entity_scope": expected_entity_scope,
-        "target_period_end": target_period_end,
-        "partial_monetary": partial_monetary,
-        "header_engine": header_engine,
-    }
     for statement in ordered:
         region = region_by_id.get(statement.statement_id)
-        current = bind_column_context(document, statement, region_hint=region, **bind_kwargs)
+        current = bind_column_context(
+            document,
+            statement,
+            region_hint=region,
+            expected_entity_scope=expected_entity_scope,
+            target_period_end=target_period_end,
+            partial_monetary=partial_monetary,
+            header_engine=header_engine,
+        )
         if (
             region is not None
             and len(statement.pages) > 1
@@ -359,13 +374,19 @@ def bind_column_contexts(
                 document,
                 statement,
                 region_hint=anchor_region,
-                **bind_kwargs,
+                expected_entity_scope=expected_entity_scope,
+                target_period_end=target_period_end,
+                partial_monetary=partial_monetary,
+                header_engine=header_engine,
             )
             continuation = bind_column_context(
                 document,
                 statement,
                 region_hint=continuation_region,
-                **bind_kwargs,
+                expected_entity_scope=expected_entity_scope,
+                target_period_end=target_period_end,
+                partial_monetary=partial_monetary,
+                header_engine=header_engine,
             )
             internal = links_by_to.get((cont_start, statement.statement_type))
             if internal is not None and internal.from_page == statement.pages[0]:
@@ -543,6 +564,20 @@ def _is_entity_bearing_subtitle(line: CanonicalLine) -> bool:
     return True
 
 
+@overload
+def _heading_context_lines(
+    page: CanonicalPage, *, return_indices: Literal[False] = False
+) -> list[CanonicalLine]:
+    ...
+
+
+@overload
+def _heading_context_lines(
+    page: CanonicalPage, *, return_indices: Literal[True]
+) -> list[tuple[int, CanonicalLine]]:
+    ...
+
+
 def _heading_context_lines(
     page: CanonicalPage,
     *,
@@ -577,7 +612,7 @@ def _heading_context_lines(
 
 def _page_context_lines(page: CanonicalPage, *, region: StatementRegion | None = None) -> list[str]:
     lines = _heading_context_lines(page)
-    if region is None or region.segment_start_line is None and region.segment_end_line is None:
+    if region is None or (region.segment_start_line is None and region.segment_end_line is None):
         return [line.text for line in lines]
     indexed = _heading_context_lines(page, return_indices=True)
     filtered: list[str] = []
@@ -645,12 +680,18 @@ def _iter_heading_lines(
             continue
         indexed = _heading_context_lines(page, return_indices=True)
         for line_index, line in indexed:
-            if region.segment_start_line is not None and page_number == region.page_start:
-                if line_index < region.segment_start_line:
-                    continue
-            if region.segment_end_line is not None and page_number == region.page_end:
-                if line_index >= region.segment_end_line:
-                    continue
+            if (
+                region.segment_start_line is not None
+                and page_number == region.page_start
+                and line_index < region.segment_start_line
+            ):
+                continue
+            if (
+                region.segment_end_line is not None
+                and page_number == region.page_end
+                and line_index >= region.segment_end_line
+            ):
+                continue
             lines.append(line)
     return lines
 
@@ -1089,12 +1130,12 @@ def _entity_for_position(
                 return left if position < midpoint else right
         if len(unique) == 1:
             return unique[0]
-    left, right = _paired_entities(blob)
-    if left is not None and right is not None and monetary_count >= 4:
+    paired_left, paired_right = _paired_entities(blob)
+    if paired_left is not None and paired_right is not None and monetary_count >= 4:
         midpoint = monetary_count // 2
-        return left if position < midpoint else right
+        return paired_left if position < midpoint else paired_right
     # Unlabelled / ambiguous multi-entity blob → leave unresolved (fail closed).
-    if left is not None and right is not None:
+    if paired_left is not None and paired_right is not None:
         return None
     return parse_entity_scope(_strip_issuer_name_phrases(blob))
 
