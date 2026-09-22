@@ -11,7 +11,7 @@ from typing import Any
 
 from cse_financial_etl.config import infer_entity_scope
 from cse_financial_etl.extraction.statement_extractor import ExtractedFact
-from cse_financial_etl.v2.contracts.enums import EntityScope
+from cse_financial_etl.v2.contracts.enums import EntityScope, ReviewStatus, ValidationStatus
 from cse_financial_etl.v2.contracts.facts import DerivedFact, SourceFact
 from cse_financial_etl.v2.orchestration.filing_pipeline import run_pdf_pipeline
 from cse_financial_etl.v2.resolution.production_selection import select_pipeline_facts
@@ -112,6 +112,90 @@ def extract_filing_v2(
     if v2_native_sidecar is not None:
         write_v2_native_sidecar(v2_native_sidecar, bundle)
     return bundle.production_facts
+
+
+
+def synchronize_native_governance(
+    source_facts: tuple[SourceFact, ...] | list[SourceFact],
+    derived_facts: tuple[DerivedFact, ...] | list[DerivedFact],
+    production_facts: list[ExtractedFact],
+) -> tuple[tuple[SourceFact, ...], tuple[DerivedFact, ...]]:
+    """Copy validated/reviewed governance state back onto native V2 facts.
+
+    The V1-shaped rows are the objects stamped by equation validation and signed review
+    decisions in the production pipeline. The V2 workbook, however, renders native
+    SourceFact/DerivedFact objects. Propagation is therefore required, but it must be
+    fail-closed: issuer, metric, period, entity and normalized value must all match, and
+    conflicting production governance states never choose a winner.
+    """
+
+    governance: dict[
+        tuple[str, str, date, str, Decimal],
+        set[tuple[ValidationStatus, ReviewStatus]],
+    ] = {}
+    for fact in production_facts:
+        if fact.normalized_value is None:
+            continue
+        try:
+            validation = ValidationStatus(str(fact.validation_status).strip().upper())
+            review = ReviewStatus(str(fact.review_status).strip().upper())
+        except ValueError:
+            continue
+        key = (
+            fact.symbol.strip().upper(),
+            fact.metric_code.strip().upper(),
+            fact.period_end,
+            fact.entity_scope.strip().upper(),
+            fact.normalized_value,
+        )
+        governance.setdefault(key, set()).add((validation, review))
+
+    def state_for(fact: SourceFact | DerivedFact) -> tuple[ValidationStatus, ReviewStatus] | None:
+        entity = _ENTITY_TO_V1.get(fact.entity_scope, fact.entity_scope.value)
+        key = (
+            fact.issuer_id.strip().upper(),
+            fact.metric_code.strip().upper(),
+            fact.period_end,
+            entity,
+            fact.normalized_value,
+        )
+        states = governance.get(key, set())
+        if len(states) != 1:
+            return None
+        return next(iter(states))
+
+    synced_source: list[SourceFact] = []
+    for fact in source_facts:
+        state = state_for(fact)
+        if state is None:
+            synced_source.append(fact)
+            continue
+        validation, review = state
+        synced_source.append(
+            fact.model_copy(
+                update={
+                    "validation_status": validation,
+                    "review_status": review,
+                }
+            )
+        )
+
+    synced_derived: list[DerivedFact] = []
+    for fact in derived_facts:
+        state = state_for(fact)
+        if state is None:
+            synced_derived.append(fact)
+            continue
+        validation, review = state
+        synced_derived.append(
+            fact.model_copy(
+                update={
+                    "validation_status": validation,
+                    "review_status": review,
+                }
+            )
+        )
+    return tuple(synced_source), tuple(synced_derived)
 
 
 def _expected_entity(issuer_name: str, issuers: dict[str, Any] | None) -> EntityScope | None:
