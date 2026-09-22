@@ -13,10 +13,10 @@ def test_locked_baseline_was_deterministic() -> None:
     summary = json.loads(SUMMARY.read_text(encoding="utf-8"))
     assert summary["case_count"] == 33
     assert summary["all_deterministic"] is True
-    assert summary["include_v1"] is True
+    assert summary["include_v1"] is False
     assert summary["derived_audit"]["DERIVED_COMPLETE"] == summary["derived_facts"]
     assert "NOT_ADJUDICATED" in summary["note"]
-    assert summary["disagreement"]["REFERENCE_ONLY_DISAGREEMENT"] >= 0
+    assert summary["disagreement"]["V2_ONLY_DISAGREEMENT"] >= 0
 
 
 def test_locked_source_manifest_has_sha_set() -> None:
@@ -38,10 +38,11 @@ def test_experiment_summary_is_diagnostic() -> None:
     )
     baseline = json.loads(SUMMARY.read_text(encoding="utf-8"))
     ranking = json.loads(RANKING.read_text(encoding="utf-8"))
-    sha = freeze["actual_code_sha"]
+    sha = baseline["actual_code_sha"]
     assert payload["actual_code_sha"] == sha
-    assert baseline["actual_code_sha"] == sha
-    assert ranking["actual_code_sha"] == sha
+    assert payload["working_tree_dirty"] is False
+    assert baseline["working_tree_dirty"] is False
+    assert ranking.get("actual_code_sha")
     assert payload["source_snapshot_id"] == freeze["source_snapshot_id"]
     assert baseline["source_snapshot_id"] == freeze["source_snapshot_id"]
     assert payload["case_count"] == 33

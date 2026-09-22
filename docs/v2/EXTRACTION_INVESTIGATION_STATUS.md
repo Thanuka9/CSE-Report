@@ -12,6 +12,13 @@ No-patches recovery strategy: `docs/v2/EXTRACTION_RECOVERY_STRATEGY_NO_PATCHES.m
 
 **Verdict:** Architecture improved; first T25 holdout **retired** after F1/F3 + SFCL truth fix. Not engineering-complete. Not OFFICIAL-only. **Recovery direction:** port V1 structural intelligence into V2 contracts (no issuer patches). **Next human step: N17** blind adjudication (`docs/v2/N17_BLIND_ADJUDICATION.md`).
 
+## T29 Resume cutover
+
+**BLOCKED** until remote CI is green and recorded OFFICIAL approval exists. Do not set
+`configs/app.yml` `engine: v2` before those gates pass. Blind source-truth evidence
+remains in `tests/v2/source_truth/items.jsonl`; historical investigation artefacts remain
+snapshots rather than being rewritten to match the current branch.
+
 | Task | Status | Evidence |
 |---|---|---|
 | T00–T10 / T21–T23 | DONE | Prior investigation artefacts |

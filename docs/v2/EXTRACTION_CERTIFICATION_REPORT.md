@@ -1,6 +1,6 @@
 # V2 Extraction Certification Report
 
-**Status: HYBRID 829 PARITY PASSED — REMOTE CI IS THE OPEN TECHNICAL GATE**
+**Status: NOT CERTIFIED — HYBRID 829 PARITY PASSED — REMOTE CI IS THE OPEN TECHNICAL GATE**
 
 Production extraction remains **V1** until recorded OFFICIAL approval.
 Coverage floor remains **8924**. Do not set `configs/app.yml` `extraction.engine: v2`.

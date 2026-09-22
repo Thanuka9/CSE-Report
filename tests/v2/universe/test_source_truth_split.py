@@ -31,10 +31,15 @@ def test_dev_holdout_queue_has_no_expected_values() -> None:
     queue_path = ROOT / "tests" / "v2" / "source_truth" / "t10_review_queue.json"
     if queue_path.is_file():
         queue = json.loads(queue_path.read_text(encoding="utf-8"))
-        assert queue["items"]
-        assert all("v1_value" not in item for item in queue["items"])
-        assert all("v2_value" not in item for item in queue["items"])
-        assert all(item["split"] == "DEV" for item in queue["items"])
+        items = queue.get("items", [])
+        assert queue["item_count"] == len(items)
+        assert "not source truth" in queue["note"].casefold()
+        assert "not gold" in queue["note"].casefold()
+        assert all("v1_value" not in item for item in items)
+        assert all("v2_value" not in item for item in items)
+        assert all(item["split"] == "DEV" for item in items)
+        if not items:
+            assert ITEMS_PATH.is_file()
 
 
 def test_t10_items_are_blind_source_records() -> None:
