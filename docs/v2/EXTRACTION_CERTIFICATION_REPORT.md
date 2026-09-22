@@ -1,6 +1,6 @@
 # V2 Extraction Certification Report
 
-**Status: ENGINEERING COMPLETE FOR V2 DRAFT CUTOVER — OFFICIAL DATA RELEASE HUMAN-PROOF GATES PENDING**
+**Status: ENGINEERING COMPLETE FOR V2 DRAFT CUTOVER — OFFICIAL DATA RELEASE NOT CERTIFIED; HUMAN-PROOF GATES PENDING**
 
 Production extraction remains **V1** until a recorded human cutover approval.
 The configured publication mode remains **DRAFT**. The 8,924 floor is unchanged.
