@@ -1,6 +1,13 @@
 # V2 Extraction Certification Report
 
-**Status: READY FOR OFFICIAL DECISION — NOT CERTIFIED UNTIL RECORDED OFFICIAL APPROVAL**
+**Status: ENGINEERING COMPLETE FOR V2 DRAFT CUTOVER — OFFICIAL DATA RELEASE HUMAN-PROOF GATES PENDING**
+
+Production extraction remains **V1** until a recorded human cutover approval.
+The configured publication mode remains **DRAFT**. The 8,924 floor is unchanged.
+
+Remote CI run #241 passed on Ubuntu and Windows at
+`ef30bc0bda4815eaea74ed231b4f0f44617dda92`, including the new fail-closed
+native-governance propagation and OFFICIAL native-release completeness tests.
 
 Production extraction remains **V1** until recorded OFFICIAL approval.
 Coverage floor remains **8924**. Do not set `configs/app.yml` `extraction.engine: v2`.
@@ -31,16 +38,36 @@ recorded OFFICIAL approval. V1 remains the fallback backend.
 | 829 pinned-file hybrid parity | PASS — 0 unexplained V1 TARGET losses/mismatches |
 | Unresolved V1/V2 conflicts | QUARANTINED |
 | Coverage floor | 8,924 unchanged |
-| Remote deterministic production CI | PASS — run #238, Ubuntu + Windows |
+| Remote deterministic production CI | PASS — run #241, Ubuntu + Windows, head `ef30bc0` |
+| Native signed-review propagation | PASS — exact identity/value match only; conflicts fail closed |
+| OFFICIAL native-release completeness guard | PASS — cannot publish below governed 8,924 floor |
 | Production engine | V1 — intentionally unchanged |
-| Certification state | READY FOR OFFICIAL DECISION; not yet OFFICIAL |
-| Remaining gate | Recorded human OFFICIAL approval |
+| Configured publication mode | DRAFT |
+| V2 DRAFT cutover | ENGINEERING COMPLETE; requires recorded human cutover approval |
+| OFFICIAL data publication | BLOCKED on independent human proof + signed/curated coverage |
 
 After approval only: set `configs/app.yml` `extraction.engine: v2`, run the governed
 production smoke, and retain V1 as the rollback backend during the observation period.
 
 The investigation sections below are retained as historical chronology and do not
 override the current release-decision gates above.
+
+## Remaining human-only gates
+
+These are not extraction-engine defects and must not be manufactured by software.
+
+- Independent MANUAL_QA issuer gate: **4 / 100** currently counts under the committed
+  golden fixture. PIPELINE_SEEDED and MANUAL_OR_PRIOR do not satisfy this gate.
+- OFFICIAL publication uses only APPROVED/CURATED native facts. The native OFFICIAL
+  release view now has a hard 8,924 completeness floor; a thin signed subset cannot
+  certify itself.
+- A recorded human cutover approval is required before changing
+  `configs/app.yml` from `extraction.engine: v1` to `v2`.
+- V1 remains the rollback backend during the observation period.
+
+The first two bullets govern **OFFICIAL data publication**. They do not invalidate a
+governed V2 **DRAFT** production run, which may activate after engineering acceptance
+and recorded cutover approval.
 
 ## First T25 holdout (retired)
 

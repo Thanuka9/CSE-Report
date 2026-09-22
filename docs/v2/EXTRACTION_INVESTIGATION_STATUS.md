@@ -10,16 +10,18 @@ Recovery plan: `docs/v2/NEXT_ENGINEERING_STEPS_AND_PROJECT_RECOVERY_PLAN.md`.
 Verified open-work path: `docs/v2/VERIFIED_OPEN_WORK_AND_FINAL_ENGINEERING_PATH.md` (engineering head `0d844aa`+).
 No-patches recovery strategy: `docs/v2/EXTRACTION_RECOVERY_STRATEGY_NO_PATCHES.md` (R0 freeze + R1 matrix started).
 
-**Current verdict:** **READY FOR OFFICIAL DECISION — NOT YET OFFICIAL.** Hybrid 829 parity is passed, unresolved conflicts are quarantined, and remote deterministic production CI is green on Ubuntu + Windows (run #238). Production remains V1 until recorded human approval.
+**Current verdict:** **ENGINEERING COMPLETE FOR V2 DRAFT CUTOVER.** Hybrid 829 parity passed, unresolved conflicts are quarantined, native signed-review propagation and OFFICIAL completeness guards are implemented, and remote CI run #241 is green on Ubuntu + Windows. Production remains V1 until recorded human cutover approval. OFFICIAL data publication remains separately blocked on independent human proof and signed/curated coverage.
 
 ## T29 Resume cutover
 
-Remote CI is **GREEN**: Deterministic production checks run #238
-(`35729229940`) passed on Ubuntu and Windows at head
-`282fe57af8d3d0bebbf007e06d83eb26e54c4774`.
+Remote CI is **GREEN**: Deterministic production checks run #241
+(`35739347108`) passed on Ubuntu and Windows at head
+`ef30bc0bda4815eaea74ed231b4f0f44617dda92`.
 
-**BLOCKED only on recorded OFFICIAL approval.** Do not set `configs/app.yml`
-`engine: v2` before that approval exists. Blind source-truth evidence remains in
+**V2 DRAFT cutover is blocked only on recorded human cutover approval.** Do not set
+`configs/app.yml` `engine: v2` before that approval exists. OFFICIAL data publication
+has additional human-proof requirements: 100 independent MANUAL_QA issuers and enough
+APPROVED/CURATED native facts to satisfy the governed 8,924 OFFICIAL completeness floor. Blind source-truth evidence remains in
 `tests/v2/source_truth/items.jsonl`; historical investigation artefacts remain snapshots
 rather than being rewritten to match the current branch.
 
@@ -48,7 +50,7 @@ the OFFICIAL approval described above.
 | F3 duration ownership | **FIX LANDED** | Ignore `period ended` date cues as false 9M banners |
 | N11 Clean-SHA baseline | **DONE** | `baseline_run_summary.json` — `actual_code_sha=2ff5d1f…`, `all_deterministic=true` |
 | N12 Canonical regen | **DONE** | Freeze `ef4b200` + report `0d844aa` |
-| N13 CI / PR | **DONE** | PR #35; Deterministic production checks run #238 passed on Ubuntu + Windows |
+| N13 CI / PR | **DONE** | PR #35; Deterministic production checks run #241 passed on Ubuntu + Windows at `ef30bc0` |
 | N14 Universe challenger | **DONE (fail-closed)** | Post-F1/F3: draft-publishable **3,748** vs floor **8,924** (+64 vs prior 3,684); 43 OCR_REQUIRED_NOT_AVAILABLE — `n14_challenger_2026-09-09.json` |
 | R0 Direction freeze | **DONE** | `R0_DIRECTION_FREEZE.md` + strategy copied |
 | R1 V1↔V2 matrix | **LOCKED** | `V1_V2_EXTRACTION_COMPONENT_MATRIX.md` — H1 header MERGE/PORT next; reject NDB/silent-fill debt |
@@ -57,8 +59,8 @@ the OFFICIAL approval described above.
 | N17 Blind gold | **PACKAGE READY / NOT ADJUDICATED** | `n17_blind_review_queue.json` + `N17_BLIND_ADJUDICATION.md` |
 | T26 Frozen-universe | OPEN | Sept-10 artefacts missing |
 | T27 Baseline | PARTIAL | Floor stays 8924 |
-| T28 Certification | **READY FOR OFFICIAL DECISION** | Remote CI + hybrid parity gates passed |
-| T29 Cutover | **BLOCKED ON OFFICIAL APPROVAL** | Production stays V1 until approval |
+| T28 Certification | **ENGINEERING COMPLETE / HUMAN PROOF PENDING FOR OFFICIAL** | Hybrid parity + CI + native review/completeness guards passed |
+| T29 Cutover | **BLOCKED ON HUMAN CUTOVER APPROVAL** | V2 DRAFT technically ready; production stays V1 until approval |
 
 ## Hard stops
 
@@ -72,6 +74,10 @@ the OFFICIAL approval described above.
 
 ## Next
 
-Record the OFFICIAL human decision. If approved, change `configs/app.yml`
-`extraction.engine: v2`, run the governed production smoke, and retain V1 as the rollback
-backend during the observation period.
+For V2 DRAFT production: record the human cutover decision, then change
+`configs/app.yml` `extraction.engine: v2`, run the governed production smoke, and retain
+V1 as rollback during the observation period.
+
+For OFFICIAL data publication: complete the independent MANUAL_QA issuer gate and signed
+APPROVED/CURATED native-fact coverage. Do not relabel PIPELINE_SEEDED rows or weaken the
+8,924 floor.
