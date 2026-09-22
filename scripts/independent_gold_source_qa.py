@@ -53,6 +53,7 @@ ALIASES: dict[str, tuple[re.Pattern[str], ...]] = {
         r"\boperating profit\b", r"\bprofit from operations?\b",
         r"\bresults? from operating activities\b", r"\boperating results?\b",
         r"\bprofit from operating activities\b", r"\bprofit before vat",
+        r"\boperating.*profit\b",
     )),
     "PBT": tuple(re.compile(p, re.I) for p in (
         r"\bprofit.*before.*tax", r"\bloss.*before.*tax",
@@ -66,14 +67,17 @@ ALIASES: dict[str, tuple[re.Pattern[str], ...]] = {
     "EPS_BASIC": tuple(re.compile(p, re.I) for p in (
         r"\bbasic earnings per share\b", r"\bbasic.*earnings.*share",
         r"\bearnings per share.*basic", r"\bbasic eps\b",
+        r"\bearnings per ordinary share.*basic", r"\bbasic.*per share",
     )),
     "EPS_DILUTED": tuple(re.compile(p, re.I) for p in (
         r"\bdiluted earnings per share\b", r"\bdiluted.*earnings.*share",
         r"\bearnings per share.*diluted", r"\bdiluted eps\b",
+        r"\bearnings per ordinary share.*diluted", r"\bdiluted.*per share",
     )),
     "NAVPS": tuple(re.compile(p, re.I) for p in (
         r"\bnet assets? per share\b", r"\bnet asset value per share\b",
-        r"\bnav per share\b", r"\bnavps\b",
+        r"\bnav per share\b", r"\bnavps\b", r"\bnet asset per share\b",
+        r"\bnet assets per ordinary share\b", r"\bnet asset value per ordinary share\b",
     )),
     "TOTAL_ASSETS": (re.compile(r"\btotal assets\b", re.I),),
     "TOTAL_EQUITY": tuple(re.compile(p, re.I) for p in (
@@ -173,13 +177,18 @@ def download(urls: list[str], destination: Path) -> tuple[str, str]:
 
 
 def page_scale(text: str) -> Decimal:
-    t = text.casefold().replace("’", "'").replace("‘", "'")
-    if re.search(r"(?:rs\.?|lkr)?\s*[' ]?000s?\b", t):
-        return Decimal("1000")
-    if re.search(r"(?:rs\.?|lkr)\s*(?:mn|million)\b", t):
-        return Decimal("1000000")
-    if re.search(r"(?:rs\.?|lkr)\s*(?:bn|billion)\b", t):
-        return Decimal("1000000000")
+    """Detect a statement unit declaration, not narrative monetary prose."""
+    for line in text.splitlines():
+        t = line.casefold().replace("’", "'").replace("‘", "'").strip()
+        # Declarations are short: "(Rs. '000)", "Rs Mn", "LKR million".
+        if len(t) > 90:
+            continue
+        if re.search(r"(?:rs\.?|lkr)\s*[' ]?000s?\b", t):
+            return Decimal("1000")
+        if re.search(r"(?:rs\.?|lkr)\s*(?:mn|million)\b", t):
+            return Decimal("1000000")
+        if re.search(r"(?:rs\.?|lkr)\s*(?:bn|billion)\b", t):
+            return Decimal("1000000000")
     return Decimal("1")
 
 
@@ -289,7 +298,7 @@ def row_band_text(
             continue
         ry = sum(_y_center(w) for w in row) / len(row)
         dist = yc - ry
-        if 0 < dist <= 18 and dist < prev_dist:
+        if 0 < dist <= 30 and dist < prev_dist:
             previous = row
             prev_dist = dist
     if previous:
@@ -318,16 +327,34 @@ def nearest_year(words: list[tuple[Any, ...]], x: float, y: float) -> str | None
 def column_entity_ok(scope: str, words: list[tuple[Any, ...]], x: float, y: float, page_text: str) -> bool:
     ctx = header_context(words, x, y).casefold()
     page = page_text.casefold()
+
+    labels: list[tuple[float, str]] = []
+    for w in words:
+        token = str(w[4]).strip().casefold()
+        if token not in {"company", "bank", "group", "consolidated", "separate"}:
+            continue
+        wy = _y_center(w)
+        if not (y - 360 <= wy <= y + 4):
+            continue
+        cx = (float(w[0]) + float(w[2])) / 2
+        labels.append((abs(cx - x) + max(0.0, y - wy) * 0.04, token))
+    labels.sort()
+    nearest = labels[0][1] if labels else None
+
     if scope == "BANK":
-        if "bank" in ctx:
+        if nearest == "bank":
+            return True
+        if "bank" in ctx and "group" not in ctx:
             return True
         if "bank" in page and "group" not in page and "consolidated" not in page:
             return True
         return False
     if scope == "COMPANY":
+        if nearest in {"company", "separate"}:
+            return True
         if "company" in ctx or "separate" in ctx:
             return True
-        if ("company income statement" in page or "company statement of financial position" in page):
+        if "company income statement" in page or "company statement of financial position" in page:
             return True
         if "group" not in page and "consolidated" not in page:
             return True
@@ -374,8 +401,9 @@ def find_matches(
 ) -> list[Match]:
     matches = []
     for page_index, ptext, words, rows, detected_scale in pages:
-        p_period = period_ok(ptext, target_period)
-        p_duration = duration_ok(ptext)
+        document_text = " ".join(page[1] for page in pages[:4])
+        p_period = period_ok(ptext, target_period) or period_ok(document_text, target_period)
+        p_duration = duration_ok(ptext) or duration_ok(document_text)
         for w in words:
             raw = parse_num(str(w[4]))
             if raw is None:
