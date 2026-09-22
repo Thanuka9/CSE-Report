@@ -83,6 +83,8 @@ ALIASES: dict[str, tuple[re.Pattern[str], ...]] = {
     "TOTAL_EQUITY": tuple(re.compile(p, re.I) for p in (
         r"\btotal equity\b", r"\btotal shareholders'? funds\b",
         r"\btotal shareholders'? equity\b",
+        r"\bequity attributable to.*(?:owners|equity holders)\b",
+        r"\btotal.*equity attributable to.*(?:owners|equity holders)\b",
     )),
     "TOTAL_LIABILITIES": (re.compile(r"\btotal liabilities\b", re.I),),
 }
@@ -109,6 +111,7 @@ class Match:
     raw_number: Decimal
     scale: Decimal
     normalized: Decimal
+    declared_scale: Decimal
     header_context: str
     period_ok: bool
     duration_ok: bool
@@ -276,6 +279,7 @@ def row_band_text(
     words: list[tuple[Any, ...]],
     number_word: tuple[Any, ...],
     rows: list[list[tuple[Any, ...]]],
+    metric: str,
 ) -> str:
     """Recover the visible row around a number regardless of PDF block splitting."""
     yc = _y_center(number_word)
@@ -287,23 +291,26 @@ def row_band_text(
     ]
     same.sort(key=lambda w: float(w[0]))
     text = " ".join(str(w[4]) for w in same)
-    if any(alias_ok(metric, text) for metric in ALIASES):
+    if alias_ok(metric, text):
         return text
 
-    # Wrapped labels are commonly one visual line immediately above the numbers.
-    previous: list[tuple[Any, ...]] | None = None
-    prev_dist = 999.0
+    # Wrapped labels may sit one or two visual baselines away from the numeric row,
+    # or PyMuPDF may split the label into a separate block entirely.
+    nearby: list[tuple[float, str]] = []
     for row in rows:
         if not row:
             continue
         ry = sum(_y_center(w) for w in row) / len(row)
-        dist = yc - ry
-        if 0 < dist <= 30 and dist < prev_dist:
-            previous = row
-            prev_dist = dist
-    if previous:
-        prev_text = " ".join(str(w[4]) for w in previous)
-        text = f"{prev_text} {text}"
+        dist = abs(yc - ry)
+        if dist > 52:
+            continue
+        rtext = " ".join(str(w[4]) for w in row)
+        if alias_ok(metric, rtext):
+            left_penalty = 0.0 if min(float(w[0]) for w in row) < x0 else 18.0
+            nearby.append((dist + left_penalty, rtext))
+    if nearby:
+        nearby.sort(key=lambda item: item[0])
+        return f"{nearby[0][1]} {text}"
     return text
 
 
@@ -410,7 +417,7 @@ def find_matches(
                 continue
             x = (float(w[0]) + float(w[2])) / 2
             y = (float(w[1]) + float(w[3])) / 2
-            text = row_band_text(words, w, rows)
+            text = row_band_text(words, w, rows, metric)
             if not alias_ok(metric, text):
                 continue
             ctx = header_context(words, x, y)
@@ -441,6 +448,7 @@ def find_matches(
                         raw_number=raw,
                         scale=scale,
                         normalized=normalized,
+                        declared_scale=detected_scale,
                         header_context=ctx,
                         period_ok=c_period,
                         duration_ok=(c_duration if metric in FLOW_METRICS else True),
@@ -565,6 +573,8 @@ def main() -> int:
                     "evidence_page": best.page if best else "",
                     "source_raw_value": str(best.raw_number) if best else "",
                     "source_scale": str(best.scale) if best else "",
+                    "declared_scale": str(best.declared_scale) if best else "",
+                    "scale_consistent": bool(best.scale == best.declared_scale) if best else False,
                     "recomputed_value": str(best.normalized) if best else "",
                     "period_ok": bool(best.period_ok) if best else False,
                     "duration_ok": bool(best.duration_ok) if best else False,
@@ -611,7 +621,8 @@ def main() -> int:
     fact_fields = [
         "issuer_index","issuer_name","symbol","period_end","scope","metric_code",
         "expected_value","qa_result","evidence_page","source_raw_value","source_scale",
-        "recomputed_value","period_ok","duration_ok","entity_ok","evidence_score",
+        "declared_scale","scale_consistent","recomputed_value","period_ok","duration_ok",
+        "entity_ok","evidence_score",
         "source_row","column_context","pdf_url","pdf_sha256",
         "prior_verification_status","note",
     ]
