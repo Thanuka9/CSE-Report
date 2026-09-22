@@ -174,7 +174,7 @@ def download(urls: list[str], destination: Path) -> tuple[str, str]:
 
 def page_scale(text: str) -> Decimal:
     t = text.casefold().replace("’", "'").replace("‘", "'")
-    if re.search(r"(?:rs\.?|lkr)\s*[' ]?000\b", t):
+    if re.search(r"(?:rs\.?|lkr)?\s*[' ]?000s?\b", t):
         return Decimal("1000")
     if re.search(r"(?:rs\.?|lkr)\s*(?:mn|million)\b", t):
         return Decimal("1000000")
@@ -183,17 +183,38 @@ def page_scale(text: str) -> Decimal:
     return Decimal("1")
 
 
+def _y_center(word: tuple[Any, ...]) -> float:
+    return (float(word[1]) + float(word[3])) / 2.0
+
+
 def group_rows(words: list[tuple[Any, ...]]) -> list[list[tuple[Any, ...]]]:
-    rows: dict[tuple[int, int], list[tuple[Any, ...]]] = defaultdict(list)
-    for word in words:
-        if len(word) >= 8:
-            rows[(int(word[5]), int(word[6]))].append(word)
-    result = []
-    for row in rows.values():
+    """Cluster words by visual baseline, ignoring PyMuPDF block/line IDs.
+
+    CSE tables often split a visible row into separate logical PDF blocks, which
+    made the first verifier miss correct facts such as JKH PAT/PBT/OP.
+    """
+    ordered = sorted((w for w in words if len(w) >= 5), key=lambda w: (_y_center(w), float(w[0])))
+    rows: list[list[tuple[Any, ...]]] = []
+    centers: list[float] = []
+    for word in ordered:
+        yc = _y_center(word)
+        best = None
+        best_dist = 10.0
+        for idx, center in enumerate(centers[-4:], start=max(0, len(centers) - 4)):
+            dist = abs(yc - center)
+            if dist <= 4.5 and dist < best_dist:
+                best = idx
+                best_dist = dist
+        if best is None:
+            rows.append([word])
+            centers.append(yc)
+        else:
+            rows[best].append(word)
+            centers[best] = sum(_y_center(w) for w in rows[best]) / len(rows[best])
+    for row in rows:
         row.sort(key=lambda w: float(w[0]))
-        result.append(row)
-    result.sort(key=lambda row: (float(row[0][1]), float(row[0][0])))
-    return result
+    rows.sort(key=lambda row: (_y_center(row[0]), float(row[0][0])))
+    return rows
 
 
 def row_text(row: list[tuple[Any, ...]]) -> str:
@@ -206,7 +227,13 @@ def alias_ok(metric: str, text: str) -> bool:
 
 def period_ok(text: str, target: str) -> bool:
     if target == "2026-06-30":
-        return any(p.search(text) for p in PERIOD_PATTERNS)
+        if any(p.search(text) for p in PERIOD_PATTERNS):
+            return True
+        compact = text.casefold()
+        return bool(
+            re.search(r"30\s*(?:th)?\s*june\b", compact)
+            and re.search(r"\b2026\b", compact)
+        )
     y, m, d = target.split("-")
     month = {"12": "december", "03": "march", "06": "june"}.get(m)
     return bool(month and re.search(rf"\b{int(d)}\s+{month}\s+{y}\b", text, re.I))
@@ -230,10 +257,82 @@ def header_context(words: list[tuple[Any, ...]], x: float, y: float) -> str:
     for w in words:
         wx0, wy0, wx1, _ = map(float, w[:4])
         cx = (wx0 + wx1) / 2
-        if y - 260 <= wy0 <= y + 4 and abs(cx - x) <= 95:
+        if y - 320 <= wy0 <= y + 4 and abs(cx - x) <= 140:
             chosen.append(w)
     chosen.sort(key=lambda w: (float(w[1]), float(w[0])))
-    return " ".join(str(w[4]) for w in chosen)[-1200:]
+    return " ".join(str(w[4]) for w in chosen)[-1800:]
+
+
+def row_band_text(
+    words: list[tuple[Any, ...]],
+    number_word: tuple[Any, ...],
+    rows: list[list[tuple[Any, ...]]],
+) -> str:
+    """Recover the visible row around a number regardless of PDF block splitting."""
+    yc = _y_center(number_word)
+    x0 = float(number_word[0])
+    same = [
+        w
+        for w in words
+        if abs(_y_center(w) - yc) <= 5.0 and float(w[0]) <= x0 + 320
+    ]
+    same.sort(key=lambda w: float(w[0]))
+    text = " ".join(str(w[4]) for w in same)
+    if any(alias_ok(metric, text) for metric in ALIASES):
+        return text
+
+    # Wrapped labels are commonly one visual line immediately above the numbers.
+    previous: list[tuple[Any, ...]] | None = None
+    prev_dist = 999.0
+    for row in rows:
+        if not row:
+            continue
+        ry = sum(_y_center(w) for w in row) / len(row)
+        dist = yc - ry
+        if 0 < dist <= 18 and dist < prev_dist:
+            previous = row
+            prev_dist = dist
+    if previous:
+        prev_text = " ".join(str(w[4]) for w in previous)
+        text = f"{prev_text} {text}"
+    return text
+
+
+def nearest_year(words: list[tuple[Any, ...]], x: float, y: float) -> str | None:
+    candidates: list[tuple[float, str]] = []
+    for w in words:
+        token = str(w[4]).strip()
+        if token not in {"2024", "2025", "2026", "2027"}:
+            continue
+        wy = _y_center(w)
+        if not (y - 320 <= wy <= y + 4):
+            continue
+        cx = (float(w[0]) + float(w[2])) / 2
+        candidates.append((abs(cx - x) + max(0.0, y - wy) * 0.08, token))
+    if not candidates:
+        return None
+    candidates.sort()
+    return candidates[0][1]
+
+
+def column_entity_ok(scope: str, words: list[tuple[Any, ...]], x: float, y: float, page_text: str) -> bool:
+    ctx = header_context(words, x, y).casefold()
+    page = page_text.casefold()
+    if scope == "BANK":
+        if "bank" in ctx:
+            return True
+        if "bank" in page and "group" not in page and "consolidated" not in page:
+            return True
+        return False
+    if scope == "COMPANY":
+        if "company" in ctx or "separate" in ctx:
+            return True
+        if ("company income statement" in page or "company statement of financial position" in page):
+            return True
+        if "group" not in page and "consolidated" not in page:
+            return True
+        return False
+    return False
 
 
 def close(a: Decimal, b: Decimal) -> bool:
@@ -277,56 +376,60 @@ def find_matches(
     for page_index, ptext, words, rows, detected_scale in pages:
         p_period = period_ok(ptext, target_period)
         p_duration = duration_ok(ptext)
-        p_entity = entity_ok(scope, ptext)
-        for row in rows:
-            text = row_text(row)
+        for w in words:
+            raw = parse_num(str(w[4]))
+            if raw is None:
+                continue
+            x = (float(w[0]) + float(w[2])) / 2
+            y = (float(w[1]) + float(w[3])) / 2
+            text = row_band_text(words, w, rows)
             if not alias_ok(metric, text):
                 continue
-            for w in row:
-                raw = parse_num(str(w[4]))
-                if raw is None:
+            ctx = header_context(words, x, y)
+            year = nearest_year(words, x, y)
+            target_year = target_period[:4]
+            c_period = p_period and (year in {None, target_year})
+            c_duration = duration_ok(ctx) or p_duration
+            c_entity = column_entity_ok(scope, words, x, y, ptext)
+            for scale in candidate_scales(metric, detected_scale):
+                normalized = raw * scale
+                if not close(normalized, expected):
                     continue
-                x = (float(w[0]) + float(w[2])) / 2
-                y = (float(w[1]) + float(w[3])) / 2
-                ctx = header_context(words, x, y)
-                c_period = period_ok(ctx, target_period) or p_period
-                c_duration = duration_ok(ctx) or (
-                    p_duration and "three months" in ptext.casefold()[:3000]
-                )
-                c_entity = entity_ok(scope, ctx) or (
-                    p_entity and not any(k in ctx.casefold() for k in ("group", "consolidated"))
-                )
-                for scale in candidate_scales(metric, detected_scale):
-                    normalized = raw * scale
-                    if not close(normalized, expected):
-                        continue
-                    score = 6
-                    score += 4 if scale == detected_scale else -2
-                    score += 3 if c_period else 0
-                    score += 3 if c_entity else 0
-                    if metric in FLOW_METRICS:
-                        score += 3 if c_duration else -2
-                    matches.append(
-                        Match(
-                            page=page_index + 1,
-                            row_text=text[:700],
-                            raw_number=raw,
-                            scale=scale,
-                            normalized=normalized,
-                            header_context=ctx,
-                            period_ok=c_period,
-                            duration_ok=(c_duration if metric in FLOW_METRICS else True),
-                            entity_ok=c_entity,
-                            score=score,
-                        )
+                score = 6
+                if scale == detected_scale:
+                    score += 4
+                elif metric in MONETARY and detected_scale != Decimal("1"):
+                    score -= 4
+                else:
+                    score -= 1
+                score += 3 if c_period else -2
+                score += 3 if c_entity else -2
+                if metric in FLOW_METRICS:
+                    score += 3 if c_duration else -2
+                matches.append(
+                    Match(
+                        page=page_index + 1,
+                        row_text=text[:900],
+                        raw_number=raw,
+                        scale=scale,
+                        normalized=normalized,
+                        header_context=ctx,
+                        period_ok=c_period,
+                        duration_ok=(c_duration if metric in FLOW_METRICS else True),
+                        entity_ok=c_entity,
+                        score=score,
                     )
+                )
     return sorted(matches, key=lambda m: (-m.score, m.page))
 
 
 def classify(metric: str, matches: list[Match]) -> tuple[str, str]:
     if not matches:
-        return "FAIL", "Expected value not found on a matching source row with acceptable scale."
+        return "FAIL", "Expected value was not independently located on an applicable source row."
     best = matches[0]
+    scale_problem = metric in MONETARY and best.scale != Decimal("1") and best.score < 10
+    if scale_problem:
+        return "REVIEW", "Numeric claim was located, but source scale needs adjudication."
     threshold = 12 if metric in FLOW_METRICS else 10
     if best.score >= threshold and best.period_ok and best.entity_ok and best.duration_ok:
         return "PASS_STRONG", "Exact value and required source context independently located."
