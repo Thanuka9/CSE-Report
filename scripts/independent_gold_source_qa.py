@@ -254,25 +254,31 @@ def candidate_scales(metric: str, detected: Decimal) -> tuple[Decimal, ...]:
     return tuple(out)
 
 
-def find_matches(
-    doc: fitz.Document,
-    metric: str,
-    expected: Decimal,
-    scope: str,
-    target_period: str,
-) -> list[Match]:
-    matches = []
+def prepare_pages(doc: fitz.Document) -> list[tuple[int, str, list[tuple[Any, ...]], list[list[tuple[Any, ...]]], Decimal]]:
+    pages = []
     for page_index in range(doc.page_count):
         page = doc.load_page(page_index)
         ptext = page.get_text("text")
         words = page.get_text("words")
         if not words:
             continue
-        detected_scale = page_scale(ptext)
+        pages.append((page_index, ptext, words, group_rows(words), page_scale(ptext)))
+    return pages
+
+
+def find_matches(
+    pages: list[tuple[int, str, list[tuple[Any, ...]], list[list[tuple[Any, ...]]], Decimal]],
+    metric: str,
+    expected: Decimal,
+    scope: str,
+    target_period: str,
+) -> list[Match]:
+    matches = []
+    for page_index, ptext, words, rows, detected_scale in pages:
         p_period = period_ok(ptext, target_period)
         p_duration = duration_ok(ptext)
         p_entity = entity_ok(scope, ptext)
-        for row in group_rows(words):
+        for row in rows:
             text = row_text(row)
             if not alias_ok(metric, text):
                 continue
@@ -327,8 +333,11 @@ def classify(metric: str, matches: list[Match]) -> tuple[str, str]:
     return "REVIEW", "Exact value located, but period/duration/entity/scale context needs visual adjudication."
 
 
-def issuer_identity_ok(doc: fitz.Document, issuer: str) -> bool:
-    text = " ".join(doc.load_page(i).get_text("text") for i in range(min(3, doc.page_count)))
+def issuer_identity_ok(
+    pages: list[tuple[int, str, list[tuple[Any, ...]], list[list[tuple[Any, ...]]], Decimal]],
+    issuer: str,
+) -> bool:
+    text = " ".join(page[1] for page in pages[:3])
     if norm_name(issuer) in norm_name(text):
         return True
     tokens = [t for t in re.findall(r"[a-z0-9]+", issuer.casefold()) if len(t) > 3]
@@ -400,11 +409,12 @@ def main() -> int:
             )
             continue
 
-        identity = issuer_identity_ok(doc, issuer)
+        pages = prepare_pages(doc)
+        identity = issuer_identity_ok(pages, issuer)
         counts: Counter[str] = Counter()
         for metric, value in item.get("facts", {}).items():
             expected = Decimal(str(value))
-            matches = find_matches(doc, str(metric), expected, scope, period)
+            matches = find_matches(pages, str(metric), expected, scope, period)
             result, note = classify(str(metric), matches)
             if not identity and result == "PASS_STRONG":
                 result = "REVIEW"
