@@ -181,13 +181,16 @@ def download(urls: list[str], destination: Path) -> tuple[str, str]:
 
 def page_scale(text: str) -> Decimal:
     """Detect a statement unit declaration, not narrative monetary prose."""
-    for line in text.splitlines():
-        t = line.casefold().replace("’", "'").replace("‘", "'").strip()
-        # Declarations are short: "(Rs. '000)", "Rs Mn", "LKR million".
+    normalized = text.casefold().replace("’", "'").replace("‘", "'")
+    # '000 is declaration syntax, not ordinary narrative prose, so it is safe to
+    # detect even when the PDF merges a whole table header into one long text line.
+    if re.search(r"(?:rs\.?|lkr)\s*[' ]?000s?\b", normalized):
+        return Decimal("1000")
+    for line in normalized.splitlines():
+        t = line.strip()
+        # Mn/Bn words also occur in narrative; only trust compact declaration lines.
         if len(t) > 90:
             continue
-        if re.search(r"(?:rs\.?|lkr)\s*[' ]?000s?\b", t):
-            return Decimal("1000")
         if re.search(r"(?:rs\.?|lkr)\s*(?:mn|million)\b", t):
             return Decimal("1000000")
         if re.search(r"(?:rs\.?|lkr)\s*(?:bn|billion)\b", t):
@@ -426,14 +429,17 @@ def find_matches(
             c_period = p_period and (year in {None, target_year})
             c_duration = duration_ok(ctx) or p_duration
             c_entity = column_entity_ok(scope, words, x, y, ptext)
-            for scale in candidate_scales(metric, detected_scale):
+            effective_declared_scale = (
+                Decimal("1") if metric in PER_SHARE else detected_scale
+            )
+            for scale in candidate_scales(metric, effective_declared_scale):
                 normalized = raw * scale
                 if not close(normalized, expected):
                     continue
                 score = 6
-                if scale == detected_scale:
+                if scale == effective_declared_scale:
                     score += 4
-                elif metric in MONETARY and detected_scale != Decimal("1"):
+                elif metric in MONETARY and effective_declared_scale != Decimal("1"):
                     score -= 4
                 else:
                     score -= 1
@@ -448,7 +454,7 @@ def find_matches(
                         raw_number=raw,
                         scale=scale,
                         normalized=normalized,
-                        declared_scale=detected_scale,
+                        declared_scale=effective_declared_scale,
                         header_context=ctx,
                         period_ok=c_period,
                         duration_ok=(c_duration if metric in FLOW_METRICS else True),
