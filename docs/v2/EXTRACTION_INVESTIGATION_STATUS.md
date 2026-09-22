@@ -10,14 +10,21 @@ Recovery plan: `docs/v2/NEXT_ENGINEERING_STEPS_AND_PROJECT_RECOVERY_PLAN.md`.
 Verified open-work path: `docs/v2/VERIFIED_OPEN_WORK_AND_FINAL_ENGINEERING_PATH.md` (engineering head `0d844aa`+).
 No-patches recovery strategy: `docs/v2/EXTRACTION_RECOVERY_STRATEGY_NO_PATCHES.md` (R0 freeze + R1 matrix started).
 
-**Verdict:** Architecture improved; first T25 holdout **retired** after F1/F3 + SFCL truth fix. Not engineering-complete. Not OFFICIAL-only. **Recovery direction:** port V1 structural intelligence into V2 contracts (no issuer patches). **Next human step: N17** blind adjudication (`docs/v2/N17_BLIND_ADJUDICATION.md`).
+**Current verdict:** **READY FOR OFFICIAL DECISION — NOT YET OFFICIAL.** Hybrid 829 parity is passed, unresolved conflicts are quarantined, and remote deterministic production CI is green on Ubuntu + Windows (run #238). Production remains V1 until recorded human approval.
 
 ## T29 Resume cutover
 
-**BLOCKED** until remote CI is green and recorded OFFICIAL approval exists. Do not set
-`configs/app.yml` `engine: v2` before those gates pass. Blind source-truth evidence
-remains in `tests/v2/source_truth/items.jsonl`; historical investigation artefacts remain
-snapshots rather than being rewritten to match the current branch.
+Remote CI is **GREEN**: Deterministic production checks run #238
+(`35729229940`) passed on Ubuntu and Windows at head
+`282fe57af8d3d0bebbf007e06d83eb26e54c4774`.
+
+**BLOCKED only on recorded OFFICIAL approval.** Do not set `configs/app.yml`
+`engine: v2` before that approval exists. Blind source-truth evidence remains in
+`tests/v2/source_truth/items.jsonl`; historical investigation artefacts remain snapshots
+rather than being rewritten to match the current branch.
+
+The task table below is retained as investigation chronology; the current release gate is
+the OFFICIAL approval described above.
 
 | Task | Status | Evidence |
 |---|---|---|
@@ -41,7 +48,7 @@ snapshots rather than being rewritten to match the current branch.
 | F3 duration ownership | **FIX LANDED** | Ignore `period ended` date cues as false 9M banners |
 | N11 Clean-SHA baseline | **DONE** | `baseline_run_summary.json` — `actual_code_sha=2ff5d1f…`, `all_deterministic=true` |
 | N12 Canonical regen | **DONE** | Freeze `ef4b200` + report `0d844aa` |
-| N13 CI / PR | **OPEN** | Branch pushed; `gh` not authenticated — [compare](https://github.com/Thanuka9/CSE-Report/compare/main...v2/extraction-investigation?expand=1) |
+| N13 CI / PR | **DONE** | PR #35; Deterministic production checks run #238 passed on Ubuntu + Windows |
 | N14 Universe challenger | **DONE (fail-closed)** | Post-F1/F3: draft-publishable **3,748** vs floor **8,924** (+64 vs prior 3,684); 43 OCR_REQUIRED_NOT_AVAILABLE — `n14_challenger_2026-09-09.json` |
 | R0 Direction freeze | **DONE** | `R0_DIRECTION_FREEZE.md` + strategy copied |
 | R1 V1↔V2 matrix | **LOCKED** | `V1_V2_EXTRACTION_COMPONENT_MATRIX.md` — H1 header MERGE/PORT next; reject NDB/silent-fill debt |
@@ -50,8 +57,8 @@ snapshots rather than being rewritten to match the current branch.
 | N17 Blind gold | **PACKAGE READY / NOT ADJUDICATED** | `n17_blind_review_queue.json` + `N17_BLIND_ADJUDICATION.md` |
 | T26 Frozen-universe | OPEN | Sept-10 artefacts missing |
 | T27 Baseline | PARTIAL | Floor stays 8924 |
-| T28 Certification | **BLOCKED ON ENGINEERING** | |
-| T29 Cutover | **BLOCKED ON ENGINEERING + OFFICIAL** | |
+| T28 Certification | **READY FOR OFFICIAL DECISION** | Remote CI + hybrid parity gates passed |
+| T29 Cutover | **BLOCKED ON OFFICIAL APPROVAL** | Production stays V1 until approval |
 
 ## Hard stops
 
@@ -61,8 +68,10 @@ snapshots rather than being rewritten to match the current branch.
 - Do not reuse failed T25 as final holdout.
 - Do not score N16 until blind adjudication.
 - Do not treat fail-closed as acceptance.
-- Do not claim OFFICIAL-only.
+- Do not claim OFFICIAL approval until a human approval record exists.
 
 ## Next
 
-Port generalized V1 table/continuation wins from R5 (no issuer patches) → re-bake H1/U1 → N17 parallel → full-universe remeasure only after a promoted transplant.
+Record the OFFICIAL human decision. If approved, change `configs/app.yml`
+`extraction.engine: v2`, run the governed production smoke, and retain V1 as the rollback
+backend during the observation period.

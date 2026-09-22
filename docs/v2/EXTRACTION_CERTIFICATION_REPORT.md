@@ -1,6 +1,6 @@
 # V2 Extraction Certification Report
 
-**Status: NOT CERTIFIED — HYBRID 829 PARITY PASSED — REMOTE CI IS THE OPEN TECHNICAL GATE**
+**Status: READY FOR OFFICIAL DECISION — NOT CERTIFIED UNTIL RECORDED OFFICIAL APPROVAL**
 
 Production extraction remains **V1** until recorded OFFICIAL approval.
 Coverage floor remains **8924**. Do not set `configs/app.yml` `extraction.engine: v2`.
@@ -18,9 +18,29 @@ N17 package: `docs/v2/N17_BLIND_ADJUDICATION.md`.
 ## Verdict
 
 829 pinned-file hybrid parity passed (3,183 V1 TARGET facts: 3,048 preserved, 135
-quarantined, 0 unexplained). Remote GitHub CI (`full-production-validation.yml` on
-Ubuntu + Windows) is the remaining technical gate. Do not flip `engine: v2` before
-green CI and recorded OFFICIAL approval. V1 remains the fallback backend.
+quarantined, 0 unexplained). Remote GitHub CI passed on both Ubuntu and Windows in
+Deterministic production checks run #238
+(`35729229940`, head `282fe57af8d3d0bebbf007e06d83eb26e54c4774`).
+The technical pack is READY FOR OFFICIAL DECISION. Do not flip `engine: v2` before
+recorded OFFICIAL approval. V1 remains the fallback backend.
+
+## Current release decision
+
+| Gate | Result |
+|---|---|
+| 829 pinned-file hybrid parity | PASS — 0 unexplained V1 TARGET losses/mismatches |
+| Unresolved V1/V2 conflicts | QUARANTINED |
+| Coverage floor | 8,924 unchanged |
+| Remote deterministic production CI | PASS — run #238, Ubuntu + Windows |
+| Production engine | V1 — intentionally unchanged |
+| Certification state | READY FOR OFFICIAL DECISION; not yet OFFICIAL |
+| Remaining gate | Recorded human OFFICIAL approval |
+
+After approval only: set `configs/app.yml` `extraction.engine: v2`, run the governed
+production smoke, and retain V1 as the rollback backend during the observation period.
+
+The investigation sections below are retained as historical chronology and do not
+override the current release-decision gates above.
 
 ## First T25 holdout (retired)
 
@@ -58,14 +78,14 @@ N16 identity locked (13 filings) — holdout_v2_identity_manifest.json
 | Checklist 20 V2 publish path | DONE (opt-in `engine=v2`) |
 | Engine default | V1 |
 
-## Still open before certification
+## Historical investigation gates retained for chronology
 
 | Gate | Result |
 |---|---|
 | N17 / N18 new unseen holdout | PACKAGE READY / BLOCKED ON human blind gold |
 | N11 clean-SHA locked-33 baseline | DONE (`2ff5d1f…`, deterministic) |
 | N12 canonical artefact regen | DONE |
-| N13 CI green | OPEN (branch pushed; PR needs `gh auth login`) |
+| N13 CI green | DONE — PR #35, Deterministic production checks run #238, Ubuntu + Windows |
 | N14 current-universe V2 challenger | DONE fail-closed (3,748 vs 8,924; +64 vs prior; 43 OCR unavailable) |
 | G02 / G04–G08 | UNTESTED vs source truth |
 | H1 / H2 | not built |
@@ -77,7 +97,7 @@ N16 identity locked (13 filings) — holdout_v2_identity_manifest.json
 - Do not promote V2 / lower 8924 / delete V1.
 - Do not score N16 before blind truth.
 - Do not reuse first T25 as final holdout.
-- Do not claim OFFICIAL-only / H2 complete / G02–G08 decided.
+- Do not claim OFFICIAL approval until a human approval record exists.
 - Do not treat Sept-05 diagnostic as Sept-10 acceptance.
 
 ## Artefacts
