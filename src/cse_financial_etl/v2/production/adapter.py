@@ -133,20 +133,22 @@ def synchronize_native_governance(
         tuple[str, str, date, str, Decimal],
         set[tuple[ValidationStatus, ReviewStatus]],
     ] = {}
-    for fact in production_facts:
-        if fact.normalized_value is None:
+    for production_fact in production_facts:
+        if production_fact.normalized_value is None:
             continue
         try:
-            validation = ValidationStatus(str(fact.validation_status).strip().upper())
-            review = ReviewStatus(str(fact.review_status).strip().upper())
+            validation = ValidationStatus(
+                str(production_fact.validation_status).strip().upper()
+            )
+            review = ReviewStatus(str(production_fact.review_status).strip().upper())
         except ValueError:
             continue
         key = (
-            fact.symbol.strip().upper(),
-            fact.metric_code.strip().upper(),
-            fact.period_end,
-            fact.entity_scope.strip().upper(),
-            fact.normalized_value,
+            production_fact.symbol.strip().upper(),
+            production_fact.metric_code.strip().upper(),
+            production_fact.period_end,
+            production_fact.entity_scope.strip().upper(),
+            production_fact.normalized_value,
         )
         governance.setdefault(key, set()).add((validation, review))
 
@@ -165,14 +167,14 @@ def synchronize_native_governance(
         return next(iter(states))
 
     synced_source: list[SourceFact] = []
-    for fact in source_facts:
-        state = state_for(fact)
+    for source_fact in source_facts:
+        state = state_for(source_fact)
         if state is None:
-            synced_source.append(fact)
+            synced_source.append(source_fact)
             continue
         validation, review = state
         synced_source.append(
-            fact.model_copy(
+            source_fact.model_copy(
                 update={
                     "validation_status": validation,
                     "review_status": review,
@@ -181,14 +183,14 @@ def synchronize_native_governance(
         )
 
     synced_derived: list[DerivedFact] = []
-    for fact in derived_facts:
-        state = state_for(fact)
+    for derived_fact in derived_facts:
+        state = state_for(derived_fact)
         if state is None:
-            synced_derived.append(fact)
+            synced_derived.append(derived_fact)
             continue
         validation, review = state
         synced_derived.append(
-            fact.model_copy(
+            derived_fact.model_copy(
                 update={
                     "validation_status": validation,
                     "review_status": review,

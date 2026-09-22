@@ -10,6 +10,7 @@ from cse_financial_etl.config import AppConfig, load_coverage_baseline
 from cse_financial_etl.reporting.excel import generate_excel
 from cse_financial_etl.v2.contracts.enums import ReleaseMode
 from cse_financial_etl.v2.contracts.facts import DerivedFact, SourceFact
+from cse_financial_etl.v2.contracts.release import ReleaseContext
 from cse_financial_etl.v2.production.facts_store import load_v2_publication_facts
 from cse_financial_etl.v2.production.publish import publish_production_workbook
 from cse_financial_etl.v2.production.release_context import build_production_release_context
@@ -29,7 +30,7 @@ def resolve_extraction_engine(app_config: AppConfig, engine: str | None) -> str:
 def _assert_v2_official_completeness(
     project_root: Path,
     *,
-    release: object,
+    release: ReleaseContext,
     source_facts: Sequence[SourceFact],
     derived_facts: Sequence[DerivedFact],
 ) -> None:
