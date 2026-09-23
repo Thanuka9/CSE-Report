@@ -733,6 +733,31 @@ class Pipeline:
             for item, facts in extracted_results
         ]
         extracted_results = derive_ratio_facts(stripped, display_periods=target_periods)
+        if chosen_engine == "v2":
+            from cse_financial_etl.v2.production.adapter import synchronize_native_governance
+            from cse_financial_etl.v2.production.facts_store import write_v2_publication_facts
+
+            governed_rows = [
+                fact for _downloaded_item, facts in extracted_results for fact in facts
+            ]
+            synced_source, synced_derived = synchronize_native_governance(
+                v2_source_facts,
+                v2_derived_facts,
+                governed_rows,
+            )
+            v2_source_facts = list(synced_source)
+            v2_derived_facts = list(synced_derived)
+            source_path, _derived_path = write_v2_publication_facts(
+                self.root,
+                as_of_date,
+                source_facts=v2_source_facts,
+                derived_facts=v2_derived_facts,
+            )
+            self.progress(
+                f"      persisted governed V2 publication facts "
+                f"({len(v2_source_facts)} source, {len(v2_derived_facts)} derived) "
+                f"under {source_path.name}"
+            )
         self.repository.apply_stamped_facts(extracted_results)
         if chosen_engine == "v2":
             from cse_financial_etl.v2.production.facts_store import write_v2_publication_facts

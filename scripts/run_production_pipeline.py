@@ -12,6 +12,7 @@ import json
 from datetime import date
 from pathlib import Path
 
+from cse_financial_etl.config import load_app_config
 from cse_financial_etl.orchestration.resilient_pipeline import run_resilient_pipeline
 from cse_financial_etl.production.r4_hardening import (
     apply_r4_hardening,
@@ -24,7 +25,6 @@ from cse_financial_etl.production.runtime import (
     relabel_workbook_leverage,
     write_metric_definitions,
 )
-from cse_financial_etl.config import load_app_config
 from cse_financial_etl.reporting.production_workbook import (
     generate_production_workbook,
     resolve_extraction_engine,
