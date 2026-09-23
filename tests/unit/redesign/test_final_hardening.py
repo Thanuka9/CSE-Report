@@ -52,7 +52,7 @@ def test_explicit_layout_fallback_is_a_production_gate(tmp_path: Path) -> None:
     assert "EXPLICIT_LAYOUT_FALLBACK_USED" in {hit.code for hit in hits}
 
 
-def test_gold_gate_requires_independent_issuer_breadth() -> None:
+def test_gold_gate_requires_independent_issuer_breadth_in_official() -> None:
     hits = evaluate_production_gates(
         [],
         golden_validation={
@@ -62,5 +62,6 @@ def test_gold_gate_requires_independent_issuer_breadth() -> None:
             "results": [],
         },
         coverage_baseline={"min_gold_sample": 100, "min_gold_issuers": 100},
+        release_mode="OFFICIAL",
     )
     assert "GOLD_ISSUER_SAMPLE_INCOMPLETE" in {hit.code for hit in hits}

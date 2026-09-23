@@ -253,3 +253,41 @@ def test_investor_information_page_is_eps_note() -> None:
     )
     regions = detect_statement_regions(document)
     assert any(region.statement_type is StatementType.EPS_NOTE for region in regions)
+
+
+def test_ocr_statmenet_typo_is_income_statement() -> None:
+    document = canonical_document_from_pages(
+        (
+            (
+                "COMMERCIAL CREDIT & FINANCE PLC",
+                "STATMENET OF PROFIT OR LOSS",
+                "For the Three months ended",
+                "Gross Income 100",
+            ),
+        )
+    )
+    regions = detect_statement_regions(document)
+    assert regions[0].statement_type is StatementType.INCOME_STATEMENT
+    assert "HEADING_MATCH" in regions[0].reason_codes
+
+
+def test_untitled_period_grid_with_income_body_cues_is_income() -> None:
+    document = canonical_document_from_pages(
+        (
+            (
+                "ABANS FINANCE PLC",
+                "09 Months 03 Months",
+                "Ended 31 December 31 December",
+                "2025 2024 2025 2024",
+                "Rs. Rs. Rs. Rs.",
+                "Income 100 90 80 70",
+                "Interest Income 90 80 70 60",
+                "Net Interest Income 80 70 60 50",
+                "Total Operating Income 70 60 50 40",
+                "Operating Profit before Taxes on Financial Services 30 20 10 5",
+            ),
+        )
+    )
+    regions = detect_statement_regions(document)
+    assert regions[0].statement_type is StatementType.INCOME_STATEMENT
+    assert "BODY_CUE_INCOME" in regions[0].reason_codes

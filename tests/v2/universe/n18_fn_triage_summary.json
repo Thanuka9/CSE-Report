@@ -1,0 +1,39 @@
+{
+  "id": "n18-fn-triage",
+  "status": "TRIAGE",
+  "fn_count": 66,
+  "family_counts": {
+    "NO_TARGET_CANDIDATE": 16,
+    "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT": 45,
+    "NO_TARGET_CANDIDATE_NEAR_MISS": 5
+  },
+  "stage_counts": {
+    "NO_TARGET_CANDIDATE": 16,
+    "ENTITY_UNRESOLVED": 35,
+    "CONCEPT_UNRESOLVED": 15
+  },
+  "by_metric": {
+    "EPS_BASIC": 8,
+    "NAVPS": 7,
+    "OPERATING_PROFIT": 6,
+    "PAT": 8,
+    "PBT": 8,
+    "TOP_LINE": 6,
+    "TOTAL_ASSETS": 6,
+    "TOTAL_EQUITY": 7,
+    "TOTAL_LIABILITIES": 6,
+    "EPS_DILUTED": 4
+  },
+  "by_issuer": {
+    "AFSL.N0000": 9,
+    "AMCL.N0000": 9,
+    "ATLL.N0000": 10,
+    "CINS.N0000": 2,
+    "COCR.N0000": 5,
+    "HUNA.N0000": 4,
+    "LGIL.N0000": 9,
+    "PABC.N0000": 9,
+    "SDB.N0000": 9
+  },
+  "note": "NO_TARGET_CANDIDATE is not source-verified ROW_NOT_FOUND. CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT means concept matched but admission/validation failed."
+}

@@ -1,0 +1,49 @@
+{
+  "id": "hybrid-829-disagreement-audit",
+  "source_run": "reports/v1_v2_same_input/hybrid_baseline_full829",
+  "audited_at": "2026-09-21T15:20:00+00:00",
+  "scope": "disagreements only; no extractor rewrite",
+  "headline": {
+    "v1_target_extracted": 3183,
+    "agree_preserve": 2973,
+    "supersede": 101,
+    "quarantine": 82,
+    "unexplained_value_mismatch": 13,
+    "unexplained_loss_absent": 14,
+    "ocr_pipeline_errors": 35,
+    "parity_pass_first_run": false
+  },
+  "classifications": {
+    "UNEXPLAINED_VALUE_MISMATCH": {
+      "count": 13,
+      "decision": "neither initially provable as V2-correct; union falsely tagged V1_V2_AGREE",
+      "cause": "values_agree used abs(0.5) which is valid for rupees, not EPS/NAVPS",
+      "action": "tighten per-share agree tolerance; treat remaining EPS/NAVPS conflicts as QUARANTINE unless V1 bbox exists and V2 is stronger"
+    },
+    "UNEXPLAINED_LOSS_ABSENT": {
+      "count": 14,
+      "decision": "not a V1 loss in the hybrid fact layer",
+      "cause": "measure key used V1 comparison_role=UNKNOWN and NAVPS duration=3; adapter maps UNKNOWN→CURRENT and stock duration→None, so hybrid preserved the same facts under the canonical key",
+      "action": "canonicalize measure keys to the adapter key"
+    },
+    "SUPERSEDE_V2_STRONGER": {
+      "count": 101,
+      "v1_correct_preserve": "scale ratio >= 50 (ATL/AAF/NEH/RHTL/VLL/CFLB thousand-unit jumps and similar)",
+      "neither_quarantine": "V1_BBOX_ABSENT is not proof that V1 is wrong; quarantine instead of supersede",
+      "v2_supersede_only_if": "V1 has a PDF bbox AND V2 evidence_strength is >= V1+2 AND values are not a scale jump"
+    },
+    "QUARANTINE": {
+      "count": 82,
+      "decision": "keep withheld; unresolved conflicts"
+    },
+    "OCR_REQUIRED_NOT_AVAILABLE": {
+      "count": 35,
+      "decision": "quarantine the filing; not an extractor rewrite"
+    }
+  },
+  "union_policy_fix": [
+    "per-share agree tolerance 0.005",
+    "scale-conflict (>=50x) preserves V1",
+    "V2 supersede requires V1 bbox; otherwise CONFLICT_UNRESOLVED"
+  ]
+}

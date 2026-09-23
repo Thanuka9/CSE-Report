@@ -50,6 +50,16 @@ _SHARE_PARENT = re.compile(
     r"earnings?\s*(?:/\s*\(\s*loss\s*\))?\s*per share|earning per share",
     re.IGNORECASE,
 )
+_OTHER_METRIC_HINT = re.compile(
+    r"(?:net\s+asset(?:s|\s+value)?\s+per\s+share|earnings?\s+per\s+share\s*\(?\s*eps|"
+    r"basic\s+(?:earnings?|loss)\s+per\s+share|investor\s+ratios|key\s+ratios)",
+    re.IGNORECASE,
+)
+_OTHER_STOP = re.compile(
+    r"list of (?:the )?shareholders|20\s+largest shareholders",
+    re.IGNORECASE,
+)
+
 _SHARE_QUALIFIER = re.compile(
     r"^(?:[-–—]\s*)?(?:basic|diluted)(?:\s*/\s*diluted)?\b",
     re.IGNORECASE,
@@ -63,15 +73,32 @@ def _parser(document: CanonicalDocument) -> tuple[str, str]:
     )
 
 
-def _ref(document: CanonicalDocument, line: CanonicalLine, page_number: int) -> SourceRef:
+def _ref(
+    document: CanonicalDocument,
+    line: CanonicalLine,
+    page_number: int,
+    *,
+    raw_text: str | None = None,
+    x: float | None = None,
+) -> SourceRef:
     parser_name, parser_version = _parser(document)
+    token = None
+    if raw_text is not None:
+        matches = [item for item in line.tokens if item.text == raw_text]
+        if matches and x is not None:
+            token = min(
+                matches,
+                key=lambda item: abs(((item.bbox[0] + item.bbox[2]) / 2.0) - x),
+            )
+        elif matches:
+            token = matches[0]
     return SourceRef(
         filing_id=document.filing_version_id,
         filing_version_id=document.filing_version_id,
         source_sha256=document.source_sha256,
         page_number=page_number,
-        bbox=line.bbox,
-        raw_text=line.text,
+        bbox=token.bbox if token is not None else line.bbox,
+        raw_text=raw_text if raw_text is not None else line.text,
         parser_name=parser_name,
         parser_version=parser_version,
     )
@@ -105,6 +132,17 @@ def _intervals_for_body(
     if not counts:
         return clustered
     modal = Counter(counts).most_common(1)[0][0]
+    # Dual-entity Group|Company (or Bank) layouts often have sparse 2-3-value rows
+    # mixed with true 4/6-value monetary rows. Prefer the high-arity structure so
+    # Company/Bank columns are not collapsed into the Group cluster.
+    high_counts = [count for count in counts if count >= 4]
+    if high_counts:
+        high_modal = Counter(high_counts).most_common(1)[0][0]
+        sample = max(
+            (values for _page, _line, _label, values in body if len(values) == high_modal),
+            key=lambda values: values[-1][0] - values[0][0],
+        )
+        return [(x - 12.0, x + 12.0) for x, _text in sample]
     if modal < 4:
         return clustered
     sample = max(
@@ -112,6 +150,12 @@ def _intervals_for_body(
         key=lambda values: values[-1][0] - values[0][0],
     )
     return [(x - 12.0, x + 12.0) for x, _text in sample]
+
+
+_INCOMPLETE_PENDING = re.compile(
+    r"(?:[&,/]|-|–|—)\s*$|\b(?:and|or|of|the|before|after|on|for|&)\s*$",
+    re.IGNORECASE,
+)
 
 
 def _merged_label(pending: str | None, label: str) -> str:
@@ -124,6 +168,10 @@ def _merged_label(pending: str | None, label: str) -> str:
         parent = pending.rstrip(" -–—")
         qualifier = label.lstrip(" -–—")
         return f"{parent} {qualifier}".strip()
+    # Wrapped account labels: pending line had no values; continuation often
+    # starts lowercase or pending ends mid-phrase ("... VAT) & social security").
+    if label[:1].islower() or _INCOMPLETE_PENDING.search(pending.strip()):
+        return f"{pending.strip()} {label}".strip()
     return label
 
 
@@ -178,12 +226,46 @@ def reconstruct_statements(
     pages = {page.page_number: page for page in document.pages}
     statements: list[CanonicalStatement] = []
     for region in regions:
-        if region.statement_type == StatementType.OTHER_FINANCIAL_STATEMENT:
+        if (
+            region.statement_type == StatementType.OTHER_FINANCIAL_STATEMENT
+            and not _other_region_has_target_metrics(pages, region)
+        ):
             continue
         statement = _reconstruct_region(document, pages, region)
         if statement is not None:
             statements.append(statement)
     return tuple(statements)
+
+
+def _other_region_has_target_metrics(
+    pages: dict[int, CanonicalPage],
+    region: StatementRegion,
+) -> bool:
+    """Reconstruct OTHER pages only when they print target per-share / ratio lines.
+
+    Avoids turning general notes and shareholder lists into statement noise.
+    """
+
+    for page_number in range(region.page_start, region.page_end + 1):
+        page = pages.get(page_number)
+        if page is None:
+            continue
+        for line_index, line in enumerate(page.lines):
+            if (
+                region.segment_start_line is not None
+                and page_number == region.page_start
+                and line_index < region.segment_start_line
+            ):
+                continue
+            if (
+                region.segment_end_line is not None
+                and page_number == region.page_end
+                and line_index >= region.segment_end_line
+            ):
+                continue
+            if _OTHER_METRIC_HINT.search(line.text or ""):
+                return True
+    return False
 
 
 def _reconstruct_region(
@@ -197,10 +279,32 @@ def _reconstruct_region(
         page = pages.get(page_number)
         if page is None:
             continue
-        for line in page.lines:
+        for line_index, line in enumerate(page.lines):
+            if (
+                region.segment_start_line is not None
+                and page_number == region.page_start
+                and line_index < region.segment_start_line
+            ):
+                continue
+            if (
+                region.segment_end_line is not None
+                and page_number == region.page_end
+                and line_index >= region.segment_end_line
+            ):
+                continue
             lines.append((page_number, line))
     if not lines:
         return None
+
+    if region.statement_type == StatementType.OTHER_FINANCIAL_STATEMENT:
+        truncated: list[tuple[int, CanonicalLine]] = []
+        for page_number, line in lines:
+            if _OTHER_STOP.search(line.text or ""):
+                break
+            truncated.append((page_number, line))
+        lines = truncated
+        if not lines:
+            return None
 
     body: list[tuple[int, CanonicalLine, str, list[tuple[float, str]]]] = []
     headers: list[tuple[int, CanonicalLine]] = []
@@ -263,7 +367,7 @@ def _reconstruct_region(
                     column_id=columns[col_index].column_id,
                     raw_text=raw,
                     parsed_numeric_value=parse_numeric(raw),
-                    source_ref=_ref(document, line, page_number),
+                    source_ref=_ref(document, line, page_number, raw_text=raw, x=x),
                 )
             )
         rows.append(

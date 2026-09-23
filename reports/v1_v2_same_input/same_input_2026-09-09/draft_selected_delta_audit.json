@@ -1,0 +1,2727 @@
+{
+  "draft_selected_v2": 2816,
+  "draft_selected_assisted": 2840,
+  "net": 24,
+  "lost_keys": 106,
+  "gained_keys": 130,
+  "lost_classes": {
+    "DROPPED_OR_UNSELECTED": 63,
+    "STILL_ELIGIBLE_NOT_SELECTED": 10,
+    "DEMOTED_CUMULATIVE_UNSELECTED": 32,
+    "VALUE_SWAP_STILL_SELECTED": 1
+  },
+  "gained_classes": {
+    "RECOVERED_FROM_CONFLICT": 79,
+    "TRULY_NEW_SELECTED": 44,
+    "RECOVERED_FROM_WITHHELD_OTHER": 4,
+    "VALUE_SWAP_FROM_PRIOR_SELECTION": 1,
+    "NOW_SELECTED_WAS_ELIGIBLE_UNSELECTED": 2
+  },
+  "lost_rows": [
+    {
+      "issuer": "HVA_FOODS_PLC",
+      "symbol": "HVA.N0000",
+      "metric": "TOP_LINE",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "311670851",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "ca2ae37934bcd9506b7c23257b3d80fad14eb32825d257c48bfd60c64a7939ea"
+    },
+    {
+      "issuer": "SINGER_SRI_LANKA_PLC",
+      "symbol": "SINS.N0000",
+      "metric": "PBT",
+      "entity": "GROUP",
+      "period": "2025-12-31",
+      "old_value": "3122036000",
+      "class": "STILL_ELIGIBLE_NOT_SELECTED",
+      "note": null,
+      "pdf_sha256": "aebbebcbeac5e167c4a7611ca572a9a6e8f4f3927768b5e29043f1a2dc8f1ce2"
+    },
+    {
+      "issuer": "CABLE_SOLUTIONS_PLC",
+      "symbol": "CSLK.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "0.2318",
+      "class": "DEMOTED_CUMULATIVE_UNSELECTED",
+      "note": [
+        "EXACT_QUARTER_NOT_REPORTED",
+        "Q4_OR_CUMULATIVE_FLOW_BLOCKED"
+      ],
+      "pdf_sha256": "ba11b59e1ece932fec7e61ecd6f49cd12429783114515139fbfe8071d98d97ff"
+    },
+    {
+      "issuer": "FIRST_CAPITAL_HOLDINGS_PLC",
+      "symbol": "CFVF.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "-1.60",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "8b2ada570b6f0aac38c95f5cbe0fa0b8d5a735ae7b0019a2d6a58cf15fec55c9"
+    },
+    {
+      "issuer": "AMANA_TAKAFUL_PLC",
+      "symbol": "ATL.N0000",
+      "metric": "TOTAL_ASSETS",
+      "entity": "GROUP",
+      "period": "2026-03-31",
+      "old_value": "26991589085",
+      "class": "STILL_ELIGIBLE_NOT_SELECTED",
+      "note": null,
+      "pdf_sha256": "6a67efbb50e4371f6301653bcbc29da07fe039f3840403ad63cbc296e17b67fe"
+    },
+    {
+      "issuer": "CEYLON_LAND_EQUITY_PLC",
+      "symbol": "KZOO.N0000",
+      "metric": "OPERATING_PROFIT",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "44352000",
+      "class": "DEMOTED_CUMULATIVE_UNSELECTED",
+      "note": [
+        "EXACT_QUARTER_NOT_REPORTED",
+        "Q4_OR_CUMULATIVE_FLOW_BLOCKED"
+      ],
+      "pdf_sha256": "a3262450626e875d50916f88b5cb818269bbe092a3f1b53fb26ba00c90053e4e"
+    },
+    {
+      "issuer": "UNION_BANK_OF_COLOMBO_PLC",
+      "symbol": "UBC.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "GROUP",
+      "period": "2025-12-31",
+      "old_value": "0.3",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "0760adbaa3ff8a7dee3da318604aee2c5939c58962d88cfe8ae31db6a4becc1d"
+    },
+    {
+      "issuer": "HVA_FOODS_PLC",
+      "symbol": "HVA.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "old_value": "0.02",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "c988503f04c217f77ff4a2188b48513cff6a71e50582bc4ffade290e1c8139cf"
+    },
+    {
+      "issuer": "CENTRAL_INDUSTRIES_PLC",
+      "symbol": "CIND.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "old_value": "5.63",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "6d13056aa0de1529d007985e8025d12a916fcf34765083ba6f04acfa00596d95"
+    },
+    {
+      "issuer": "SINGER_SRI_LANKA_PLC",
+      "symbol": "SINS.N0000",
+      "metric": "PAT",
+      "entity": "GROUP",
+      "period": "2025-12-31",
+      "old_value": "2105307000",
+      "class": "STILL_ELIGIBLE_NOT_SELECTED",
+      "note": null,
+      "pdf_sha256": "aebbebcbeac5e167c4a7611ca572a9a6e8f4f3927768b5e29043f1a2dc8f1ce2"
+    },
+    {
+      "issuer": "L_O_L_C_HOLDINGS_PLC",
+      "symbol": "LOLC.N0000",
+      "metric": "NAVPS",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "877.59",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "d0f1f7cfff61da67625b09feca406c749392c41aae95de190659e9609658e412"
+    },
+    {
+      "issuer": "CENTRAL_INDUSTRIES_PLC",
+      "symbol": "CIND.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "old_value": "7.67",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "958ea25753fbd177cc787145d8790fe4ac3417738019d0f5c2208035cef40f62"
+    },
+    {
+      "issuer": "HVA_FOODS_PLC",
+      "symbol": "HVA.N0000",
+      "metric": "NAVPS",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "old_value": "-0.26",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "4e2cdb2faf94669be3df026b0effef98380325a60733b87046d8dedd8036bd1c"
+    },
+    {
+      "issuer": "SIERRA_CABLES_PLC",
+      "symbol": "SIRA.N0000",
+      "metric": "TOP_LINE",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "old_value": "4184734524",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "cd10d7e30dff7174ac8b4ed1f2143cde7191b62fd38c837438f208ac3d236c42"
+    },
+    {
+      "issuer": "CEYLON_LAND_EQUITY_PLC",
+      "symbol": "KZOO.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "0.05",
+      "class": "DEMOTED_CUMULATIVE_UNSELECTED",
+      "note": [
+        "EXACT_QUARTER_NOT_REPORTED",
+        "Q4_OR_CUMULATIVE_FLOW_BLOCKED"
+      ],
+      "pdf_sha256": "a3262450626e875d50916f88b5cb818269bbe092a3f1b53fb26ba00c90053e4e"
+    },
+    {
+      "issuer": "COLOMBO_DOCKYARD_PLC",
+      "symbol": "DOCK.N0000",
+      "metric": "PAT",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "old_value": "-1191549000",
+      "class": "DEMOTED_CUMULATIVE_UNSELECTED",
+      "note": [
+        "EXACT_QUARTER_NOT_REPORTED",
+        "CUMULATIVE_ONLY",
+        "Q4_OR_CUMULATIVE_FLOW_BLOCKED"
+      ],
+      "pdf_sha256": "5c1f1bd594ab0a96726c56f77eb93ed09a07cf2dbd8051d48cffeb3b0696cb5c"
+    },
+    {
+      "issuer": "KERNER_HAUS_GLOBAL_SOLUTIONS_PLC",
+      "symbol": "CPRT.N0000",
+      "metric": "NAVPS",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "-0.9",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "a5fe54d5bef58e94eaa564fc617cf3e53a11a83325fe10424ab9ec7105aee782"
+    },
+    {
+      "issuer": "HARISCHANDRA_MILLS_PLC",
+      "symbol": "HARI.N0000",
+      "metric": "TOP_LINE",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "1466635000",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "621f84659cf5b66505453945728d99a5aeb315e80cca041f972c7cd3b2d86255"
+    },
+    {
+      "issuer": "HVA_FOODS_PLC",
+      "symbol": "HVA.N0000",
+      "metric": "EPS_DILUTED",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "-0.13",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "ca2ae37934bcd9506b7c23257b3d80fad14eb32825d257c48bfd60c64a7939ea"
+    },
+    {
+      "issuer": "CENTRAL_INDUSTRIES_PLC",
+      "symbol": "CIND.N0000",
+      "metric": "TOP_LINE",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "old_value": "1618147000",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "6d13056aa0de1529d007985e8025d12a916fcf34765083ba6f04acfa00596d95"
+    },
+    {
+      "issuer": "OFFICE_EQUIPMENT_PLC",
+      "symbol": "OFEQ.N0000",
+      "metric": "OPERATING_PROFIT",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "old_value": "-5610785",
+      "class": "DEMOTED_CUMULATIVE_UNSELECTED",
+      "note": [
+        "EXACT_QUARTER_NOT_REPORTED",
+        "Q4_OR_CUMULATIVE_FLOW_BLOCKED"
+      ],
+      "pdf_sha256": "3ff256a512cc1b4a82894ef83347a84bc40f22056927fb2dc408a104bf58a11f"
+    },
+    {
+      "issuer": "LANKA_TILES_PLC",
+      "symbol": "TILE.N0000",
+      "metric": "NAVPS",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "61",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "13f8f98f6e8c041e57a89fbb8754e09285a6b3a5a557260c4ee6e09da2afe85c"
+    },
+    {
+      "issuer": "UNION_BANK_OF_COLOMBO_PLC",
+      "symbol": "UBC.N0000",
+      "metric": "EPS_DILUTED",
+      "entity": "GROUP",
+      "period": "2025-12-31",
+      "old_value": "0.3",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "0760adbaa3ff8a7dee3da318604aee2c5939c58962d88cfe8ae31db6a4becc1d"
+    },
+    {
+      "issuer": "DIGITAL_MOBILITY_SOLUTIONS_LANKA_PLC",
+      "symbol": "PKME.N0000",
+      "metric": "NAVPS",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "old_value": "11.49",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "e4b139f69c9b2650e1c2c420bb58d322fb6a25f779b85567d16348eb1f0e452c"
+    },
+    {
+      "issuer": "HARISCHANDRA_MILLS_PLC",
+      "symbol": "HARI.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "19.41",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "621f84659cf5b66505453945728d99a5aeb315e80cca041f972c7cd3b2d86255"
+    },
+    {
+      "issuer": "SINGER_SRI_LANKA_PLC",
+      "symbol": "SINS.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "GROUP",
+      "period": "2025-12-31",
+      "old_value": "1.73",
+      "class": "STILL_ELIGIBLE_NOT_SELECTED",
+      "note": null,
+      "pdf_sha256": "aebbebcbeac5e167c4a7611ca572a9a6e8f4f3927768b5e29043f1a2dc8f1ce2"
+    },
+    {
+      "issuer": "RENUKA_FOODS_PLC",
+      "symbol": "COCO.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "0.03",
+      "class": "DEMOTED_CUMULATIVE_UNSELECTED",
+      "note": [
+        "EXACT_QUARTER_NOT_REPORTED",
+        "Q4_OR_CUMULATIVE_FLOW_BLOCKED"
+      ],
+      "pdf_sha256": "7838a9f3da8a1e41e8aea11af2220006442da16930e8b9c55837b56e846a4d81"
+    },
+    {
+      "issuer": "FIRST_CAPITAL_HOLDINGS_PLC",
+      "symbol": "CFVF.N0000",
+      "metric": "NAVPS",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "old_value": "19.40",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "8593e36cb3a2d7d0606505678e24f115895d787d11bf87c86a69308337181c1b"
+    },
+    {
+      "issuer": "CEYLON_LAND_EQUITY_PLC",
+      "symbol": "KZOO.N0000",
+      "metric": "NAVPS",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "old_value": "10.32",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "9bd7d203de217f82d416f6d6f56430fe0a6ca709f173bf87a2e582c3fe24068b"
+    },
+    {
+      "issuer": "L_V_L_ENERGY_FUND_PLC",
+      "symbol": "LVEF.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "old_value": "0.00",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "633f9b83f8883dbc1d99fb3d1712e5a7d7c630e686a914f619f7557a01fabae4"
+    },
+    {
+      "issuer": "SINGER_SRI_LANKA_PLC",
+      "symbol": "SINS.N0000",
+      "metric": "TOP_LINE",
+      "entity": "GROUP",
+      "period": "2025-12-31",
+      "old_value": "35894181000",
+      "class": "STILL_ELIGIBLE_NOT_SELECTED",
+      "note": null,
+      "pdf_sha256": "aebbebcbeac5e167c4a7611ca572a9a6e8f4f3927768b5e29043f1a2dc8f1ce2"
+    },
+    {
+      "issuer": "HARISCHANDRA_MILLS_PLC",
+      "symbol": "HARI.N0000",
+      "metric": "PBT",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "53239000",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "621f84659cf5b66505453945728d99a5aeb315e80cca041f972c7cd3b2d86255"
+    },
+    {
+      "issuer": "DISTILLERIES_COMPANY_OF_SRI_LANKA_PLC",
+      "symbol": "DIST.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "old_value": "0.86",
+      "class": "DEMOTED_CUMULATIVE_UNSELECTED",
+      "note": [
+        "EXACT_QUARTER_NOT_REPORTED",
+        "CUMULATIVE_ONLY",
+        "Q4_OR_CUMULATIVE_FLOW_BLOCKED"
+      ],
+      "pdf_sha256": "11504191b5299c866bb85d6480710398707be413b0476bff2aed99d85730a63b"
+    },
+    {
+      "issuer": "CENTRAL_INDUSTRIES_PLC",
+      "symbol": "CIND.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "7.62",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "d3b56530a5cf8aaf7678de8ff177f5c4f74b581ce34a14473521c0a77fb1a1cd"
+    },
+    {
+      "issuer": "JANASHAKTHI_LIMITED",
+      "symbol": "JXG.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "-0.30",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "eeb524b51819c3a7d8776b8be99439fd65766e1b22f2f1384346e86cd3276f22"
+    },
+    {
+      "issuer": "FIRST_CAPITAL_HOLDINGS_PLC",
+      "symbol": "CFVF.N0000",
+      "metric": "NAVPS",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "17.80",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "8b2ada570b6f0aac38c95f5cbe0fa0b8d5a735ae7b0019a2d6a58cf15fec55c9"
+    },
+    {
+      "issuer": "L_O_L_C_HOLDINGS_PLC",
+      "symbol": "LOLC.N0000",
+      "metric": "NAVPS",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "old_value": "822.46",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "c007ffcb6473b1da775198ec2b06a3a72e4deef37ce30d58967c5546f29f6615"
+    },
+    {
+      "issuer": "BLUE_DIAMONDS_JEWELLERY_WORLDWIDE_PLC",
+      "symbol": "BLUE.N0000",
+      "metric": "TOP_LINE",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "old_value": "5148000",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "b912398f6ba47ae3750cb7a37e7631b73aceff0cbada37c1161dbe750a386632"
+    },
+    {
+      "issuer": "RENUKA_AGRI_FOODS_PLC",
+      "symbol": "RAL.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "0.27",
+      "class": "DEMOTED_CUMULATIVE_UNSELECTED",
+      "note": [
+        "EXACT_QUARTER_NOT_REPORTED",
+        "Q4_OR_CUMULATIVE_FLOW_BLOCKED"
+      ],
+      "pdf_sha256": "9b488e0be107b00cd73ce4c2613acf5d217327d3f8e43a851f2797b2dc258e97"
+    },
+    {
+      "issuer": "CEYLON_LAND_EQUITY_PLC",
+      "symbol": "KZOO.N0000",
+      "metric": "TOTAL_EQUITY",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "old_value": "9502778000",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "9bd7d203de217f82d416f6d6f56430fe0a6ca709f173bf87a2e582c3fe24068b"
+    },
+    {
+      "issuer": "LANKA_ALUMINIUM_INDUSTRIES_PLC",
+      "symbol": "LALU.N0000",
+      "metric": "PAT",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "27592000",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "8e0e91feaa006528092fe9655e12ed054e46860097f9cf543ace289ce3061ad3"
+    },
+    {
+      "issuer": "BLUE_DIAMONDS_JEWELLERY_WORLDWIDE_PLC",
+      "symbol": "BLUE.N0000",
+      "metric": "TOP_LINE",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "10532000",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "5271cb0028d0b2b27988c670e1d8929a353fb45f960aa7e27b5df3edab21c9b1"
+    },
+    {
+      "issuer": "BROWNS_INVESTMENTS_PLC",
+      "symbol": "BIL.N0000",
+      "metric": "NAVPS",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "12.77",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "5b135cca3f14c4b11667a1a7b59f6f39abe129b544366e3cf90d94167f0012b2"
+    },
+    {
+      "issuer": "COLOMBO_DOCKYARD_PLC",
+      "symbol": "DOCK.N0000",
+      "metric": "TOP_LINE",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "old_value": "6140464000",
+      "class": "DEMOTED_CUMULATIVE_UNSELECTED",
+      "note": [
+        "EXACT_QUARTER_NOT_REPORTED",
+        "CUMULATIVE_ONLY",
+        "Q4_OR_CUMULATIVE_FLOW_BLOCKED"
+      ],
+      "pdf_sha256": "5c1f1bd594ab0a96726c56f77eb93ed09a07cf2dbd8051d48cffeb3b0696cb5c"
+    },
+    {
+      "issuer": "BROWN_COMPANY_PLC",
+      "symbol": "BRWN.N0000",
+      "metric": "NAVPS",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "old_value": "515.01",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "9f89fffb002c3317e1f381117ae9f0acab845473b90cdecbaee48e735f807772"
+    },
+    {
+      "issuer": "OFFICE_EQUIPMENT_PLC",
+      "symbol": "OFEQ.N0000",
+      "metric": "PBT",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "old_value": "-5846304",
+      "class": "DEMOTED_CUMULATIVE_UNSELECTED",
+      "note": [
+        "EXACT_QUARTER_NOT_REPORTED",
+        "Q4_OR_CUMULATIVE_FLOW_BLOCKED"
+      ],
+      "pdf_sha256": "3ff256a512cc1b4a82894ef83347a84bc40f22056927fb2dc408a104bf58a11f"
+    },
+    {
+      "issuer": "OFFICE_EQUIPMENT_PLC",
+      "symbol": "OFEQ.N0000",
+      "metric": "PAT",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "3140005",
+      "class": "DEMOTED_CUMULATIVE_UNSELECTED",
+      "note": [
+        "EXACT_QUARTER_NOT_REPORTED",
+        "Q4_OR_CUMULATIVE_FLOW_BLOCKED"
+      ],
+      "pdf_sha256": "89ac64e5252fc33469dddb1e94cd0be678f7ddc4ca023a7fffd5863a8dafdbe8"
+    },
+    {
+      "issuer": "SINGER_SRI_LANKA_PLC",
+      "symbol": "SINS.N0000",
+      "metric": "OPERATING_PROFIT",
+      "entity": "GROUP",
+      "period": "2025-12-31",
+      "old_value": "3997033000",
+      "class": "STILL_ELIGIBLE_NOT_SELECTED",
+      "note": null,
+      "pdf_sha256": "aebbebcbeac5e167c4a7611ca572a9a6e8f4f3927768b5e29043f1a2dc8f1ce2"
+    },
+    {
+      "issuer": "UNION_BANK_OF_COLOMBO_PLC",
+      "symbol": "UBC.N0000",
+      "metric": "NAVPS",
+      "entity": "GROUP",
+      "period": "2026-06-30",
+      "old_value": "19.0",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "ef96ce40657141cf03e0e0fa78db7bd13af94810faf3eeba3a1634335afa1a30"
+    },
+    {
+      "issuer": "BLUE_DIAMONDS_JEWELLERY_WORLDWIDE_PLC",
+      "symbol": "BLUE.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "old_value": "-0.03",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "b912398f6ba47ae3750cb7a37e7631b73aceff0cbada37c1161dbe750a386632"
+    },
+    {
+      "issuer": "BROWN_COMPANY_PLC",
+      "symbol": "BRWN.N0000",
+      "metric": "NAVPS",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "533.93",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "1e8e1ea2237336897e36012f0ecdc71e04051435bc1f0403333cba20f9fa0cdc"
+    },
+    {
+      "issuer": "COLOMBO_DOCKYARD_PLC",
+      "symbol": "DOCK.N0000",
+      "metric": "NAVPS",
+      "entity": "CONSOLIDATED",
+      "period": "2026-03-31",
+      "old_value": "38.74",
+      "class": "STILL_ELIGIBLE_NOT_SELECTED",
+      "note": null,
+      "pdf_sha256": "1df1bec3c56a2c631f6029ff27940657008ff2fc87695267a7873c6223432396"
+    },
+    {
+      "issuer": "CEYLON_LAND_EQUITY_PLC",
+      "symbol": "KZOO.N0000",
+      "metric": "PBT",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "44352000",
+      "class": "DEMOTED_CUMULATIVE_UNSELECTED",
+      "note": [
+        "EXACT_QUARTER_NOT_REPORTED",
+        "Q4_OR_CUMULATIVE_FLOW_BLOCKED"
+      ],
+      "pdf_sha256": "a3262450626e875d50916f88b5cb818269bbe092a3f1b53fb26ba00c90053e4e"
+    },
+    {
+      "issuer": "OFFICE_EQUIPMENT_PLC",
+      "symbol": "OFEQ.N0000",
+      "metric": "OPERATING_PROFIT",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "3276155",
+      "class": "DEMOTED_CUMULATIVE_UNSELECTED",
+      "note": [
+        "EXACT_QUARTER_NOT_REPORTED",
+        "Q4_OR_CUMULATIVE_FLOW_BLOCKED"
+      ],
+      "pdf_sha256": "89ac64e5252fc33469dddb1e94cd0be678f7ddc4ca023a7fffd5863a8dafdbe8"
+    },
+    {
+      "issuer": "AMBEON_CAPITAL_PLC",
+      "symbol": "TAP.N0000",
+      "metric": "EPS_DILUTED",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "old_value": "-0.31",
+      "class": "DEMOTED_CUMULATIVE_UNSELECTED",
+      "note": [
+        "EXACT_QUARTER_NOT_REPORTED",
+        "Q4_OR_CUMULATIVE_FLOW_BLOCKED"
+      ],
+      "pdf_sha256": "a4edd2cfbf7d9ce53e49edf7c29485bd6cda6e85b36505ffcf1ee062e9eb1804"
+    },
+    {
+      "issuer": "CEYLON_LAND_EQUITY_PLC",
+      "symbol": "KZOO.N0000",
+      "metric": "TOTAL_EQUITY",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "old_value": "4591910000",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "5b03248109d4bed9027c4bef97c42be317b7fe399cbb51c11f2091158f69acc3"
+    },
+    {
+      "issuer": "CENTRAL_INDUSTRIES_PLC",
+      "symbol": "CIND.N0000",
+      "metric": "TOP_LINE",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "1772282000",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "d3b56530a5cf8aaf7678de8ff177f5c4f74b581ce34a14473521c0a77fb1a1cd"
+    },
+    {
+      "issuer": "AMANA_TAKAFUL_PLC",
+      "symbol": "ATL.N0000",
+      "metric": "TOTAL_LIABILITIES",
+      "entity": "GROUP",
+      "period": "2026-03-31",
+      "old_value": "18660361665",
+      "class": "STILL_ELIGIBLE_NOT_SELECTED",
+      "note": null,
+      "pdf_sha256": "6a67efbb50e4371f6301653bcbc29da07fe039f3840403ad63cbc296e17b67fe"
+    },
+    {
+      "issuer": "ASIRI_SURGICAL_HOSPITAL_PLC",
+      "symbol": "AMSL.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "old_value": "0.38",
+      "class": "DEMOTED_CUMULATIVE_UNSELECTED",
+      "note": [
+        "EXACT_QUARTER_NOT_REPORTED",
+        "CUMULATIVE_ONLY",
+        "Q4_OR_CUMULATIVE_FLOW_BLOCKED"
+      ],
+      "pdf_sha256": "0585890b87729264ea1285382476dc4d78ac1bae030096a4e0f4aa345eafb25e"
+    },
+    {
+      "issuer": "CENTRAL_INDUSTRIES_PLC",
+      "symbol": "CIND.N0000",
+      "metric": "TOP_LINE",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "old_value": "1876061000",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "958ea25753fbd177cc787145d8790fe4ac3417738019d0f5c2208035cef40f62"
+    },
+    {
+      "issuer": "AMANA_TAKAFUL_PLC",
+      "symbol": "ATL.N0000",
+      "metric": "TOTAL_EQUITY",
+      "entity": "GROUP",
+      "period": "2026-03-31",
+      "old_value": "8331227420",
+      "class": "STILL_ELIGIBLE_NOT_SELECTED",
+      "note": null,
+      "pdf_sha256": "6a67efbb50e4371f6301653bcbc29da07fe039f3840403ad63cbc296e17b67fe"
+    },
+    {
+      "issuer": "LANKA_VENTURES_PLC",
+      "symbol": "LVEN.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "old_value": "-0.19",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "f02df9c244b23ea859db32fdbbf5434b478936d1766b7cf39354e85b9ce930a7"
+    },
+    {
+      "issuer": "CENTRAL_INDUSTRIES_PLC",
+      "symbol": "CIND.N0000",
+      "metric": "OPERATING_PROFIT",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "240341000",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "d3b56530a5cf8aaf7678de8ff177f5c4f74b581ce34a14473521c0a77fb1a1cd"
+    },
+    {
+      "issuer": "HUNAS_HOLDINGS_PLC",
+      "symbol": "HUNA.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "old_value": "-0.13",
+      "class": "DEMOTED_CUMULATIVE_UNSELECTED",
+      "note": [
+        "EXACT_QUARTER_NOT_REPORTED",
+        "CUMULATIVE_ONLY",
+        "Q4_OR_CUMULATIVE_FLOW_BLOCKED"
+      ],
+      "pdf_sha256": "bbbf888059210fe727419720d0246ae2f1b6bc1a291e8d9238a78dfbd8126d17"
+    },
+    {
+      "issuer": "MERCANTILE_SHIPPING_COMPANY_PLC",
+      "symbol": "MSL.N0000",
+      "metric": "EPS_DILUTED",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "0.19",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "46cc7316a451b28b94d34ce482cc5901a293e5b2c0532eb2f53b6fe8b7ab2081"
+    },
+    {
+      "issuer": "C_T_HOLDINGS_PLC",
+      "symbol": "CTHR.N0000",
+      "metric": "PAT",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "old_value": "1024224000",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "b9b752224527706ad4f501d8efafc45eadbd726a94e71f8bd20083a4f73a899f"
+    },
+    {
+      "issuer": "CEYLON_LAND_EQUITY_PLC",
+      "symbol": "KZOO.N0000",
+      "metric": "EPS_DILUTED",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "0.05",
+      "class": "DEMOTED_CUMULATIVE_UNSELECTED",
+      "note": [
+        "EXACT_QUARTER_NOT_REPORTED",
+        "Q4_OR_CUMULATIVE_FLOW_BLOCKED"
+      ],
+      "pdf_sha256": "a3262450626e875d50916f88b5cb818269bbe092a3f1b53fb26ba00c90053e4e"
+    },
+    {
+      "issuer": "OFFICE_EQUIPMENT_PLC",
+      "symbol": "OFEQ.N0000",
+      "metric": "TOP_LINE",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "old_value": "7144288",
+      "class": "DEMOTED_CUMULATIVE_UNSELECTED",
+      "note": [
+        "EXACT_QUARTER_NOT_REPORTED",
+        "Q4_OR_CUMULATIVE_FLOW_BLOCKED"
+      ],
+      "pdf_sha256": "3ff256a512cc1b4a82894ef83347a84bc40f22056927fb2dc408a104bf58a11f"
+    },
+    {
+      "issuer": "FIRST_CAPITAL_HOLDINGS_PLC",
+      "symbol": "CFVF.N0000",
+      "metric": "NAVPS",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "old_value": "22.26",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "8f46a6c50ff691b4a07a561f8d78ac3e6bacb10453ee6f89913e84e83b8096ea"
+    },
+    {
+      "issuer": "HVA_FOODS_PLC",
+      "symbol": "HVA.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "-0.13",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "ca2ae37934bcd9506b7c23257b3d80fad14eb32825d257c48bfd60c64a7939ea"
+    },
+    {
+      "issuer": "HVA_FOODS_PLC",
+      "symbol": "HVA.N0000",
+      "metric": "TOP_LINE",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "old_value": "604210879",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "c988503f04c217f77ff4a2188b48513cff6a71e50582bc4ffade290e1c8139cf"
+    },
+    {
+      "issuer": "BROWN_COMPANY_PLC",
+      "symbol": "BRWN.N0000",
+      "metric": "NAVPS",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "old_value": "518.14",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "8baaeba5eac6de4074ebd1fb10fee11d651e8b5eda0956af6f4d02fa03859b8e"
+    },
+    {
+      "issuer": "OFFICE_EQUIPMENT_PLC",
+      "symbol": "OFEQ.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "old_value": "-7.01",
+      "class": "DEMOTED_CUMULATIVE_UNSELECTED",
+      "note": [
+        "EXACT_QUARTER_NOT_REPORTED",
+        "Q4_OR_CUMULATIVE_FLOW_BLOCKED"
+      ],
+      "pdf_sha256": "3ff256a512cc1b4a82894ef83347a84bc40f22056927fb2dc408a104bf58a11f"
+    },
+    {
+      "issuer": "BLUE_DIAMONDS_JEWELLERY_WORLDWIDE_PLC",
+      "symbol": "BLUE.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "0.01",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "5271cb0028d0b2b27988c670e1d8929a353fb45f960aa7e27b5df3edab21c9b1"
+    },
+    {
+      "issuer": "ACL_CABLES_PLC",
+      "symbol": "ACL.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "1.25",
+      "class": "DEMOTED_CUMULATIVE_UNSELECTED",
+      "note": [
+        "EXACT_QUARTER_NOT_REPORTED",
+        "Q4_OR_CUMULATIVE_FLOW_BLOCKED"
+      ],
+      "pdf_sha256": "22e1af573e5614deab5f924fd099c3567fe5ed64b1a69b67af860ebd5fc3ecd9"
+    },
+    {
+      "issuer": "OFFICE_EQUIPMENT_PLC",
+      "symbol": "OFEQ.N0000",
+      "metric": "PBT",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "3140005",
+      "class": "DEMOTED_CUMULATIVE_UNSELECTED",
+      "note": [
+        "EXACT_QUARTER_NOT_REPORTED",
+        "Q4_OR_CUMULATIVE_FLOW_BLOCKED"
+      ],
+      "pdf_sha256": "89ac64e5252fc33469dddb1e94cd0be678f7ddc4ca023a7fffd5863a8dafdbe8"
+    },
+    {
+      "issuer": "CEYLON_LAND_EQUITY_PLC",
+      "symbol": "KZOO.N0000",
+      "metric": "PAT",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "44352000",
+      "class": "DEMOTED_CUMULATIVE_UNSELECTED",
+      "note": [
+        "EXACT_QUARTER_NOT_REPORTED",
+        "Q4_OR_CUMULATIVE_FLOW_BLOCKED"
+      ],
+      "pdf_sha256": "a3262450626e875d50916f88b5cb818269bbe092a3f1b53fb26ba00c90053e4e"
+    },
+    {
+      "issuer": "BLUE_DIAMONDS_JEWELLERY_WORLDWIDE_PLC",
+      "symbol": "BLUE.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "old_value": "-0.01",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "37e3ca104debec9af3be3717b55425461ec01ae080edf0a7609bd1f9dafe1586"
+    },
+    {
+      "issuer": "OFFICE_EQUIPMENT_PLC",
+      "symbol": "OFEQ.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "3.77",
+      "class": "DEMOTED_CUMULATIVE_UNSELECTED",
+      "note": [
+        "EXACT_QUARTER_NOT_REPORTED",
+        "Q4_OR_CUMULATIVE_FLOW_BLOCKED"
+      ],
+      "pdf_sha256": "89ac64e5252fc33469dddb1e94cd0be678f7ddc4ca023a7fffd5863a8dafdbe8"
+    },
+    {
+      "issuer": "JOHN_KEELLS_HOTELS_PLC",
+      "symbol": "KHL.N0000",
+      "metric": "PBT",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "old_value": "-5501000",
+      "class": "VALUE_SWAP_STILL_SELECTED",
+      "note": "96269000",
+      "pdf_sha256": "4b6a912241f2bbe53b1dc707bca71aa2f78fcfc5b923f93ed13d7fd6e36b5613"
+    },
+    {
+      "issuer": "DIGITAL_MOBILITY_SOLUTIONS_LANKA_PLC",
+      "symbol": "PKME.N0000",
+      "metric": "NAVPS",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "13.41",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "261f41c0eab405b76a395b97b8e3caa6a20da18f1b0d226d4cd9bf3c758a34e2"
+    },
+    {
+      "issuer": "KERNER_HAUS_GLOBAL_SOLUTIONS_PLC",
+      "symbol": "CPRT.N0000",
+      "metric": "TOP_LINE",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "old_value": "2497826",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "5c608ea086de000ea9def5355126279bded8a36e00d2ba6af8e44803a2b29395"
+    },
+    {
+      "issuer": "UNION_BANK_OF_COLOMBO_PLC",
+      "symbol": "UBC.N0000",
+      "metric": "NAVPS",
+      "entity": "GROUP",
+      "period": "2025-12-31",
+      "old_value": "18.8",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "0760adbaa3ff8a7dee3da318604aee2c5939c58962d88cfe8ae31db6a4becc1d"
+    },
+    {
+      "issuer": "LANKA_WALLTILE_PLC",
+      "symbol": "LWL.N0000",
+      "metric": "PAT",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "36249000",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "f3581de99cd4abe172a3d6c452079d04b829477d0965247b8827ed5773f211ef"
+    },
+    {
+      "issuer": "COLOMBO_DOCKYARD_PLC",
+      "symbol": "DOCK.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "old_value": "-16.58",
+      "class": "DEMOTED_CUMULATIVE_UNSELECTED",
+      "note": [
+        "EXACT_QUARTER_NOT_REPORTED",
+        "CUMULATIVE_ONLY",
+        "Q4_OR_CUMULATIVE_FLOW_BLOCKED"
+      ],
+      "pdf_sha256": "5c1f1bd594ab0a96726c56f77eb93ed09a07cf2dbd8051d48cffeb3b0696cb5c"
+    },
+    {
+      "issuer": "UNION_BANK_OF_COLOMBO_PLC",
+      "symbol": "UBC.N0000",
+      "metric": "NAVPS",
+      "entity": "GROUP",
+      "period": "2026-03-31",
+      "old_value": "18.8",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "3f37fadbb3fae09f1a6c08861662867e5b0967bbdb0aaa244c4308fa3113961a"
+    },
+    {
+      "issuer": "BROWNS_INVESTMENTS_PLC",
+      "symbol": "BIL.N0000",
+      "metric": "NAVPS",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "old_value": "12.52",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "82c03936b82e81f080080b035fbc10c6e6230b3043bd4b4747cd3e73a0963984"
+    },
+    {
+      "issuer": "OFFICE_EQUIPMENT_PLC",
+      "symbol": "OFEQ.N0000",
+      "metric": "TOP_LINE",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "9745517",
+      "class": "DEMOTED_CUMULATIVE_UNSELECTED",
+      "note": [
+        "EXACT_QUARTER_NOT_REPORTED",
+        "Q4_OR_CUMULATIVE_FLOW_BLOCKED"
+      ],
+      "pdf_sha256": "89ac64e5252fc33469dddb1e94cd0be678f7ddc4ca023a7fffd5863a8dafdbe8"
+    },
+    {
+      "issuer": "SIERRA_CABLES_PLC",
+      "symbol": "SIRA.N0000",
+      "metric": "TOP_LINE",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "old_value": "4285150501",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "5bdd29cad9860ea16050a3be77b367c7e5558c3c6ff29ac3ad747bb409c113c9"
+    },
+    {
+      "issuer": "BLUE_DIAMONDS_JEWELLERY_WORLDWIDE_PLC",
+      "symbol": "BLUE.N0000",
+      "metric": "TOP_LINE",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "old_value": "4896000",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "37e3ca104debec9af3be3717b55425461ec01ae080edf0a7609bd1f9dafe1586"
+    },
+    {
+      "issuer": "CEYLON_TEA_BROKERS_PLC",
+      "symbol": "CTBL.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "old_value": "0.15",
+      "class": "DEMOTED_CUMULATIVE_UNSELECTED",
+      "note": [
+        "EXACT_QUARTER_NOT_REPORTED",
+        "CUMULATIVE_ONLY",
+        "Q4_OR_CUMULATIVE_FLOW_BLOCKED"
+      ],
+      "pdf_sha256": "77062f75d54cba04d078281a67cb89f027de1438e098e9749ae1d20e97a8fecd"
+    },
+    {
+      "issuer": "CENTRAL_INDUSTRIES_PLC",
+      "symbol": "CIND.N0000",
+      "metric": "OPERATING_PROFIT",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "old_value": "182003000",
+      "class": "DEMOTED_CUMULATIVE_UNSELECTED",
+      "note": [
+        "EXACT_QUARTER_NOT_REPORTED",
+        "CUMULATIVE_ONLY",
+        "Q4_OR_CUMULATIVE_FLOW_BLOCKED"
+      ],
+      "pdf_sha256": "6d13056aa0de1529d007985e8025d12a916fcf34765083ba6f04acfa00596d95"
+    },
+    {
+      "issuer": "HVA_FOODS_PLC",
+      "symbol": "HVA.N0000",
+      "metric": "EPS_DILUTED",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "old_value": "0.02",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "c988503f04c217f77ff4a2188b48513cff6a71e50582bc4ffade290e1c8139cf"
+    },
+    {
+      "issuer": "OFFICE_EQUIPMENT_PLC",
+      "symbol": "OFEQ.N0000",
+      "metric": "PAT",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "old_value": "-5846304",
+      "class": "DEMOTED_CUMULATIVE_UNSELECTED",
+      "note": [
+        "EXACT_QUARTER_NOT_REPORTED",
+        "Q4_OR_CUMULATIVE_FLOW_BLOCKED"
+      ],
+      "pdf_sha256": "3ff256a512cc1b4a82894ef83347a84bc40f22056927fb2dc408a104bf58a11f"
+    },
+    {
+      "issuer": "COLOMBO_DOCKYARD_PLC",
+      "symbol": "DOCK.N0000",
+      "metric": "TOTAL_EQUITY",
+      "entity": "CONSOLIDATED",
+      "period": "2026-03-31",
+      "old_value": "15501205000",
+      "class": "STILL_ELIGIBLE_NOT_SELECTED",
+      "note": null,
+      "pdf_sha256": "1df1bec3c56a2c631f6029ff27940657008ff2fc87695267a7873c6223432396"
+    },
+    {
+      "issuer": "CEYLON_LAND_EQUITY_PLC",
+      "symbol": "KZOO.N0000",
+      "metric": "NAVPS",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "old_value": "14.95",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "5b03248109d4bed9027c4bef97c42be317b7fe399cbb51c11f2091158f69acc3"
+    },
+    {
+      "issuer": "L_O_L_C_HOLDINGS_PLC",
+      "symbol": "LOLC.N0000",
+      "metric": "NAVPS",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "old_value": "790.83",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "1a4d13b4b7c635455db1a6e2b188f7f6772ff7056625ba9353f6ffe981c7dc0c"
+    },
+    {
+      "issuer": "LANKA_VENTURES_PLC",
+      "symbol": "LVEN.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "old_value": "-1.12",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "4648159b8b3b5a393849d60eb482adc753888aab06cb95d5b03b956557ed5460"
+    },
+    {
+      "issuer": "HVA_FOODS_PLC",
+      "symbol": "HVA.N0000",
+      "metric": "NAVPS",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "old_value": "-0.26",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "c988503f04c217f77ff4a2188b48513cff6a71e50582bc4ffade290e1c8139cf"
+    },
+    {
+      "issuer": "COLOMBO_DOCKYARD_PLC",
+      "symbol": "DOCK.N0000",
+      "metric": "PBT",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "old_value": "-1246170000",
+      "class": "DEMOTED_CUMULATIVE_UNSELECTED",
+      "note": [
+        "EXACT_QUARTER_NOT_REPORTED",
+        "CUMULATIVE_ONLY",
+        "Q4_OR_CUMULATIVE_FLOW_BLOCKED"
+      ],
+      "pdf_sha256": "5c1f1bd594ab0a96726c56f77eb93ed09a07cf2dbd8051d48cffeb3b0696cb5c"
+    },
+    {
+      "issuer": "BROWNS_INVESTMENTS_PLC",
+      "symbol": "BIL.N0000",
+      "metric": "NAVPS",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "old_value": "12.33",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "6436478214d6a396527e0f37d24672cab67a45e8ab3df42a3e87f034caead40f"
+    },
+    {
+      "issuer": "NAWALOKA_HOSPITALS_PLC",
+      "symbol": "NHL.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "old_value": "0.15",
+      "class": "DEMOTED_CUMULATIVE_UNSELECTED",
+      "note": [
+        "EXACT_QUARTER_NOT_REPORTED",
+        "CUMULATIVE_ONLY",
+        "Q4_OR_CUMULATIVE_FLOW_BLOCKED"
+      ],
+      "pdf_sha256": "99b49279aa43c8a6143f10c374550e4367e39003aa1c1a22b4463c07bea99620"
+    },
+    {
+      "issuer": "HARISCHANDRA_MILLS_PLC",
+      "symbol": "HARI.N0000",
+      "metric": "PAT",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "37267000",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "621f84659cf5b66505453945728d99a5aeb315e80cca041f972c7cd3b2d86255"
+    },
+    {
+      "issuer": "RENUKA_FOODS_PLC",
+      "symbol": "COCO.N0000",
+      "metric": "EPS_DILUTED",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "old_value": "0.06",
+      "class": "DEMOTED_CUMULATIVE_UNSELECTED",
+      "note": [
+        "EXACT_QUARTER_NOT_REPORTED",
+        "Q4_OR_CUMULATIVE_FLOW_BLOCKED"
+      ],
+      "pdf_sha256": "7838a9f3da8a1e41e8aea11af2220006442da16930e8b9c55837b56e846a4d81"
+    },
+    {
+      "issuer": "KERNER_HAUS_GLOBAL_SOLUTIONS_PLC",
+      "symbol": "CPRT.N0000",
+      "metric": "TOP_LINE",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "old_value": "3694826",
+      "class": "DROPPED_OR_UNSELECTED",
+      "note": null,
+      "pdf_sha256": "53840dea1d331f542c55f1ce47d7d60fbb938117a6ec6af429a5ea27cd1fd164"
+    },
+    {
+      "issuer": "AMBEON_CAPITAL_PLC",
+      "symbol": "TAP.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "old_value": "-0.31",
+      "class": "DEMOTED_CUMULATIVE_UNSELECTED",
+      "note": [
+        "EXACT_QUARTER_NOT_REPORTED",
+        "Q4_OR_CUMULATIVE_FLOW_BLOCKED"
+      ],
+      "pdf_sha256": "a4edd2cfbf7d9ce53e49edf7c29485bd6cda6e85b36505ffcf1ee062e9eb1804"
+    }
+  ],
+  "gained_rows": [
+    {
+      "issuer": "ACL_CABLES_PLC",
+      "symbol": "ACL.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "1.34",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "1d2a65dfa9783601daa43b83010d43176e456a2a8069e563577102bc52b2467f"
+    },
+    {
+      "issuer": "JOHN_KEELLS_HOTELS_PLC",
+      "symbol": "KHL.N0000",
+      "metric": "OPERATING_PROFIT",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "100247000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "4b6a912241f2bbe53b1dc707bca71aa2f78fcfc5b923f93ed13d7fd6e36b5613"
+    },
+    {
+      "issuer": "CARSON_CUMBERBATCH_PLC",
+      "symbol": "CARS.N0000",
+      "metric": "PAT",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "new_value": "1128304000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "b5394a7e35d99fae2bc628721914208b55ae9b91f7c19155ee97bec95ad43327"
+    },
+    {
+      "issuer": "ACL_PLASTICS_PLC",
+      "symbol": "APLA.N0000",
+      "metric": "TOP_LINE",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "731203000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "78005006e520b1d74f278a660eb916731785a344534ec4a6d61c3bf2150c05ac"
+    },
+    {
+      "issuer": "PALM_GARDEN_HOTELS_PLC",
+      "symbol": "PALM.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "-0.16",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "6387ddc47fa7e8e6817c5e47112518356507ccb812ee2d407bdc8e97b395cbaf"
+    },
+    {
+      "issuer": "HOUSING_DEVELOPMENT_FINANCE_CORPORATION_BANK_OF_SL",
+      "symbol": "HDFC.N0000",
+      "metric": "TOP_LINE",
+      "entity": "BANK",
+      "period": "2025-12-31",
+      "new_value": "1823000000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "c79042137e988957e49cda76830367da0d22d505b01c7b41a64f86c76b12df9d"
+    },
+    {
+      "issuer": "PRINTCARE_PLC",
+      "symbol": "CARE.N0000",
+      "metric": "PBT",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "69106000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "cab95fe4fbfd6c94ed4d5added024d7a160a7a6b1f0838b2e2b8f9a30bc80895"
+    },
+    {
+      "issuer": "NATIONAL_DEVELOPMENT_BANK_PLC",
+      "symbol": "NDB.N0000",
+      "metric": "EPS_DILUTED",
+      "entity": "GROUP",
+      "period": "2025-12-31",
+      "new_value": "8.82",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "97b0f342019b1e2d6beeefcd0efe1ade3f993735be6767e22ac6c8fd094a87c3"
+    },
+    {
+      "issuer": "CITRUS_LEISURE_PLC",
+      "symbol": "REEF.N0000",
+      "metric": "PAT",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "new_value": "-29000000",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "e895956b6094c65dbda7eced39c00d9451b81dc4ef3c4dccd6d2e7c33d9cbb6f"
+    },
+    {
+      "issuer": "SINGER_SRI_LANKA_PLC",
+      "symbol": "SINS.N0000",
+      "metric": "OPERATING_PROFIT",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "3071242000",
+      "class": "RECOVERED_FROM_WITHHELD_OTHER",
+      "old_value": null,
+      "pdf_sha256": "aebbebcbeac5e167c4a7611ca572a9a6e8f4f3927768b5e29043f1a2dc8f1ce2"
+    },
+    {
+      "issuer": "DOLPHIN_HOTELS_PLC",
+      "symbol": "STAF.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "1.04",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "652a3a4759dfc512b9956a97ff2bcf02487235ef7c3392dd9b2baa32ecb270fb"
+    },
+    {
+      "issuer": "PRINTCARE_PLC",
+      "symbol": "CARE.N0000",
+      "metric": "OPERATING_PROFIT",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "91194000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "cab95fe4fbfd6c94ed4d5added024d7a160a7a6b1f0838b2e2b8f9a30bc80895"
+    },
+    {
+      "issuer": "LAKE_HOUSE_PRINTERS_PUBLISHERS_PLC",
+      "symbol": "LPRT.N0000",
+      "metric": "TOTAL_LIABILITIES",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "115940000",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "02b61d54b98e73d785f0ab60b67ee15f03209f25e74ac3d264dfe665c13acbff"
+    },
+    {
+      "issuer": "THE_KANDY_HOTELS_COMPANY_1938_PLC",
+      "symbol": "KHC.N0000",
+      "metric": "EPS_DILUTED",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "-0.04",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "48e745cc8b02dc1b4ef88774560dfff347d3dce0eef268e2f031de55043a7a38"
+    },
+    {
+      "issuer": "CITRUS_LEISURE_PLC",
+      "symbol": "REEF.N0000",
+      "metric": "PAT",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "2608000",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "b9c17326099c68e43492cf3bd177e9618546986c55c44911d2bb8aabf24115eb"
+    },
+    {
+      "issuer": "AMANA_TAKAFUL_PLC",
+      "symbol": "ATL.N0000",
+      "metric": "TOTAL_ASSETS",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "11050986276",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "6a67efbb50e4371f6301653bcbc29da07fe039f3840403ad63cbc296e17b67fe"
+    },
+    {
+      "issuer": "PRINTCARE_PLC",
+      "symbol": "CARE.N0000",
+      "metric": "TOP_LINE",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "937127000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "cab95fe4fbfd6c94ed4d5added024d7a160a7a6b1f0838b2e2b8f9a30bc80895"
+    },
+    {
+      "issuer": "EXTERMINATORS_PLC",
+      "symbol": "EXT.N0000",
+      "metric": "NAVPS",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "new_value": "2.70",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "667b8adbf77221b7d6af571a75b08e532b2f0a3bbd73e4e7ec1501903b69555c"
+    },
+    {
+      "issuer": "PRINTCARE_PLC",
+      "symbol": "CARE.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "0.66",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "cab95fe4fbfd6c94ed4d5added024d7a160a7a6b1f0838b2e2b8f9a30bc80895"
+    },
+    {
+      "issuer": "LEE_HEDGES_PLC",
+      "symbol": "SHAW.N0000",
+      "metric": "TOTAL_ASSETS",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "5371438000",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "7b9bc6cf5940e3a2918ec13fb1bc736290e181872902a0c1cab029de6f608624"
+    },
+    {
+      "issuer": "ALLIANCE_FINANCE_COMPANY_PLC",
+      "symbol": "ALLI.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "85.49",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "563f5094f769d4a7c22a73216840c2e28fba035c84bb1933dff85eadb43fbbf1"
+    },
+    {
+      "issuer": "PRINTCARE_PLC",
+      "symbol": "CARE.N0000",
+      "metric": "PAT",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "-41095000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "e1698a5a9ba7ff01bb4cd41866cfa2b6f39876ee506d288df4fb0698dcab04c4"
+    },
+    {
+      "issuer": "UB_FINANCE_PLC",
+      "symbol": "UBF.N0000",
+      "metric": "PBT",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "new_value": "-21369956",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "8939e7df78f37ad8e9592c987deeb08129e0a0bf1fb5b50e24ab907e69600d8e"
+    },
+    {
+      "issuer": "ASIA_CAPITAL_PLC",
+      "symbol": "ACAP.N0000",
+      "metric": "PAT",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "-130645000",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "c69360b471175a1a3bf30bf5a6f5789c1039d039ba672025c50f8b410a0d1c86"
+    },
+    {
+      "issuer": "AMANA_TAKAFUL_PLC",
+      "symbol": "ATL.N0000",
+      "metric": "TOTAL_EQUITY",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "5064502281",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "6a67efbb50e4371f6301653bcbc29da07fe039f3840403ad63cbc296e17b67fe"
+    },
+    {
+      "issuer": "RENUKA_FOODS_PLC",
+      "symbol": "COCO.N0000",
+      "metric": "EPS_DILUTED",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "2.28",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "d4b547aed67d94521f5216b317d16e8beeaa2c97c3f98a2d5f0622db39c6ba72"
+    },
+    {
+      "issuer": "AMANA_TAKAFUL_PLC",
+      "symbol": "ATL.N0000",
+      "metric": "TOTAL_LIABILITIES",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "5986483996",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "6a67efbb50e4371f6301653bcbc29da07fe039f3840403ad63cbc296e17b67fe"
+    },
+    {
+      "issuer": "ANILANA_HOTELS_AND_PROPERTIES_PLC",
+      "symbol": "ALHP.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "-0.04",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "326bbd6dc2824621e4af27508dd5af6849811626033f03e5a581c1912954d276"
+    },
+    {
+      "issuer": "COLOMBO_DOCKYARD_PLC",
+      "symbol": "DOCK.N0000",
+      "metric": "NAVPS",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "32.80",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "1df1bec3c56a2c631f6029ff27940657008ff2fc87695267a7873c6223432396"
+    },
+    {
+      "issuer": "ACL_PLASTICS_PLC",
+      "symbol": "APLA.N0000",
+      "metric": "PAT",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "241527000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "5c6e6a65d94a29cd1d1b729298a5b478f1aca5ab67ba262c612265c66b3cc0c5"
+    },
+    {
+      "issuer": "INSUREME_INSURANCE_BROKERS_PLC",
+      "symbol": "INME.N0000",
+      "metric": "PAT",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "new_value": "19045566",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "d235de274e86a5f53e26dca85a030474969f7c56c473c3d2bc91b3a2e40b66b0"
+    },
+    {
+      "issuer": "JOHN_KEELLS_HOTELS_PLC",
+      "symbol": "KHL.N0000",
+      "metric": "PAT",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "90768000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "4b6a912241f2bbe53b1dc707bca71aa2f78fcfc5b923f93ed13d7fd6e36b5613"
+    },
+    {
+      "issuer": "AGARAPATANA_PLANTATIONS_PLC",
+      "symbol": "AGPL.N0000",
+      "metric": "PAT",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "new_value": "64137000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "0978e431f8a2c1c529b514e31af02acfdc4deffc7cfec095548be82459ccfd24"
+    },
+    {
+      "issuer": "RENUKA_AGRI_FOODS_PLC",
+      "symbol": "RAL.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "0.47",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "ae574d7d8505c828e67f9cd2dcdb740777dc897e2076a4ecfa13b3d07d6ffe98"
+    },
+    {
+      "issuer": "CEYLON_COLD_STORES_PLC",
+      "symbol": "CCS.N0000",
+      "metric": "NAVPS",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "17.03",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "a1d89216708b39bf65bb989d3eacdffdd39770c74523e4c2889f1fdbafa3ec64"
+    },
+    {
+      "issuer": "CEYLON_TOBACCO_COMPANY_PLC",
+      "symbol": "CTC.N0000",
+      "metric": "NAVPS",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "58.97",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "f71cff76da076b172331ea47f20980f4129ea267bdc32628b84f39f11a4dbbaa"
+    },
+    {
+      "issuer": "CARSON_CUMBERBATCH_PLC",
+      "symbol": "CARS.N0000",
+      "metric": "OPERATING_PROFIT",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "new_value": "1179783000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "b5394a7e35d99fae2bc628721914208b55ae9b91f7c19155ee97bec95ad43327"
+    },
+    {
+      "issuer": "LAKE_HOUSE_PRINTERS_PUBLISHERS_PLC",
+      "symbol": "LPRT.N0000",
+      "metric": "NAVPS",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "316.23",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "02b61d54b98e73d785f0ab60b67ee15f03209f25e74ac3d264dfe665c13acbff"
+    },
+    {
+      "issuer": "LUMINEX_PLC",
+      "symbol": "LUMX.N0000",
+      "metric": "NAVPS",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "new_value": "7.12",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "943ab670501231c48ac3e4c143c09a5e84e30710bc6563a8b9d9af014ca7cbf5"
+    },
+    {
+      "issuer": "CEYLON_LAND_EQUITY_PLC",
+      "symbol": "KZOO.N0000",
+      "metric": "PAT",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "464393000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "5b03248109d4bed9027c4bef97c42be317b7fe399cbb51c11f2091158f69acc3"
+    },
+    {
+      "issuer": "LAKE_HOUSE_PRINTERS_PUBLISHERS_PLC",
+      "symbol": "LPRT.N0000",
+      "metric": "TOTAL_ASSETS",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "1044704000",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "02b61d54b98e73d785f0ab60b67ee15f03209f25e74ac3d264dfe665c13acbff"
+    },
+    {
+      "issuer": "KERNER_HAUS_GLOBAL_SOLUTIONS_PLC",
+      "symbol": "CPRT.N0000",
+      "metric": "TOTAL_LIABILITIES",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "54727160",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "5c608ea086de000ea9def5355126279bded8a36e00d2ba6af8e44803a2b29395"
+    },
+    {
+      "issuer": "SUNSHINE_HOLDINGS_PLC",
+      "symbol": "SUN.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "0.27",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "e4be413bf7b017ec44d164288864f9558be98ec6a5659e104316ba5801cfd68b"
+    },
+    {
+      "issuer": "C_T_HOLDINGS_PLC",
+      "symbol": "CTHR.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "31",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "b9b752224527706ad4f501d8efafc45eadbd726a94e71f8bd20083a4f73a899f"
+    },
+    {
+      "issuer": "SINGER_SRI_LANKA_PLC",
+      "symbol": "SINS.N0000",
+      "metric": "PBT",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "2342487000",
+      "class": "RECOVERED_FROM_WITHHELD_OTHER",
+      "old_value": null,
+      "pdf_sha256": "aebbebcbeac5e167c4a7611ca572a9a6e8f4f3927768b5e29043f1a2dc8f1ce2"
+    },
+    {
+      "issuer": "JOHN_KEELLS_HOTELS_PLC",
+      "symbol": "KHL.N0000",
+      "metric": "PBT",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "96269000",
+      "class": "VALUE_SWAP_FROM_PRIOR_SELECTION",
+      "old_value": "-5501000",
+      "pdf_sha256": "4b6a912241f2bbe53b1dc707bca71aa2f78fcfc5b923f93ed13d7fd6e36b5613"
+    },
+    {
+      "issuer": "LEE_HEDGES_PLC",
+      "symbol": "SHAW.N0000",
+      "metric": "PBT",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "-316007000",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "204f21ff1ee7a8fd968548fe7d394a5b126facf0de3ea3e250104ca02cc78dd9"
+    },
+    {
+      "issuer": "JAT_HOLDINGS_PLC",
+      "symbol": "JAT.N0000",
+      "metric": "TOP_LINE",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "4",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "488f918c4228ec84d4b4d5b9cd80b4caca09752aff52346cf1596bd72aba0b87"
+    },
+    {
+      "issuer": "CARSON_CUMBERBATCH_PLC",
+      "symbol": "CARS.N0000",
+      "metric": "PBT",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "new_value": "1129472000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "b5394a7e35d99fae2bc628721914208b55ae9b91f7c19155ee97bec95ad43327"
+    },
+    {
+      "issuer": "NATIONAL_DEVELOPMENT_BANK_PLC",
+      "symbol": "NDB.N0000",
+      "metric": "OPERATING_PROFIT",
+      "entity": "GROUP",
+      "period": "2025-12-31",
+      "new_value": "7257218000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "97b0f342019b1e2d6beeefcd0efe1ade3f993735be6767e22ac6c8fd094a87c3"
+    },
+    {
+      "issuer": "AGARAPATANA_PLANTATIONS_PLC",
+      "symbol": "AGPL.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "new_value": "0.13",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "0978e431f8a2c1c529b514e31af02acfdc4deffc7cfec095548be82459ccfd24"
+    },
+    {
+      "issuer": "ACL_PLASTICS_PLC",
+      "symbol": "APLA.N0000",
+      "metric": "PBT",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "331785000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "5c6e6a65d94a29cd1d1b729298a5b478f1aca5ab67ba262c612265c66b3cc0c5"
+    },
+    {
+      "issuer": "ACL_PLASTICS_PLC",
+      "symbol": "APLA.N0000",
+      "metric": "PBT",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "271290000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "78005006e520b1d74f278a660eb916731785a344534ec4a6d61c3bf2150c05ac"
+    },
+    {
+      "issuer": "COLOMBO_DOCKYARD_PLC",
+      "symbol": "DOCK.N0000",
+      "metric": "TOTAL_EQUITY",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "12961648000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "1df1bec3c56a2c631f6029ff27940657008ff2fc87695267a7873c6223432396"
+    },
+    {
+      "issuer": "ACL_PLASTICS_PLC",
+      "symbol": "APLA.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "5.73",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "5c6e6a65d94a29cd1d1b729298a5b478f1aca5ab67ba262c612265c66b3cc0c5"
+    },
+    {
+      "issuer": "HOUSING_DEVELOPMENT_FINANCE_CORPORATION_BANK_OF_SL",
+      "symbol": "HDFC.N0000",
+      "metric": "PAT",
+      "entity": "BANK",
+      "period": "2025-12-31",
+      "new_value": "-163000000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "c79042137e988957e49cda76830367da0d22d505b01c7b41a64f86c76b12df9d"
+    },
+    {
+      "issuer": "SINGER_SRI_LANKA_PLC",
+      "symbol": "SINS.N0000",
+      "metric": "PBT",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "2709739000",
+      "class": "RECOVERED_FROM_WITHHELD_OTHER",
+      "old_value": null,
+      "pdf_sha256": "218d234d79f1cca11e871e691c1a99ea44eeb8819cd599ccdf55933656ebb021"
+    },
+    {
+      "issuer": "CEYLON_COLD_STORES_PLC",
+      "symbol": "CCS.N0000",
+      "metric": "TOTAL_ASSETS",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "new_value": "26703182000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "6220191be748a1f25775a45fc9fc336bea3fa2509380617042cba176e8fd242b"
+    },
+    {
+      "issuer": "ACL_PLASTICS_PLC",
+      "symbol": "APLA.N0000",
+      "metric": "TOP_LINE",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "802073000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "5c6e6a65d94a29cd1d1b729298a5b478f1aca5ab67ba262c612265c66b3cc0c5"
+    },
+    {
+      "issuer": "KELANI_TYRES_PLC",
+      "symbol": "TYRE.N0000",
+      "metric": "TOTAL_LIABILITIES",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "new_value": "246229000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "9cbb6d97f7c102cad55f541ad5f38fde2561f01dcc94d7c6cbb37f96ba7431f8"
+    },
+    {
+      "issuer": "EXTERMINATORS_PLC",
+      "symbol": "EXT.N0000",
+      "metric": "TOTAL_ASSETS",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "new_value": "169960994",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "667b8adbf77221b7d6af571a75b08e532b2f0a3bbd73e4e7ec1501903b69555c"
+    },
+    {
+      "issuer": "LEE_HEDGES_PLC",
+      "symbol": "SHAW.N0000",
+      "metric": "OPERATING_PROFIT",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "-356745000",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "204f21ff1ee7a8fd968548fe7d394a5b126facf0de3ea3e250104ca02cc78dd9"
+    },
+    {
+      "issuer": "SINGER_SRI_LANKA_PLC",
+      "symbol": "SINS.N0000",
+      "metric": "OPERATING_PROFIT",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "3606989000",
+      "class": "RECOVERED_FROM_WITHHELD_OTHER",
+      "old_value": null,
+      "pdf_sha256": "218d234d79f1cca11e871e691c1a99ea44eeb8819cd599ccdf55933656ebb021"
+    },
+    {
+      "issuer": "PEOPLE_S_LEASING_FINANCE_PLC",
+      "symbol": "PLC.N0000",
+      "metric": "PBT",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "2327000000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "563be1f29f0e36d6f5eca4a5ac903b6a686b745fad946e322a0743ad954efa3c"
+    },
+    {
+      "issuer": "CEYLON_LAND_EQUITY_PLC",
+      "symbol": "KZOO.N0000",
+      "metric": "TOP_LINE",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "2045000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "5b03248109d4bed9027c4bef97c42be317b7fe399cbb51c11f2091158f69acc3"
+    },
+    {
+      "issuer": "RENUKA_HOLDINGS_PLC",
+      "symbol": "RHL.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "0.00",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "00499c228548b839baeff5bf341678c6b365fcedaa031f556e35e793d4e555cf"
+    },
+    {
+      "issuer": "SUNSHINE_HOLDINGS_PLC",
+      "symbol": "SUN.N0000",
+      "metric": "OPERATING_PROFIT",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "357802000",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "e4be413bf7b017ec44d164288864f9558be98ec6a5659e104316ba5801cfd68b"
+    },
+    {
+      "issuer": "NATIONS_TRUST_BANK_PLC",
+      "symbol": "NTB.N0000",
+      "metric": "PBT",
+      "entity": "GROUP",
+      "period": "2026-03-31",
+      "new_value": "7020871000",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "b490dc0b5387aa045109353e64d47a530dcedf32e7642f7471531e7640559204"
+    },
+    {
+      "issuer": "CABLE_SOLUTIONS_PLC",
+      "symbol": "CSLK.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "0.2336",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "98c4768c5df024d627b93e8ed95cd7903a598074361c25cb780cff4a0b54da91"
+    },
+    {
+      "issuer": "CEYLON_LAND_EQUITY_PLC",
+      "symbol": "KZOO.N0000",
+      "metric": "OPERATING_PROFIT",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "177012000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "9bd7d203de217f82d416f6d6f56430fe0a6ca709f173bf87a2e582c3fe24068b"
+    },
+    {
+      "issuer": "CEYLON_COLD_STORES_PLC",
+      "symbol": "CCS.N0000",
+      "metric": "TOTAL_EQUITY",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "16180915000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "a1d89216708b39bf65bb989d3eacdffdd39770c74523e4c2889f1fdbafa3ec64"
+    },
+    {
+      "issuer": "HOTEL_SIGIRIYA_PLC",
+      "symbol": "HSIG.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "new_value": "17577000",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "6fe99042c2d3245464c070d6fd45b5d6ff45c37c01b0be77b6ca2ff22640825b"
+    },
+    {
+      "issuer": "LUMINEX_PLC",
+      "symbol": "LUMX.N0000",
+      "metric": "PAT",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "new_value": "-119062985",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "943ab670501231c48ac3e4c143c09a5e84e30710bc6563a8b9d9af014ca7cbf5"
+    },
+    {
+      "issuer": "SOFTLOGIC_CAPITAL_PLC",
+      "symbol": "SCAP.N0000",
+      "metric": "PAT",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "new_value": "-412041794",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "9e6d71505931106a421f35d53cb545b2744c899239b0a26728b3fd37695d0b5f"
+    },
+    {
+      "issuer": "LAKE_HOUSE_PRINTERS_PUBLISHERS_PLC",
+      "symbol": "LPRT.N0000",
+      "metric": "NAVPS",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "new_value": "317.05",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "5582683db6fcc3650603c7b77ec0a12660dd1eba4a54014d68576cf62a43a718"
+    },
+    {
+      "issuer": "NATIONAL_DEVELOPMENT_BANK_PLC",
+      "symbol": "NDB.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "GROUP",
+      "period": "2025-12-31",
+      "new_value": "8.82",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "97b0f342019b1e2d6beeefcd0efe1ade3f993735be6767e22ac6c8fd094a87c3"
+    },
+    {
+      "issuer": "LUMINEX_PLC",
+      "symbol": "LUMX.N0000",
+      "metric": "PBT",
+      "entity": "GROUP",
+      "period": "2026-03-31",
+      "new_value": "-2244907",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "463337cf37fbe815135b6b1c6b9bbd1680a94002dfda30a6b7e6bc30734c21cd"
+    },
+    {
+      "issuer": "HVA_FOODS_PLC",
+      "symbol": "HVA.N0000",
+      "metric": "NAVPS",
+      "entity": "GROUP",
+      "period": "2026-03-31",
+      "new_value": "-0.26",
+      "class": "NOW_SELECTED_WAS_ELIGIBLE_UNSELECTED",
+      "old_value": null,
+      "pdf_sha256": "4e2cdb2faf94669be3df026b0effef98380325a60733b87046d8dedd8036bd1c"
+    },
+    {
+      "issuer": "HOTEL_SIGIRIYA_PLC",
+      "symbol": "HSIG.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "17577000",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "8e6359addbe7afcee5052f7734cdc02679e5bed0cf25ef87a0a5519858d30f3e"
+    },
+    {
+      "issuer": "BLUE_DIAMONDS_JEWELLERY_WORLDWIDE_PLC",
+      "symbol": "BLUE.N0000",
+      "metric": "PAT",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "new_value": "6900000",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "5271cb0028d0b2b27988c670e1d8929a353fb45f960aa7e27b5df3edab21c9b1"
+    },
+    {
+      "issuer": "ANILANA_HOTELS_AND_PROPERTIES_PLC",
+      "symbol": "ALHP.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "-0.05",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "99264cdb1eba0528f0018550b4000dd8766c183757fdd6b341f57d3fd47817fd"
+    },
+    {
+      "issuer": "KERNER_HAUS_GLOBAL_SOLUTIONS_PLC",
+      "symbol": "CPRT.N0000",
+      "metric": "TOTAL_LIABILITIES",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "new_value": "58164479",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "a5fe54d5bef58e94eaa564fc617cf3e53a11a83325fe10424ab9ec7105aee782"
+    },
+    {
+      "issuer": "CARSON_CUMBERBATCH_PLC",
+      "symbol": "CARS.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "new_value": "5.75",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "b5394a7e35d99fae2bc628721914208b55ae9b91f7c19155ee97bec95ad43327"
+    },
+    {
+      "issuer": "CEYLON_COLD_STORES_PLC",
+      "symbol": "CCS.N0000",
+      "metric": "NAVPS",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "new_value": "15.00",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "6220191be748a1f25775a45fc9fc336bea3fa2509380617042cba176e8fd242b"
+    },
+    {
+      "issuer": "NATIONAL_DEVELOPMENT_BANK_PLC",
+      "symbol": "NDB.N0000",
+      "metric": "PBT",
+      "entity": "GROUP",
+      "period": "2025-12-31",
+      "new_value": "5774295000",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "97b0f342019b1e2d6beeefcd0efe1ade3f993735be6767e22ac6c8fd094a87c3"
+    },
+    {
+      "issuer": "ACL_PLASTICS_PLC",
+      "symbol": "APLA.N0000",
+      "metric": "OPERATING_PROFIT",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "203129000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "78005006e520b1d74f278a660eb916731785a344534ec4a6d61c3bf2150c05ac"
+    },
+    {
+      "issuer": "INSUREME_INSURANCE_BROKERS_PLC",
+      "symbol": "INME.N0000",
+      "metric": "PBT",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "new_value": "27967154",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "d235de274e86a5f53e26dca85a030474969f7c56c473c3d2bc91b3a2e40b66b0"
+    },
+    {
+      "issuer": "PEOPLE_S_LEASING_FINANCE_PLC",
+      "symbol": "PLC.N0000",
+      "metric": "PAT",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "1365000000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "563be1f29f0e36d6f5eca4a5ac903b6a686b745fad946e322a0743ad954efa3c"
+    },
+    {
+      "issuer": "LEE_HEDGES_PLC",
+      "symbol": "SHAW.N0000",
+      "metric": "TOP_LINE",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "27492000",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "204f21ff1ee7a8fd968548fe7d394a5b126facf0de3ea3e250104ca02cc78dd9"
+    },
+    {
+      "issuer": "CEYLON_COLD_STORES_PLC",
+      "symbol": "CCS.N0000",
+      "metric": "TOTAL_ASSETS",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "27807135000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "a1d89216708b39bf65bb989d3eacdffdd39770c74523e4c2889f1fdbafa3ec64"
+    },
+    {
+      "issuer": "MERCANTILE_SHIPPING_COMPANY_PLC",
+      "symbol": "MSL.N0000",
+      "metric": "EPS_DILUTED",
+      "entity": "GROUP",
+      "period": "2026-06-30",
+      "new_value": "0.19",
+      "class": "NOW_SELECTED_WAS_ELIGIBLE_UNSELECTED",
+      "old_value": null,
+      "pdf_sha256": "46cc7316a451b28b94d34ce482cc5901a293e5b2c0532eb2f53b6fe8b7ab2081"
+    },
+    {
+      "issuer": "ALLIANCE_FINANCE_COMPANY_PLC",
+      "symbol": "ALLI.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "51.67",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "840b48149173a7b42ce87549947cb012a1e602f4a67c587dda7c9f9b1ecbdade"
+    },
+    {
+      "issuer": "SUNSHINE_HOLDINGS_PLC",
+      "symbol": "SUN.N0000",
+      "metric": "TOP_LINE",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "380672000",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "e4be413bf7b017ec44d164288864f9558be98ec6a5659e104316ba5801cfd68b"
+    },
+    {
+      "issuer": "NATIONS_TRUST_BANK_PLC",
+      "symbol": "NTB.N0000",
+      "metric": "PBT",
+      "entity": "GROUP",
+      "period": "2026-06-30",
+      "new_value": "7462010000",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "3af1b4619c200a134b0cc2ef9f3b0b48ae94ab5d22b7207f83985e526b2bc08d"
+    },
+    {
+      "issuer": "JAT_HOLDINGS_PLC",
+      "symbol": "JAT.N0000",
+      "metric": "TOP_LINE",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "4",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "a3416bed227db8e82cfa7b3e913bbc3f387ea667c915bdd55f2bc07febe76166"
+    },
+    {
+      "issuer": "ACL_PLASTICS_PLC",
+      "symbol": "APLA.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "4.75",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "78005006e520b1d74f278a660eb916731785a344534ec4a6d61c3bf2150c05ac"
+    },
+    {
+      "issuer": "AGARAPATANA_PLANTATIONS_PLC",
+      "symbol": "AGPL.N0000",
+      "metric": "TOP_LINE",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "new_value": "1736763000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "0978e431f8a2c1c529b514e31af02acfdc4deffc7cfec095548be82459ccfd24"
+    },
+    {
+      "issuer": "LEE_HEDGES_PLC",
+      "symbol": "SHAW.N0000",
+      "metric": "NAVPS",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "182.39",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "7b9bc6cf5940e3a2918ec13fb1bc736290e181872902a0c1cab029de6f608624"
+    },
+    {
+      "issuer": "ACL_PLASTICS_PLC",
+      "symbol": "APLA.N0000",
+      "metric": "PAT",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "200163000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "78005006e520b1d74f278a660eb916731785a344534ec4a6d61c3bf2150c05ac"
+    },
+    {
+      "issuer": "SUNSHINE_HOLDINGS_PLC",
+      "symbol": "SUN.N0000",
+      "metric": "PBT",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "405801000",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "e4be413bf7b017ec44d164288864f9558be98ec6a5659e104316ba5801cfd68b"
+    },
+    {
+      "issuer": "PRINTCARE_PLC",
+      "symbol": "CARE.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "0.40",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "e1698a5a9ba7ff01bb4cd41866cfa2b6f39876ee506d288df4fb0698dcab04c4"
+    },
+    {
+      "issuer": "LEE_HEDGES_PLC",
+      "symbol": "SHAW.N0000",
+      "metric": "NAVPS",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "new_value": "167.50",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "dad3581d46751798799cc4c686b927ddc836215ef1714c89db6f6a283d22ce1d"
+    },
+    {
+      "issuer": "ACL_PLASTICS_PLC",
+      "symbol": "APLA.N0000",
+      "metric": "OPERATING_PROFIT",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "261308000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "5c6e6a65d94a29cd1d1b729298a5b478f1aca5ab67ba262c612265c66b3cc0c5"
+    },
+    {
+      "issuer": "INSUREME_INSURANCE_BROKERS_PLC",
+      "symbol": "INME.N0000",
+      "metric": "PAT",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "38262054",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "650e4c5cd4d3c54ddc3ab66cb4d22a517f43b09cb21b9029fd05631ee0091a77"
+    },
+    {
+      "issuer": "CEYLON_LAND_EQUITY_PLC",
+      "symbol": "KZOO.N0000",
+      "metric": "PAT",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "149369000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "9bd7d203de217f82d416f6d6f56430fe0a6ca709f173bf87a2e582c3fe24068b"
+    },
+    {
+      "issuer": "SUNSHINE_HOLDINGS_PLC",
+      "symbol": "SUN.N0000",
+      "metric": "PAT",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "534356000",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "e4be413bf7b017ec44d164288864f9558be98ec6a5659e104316ba5801cfd68b"
+    },
+    {
+      "issuer": "CARSON_CUMBERBATCH_PLC",
+      "symbol": "CARS.N0000",
+      "metric": "TOP_LINE",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "new_value": "1246970000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "b5394a7e35d99fae2bc628721914208b55ae9b91f7c19155ee97bec95ad43327"
+    },
+    {
+      "issuer": "HAYCARB_PLC",
+      "symbol": "HAYC.N0000",
+      "metric": "OPERATING_PROFIT",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "new_value": "429495000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "0b53dfcadff0ad491180289d0ce29760edc2225d67afd0cfdc5c701054f83b5f"
+    },
+    {
+      "issuer": "RENUKA_FOODS_PLC",
+      "symbol": "COCO.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "2.28",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "d4b547aed67d94521f5216b317d16e8beeaa2c97c3f98a2d5f0622db39c6ba72"
+    },
+    {
+      "issuer": "C_W_MACKIE_PLC",
+      "symbol": "CWM.N0000",
+      "metric": "EPS_DILUTED",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "6",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "d6ed044b75ef0c18b1762d574a3ee0cd5fec8c203fdb72a1490179997703c626"
+    },
+    {
+      "issuer": "CEYLON_TOBACCO_COMPANY_PLC",
+      "symbol": "CTC.N0000",
+      "metric": "NAVPS",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "67.51",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "35f936a1261fdbaac78b9aebfedb3f702426eed9eb5edb18108280466274c2b8"
+    },
+    {
+      "issuer": "LEE_HEDGES_PLC",
+      "symbol": "SHAW.N0000",
+      "metric": "TOTAL_ASSETS",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "new_value": "7019799000",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "dad3581d46751798799cc4c686b927ddc836215ef1714c89db6f6a283d22ce1d"
+    },
+    {
+      "issuer": "CEYLON_TOBACCO_COMPANY_PLC",
+      "symbol": "CTC.N0000",
+      "metric": "NAVPS",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "new_value": "57.72",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "91197f28f7c5c56c03775ced351bbb94a6095efc15bec1a39c12f7bea1235f2e"
+    },
+    {
+      "issuer": "LANKEM_CEYLON_PLC",
+      "symbol": "LCEY.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "4",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "0f1149f642fc75c9645ad6818d5d8e024c0a52a37a4adb094f7b66e1e6cebfef"
+    },
+    {
+      "issuer": "HOUSING_DEVELOPMENT_FINANCE_CORPORATION_BANK_OF_SL",
+      "symbol": "HDFC.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "BANK",
+      "period": "2025-12-31",
+      "new_value": "-2.51",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "c79042137e988957e49cda76830367da0d22d505b01c7b41a64f86c76b12df9d"
+    },
+    {
+      "issuer": "ASIA_CAPITAL_PLC",
+      "symbol": "ACAP.N0000",
+      "metric": "OPERATING_PROFIT",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "-143571000",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "6b453d63f4b98db030370118cb4d22170732cb45d2bc82c1611a04ebadf8e089"
+    },
+    {
+      "issuer": "PEOPLE_S_LEASING_FINANCE_PLC",
+      "symbol": "PLC.N0000",
+      "metric": "OPERATING_PROFIT",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "3150000000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "563be1f29f0e36d6f5eca4a5ac903b6a686b745fad946e322a0743ad954efa3c"
+    },
+    {
+      "issuer": "EXTERMINATORS_PLC",
+      "symbol": "EXT.N0000",
+      "metric": "NAVPS",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "2.40",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "89ea14ba87183fef3bba9c0fc415f8106f903c7f6400aea74c2fe1573cccafe4"
+    },
+    {
+      "issuer": "LEE_HEDGES_PLC",
+      "symbol": "SHAW.N0000",
+      "metric": "TOTAL_ASSETS",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "5052227000",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "204f21ff1ee7a8fd968548fe7d394a5b126facf0de3ea3e250104ca02cc78dd9"
+    },
+    {
+      "issuer": "NAWALOKA_HOSPITALS_PLC",
+      "symbol": "NHL.N0000",
+      "metric": "OPERATING_PROFIT",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "new_value": "599096000",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "0d473184502feda8e7dd94c926fc449ceea758fff43eef5da60589ea015b67e9"
+    },
+    {
+      "issuer": "KERNER_HAUS_GLOBAL_SOLUTIONS_PLC",
+      "symbol": "CPRT.N0000",
+      "metric": "TOTAL_LIABILITIES",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "55579126",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "53840dea1d331f542c55f1ce47d7d60fbb938117a6ec6af429a5ea27cd1fd164"
+    },
+    {
+      "issuer": "LEE_HEDGES_PLC",
+      "symbol": "SHAW.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "-9.83",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "204f21ff1ee7a8fd968548fe7d394a5b126facf0de3ea3e250104ca02cc78dd9"
+    },
+    {
+      "issuer": "C_W_MACKIE_PLC",
+      "symbol": "CWM.N0000",
+      "metric": "EPS_BASIC",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "6",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "d6ed044b75ef0c18b1762d574a3ee0cd5fec8c203fdb72a1490179997703c626"
+    },
+    {
+      "issuer": "NATIONAL_DEVELOPMENT_BANK_PLC",
+      "symbol": "NDB.N0000",
+      "metric": "PAT",
+      "entity": "GROUP",
+      "period": "2025-12-31",
+      "new_value": "5774295000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "97b0f342019b1e2d6beeefcd0efe1ade3f993735be6767e22ac6c8fd094a87c3"
+    },
+    {
+      "issuer": "LEE_HEDGES_PLC",
+      "symbol": "SHAW.N0000",
+      "metric": "NAVPS",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "172.58",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "204f21ff1ee7a8fd968548fe7d394a5b126facf0de3ea3e250104ca02cc78dd9"
+    },
+    {
+      "issuer": "CITRUS_LEISURE_PLC",
+      "symbol": "REEF.N0000",
+      "metric": "PAT",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "11478000",
+      "class": "TRULY_NEW_SELECTED",
+      "old_value": null,
+      "pdf_sha256": "b60abcd4426bd80b30c876ed0ed84803a77048c0d6001afbbcab0ab7cf7759a5"
+    },
+    {
+      "issuer": "CEYLON_LAND_EQUITY_PLC",
+      "symbol": "KZOO.N0000",
+      "metric": "PBT",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "149369000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "9bd7d203de217f82d416f6d6f56430fe0a6ca709f173bf87a2e582c3fe24068b"
+    },
+    {
+      "issuer": "HAYLEYS_PLC",
+      "symbol": "HAYL.N0000",
+      "metric": "TOP_LINE",
+      "entity": "COMPANY",
+      "period": "2026-03-31",
+      "new_value": "6000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "aa1aa41e582ce10d1779c0ad7731037ce936dd38aea593e7451d6689a69643ca"
+    },
+    {
+      "issuer": "CEYLON_COLD_STORES_PLC",
+      "symbol": "CCS.N0000",
+      "metric": "TOTAL_EQUITY",
+      "entity": "COMPANY",
+      "period": "2026-06-30",
+      "new_value": "14251418000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "6220191be748a1f25775a45fc9fc336bea3fa2509380617042cba176e8fd242b"
+    },
+    {
+      "issuer": "CEYLON_LAND_EQUITY_PLC",
+      "symbol": "KZOO.N0000",
+      "metric": "PBT",
+      "entity": "COMPANY",
+      "period": "2025-12-31",
+      "new_value": "464393000",
+      "class": "RECOVERED_FROM_CONFLICT",
+      "old_value": null,
+      "pdf_sha256": "5b03248109d4bed9027c4bef97c42be317b7fe399cbb51c11f2091158f69acc3"
+    }
+  ],
+  "reporting_note": "draft_selected TARGET (2816/2840) is NOT E13 total draft-publishable 3854; do not report 3878 without same-definition rerun including derived."
+}

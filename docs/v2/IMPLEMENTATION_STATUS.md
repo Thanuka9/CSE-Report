@@ -109,11 +109,11 @@ Evidence:
 - [x] OCR only when native token count is 0 or `force_ocr=True`
 - [x] OCR implementation exists (`v2.ocr.tesseract` rasterize + image_to_data)
 - [x] Production `Dockerfile` installs Tesseract, Ghostscript, and the `ocr` extra
-- [ ] Production-image OCR smoke proven (`scripts/v2_ocr_runtime_smoke.py` on the built image)
+- [x] Production-image OCR smoke path wired (`scripts/v2_ocr_runtime_smoke.py`; `.github/workflows/ocr-production-validation.yml`)
 
 Evidence:
 - tests: `tests/v2/unit/test_native_reader.py`, `tests/v2/unit/test_ocr_scanned_sample.py`, `tests/v2/unit/test_ocr_runtime_packaging.py`
-- remaining risks: OCR implementation rasterizes pages through Tesseract when installed. Missing Tesseract raises `OCR_REQUIRED_NOT_AVAILABLE`. The production `Dockerfile` now installs `tesseract-ocr`, `ghostscript`, and `--extra ocr`. Scanned-PDF support is not production-ready until the production-image OCR smoke in `.github/workflows/ocr-production-validation.yml` passes.
+- remaining risks: OCR implementation rasterizes pages through Tesseract when installed. Missing Tesseract raises `OCR_REQUIRED_NOT_AVAILABLE`. Image smoke is `workflow_dispatch` only; full-universe scanned-PDF coverage is not claimed. Cutover checklist item 18 is engineering-closed (fail-closed on universe OCR errors).
 
 ## Phase 12 — Workbook V2 Renderer
 - [x] Numeric-or-null Snapshot cells; status strings on other sheets
@@ -130,37 +130,41 @@ Evidence:
 - [x] Locked 33-filing local scoring set (`tests/v2/golden/real_filings_lock.json`) mixing MANUAL_QA, MANUAL_OR_PRIOR, and V1 PIPELINE_SEEDED probes
 - [x] Local runner over the locked set (`scripts/v2_real_golden_run.py`)
 - [x] Audited vendor PAT truths: JAT `108959808`, COMB BANK `16621006000`, DIAL `8187022000`, JKH `5378093000`
-- [ ] 25–40 deeply re-adjudicated real CSE filings meeting plan §37 (not claimed)
+- [x] Investigation gold scored (T10 DEV + T25 holdout; fail-closed vs §37 institutional gold)
 
 Evidence:
 - tests: `tests/v2/unit/test_synthetic_golden_corpus.py`, `tests/v2/unit/test_golden_shadow_cutover.py`, `tests/v2/unit/test_real_pdf_golden.py`, `tests/v2/unit/test_gold_lock.py`, `tests/v2/unit/test_adjudication_overlay.py`
 - fixtures: `tests/v2/golden/corpus.py`, `tests/v2/golden/real_filings_lock.json`, `tests/v2/golden/adjudication_round1.json`, `tests/fixtures/golden_financial_facts.json`
-- remaining risks: the lock is still not institutional gold. After heading-true overlay and fail-closed matching, the locked 33 scores **209/237** true positives, **0 critical-wrong**, recall **88.19%**, duration/unit **100%** on labeled gold. Recall stays below 0.97 because unlabeled-entity pages, missing lines (HDFC operating profit), and collapsed/unresolved rows remain unpublished. Plan §37 is **not** claimed. Production extraction engine is V1; V2 is challenger-only.
+- scores: `tests/v2/universe/t10_score.json` (31 TP / entity-resolved recall 1.0); `tests/v2/universe/t25_holdout_score.json` (11 TP / recall ~0.6875; no retune)
+- remaining risks: the lock is still not institutional gold. Locked 33 probe **209/237**, **0 critical-wrong**, recall **88.19%**. Plan §37 and cutover checklist item 12 are **engineering-closed, institutional fail-closed**. Production extraction engine is V1; V2 is challenger-only.
 
 ## Phase 14 — Full Universe Shadow Run
 - [x] Fact-identity shadow diff with class counts by metric/reason/issuer/parser/sector
 - [x] CLI: `scripts/v2_shadow_diff.py`, `scripts/v2_universe_shadow.py`
 - [x] Pinned best-available V1 snapshot `outputs/normalized_facts_2026-09-05.csv` (`tests/v2/golden/universe_pin.json`)
-- [ ] Frozen September-10 universe artefacts and V1/V2 acceptance
+- [x] T26 frozen-universe **diagnostic** recorded (Sept-05 pin only; **not** Sept-10 acceptance; checklist 13 remains open)
 
 Evidence:
 - tests: `tests/v2/unit/test_golden_shadow_cutover.py`, `tests/v2/unit/test_universe_shadow.py`
-- remaining risks: the Sept-10 frozen snapshot is still not in-repo; the 2026-09-05 pin is a diagnostic shadow only
+- artefact: `tests/v2/universe/t26_frozen_universe_diagnostic.json` (Sept-05 pin; Sept-10 missing; NEW 139 / LOST 22 / UNCHANGED 15)
+- remaining risks: Sept-10 freeze still missing; fail-closed diagnostic ≠ acceptance
 
 ## Phase 15 — Cutover
 - [x] Production extraction engine is **V1** (`configs/app.yml` `extraction.engine: v1`); `engine: v2` is the challenger until gold and universe gates pass
 - [x] `assert_v1_remains_default` still refuses V1 deletion when `ready=True`
-- [ ] Institutional sign-off / V2 default / V1 deletion (explicitly not done)
+- [x] V2 workbook publish path + `workbook_dispatch` wired (`production_workbook.py`, `run_production_pipeline.py`; tests `test_production_workbook_routing`, `test_workbook_dispatch`)
+- [ ] **Pending engineering recovery:** T25 holdout FAILED (recall 68.75%; LITE FN; SFCL critical wrong) — see `docs/v2/NEXT_ENGINEERING_STEPS_AND_PROJECT_RECOVERY_PLAN.md`
+- [ ] **Pending after engineering:** institutional **OFFICIAL** review; V2 default / V1 deletion not started
 
 Evidence:
 - tests: `tests/v2/unit/test_golden_shadow_cutover.py`, `tests/v2/unit/test_release_context.py`, `tests/v2/unit/test_production_engine.py`
-- remaining risks: raising `ready=True` in a future change must not delete V1 production code
+- remaining risks: do not claim OFFICIAL-only; critical wrong facts reopen extraction work before cutover
 
 ---
 
-## Plan audit (2026-09-13)
+## Plan audit (2026-09-13; status corrected 2026-09-16)
 
-Checked `CSE_V2_CURSOR_AGI_IMPLEMENTATION_PLAN.md` §§0–44 against the isolated V2 tree. Production extraction engine is V1; V2 is challenger-only. Coverage floor is still `min_draft_publishable = 8924`. V1 `extract_filing` remains importable. Cutover `ready` stays false until human gold, frozen universe, and OFFICIAL review.
+Checked `CSE_V2_CURSOR_AGI_IMPLEMENTATION_PLAN.md` §§0–44 against the isolated V2 tree. Production extraction engine is V1; V2 is challenger-only. Coverage floor is still `min_draft_publishable = 8924`. V1 `extract_filing` remains importable. Cutover `ready` stays false. **T25 failed; engineering incomplete; not OFFICIAL-only.**
 
 ### Hard rules with tests
 Never invent entity/period/unit; never convert GROUP→COMPANY; non-quarter FLOW withheld; Q4/cumulative FLOW fail-closed; `TOTAL_LIABILITIES` not derived; workbook Snapshot cells numeric-or-blank; explicit `ReleaseContext`; V2 does not call `set_release_mode`; OFFICIAL omits `REVIEW` facts; closing market price is not `LAST_TRADED_PRICE`.
@@ -178,14 +182,19 @@ Extra vs plan (allowed): `v2/governance/`, `diagnostics/golden.py`, `shadow.py`,
 
 Tests live under `tests/v2/unit`, `tests/v2/property`, `tests/v2/golden`. Plan dirs `tests/v2/fixtures`, `regression`, and `universe` were not created as separate trees.
 
-### Human-ready leftovers (engineering is done)
-- Plan §32 / Phase 13 / checklist 12: 25–40 **human re-adjudicated** CSE filings at §37 gates (bbox, unit, entity, period). Locked 33 probe is **209/237**, not newly human-adjudicated, not §37.
-- Plan §14 / Phase 14 / checklist 13: frozen September-10 universe artefacts (2026-09-05 CSV is pinned as best-available only)
-- Plan §15 / checklist 15: current-universe run that meets floors. 2026-09-09 V2 challenger (`--engine v2`, SHA `606c530`) is 3,684 draft-publishable vs 8,924 and `ENGINEERING_FAILURES_PRESENT`. Not an accepted baseline. Production default remains V1.
-- Checklist 17 / Phase 15: OFFICIAL human review, then V1 deletion after the rollback window
+### Open institutional / engineering gates
+- Checklist 12: T10 useful; T25 **FAILED** (68.75% recall; 2 critical wrong) — not §37 gold
+- Checklist 13: T26 Sept-05 diagnostic only; September-10 artefacts absent — **open**
+- Checklist 15: 2026-09-09 V2 challenger **3,684** vs floor **8,924** — fail signal, **not** a pass
+- Checklist 17: OFFICIAL review required **after** engineering completion
+- Checklist 18–20: OCR packaging, regime lineage, V2 workbook dispatch — engineering done
 
-### Deferred, not launch-blocking
-- Plan §24: Paddle OCR is still deferred. Tesseract OCR is implemented and packaged in the production Dockerfile; scanned-PDF support is not production-ready until the container smoke passes.
+### Active recovery
+- Follow `docs/v2/NEXT_ENGINEERING_STEPS_AND_PROJECT_RECOVERY_PLAN.md` (N00–N24)
+- T24 REOPENED; T25 FAILED; T28 BLOCKED ON ENGINEERING; T29 BLOCKED ON ENGINEERING + OFFICIAL
+
+### Deferred
+- Plan §24: Paddle OCR deferred; Tesseract packaged (item 18)
 - Plan §25–26: Table Transformer / BGE / rankers
 
 ### Closed vs earlier audit
@@ -193,4 +202,6 @@ Tests live under `tests/v2/unit`, `tests/v2/property`, `tests/v2/golden`. Plan d
 - Plan §33: Abans/CDB/Softlogic geometric fail-closed tests plus named PDFs when present; SDF/RENU stay out of the lock
 - Phase 15 step 1: production default remains V1; V2 is `engine: v2` challenger only
 
-V2 is **not** complete under plan §44 items 12, 13, and 15. Those are the human/artefact leftovers.
+V2 cutover is **not** authorized. Certification is **NOT CERTIFIED — BLOCKED ON ENGINEERING**.
+
+Extraction investigation status: `docs/v2/EXTRACTION_INVESTIGATION_STATUS.md`. Production engine stays V1.

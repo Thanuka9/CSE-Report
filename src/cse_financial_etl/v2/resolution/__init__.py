@@ -10,6 +10,7 @@ from cse_financial_etl.v2.resolution.column_context import (
     parse_period_end,
     parse_unit,
 )
+from cse_financial_etl.v2.resolution.production_selection import select_pipeline_facts
 from cse_financial_etl.v2.resolution.resolver import build_candidates, resolve_source_facts
 
 __all__ = [
@@ -21,4 +22,5 @@ __all__ = [
     "parse_period_end",
     "parse_unit",
     "resolve_source_facts",
+    "select_pipeline_facts",
 ]

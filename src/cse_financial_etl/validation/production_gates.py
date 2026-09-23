@@ -2,14 +2,14 @@ from __future__ import annotations
 
 import json
 import re
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from datetime import date
 from typing import Any
 
 from cse_financial_etl.extraction.statement_extractor import ExtractedFact, QuarterPrice
 from cse_financial_etl.sources.cse import DownloadedFiling
-from cse_financial_etl.validation.acceptance import is_publishable_fact
+from cse_financial_etl.validation.acceptance import current_release_mode, is_publishable_fact
 
 FLOW_CODES = {
     "PAT",
@@ -84,6 +84,9 @@ def evaluate_production_gates(
     required_scope: dict[str, str] | None = None,
     previous_status_counts: dict[str, int] | None = None,
     coverage_baseline: dict[str, Any] | None = None,
+    release_mode: str | None = None,
+    v2_source_facts: Sequence[Any] | None = None,
+    v2_derived_facts: Sequence[Any] | None = None,
 ) -> list[GateHit]:
     """Hard stops for a universe run.
 
@@ -91,11 +94,18 @@ def evaluate_production_gates(
     withheld rows remain review evidence. Provenance failures such as an explicit layout
     fallback are still surfaced as engineering gates even though the shared publication
     contract correctly prevents them from becoming numeric output.
+
+    DRAFT coverage uses the DRAFT publication predicate. OFFICIAL mode additionally
+    requires the same floor against APPROVED/CURATED facts and, when native V2 facts
+    are supplied, against the V2 OFFICIAL release view. Independent MANUAL_QA
+    sample/issuer floors are OFFICIAL-only; AI/evidence precheck is not MANUAL_QA.
     """
 
     hits: list[GateHit] = []
     extracted_status_count = 0
     draft_publishable_count = 0
+    official_publishable_count = 0
+    mode = str(release_mode or current_release_mode() or "DRAFT").strip().upper()
 
     if golden_validation:
         all_failed = [
@@ -124,7 +134,10 @@ def evaluate_production_gates(
         sample = int(golden_validation.get("sample_size") or 0)
         passed = int(golden_validation.get("passed") or 0)
         manual_issuers = int(golden_validation.get("manual_issuer_count") or 0)
-        if coverage_baseline:
+        # DRAFT production is not blocked on independent human gold. OFFICIAL
+        # publication still requires MANUAL_QA breadth; AI/evidence precheck is
+        # not a substitute and must not relabel PIPELINE_SEEDED as MANUAL_QA.
+        if mode == "OFFICIAL" and coverage_baseline:
             min_gold = int(
                 coverage_baseline.get("min_gold_sample") or DEFAULT_MIN_GOLD_SAMPLE
             )
@@ -194,6 +207,8 @@ def evaluate_production_gates(
                 )
 
             draft_publishable = is_publishable_fact(fact, release_mode="DRAFT")
+            if is_publishable_fact(fact, release_mode="OFFICIAL"):
+                official_publishable_count += 1
             if not draft_publishable:
                 continue
             draft_publishable_count += 1
@@ -348,11 +363,16 @@ def evaluate_production_gates(
 
     min_extracted = 0
     min_draft_publishable = 0
+    min_official_publishable = 0
     if coverage_baseline:
         if coverage_baseline.get("min_extracted_plus_derived") is not None:
             min_extracted = int(coverage_baseline["min_extracted_plus_derived"])
         if coverage_baseline.get("min_draft_publishable") is not None:
             min_draft_publishable = int(coverage_baseline["min_draft_publishable"])
+        if coverage_baseline.get("min_official_publishable") is not None:
+            min_official_publishable = int(coverage_baseline["min_official_publishable"])
+        elif min_draft_publishable:
+            min_official_publishable = min_draft_publishable
 
     previous_extracted = _published_count(previous_status_counts)
     extracted_floor = max(min_extracted, previous_extracted)
@@ -378,6 +398,47 @@ def evaluate_production_gates(
                 f"draft_publishable={draft_publishable_count} below floor {min_draft_publishable}",
             )
         )
+    if (
+        mode == "OFFICIAL"
+        and min_official_publishable
+        and official_publishable_count < min_official_publishable
+    ):
+        hits.append(
+            GateHit(
+                "OFFICIAL_PUBLISHABLE_COVERAGE_REGRESSION",
+                "",
+                "",
+                None,
+                None,
+                (
+                    f"official_publishable={official_publishable_count} below floor "
+                    f"{min_official_publishable}"
+                ),
+            )
+        )
+    if v2_source_facts is not None or v2_derived_facts is not None:
+        from cse_financial_etl.v2.contracts.enums import ReleaseMode
+        from cse_financial_etl.v2.reporting.release_view import count_eligible_facts
+
+        native_official = count_eligible_facts(
+            v2_source_facts or (),
+            v2_derived_facts or (),
+            mode=ReleaseMode.OFFICIAL,
+        )
+        if mode == "OFFICIAL" and min_official_publishable and native_official < min_official_publishable:
+            hits.append(
+                GateHit(
+                    "OFFICIAL_V2_RELEASE_VIEW_INCOMPLETE",
+                    "",
+                    "",
+                    None,
+                    None,
+                    (
+                        f"v2_official_eligible={native_official} below floor "
+                        f"{min_official_publishable}"
+                    ),
+                )
+            )
 
     for price in prices:
         if (

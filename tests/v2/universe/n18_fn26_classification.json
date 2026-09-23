@@ -1,0 +1,747 @@
+{
+  "summary": {
+    "PDF_TEXT_PRESENT_NOT_TABLED": 15,
+    "RESOLVED_BUT_NOT_ADMITTED": 6,
+    "LABEL_PRESENT_CONCEPT_GAP": 4,
+    "NO_CANDIDATE_UNCLEAR": 1
+  },
+  "rows": [
+    {
+      "issuer_id": "AFSL.N0000",
+      "issuer_type": "FINANCE_COMPANY",
+      "metric_code": "EPS_BASIC",
+      "family": "NO_TARGET_CANDIDATE",
+      "gold_label": "Earnings Per Share",
+      "gold_value": "2.78",
+      "norm": "earnings per share",
+      "alias_hit": "EPS_BASIC",
+      "classification": "PDF_TEXT_PRESENT_NOT_TABLED",
+      "resolved_count": 0,
+      "label_match_count": 0,
+      "label_match_examples": [],
+      "pdf_hits": [
+        "Earnings Per Share 7.09 4.19 69o/o 2.78 2.74"
+      ],
+      "near_from_triage": []
+    },
+    {
+      "issuer_id": "AFSL.N0000",
+      "issuer_type": "FINANCE_COMPANY",
+      "metric_code": "OPERATING_PROFIT",
+      "family": "NO_TARGET_CANDIDATE",
+      "gold_label": "Operating Profit before Taxes on Financial Services",
+      "gold_value": "432765388",
+      "norm": "operating profit before taxes on financial services",
+      "alias_hit": "OPERATING_PROFIT",
+      "classification": "PDF_TEXT_PRESENT_NOT_TABLED",
+      "resolved_count": 0,
+      "label_match_count": 0,
+      "label_match_examples": [],
+      "pdf_hits": [
+        "Operating Profit before Working Capital Changes t,250,299,072 822,7A2,441"
+      ],
+      "near_from_triage": []
+    },
+    {
+      "issuer_id": "AFSL.N0000",
+      "issuer_type": "FINANCE_COMPANY",
+      "metric_code": "PAT",
+      "family": "NO_TARGET_CANDIDATE_NEAR_MISS",
+      "gold_label": "Profit for the Period",
+      "gold_value": "205013594",
+      "norm": "profit for the period",
+      "alias_hit": "PAT",
+      "classification": "LABEL_PRESENT_CONCEPT_GAP",
+      "resolved_count": 0,
+      "label_match_count": 2,
+      "label_match_examples": [
+        {
+          "label": "Net Profit for the Period ,",
+          "metric": null,
+          "stage": "CONCEPT_UNRESOLVED",
+          "entity": null,
+          "duration": null
+        },
+        {
+          "label": "Net Profit for the Period ,",
+          "metric": null,
+          "stage": "CONCEPT_UNRESOLVED",
+          "entity": null,
+          "duration": null
+        }
+      ],
+      "pdf_hits": [
+        "Profit for the Period 522,L98,347 3OB,4B1,9BB 6c)o/o 205,O13,594 157,944,344 30o/o",
+        "Net Profit for the Period ,22,198,347 s22,198,347"
+      ],
+      "near_from_triage": [
+        "Net Profit for the Period ,"
+      ]
+    },
+    {
+      "issuer_id": "AFSL.N0000",
+      "issuer_type": "FINANCE_COMPANY",
+      "metric_code": "PBT",
+      "family": "NO_TARGET_CANDIDATE",
+      "gold_label": "Profit before Taxation from Operations",
+      "gold_value": "330201470",
+      "norm": "profit before taxation from operations",
+      "alias_hit": "PBT",
+      "classification": "PDF_TEXT_PRESENT_NOT_TABLED",
+      "resolved_count": 0,
+      "label_match_count": 0,
+      "label_match_examples": [],
+      "pdf_hits": [
+        "Operatilrg Profit before Taxes on",
+        "Profit before Taxation from Operations a59,500,7 64 514,789,496 67 o/o 330,201,470 257,787,A79 28o/o",
+        "Operating Profit before Working Capital Changes t,250,299,072 822,7A2,441"
+      ],
+      "near_from_triage": []
+    },
+    {
+      "issuer_id": "AFSL.N0000",
+      "issuer_type": "FINANCE_COMPANY",
+      "metric_code": "TOP_LINE",
+      "family": "NO_TARGET_CANDIDATE",
+      "gold_label": "Income",
+      "gold_value": "1170386379",
+      "norm": "income",
+      "alias_hit": "TOP_LINE",
+      "classification": "PDF_TEXT_PRESENT_NOT_TABLED",
+      "resolved_count": 0,
+      "label_match_count": 0,
+      "label_match_examples": [],
+      "pdf_hits": [
+        "Net Interest Income 2,187,077,753 7,443,O29,242 52% 777,BA3,2AO 57 0,389,7 62 360,/o",
+        "Fcc and Corumission Income 277,136,004 225,275,736 23% L)2,2c)8,407 (l1,18{1,104",
+        "Prol'it Belore Income Tax Expense 859,500,764. 514,t89,496"
+      ],
+      "near_from_triage": []
+    },
+    {
+      "issuer_id": "AFSL.N0000",
+      "issuer_type": "FINANCE_COMPANY",
+      "metric_code": "TOTAL_EQUITY",
+      "family": "NO_TARGET_CANDIDATE_NEAR_MISS",
+      "gold_label": "Total Shareholders' Funds",
+      "gold_value": "4024661568",
+      "norm": "total shareholders funds",
+      "alias_hit": "TOTAL_EQUITY",
+      "classification": "RESOLVED_BUT_NOT_ADMITTED",
+      "resolved_count": 2,
+      "label_match_count": 1,
+      "label_match_examples": [
+        {
+          "label": "Total Shareholders' Funds 75o/o 3,502,4(t3,220",
+          "metric": "TOTAL_EQUITY",
+          "stage": "CONCEPT_UNRESOLVED",
+          "entity": null,
+          "duration": null
+        }
+      ],
+      "pdf_hits": [
+        "Total Shareholders' Funds 75o/o 4,024,661,568 3,502,4(t3,220",
+        "Total Liabilities and Shareholders' Funds ilSa/o 18,237,743,694 t3,484,926,875"
+      ],
+      "near_from_triage": [
+        "Total Shareholders' Funds 75o/o 3,502,4(t3,220"
+      ]
+    },
+    {
+      "issuer_id": "AMCL.N0000",
+      "issuer_type": "FINANCE_COMPANY",
+      "metric_code": "NAVPS",
+      "family": "NO_TARGET_CANDIDATE",
+      "gold_label": "Net Assets per Share (Rs.)",
+      "gold_value": "195.59",
+      "norm": "net assets per share",
+      "alias_hit": "NAVPS",
+      "classification": "PDF_TEXT_PRESENT_NOT_TABLED",
+      "resolved_count": 0,
+      "label_match_count": 0,
+      "label_match_examples": [],
+      "pdf_hits": [
+        "(viii) Net Assets per Share (Rs.) 195.59 185.60"
+      ],
+      "near_from_triage": []
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "issuer_type": "INSURANCE",
+      "metric_code": "EPS_DILUTED",
+      "family": "NO_TARGET_CANDIDATE_NEAR_MISS",
+      "gold_label": "Basic / diluted earnings per share to equity holders",
+      "gold_value": "-0.07",
+      "norm": "basic diluted earnings per share to equity holders",
+      "alias_hit": "EPS_BASIC",
+      "classification": "NO_CANDIDATE_UNCLEAR",
+      "resolved_count": 0,
+      "label_match_count": 4,
+      "label_match_examples": [
+        {
+          "label": "Basic / diluted earnings per share to equity holders",
+          "metric": "EPS_BASIC",
+          "stage": "ENTITY_UNRESOLVED",
+          "entity": null,
+          "duration": 12
+        },
+        {
+          "label": "Basic / diluted earnings per share to equity holders",
+          "metric": "EPS_BASIC",
+          "stage": "ENTITY_UNRESOLVED",
+          "entity": null,
+          "duration": 12
+        },
+        {
+          "label": "Basic / diluted earnings per share to equity holders",
+          "metric": "EPS_BASIC",
+          "stage": "ENTITY_UNRESOLVED",
+          "entity": null,
+          "duration": 3
+        },
+        {
+          "label": "Basic / diluted earnings per share to equity holders",
+          "metric": "EPS_BASIC",
+          "stage": "ENTITY_UNRESOLVED",
+          "entity": null,
+          "duration": 3
+        }
+      ],
+      "pdf_hits": [
+        "Basic / diluted earnings per share to equity holders 0.04 0.09 -57%",
+        "Basic / diluted earnings per share to equity holders (0.07) (0.12) -45%"
+      ],
+      "near_from_triage": [
+        "Basic / diluted earnings per share to equity holders"
+      ]
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "issuer_type": "INSURANCE",
+      "metric_code": "NAVPS",
+      "family": "NO_TARGET_CANDIDATE",
+      "gold_label": "Net asset value per share",
+      "gold_value": "13.06",
+      "norm": "net asset value per share",
+      "alias_hit": "NAVPS",
+      "classification": "PDF_TEXT_PRESENT_NOT_TABLED",
+      "resolved_count": 0,
+      "label_match_count": 0,
+      "label_match_examples": [],
+      "pdf_hits": [
+        "Financial assets at fair value through profit or loss (4.1) 35,599,999 56,203,581",
+        "4.1 Financial assets at fair value through profit & loss",
+        "Financial assets at fair value through profit or loss (5.1) 671,963,889 315,393,787"
+      ],
+      "near_from_triage": []
+    },
+    {
+      "issuer_id": "COCR.N0000",
+      "issuer_type": "FINANCE_COMPANY",
+      "metric_code": "EPS_BASIC",
+      "family": "NO_TARGET_CANDIDATE",
+      "gold_label": "Earning per Share (LKR) - For the Period",
+      "gold_value": "5.90",
+      "norm": "earning per share (lkr) for the period",
+      "alias_hit": "EPS_BASIC",
+      "classification": "PDF_TEXT_PRESENT_NOT_TABLED",
+      "resolved_count": 0,
+      "label_match_count": 0,
+      "label_match_examples": [],
+      "pdf_hits": [
+        "Earning per Share (LKR) -Annualized 23.61 3.55 25.21 8.68",
+        "Earning per Share (LKR) - For the Period 5.90 0.89 18.90 6.51",
+        "Earning per Share (LKR) -Annualized 24.40 4.16 25.87 9.17"
+      ],
+      "near_from_triage": []
+    },
+    {
+      "issuer_id": "COCR.N0000",
+      "issuer_type": "FINANCE_COMPANY",
+      "metric_code": "OPERATING_PROFIT",
+      "family": "NO_TARGET_CANDIDATE",
+      "gold_label": "Profit before Social Security Contribution Levy / Value Added Tax on financial services",
+      "gold_value": "3681170368",
+      "norm": "profit before social security contribution levy value added tax on financial services",
+      "alias_hit": "OPERATING_PROFIT",
+      "classification": "PDF_TEXT_PRESENT_NOT_TABLED",
+      "resolved_count": 0,
+      "label_match_count": 0,
+      "label_match_examples": [],
+      "pdf_hits": [
+        "Profit before Social Security Contribution",
+        "Profit Before Income Tax 2,882,632,242 507,553,720 2,375,078,523 468% 9,390,926,037 3,410,984,610 5,979,941,427 175%",
+        "Profit before Social Security Contribution"
+      ],
+      "near_from_triage": []
+    },
+    {
+      "issuer_id": "COCR.N0000",
+      "issuer_type": "FINANCE_COMPANY",
+      "metric_code": "PAT",
+      "family": "NO_TARGET_CANDIDATE_NEAR_MISS",
+      "gold_label": "Profit for the Period",
+      "gold_value": "1877424233",
+      "norm": "profit for the period",
+      "alias_hit": "PAT",
+      "classification": "LABEL_PRESENT_CONCEPT_GAP",
+      "resolved_count": 0,
+      "label_match_count": 8,
+      "label_match_examples": [
+        {
+          "label": "Net profit for the period",
+          "metric": null,
+          "stage": "CONCEPT_UNRESOLVED",
+          "entity": "COMPANY",
+          "duration": 3
+        },
+        {
+          "label": "Net profit for the period",
+          "metric": null,
+          "stage": "CONCEPT_UNRESOLVED",
+          "entity": "COMPANY",
+          "duration": 3
+        },
+        {
+          "label": "Net profit for the period",
+          "metric": null,
+          "stage": "CONCEPT_UNRESOLVED",
+          "entity": "COMPANY",
+          "duration": 3
+        },
+        {
+          "label": "Net profit for the period",
+          "metric": null,
+          "stage": "CONCEPT_UNRESOLVED",
+          "entity": "COMPANY",
+          "duration": 3
+        }
+      ],
+      "pdf_hits": [
+        "Profit for the Period 1,877,424,233 282,423,498 1,595,000,736 565% 6,013,084,227 2,071,307,036 3,941,777,191 190%",
+        "Profit for the Period 1,940,479,258 330,736,854 1,609,742,405 487% 6,170,510,654 2,187,918,551 3,982,592,102 182%",
+        "Net profit for the period - - - 2,071,307,036 - - - 2,071,307,036"
+      ],
+      "near_from_triage": [
+        "Net profit for the period"
+      ]
+    },
+    {
+      "issuer_id": "COCR.N0000",
+      "issuer_type": "FINANCE_COMPANY",
+      "metric_code": "PBT",
+      "family": "NO_TARGET_CANDIDATE_NEAR_MISS",
+      "gold_label": "Profit Before Income Tax",
+      "gold_value": "2882632242",
+      "norm": "profit before income tax",
+      "alias_hit": "PBT",
+      "classification": "LABEL_PRESENT_CONCEPT_GAP",
+      "resolved_count": 0,
+      "label_match_count": 4,
+      "label_match_examples": [
+        {
+          "label": "Profit before Income Tax Expense",
+          "metric": null,
+          "stage": "CONCEPT_UNRESOLVED",
+          "entity": "COMPANY",
+          "duration": 9
+        },
+        {
+          "label": "Profit before Income Tax Expense",
+          "metric": null,
+          "stage": "CONCEPT_UNRESOLVED",
+          "entity": "COMPANY",
+          "duration": 9
+        },
+        {
+          "label": "Profit before Income Tax Expense",
+          "metric": null,
+          "stage": "CONCEPT_UNRESOLVED",
+          "entity": "GROUP",
+          "duration": 9
+        },
+        {
+          "label": "Profit before Income Tax Expense",
+          "metric": null,
+          "stage": "CONCEPT_UNRESOLVED",
+          "entity": "GROUP",
+          "duration": 9
+        }
+      ],
+      "pdf_hits": [
+        "Profit before Social Security Contribution",
+        "Profit Before Income Tax 2,882,632,242 507,553,720 2,375,078,523 468% 9,390,926,037 3,410,984,610 5,979,941,427 175%",
+        "Profit before Social Security Contribution"
+      ],
+      "near_from_triage": [
+        "Profit before Income Tax Expense"
+      ]
+    },
+    {
+      "issuer_id": "COCR.N0000",
+      "issuer_type": "FINANCE_COMPANY",
+      "metric_code": "TOP_LINE",
+      "family": "NO_TARGET_CANDIDATE",
+      "gold_label": "Gross Income",
+      "gold_value": "8315262702",
+      "norm": "gross income",
+      "alias_hit": "TOP_LINE",
+      "classification": "PDF_TEXT_PRESENT_NOT_TABLED",
+      "resolved_count": 0,
+      "label_match_count": 0,
+      "label_match_examples": [],
+      "pdf_hits": [
+        "Gross Income 8,315,262,702 6,514,057,238 1,801,205,464 28% 24,205,950,602 20,788,731,302 3,417,219,300 16%",
+        "Gross Income 8,406,946,744 6,584,113,434 1,822,833,310 28% 24,435,731,155 20,965,083,830 3,470,647,325 17%"
+      ],
+      "near_from_triage": []
+    },
+    {
+      "issuer_id": "HUNA.N0000",
+      "issuer_type": "GENERAL",
+      "metric_code": "TOP_LINE",
+      "family": "NO_TARGET_CANDIDATE_NEAR_MISS",
+      "gold_label": "Revenue",
+      "gold_value": "13315674",
+      "norm": "revenue",
+      "alias_hit": "TOP_LINE",
+      "classification": "RESOLVED_BUT_NOT_ADMITTED",
+      "resolved_count": 8,
+      "label_match_count": 8,
+      "label_match_examples": [
+        {
+          "label": "Revenue ||",
+          "metric": "TOP_LINE",
+          "stage": "PUBLICATION",
+          "entity": "GROUP",
+          "duration": 3
+        },
+        {
+          "label": "Revenue ||",
+          "metric": "TOP_LINE",
+          "stage": "NONE",
+          "entity": "GROUP",
+          "duration": 3
+        },
+        {
+          "label": "Revenue ||",
+          "metric": "TOP_LINE",
+          "stage": "PUBLICATION",
+          "entity": "GROUP",
+          "duration": 3
+        },
+        {
+          "label": "Revenue ||",
+          "metric": "TOP_LINE",
+          "stage": "PUBLICATION",
+          "entity": "GROUP",
+          "duration": 3
+        }
+      ],
+      "pdf_hits": [
+        "Revenue 236,427,739 370,530,587 707,072,632 1,106,564,462 || 13,315,674 26,862,337 66,352,592 70,699,949"
+      ],
+      "near_from_triage": [
+        "Revenue ||"
+      ]
+    },
+    {
+      "issuer_id": "LGIL.N0000",
+      "issuer_type": "INSURANCE",
+      "metric_code": "EPS_DILUTED",
+      "family": "NO_TARGET_CANDIDATE",
+      "gold_label": "Basic and diluted earnings per share",
+      "gold_value": "-0.48",
+      "norm": "basic and diluted earnings per share",
+      "alias_hit": "EPS_BASIC",
+      "classification": "PDF_TEXT_PRESENT_NOT_TABLED",
+      "resolved_count": 0,
+      "label_match_count": 0,
+      "label_match_examples": [],
+      "pdf_hits": [
+        "6.9 Basic and diluted earnings per For the three months ended For the year ended"
+      ],
+      "near_from_triage": []
+    },
+    {
+      "issuer_id": "NHL.N0000",
+      "issuer_type": "GENERAL",
+      "metric_code": "PBT",
+      "family": "NO_TARGET_CANDIDATE_NEAR_MISS",
+      "gold_label": "Net Profit/(Loss) before Taxation",
+      "gold_value": "295611000",
+      "norm": "net profit (loss) before taxation",
+      "alias_hit": "PBT",
+      "classification": "RESOLVED_BUT_NOT_ADMITTED",
+      "resolved_count": 8,
+      "label_match_count": 8,
+      "label_match_examples": [
+        {
+          "label": "Net Profit/(Loss) before Taxation",
+          "metric": "PBT",
+          "stage": "NONE",
+          "entity": "CONSOLIDATED",
+          "duration": 3
+        },
+        {
+          "label": "Net Profit/(Loss) before Taxation",
+          "metric": "PBT",
+          "stage": "PUBLICATION",
+          "entity": "GROUP",
+          "duration": 3
+        },
+        {
+          "label": "Net Profit/(Loss) before Taxation",
+          "metric": "PBT",
+          "stage": "VALIDATION",
+          "entity": "GROUP",
+          "duration": 9
+        },
+        {
+          "label": "Net Profit/(Loss) before Taxation",
+          "metric": "PBT",
+          "stage": "VALIDATION",
+          "entity": "GROUP",
+          "duration": 9
+        }
+      ],
+      "pdf_hits": [
+        "Net Profit/(Loss) before Taxation 348,869 30,267 1,543,858 450,652 295,611 98,659 832,868 461,887",
+        "Profit/(Loss) for the period 139,647 (141,160) 1,168,626 206,048 217,677 13,733 670,058 324,461",
+        "Net Profit/(Loss) Attributable to Equity"
+      ],
+      "near_from_triage": [
+        "Net Profit/(Loss) before Taxation"
+      ]
+    },
+    {
+      "issuer_id": "PABC.N0000",
+      "issuer_type": "BANK",
+      "metric_code": "EPS_DILUTED",
+      "family": "NO_TARGET_CANDIDATE",
+      "gold_label": "Earnings Per Share - Basic/Diluted (Rs.)",
+      "gold_value": "2.22",
+      "norm": "earnings per share basic diluted",
+      "alias_hit": "EPS_BASIC",
+      "classification": "PDF_TEXT_PRESENT_NOT_TABLED",
+      "resolved_count": 0,
+      "label_match_count": 0,
+      "label_match_examples": [],
+      "pdf_hits": [
+        "\u2022 Earnings Per Share: Rs. 9.05",
+        "Bank recorded a Profit After Tax (PAT) of Rs. 4.01 billion and an Earnings Per Share (EPS) of Rs. 9.05, reflecting",
+        "Earnings Per Share - Basic/Diluted (Rs.) 9.05 9.34 (3) 2.22 4.33 (49)"
+      ],
+      "near_from_triage": []
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "issuer_type": "BANK",
+      "metric_code": "EPS_BASIC",
+      "family": "NO_TARGET_CANDIDATE_NEAR_MISS",
+      "gold_label": "Basic earnings per ordinary share (Rs.)",
+      "gold_value": "0.92",
+      "norm": "basic earnings per ordinary share",
+      "alias_hit": "EPS_BASIC",
+      "classification": "LABEL_PRESENT_CONCEPT_GAP",
+      "resolved_count": 0,
+      "label_match_count": 2,
+      "label_match_examples": [
+        {
+          "label": "[Earnings per share on profit Basic earnings per ordinary share (Rs) 2a7 249] as |",
+          "metric": null,
+          "stage": "CONCEPT_UNRESOLVED",
+          "entity": "BANK",
+          "duration": 3
+        },
+        {
+          "label": "[Earnings per share on profit Basic earnings per ordinary share (Rs) 2a7 249] as |",
+          "metric": null,
+          "stage": "CONCEPT_UNRESOLVED",
+          "entity": "BANK",
+          "duration": 3
+        }
+      ],
+      "pdf_hits": [
+        "Basic earnings per ordinary share (Rs) 2a7 249] as 02 0.03 | 2971%"
+      ],
+      "near_from_triage": [
+        "[Earnings per share on profit Basic earnings per ordinary share (Rs) 2a7 249] as"
+      ]
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "issuer_type": "BANK",
+      "metric_code": "EPS_DILUTED",
+      "family": "NO_TARGET_CANDIDATE_NEAR_MISS",
+      "gold_label": "Diluted earnings per ordinary share (Rs.)",
+      "gold_value": "0.92",
+      "norm": "diluted earnings per ordinary share",
+      "alias_hit": "EPS_DILUTED",
+      "classification": "RESOLVED_BUT_NOT_ADMITTED",
+      "resolved_count": 2,
+      "label_match_count": 2,
+      "label_match_examples": [
+        {
+          "label": "[Diluted earnings per ordinary share (Rs.) 2.49| os |",
+          "metric": "EPS_DILUTED",
+          "stage": "CONCEPT_UNRESOLVED",
+          "entity": "BANK",
+          "duration": 12
+        },
+        {
+          "label": "[Diluted earnings per ordinary share (Rs.) 2.49| os |",
+          "metric": "EPS_DILUTED",
+          "stage": "CONCEPT_UNRESOLVED",
+          "entity": "BANK",
+          "duration": 3
+        }
+      ],
+      "pdf_hits": [
+        "[Diluted earnings per ordinary share (Rs.) 247 2.49| 1% os 0.03 | 2971%"
+      ],
+      "near_from_triage": [
+        "[Diluted earnings per ordinary share (Rs.) 2.49| os |"
+      ]
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "issuer_type": "BANK",
+      "metric_code": "NAVPS",
+      "family": "NO_TARGET_CANDIDATE",
+      "gold_label": "Net asset value per share (Rs.)",
+      "gold_value": "90.18",
+      "norm": "net asset value per share",
+      "alias_hit": "NAVPS",
+      "classification": "PDF_TEXT_PRESENT_NOT_TABLED",
+      "resolved_count": 0,
+      "label_match_count": 0,
+      "label_match_examples": [],
+      "pdf_hits": [
+        "Net fair value gains/(losses) on financial assets atfair value through| \u2014 | |",
+        "Financial assets fair value through Profit or Loss : 6,739,200 | -100%",
+        "Financial assets measured at fair value through other comprehensive income 196,698 208,146 | -6%"
+      ],
+      "near_from_triage": []
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "issuer_type": "BANK",
+      "metric_code": "OPERATING_PROFIT",
+      "family": "NO_TARGET_CANDIDATE",
+      "gold_label": "Operating profit/ (loss) before VAT on financial services & SSCL",
+      "gold_value": "550523000",
+      "norm": "operating profit (loss) before vat on financial services & sscl",
+      "alias_hit": "OPERATING_PROFIT",
+      "classification": "RESOLVED_BUT_NOT_ADMITTED",
+      "resolved_count": 3,
+      "label_match_count": 0,
+      "label_match_examples": [],
+      "pdf_hits": [
+        "Operating profit/ (loss) before VAT on financial services & SSCL 614243] 1450927] 1% ssosz3| 15464] 257%",
+        "Operating profit/(loss) after VAT on financial services and SCCL 00373 684,263 17% 376,323 asi | 419%"
+      ],
+      "near_from_triage": []
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "issuer_type": "BANK",
+      "metric_code": "PBT",
+      "family": "NO_TARGET_CANDIDATE_NEAR_MISS",
+      "gold_label": "Profit/(loss) before tax",
+      "gold_value": "376323000",
+      "norm": "profit (loss) before tax",
+      "alias_hit": "PBT",
+      "classification": "RESOLVED_BUT_NOT_ADMITTED",
+      "resolved_count": 3,
+      "label_match_count": 3,
+      "label_match_examples": [
+        {
+          "label": "|Profit/(loss) before tax sooi7s| | |",
+          "metric": "PBT",
+          "stage": "CONCEPT_UNRESOLVED",
+          "entity": "BANK",
+          "duration": 3
+        },
+        {
+          "label": "|Profit/(loss) before tax sooi7s| | |",
+          "metric": "PBT",
+          "stage": "CONCEPT_UNRESOLVED",
+          "entity": "BANK",
+          "duration": 3
+        },
+        {
+          "label": "|Profit/(loss) before tax sooi7s| | |",
+          "metric": "PBT",
+          "stage": "CONCEPT_UNRESOLVED",
+          "entity": "BANK",
+          "duration": 3
+        }
+      ],
+      "pdf_hits": [
+        "Profit/(loss) for the period 404,918.55 | 404,918.55",
+        "profit or loss",
+        "Operating profit/ (loss) before VAT on financial services & SSCL 614243] 1450927] 1% ssosz3| 15464] 257%"
+      ],
+      "near_from_triage": [
+        "|Profit/(loss) before tax sooi7s| | |"
+      ]
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "issuer_type": "BANK",
+      "metric_code": "TOTAL_ASSETS",
+      "family": "NO_TARGET_CANDIDATE",
+      "gold_label": "Total assets",
+      "gold_value": "146958097000",
+      "norm": "total assets",
+      "alias_hit": "TOTAL_ASSETS",
+      "classification": "PDF_TEXT_PRESENT_NOT_TABLED",
+      "resolved_count": 0,
+      "label_match_count": 0,
+      "label_match_examples": [],
+      "pdf_hits": [
+        "\u2018Total assets 146,958,097 145,155,950 | _1%"
+      ],
+      "near_from_triage": []
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "issuer_type": "BANK",
+      "metric_code": "TOTAL_EQUITY",
+      "family": "NO_TARGET_CANDIDATE",
+      "gold_label": "Total equity",
+      "gold_value": "14804406000",
+      "norm": "total equity",
+      "alias_hit": "TOTAL_EQUITY",
+      "classification": "PDF_TEXT_PRESENT_NOT_TABLED",
+      "resolved_count": 0,
+      "label_match_count": 0,
+      "label_match_examples": [],
+      "pdf_hits": [
+        "Total equity 14,804,406 14,586,500 | 1%",
+        "Total equity and liabilities 146,958,097 145,185,950 |_1%"
+      ],
+      "near_from_triage": []
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "issuer_type": "BANK",
+      "metric_code": "TOTAL_LIABILITIES",
+      "family": "NO_TARGET_CANDIDATE",
+      "gold_label": "Total liabilities",
+      "gold_value": "132153690000",
+      "norm": "total liabilities",
+      "alias_hit": "TOTAL_LIABILITIES",
+      "classification": "PDF_TEXT_PRESENT_NOT_TABLED",
+      "resolved_count": 0,
+      "label_match_count": 0,
+      "label_match_examples": [],
+      "pdf_hits": [
+        "\u2018Total liabilities 132,153,690 730,569,450 | 1%",
+        "Total equity and liabilities 146,958,097 145,185,950 |_1%"
+      ],
+      "near_from_triage": []
+    }
+  ]
+}

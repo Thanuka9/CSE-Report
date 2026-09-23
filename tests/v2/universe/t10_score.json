@@ -1,0 +1,137 @@
+{
+  "item_count": 40,
+  "reported": 39,
+  "entity_resolved_reported": 31,
+  "ambiguous": 1,
+  "tp": 31,
+  "value_or_entity_mismatch": 0,
+  "fn": 0,
+  "g01_withheld": 8,
+  "duration_invented_on_null_truth": 0,
+  "recall_vs_entity_resolved": 1.0,
+  "critical_wrong_facts": 0,
+  "note": "T10 truth vs V2 SourceFacts. Unlabeled REPORTED rows are G01 withheld, not value errors. Publication gates are not applied to truth. Not certification and not holdout.",
+  "gates": {
+    "G01": {
+      "decision": "KEEP",
+      "rule": "Unresolved entity withholds. Do not copy issuer-name or document heading as entity. GROUP is never COMPANY.",
+      "evidence": "8 T10 REPORTED rows have null entity_scope (ABL/CBNK/CTC unlabeled columns). V2 withheld 8 as SourceFacts."
+    },
+    "G02": {
+      "decision": "UNTESTED",
+      "rule": "Partial-context cascade remains production default.",
+      "evidence": "T10 queue was VALUE_DISAGREEMENT, not cascade suppression."
+    },
+    "G03": {
+      "decision": "KEEP",
+      "rule": "Do not invent duration from Period ended. Exact-quarter remains publication policy, not source presence.",
+      "evidence": "7 GREG T10 rows have duration_months null. V2 duration inventions on null-truth rows: 0."
+    },
+    "G04": {
+      "decision": "UNTESTED",
+      "evidence": "No T10 OTHER-page adjudication."
+    },
+    "G05": {
+      "decision": "UNTESTED",
+      "evidence": "No T10 continuation adjudication."
+    },
+    "G06": {
+      "decision": "UNTESTED",
+      "evidence": "No T10 conflict-group adjudication."
+    },
+    "G07": {
+      "decision": "UNTESTED",
+      "evidence": "No T10 collapsed-row adjudication."
+    },
+    "G08": {
+      "decision": "UNTESTED",
+      "evidence": "Production selection is measured separately from source truth."
+    },
+    "G09": {
+      "decision": "KEEP",
+      "rule": "Absence of Group is not Company. Do not infer COMPANY on EPS_NOTE.",
+      "evidence": "CIC EPS is COMPANY because the statement says Company. ATL/DIMO/GREG EPS are GROUP because they say Group. Silence is not Company."
+    },
+    "score": {
+      "tp": 31,
+      "value_or_entity_mismatch": 0,
+      "fn": 0,
+      "g01_withheld": 8,
+      "not_certification": true
+    }
+  },
+  "split": "DEV",
+  "v2_source_fact_count": 446,
+  "issuers": [
+    "ABL.N0000",
+    "ACL.N0000",
+    "ATL.N0000",
+    "CBNK.N0000",
+    "CIC.N0000",
+    "COMB.N0000",
+    "CTC.N0000",
+    "DIMO.N0000",
+    "DIST.N0000",
+    "GREG.N0000"
+  ],
+  "investigation_base_sha": "91a9c68bf940d3d9c2a86245f127de88ad4b4b6d",
+  "actual_code_sha": "99278edbc8e1b225453be988ec61563538c17aa2:dirty:e704d79870cd",
+  "mismatch_examples": [
+    {
+      "issuer_id": "ABL.N0000",
+      "metric_code": "PAT",
+      "result": "G01_WITHHELD",
+      "truth": "622661000",
+      "truth_entity": null
+    },
+    {
+      "issuer_id": "ABL.N0000",
+      "metric_code": "TOTAL_LIABILITIES",
+      "result": "G01_WITHHELD",
+      "truth": "189157871000",
+      "truth_entity": null
+    },
+    {
+      "issuer_id": "CBNK.N0000",
+      "metric_code": "NAVPS",
+      "result": "G01_WITHHELD",
+      "truth": "11.81",
+      "truth_entity": null
+    },
+    {
+      "issuer_id": "CBNK.N0000",
+      "metric_code": "TOTAL_ASSETS",
+      "result": "G01_WITHHELD",
+      "truth": "104707432000",
+      "truth_entity": null
+    },
+    {
+      "issuer_id": "CBNK.N0000",
+      "metric_code": "TOTAL_EQUITY",
+      "result": "G01_WITHHELD",
+      "truth": "14642063000",
+      "truth_entity": null
+    },
+    {
+      "issuer_id": "CBNK.N0000",
+      "metric_code": "TOTAL_LIABILITIES",
+      "result": "G01_WITHHELD",
+      "truth": "90065369000",
+      "truth_entity": null
+    },
+    {
+      "issuer_id": "CTC.N0000",
+      "metric_code": "TOTAL_ASSETS",
+      "result": "G01_WITHHELD",
+      "truth": "45045000000",
+      "truth_entity": null
+    },
+    {
+      "issuer_id": "CTC.N0000",
+      "metric_code": "TOTAL_LIABILITIES",
+      "result": "G01_WITHHELD",
+      "truth": "34233000000",
+      "truth_entity": null
+    }
+  ]
+}

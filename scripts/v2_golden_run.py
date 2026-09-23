@@ -35,15 +35,21 @@ def main(argv: list[str] | None = None) -> int:
     reports = []
     negatives = 0
     for case in corpus:
-        _statements, facts, _derived, _metrics = run_filing_pipeline(
+        result = run_filing_pipeline(
             case.document,
             issuer_id=case.issuer_id,
             expected_entity_scope=case.expected_entity_scope,
             accounting_regime=case.accounting_regime,
         )
+        facts = result.source_facts
+        policy_facts = (
+            result.production_selected_source
+            if case.expected_entity_scope is not None
+            else facts
+        )
         published = {
             fact.metric_code
-            for fact in facts
+            for fact in policy_facts
             if fact.publication_status is not PublicationStatus.WITHHELD
             and fact.validation_status is not ValidationStatus.FAILED
         }

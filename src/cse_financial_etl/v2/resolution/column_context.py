@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 from datetime import date
 from decimal import Decimal
+from typing import Literal, overload
 
 from cse_financial_etl.v2.contracts.document import CanonicalDocument, CanonicalLine, CanonicalPage
 from cse_financial_etl.v2.contracts.enums import (
@@ -13,6 +14,7 @@ from cse_financial_etl.v2.contracts.enums import (
     StatementType,
     UnitDimension,
 )
+from cse_financial_etl.v2.contracts.provenance import SourceRef
 from cse_financial_etl.v2.contracts.statement import CanonicalStatement, StatementColumn
 from cse_financial_etl.v2.statements.detector import (
     HEADING_BAND_LINES,
@@ -141,6 +143,8 @@ def parse_unit(text: str) -> tuple[str | None, Decimal | None, UnitDimension | N
     currency = None
     if re.search(r"\b(?:rs\.?|lkr|rupees?)\b", lowered):
         currency = "LKR"
+    elif re.search(r"\busd\b|us\$", lowered):
+        currency = "USD"
     scale = None
     if re.search(r"million|\bmns?\.?\b|\brs\.?\s*mns?\b", lowered):
         scale = Decimal("1000000")
@@ -153,7 +157,9 @@ def parse_unit(text: str) -> tuple[str | None, Decimal | None, UnitDimension | N
     # Statement-level Rs/'000 wins over an EPS "per share" mention in the same blob.
     if currency is not None:
         return currency, scale, UnitDimension.MONETARY
-    if "per share" in lowered or "cents per share" in lowered:
+    if re.search(r"\bcents?\b", lowered) and "share" in lowered:
+        return "LKR", Decimal("0.01"), UnitDimension.PER_SHARE
+    if "per share" in lowered:
         return "LKR", Decimal("1"), UnitDimension.PER_SHARE
     if "number of share" in lowered:
         return None, Decimal("1"), UnitDimension.COUNT
@@ -170,12 +176,32 @@ def bind_column_context(
     *,
     expected_entity_scope: EntityScope | None = None,
     target_period_end: date | None = None,
+    partial_monetary: Literal["cascade", "per_column"] = "cascade",
+    header_engine: Literal["H0", "H1"] = "H0",
+    region_hint: StatementRegion | None = None,
 ) -> CanonicalStatement:
-    """Fill column context from heading evidence only. Query targets are not source."""
+    """Fill column context from heading evidence only. Query targets are not source.
+
+    ``header_engine="H0"`` is the production V2 binder.
+    ``header_engine="H1"`` runs the V1-geometry adapter (challenger / bake-off only).
+    """
+
+    if header_engine == "H1":
+        from cse_financial_etl.v2.resolution.header_h1 import bind_column_context_h1
+
+        return bind_column_context_h1(
+            document,
+            statement,
+            expected_entity_scope=expected_entity_scope,
+            target_period_end=target_period_end,
+            partial_monetary=partial_monetary,
+        )
 
     del expected_entity_scope, target_period_end  # never copied into source columns
-    regions = detect_statement_regions(document)
-    region = next((item for item in regions if item.region_id == statement.statement_id), None)
+    region = region_hint
+    if region is None:
+        regions = detect_statement_regions(document)
+        region = next((item for item in regions if item.region_id == statement.statement_id), None)
     blob = context_blob(document, region) if region is not None else ""
     blob = blob or " ".join(ref.raw_text or "" for ref in statement.source_refs)
     cover = _cover_heading(document)
@@ -187,14 +213,28 @@ def bind_column_context(
     monetary_count = len(monetary_indices)
     duration_banners = _duration_banners(document, region)
     entity_banners = _entity_banners(document, region)
+    entity_banner_texts = _entity_banner_texts(document, region)
     date_banners = _date_banners(document, region)
     banner_dates = [parsed for _x, parsed in date_banners]
     if banner_dates and len(banner_dates) == monetary_count:
         period_dates = banner_dates
     elif len(set(banner_dates)) >= 2 and len(banner_dates) > monetary_count > 0:
-        period_dates = banner_dates[-monetary_count:]
+        trailing = banner_dates[-monetary_count:]
+        leading = banner_dates[:monetary_count]
+        # Extra title/cover date appended after an alternating current/prior grid
+        # (len == monetary_count + 1) rotates pairs if we take the trailing slice.
+        if (
+            len(banner_dates) == monetary_count + 1
+            and banner_dates[0] != banner_dates[1]
+            and trailing[0] == banner_dates[1]
+            and leading[0] == banner_dates[0]
+        ):
+            period_dates = leading
+        else:
+            period_dates = trailing
     else:
         period_dates = dates or banner_dates
+    monetary_xs = _monetary_column_xs(statement, monetary_indices)
     columns: list[StatementColumn] = []
     for index, column in enumerate(statement.columns):
         kind = kinds[index]
@@ -213,17 +253,22 @@ def bind_column_context(
             continue
         position = monetary_indices.index(index)
         period_for_column = _period_for_position(position, period_dates, monetary_count)
-        entity = _entity_for_position(position, monetary_count, blob, entity_banners)
-        if (
-            statement.statement_type is StatementType.EPS_NOTE
-            and entity is None
-            and not re.search(r"\b(?:group|consolidated)\b", blob, re.I)
-        ):
-            # Listed-issuer share metrics on an investor/EPS page with no Group split.
-            entity = EntityScope.COMPANY
+        entity = _entity_for_position(
+            position,
+            monetary_count,
+            blob,
+            entity_banners,
+            column_xs=monetary_xs,
+        )
         duration = None
         if statement.statement_type is not StatementType.BALANCE_SHEET:
-            duration = _duration_for_position(position, monetary_count, blob, duration_banners)
+            duration = _duration_for_position(
+                position,
+                monetary_count,
+                blob,
+                duration_banners,
+                column_xs=monetary_xs,
+            )
             if duration is None:
                 duration = parse_duration_months(cover)
         role = _role_for_period(
@@ -242,7 +287,7 @@ def bind_column_context(
             StatementColumn(
                 column_id=column.column_id,
                 entity_scope=entity,
-                entity_evidence=evidence if entity is not None else (),
+                entity_evidence=_entity_evidence_refs(entity, evidence, entity_banner_texts),
                 period_end=period_for_column,
                 period_evidence=evidence if period_for_column is not None else (),
                 duration_months=duration,
@@ -255,8 +300,118 @@ def bind_column_context(
                 unit_evidence=evidence if unit[2] is not None else (),
             )
         )
-    columns = _fail_closed_partial_monetary_columns(statement, columns)
+    columns = (
+        _fail_closed_partial_monetary_columns(statement, columns)
+        if partial_monetary == "cascade"
+        else columns
+    )
     return statement.model_copy(update={"columns": tuple(columns)})
+
+
+def bind_column_contexts(
+    document: CanonicalDocument,
+    statements: tuple[CanonicalStatement, ...],
+    *,
+    expected_entity_scope: EntityScope | None = None,
+    target_period_end: date | None = None,
+    partial_monetary: Literal["cascade", "per_column"] = "cascade",
+    header_engine: Literal["H0", "H1"] = "H0",
+) -> tuple[CanonicalStatement, ...]:
+    """Bind all statements and apply evidenced cross-page continuation bridges."""
+
+    ordered = sorted(statements, key=lambda item: (item.pages[0], item.pages[-1], item.statement_id))
+    bound_by_end: dict[tuple[int, StatementType], CanonicalStatement] = {}
+    bound: list[CanonicalStatement] = []
+    try:
+        from cse_financial_etl.v2.statements.continuation import (  # type: ignore[import-untyped]
+            ContinuationBridgeLink,
+            bridge_statement_column_context,
+            detect_continuation_bridge_links,
+        )
+    except ImportError:
+        return tuple(
+            bind_column_context(
+                document,
+                statement,
+                expected_entity_scope=expected_entity_scope,
+                target_period_end=target_period_end,
+                partial_monetary=partial_monetary,
+                header_engine=header_engine,
+            )
+            for statement in statements
+        )
+
+    regions = detect_statement_regions(document)
+    region_by_id = {region.region_id: region for region in regions}
+    links = detect_continuation_bridge_links(document, regions)
+    links_by_to: dict[tuple[int, StatementType], ContinuationBridgeLink] = {
+        (link.to_page, link.statement_type): link for link in links
+    }
+    for statement in ordered:
+        region = region_by_id.get(statement.statement_id)
+        current = bind_column_context(
+            document,
+            statement,
+            region_hint=region,
+            expected_entity_scope=expected_entity_scope,
+            target_period_end=target_period_end,
+            partial_monetary=partial_monetary,
+            header_engine=header_engine,
+        )
+        if (
+            region is not None
+            and len(statement.pages) > 1
+            and "EXPLICIT_CONTINUATION" in region.reason_codes
+        ):
+            # Bind page-1 as anchor and continuation pages alone, then evidence-gate
+            # inheritance — mirrors V1 _bridge_evidenced_continuation_context.
+            anchor_region = region.model_copy(update={"page_end": region.page_start})
+            cont_start = statement.pages[1]
+            continuation_region = region.model_copy(
+                update={"page_start": cont_start, "page_end": region.page_end}
+            )
+            anchor = bind_column_context(
+                document,
+                statement,
+                region_hint=anchor_region,
+                expected_entity_scope=expected_entity_scope,
+                target_period_end=target_period_end,
+                partial_monetary=partial_monetary,
+                header_engine=header_engine,
+            )
+            continuation = bind_column_context(
+                document,
+                statement,
+                region_hint=continuation_region,
+                expected_entity_scope=expected_entity_scope,
+                target_period_end=target_period_end,
+                partial_monetary=partial_monetary,
+                header_engine=header_engine,
+            )
+            internal = links_by_to.get((cont_start, statement.statement_type))
+            if internal is not None and internal.from_page == statement.pages[0]:
+                current = bridge_statement_column_context(
+                    anchor,
+                    continuation,
+                    internal,
+                    document=document,
+                )
+            else:
+                current = continuation
+        cross = links_by_to.get((statement.pages[0], statement.statement_type))
+        if cross is not None and cross.from_page == statement.pages[0] - 1:
+            previous = bound_by_end.get((cross.from_page, cross.statement_type))
+            if previous is not None:
+                current = bridge_statement_column_context(
+                    previous,
+                    current,
+                    cross,
+                    document=document,
+                )
+        bound.append(current)
+        for page_number in statement.pages:
+            bound_by_end[(page_number, statement.statement_type)] = current
+    return tuple(bound)
 
 
 def _fail_closed_partial_monetary_columns(
@@ -305,7 +460,7 @@ def context_blob(document: CanonicalDocument, region: StatementRegion | None) ->
         page = pages.get(page_number)
         if page is None:
             continue
-        texts.extend(_page_context_lines(page))
+        texts.extend(_page_context_lines(page, region=region))
     return " ".join(texts)
 
 
@@ -379,34 +534,103 @@ _NINE_WORD = re.compile(r"\bnine\b", re.I)
 _MONTHS_WORD = re.compile(r"\bmonths?\b", re.I)
 
 
-def _heading_context_lines(page: CanonicalPage) -> list[CanonicalLine]:
+def _has_entity_scope_cue(text: str) -> bool:
+    """True when text carries an explicit Group/Company/Bank/Consolidated banner.
+
+    Issuer-name-only lines (e.g. ``Foo PLC``) are excluded so G01 stay fail-closed.
+    """
+
+    if _issuer_name_entity_line(text):
+        return False
+    return any(pattern.search(text) for _scope, pattern in _ENTITY_PATTERNS)
+
+
+def _is_entity_bearing_subtitle(line: CanonicalLine) -> bool:
+    """Keep Group/Company statement subtitles; do not keep account rows mentioning Group."""
+
+    if not _has_entity_scope_cue(line.text):
+        return False
+    values = [
+        parsed
+        for token in line.tokens
+        if (parsed := parse_numeric(token.text)) is not None
+    ]
+    if len(values) >= 2:
+        return False
+    if len(values) == 1:
+        value = values[0]
+        # Allow a calendar year on a subtitle; reject a lone monetary amount.
+        return bool(1900 <= abs(value) <= 2100 and value == value.to_integral())
+    return True
+
+
+@overload
+def _heading_context_lines(
+    page: CanonicalPage, *, return_indices: Literal[False] = False
+) -> list[CanonicalLine]:
+    ...
+
+
+@overload
+def _heading_context_lines(
+    page: CanonicalPage, *, return_indices: Literal[True]
+) -> list[tuple[int, CanonicalLine]]:
+    ...
+
+
+def _heading_context_lines(
+    page: CanonicalPage,
+    *,
+    return_indices: bool = False,
+) -> list[CanonicalLine] | list[tuple[int, CanonicalLine]]:
     lines: list[CanonicalLine] = []
+    indexed: list[tuple[int, CanonicalLine]] = []
     for index, line in enumerate(page.lines):
         if _skip_context_line(line):
             continue
         if index < HEADING_BAND_LINES:
+            # Keep entity-bearing statement subtitles even when they also look
+            # account-like (e.g. "Comprehensive Income - Group 31st December 2025").
             if (
                 _ACCOUNT_LINE.search(line.text)
                 and any(parse_numeric(token.text) is not None for token in line.tokens)
                 and not _STATEMENT_TITLE.search(line.text)
                 and not _UNIT_CUE.search(line.text)
+                and not _is_entity_bearing_subtitle(line)
             ):
                 continue
             lines.append(line)
+            indexed.append((index, line))
             continue
         if _UNIT_CUE.search(line.text) and not _ACCOUNT_LINE.search(line.text):
             lines.append(line)
+            indexed.append((index, line))
+    if return_indices:
+        return indexed
     return lines
 
 
-def _page_context_lines(page: CanonicalPage) -> list[str]:
-    return [line.text for line in _heading_context_lines(page)]
+def _page_context_lines(page: CanonicalPage, *, region: StatementRegion | None = None) -> list[str]:
+    lines = _heading_context_lines(page)
+    if region is None or (region.segment_start_line is None and region.segment_end_line is None):
+        return [line.text for line in lines]
+    indexed = _heading_context_lines(page, return_indices=True)
+    filtered: list[str] = []
+    for line_index, line in indexed:
+        if page.page_number == region.page_start and line_index < (region.segment_start_line or 0):
+            continue
+        if page.page_number == region.page_end and line_index >= (region.segment_end_line or len(page.lines)):
+            continue
+        filtered.append(line.text)
+    return filtered
 
 
 def _skip_context_line(line: CanonicalLine) -> bool:
     if _JUNK_HEADER.search(line.text) or _NON_HEADER_LABEL.search(line.text):
         return True
     if _STATEMENT_TITLE.search(line.text):
+        return False
+    if _is_entity_bearing_subtitle(line):
         return False
     if _dates_in_text(line.text):
         return False
@@ -454,7 +678,21 @@ def _iter_heading_lines(
         page = pages.get(page_number)
         if page is None:
             continue
-        lines.extend(_heading_context_lines(page))
+        indexed = _heading_context_lines(page, return_indices=True)
+        for line_index, line in indexed:
+            if (
+                region.segment_start_line is not None
+                and page_number == region.page_start
+                and line_index < region.segment_start_line
+            ):
+                continue
+            if (
+                region.segment_end_line is not None
+                and page_number == region.page_end
+                and line_index >= region.segment_end_line
+            ):
+                continue
+            lines.append(line)
     return lines
 
 
@@ -466,7 +704,29 @@ def _date_banners(
         for match, parsed in _iter_date_matches(line.text):
             found.append((_match_x(line, match), parsed))
     found.sort(key=lambda item: item[0])
-    return found
+    return _dedupe_nearby_date_banners(found)
+
+
+def _dedupe_nearby_date_banners(
+    banners: list[tuple[float, date]], *, min_gap: float = 15.0
+) -> list[tuple[float, date]]:
+    """Collapse title/date-row collisions that share nearly the same x.
+
+    NHL-style grids emit an extra ``31st December 2025`` from a duration title
+    within a few points of the real ``31.12.2024`` column date. Keeping the
+    rightward banner preserves the date-row token.
+    """
+
+    if not banners:
+        return banners
+    out: list[tuple[float, date]] = [banners[0]]
+    for x, parsed in banners[1:]:
+        prev_x, _prev = out[-1]
+        if x - prev_x < min_gap:
+            out[-1] = (x, parsed)
+        else:
+            out.append((x, parsed))
+    return out
 
 
 def _iter_date_matches(text: str) -> list[tuple[re.Match[str], date]]:
@@ -524,6 +784,11 @@ def _duration_banners(
         for match in _QUARTER_WORD.finditer(line.text):
             found.append((_match_x(line, match), 3))
         for match in _PERIOD_WORD.finditer(line.text):
+            # "For the period ended <date>" is a period-end cue, not a YTD
+            # duration banner. Bare column headers like "Period" beside
+            # "Quarter" still participate in duration pairing.
+            if re.search(r"\bperiod\s+ended\b", line.text, re.I):
+                continue
             found.append((_match_x(line, match), 0))
     found.sort(key=lambda item: item[0])
     has_explicit_quarter = any(_QUARTER_WORD.search(line.text) for line in lines)
@@ -558,7 +823,65 @@ def _entity_banners(
     column_headers = [(x, scope) for x, scope, issuer_only in found if not issuer_only]
     if column_headers:
         return column_headers
-    return [(x, scope) for x, scope, _issuer in found]
+    return []
+
+
+def _entity_banner_texts(
+    document: CanonicalDocument, region: StatementRegion | None
+) -> tuple[str, ...]:
+    """Distinct heading lines that contributed non-issuer entity banners."""
+
+    texts: list[str] = []
+    seen: set[str] = set()
+    for line in _iter_heading_lines(document, region):
+        if _issuer_name_entity_line(line.text):
+            continue
+        if not any(pattern.search(line.text) for _scope, pattern in _ENTITY_PATTERNS):
+            continue
+        key = line.text.strip()
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        texts.append(key)
+    return tuple(texts)
+
+
+def _evidence_from_texts(
+    template: tuple[SourceRef, ...], texts: tuple[str, ...]
+) -> tuple[SourceRef, ...]:
+    """Prefer entity-banner raw_text on a copy of an existing SourceRef template."""
+
+    if not texts or not template:
+        return ()
+    base = template[0]
+    return tuple(base.model_copy(update={"raw_text": text}) for text in texts)
+
+
+def _entity_evidence_refs(
+    entity: EntityScope | None,
+    fallback: tuple[SourceRef, ...],
+    banner_texts: tuple[str, ...],
+) -> tuple[SourceRef, ...]:
+    """Prefer banner lines that mention the bound entity over statement.title alone."""
+
+    if entity is None:
+        return ()
+    matching = tuple(
+        text
+        for text in banner_texts
+        if any(
+            scope is entity and pattern.search(text) for scope, pattern in _ENTITY_PATTERNS
+        )
+    )
+    preferred = matching or banner_texts
+    from_banners = _evidence_from_texts(fallback, preferred)
+    return from_banners or fallback
+
+
+_PLC_ISSUER_NAME = re.compile(
+    r"[\w&.'’/-]+(?:\s+[\w&.'’/-]+){0,12}\s+plc\b",
+    re.I,
+)
 
 
 def _issuer_name_entity_line(text: str) -> bool:
@@ -566,6 +889,10 @@ def _issuer_name_entity_line(text: str) -> bool:
         return False
     distinct = {scope for scope, pattern in _ENTITY_PATTERNS if pattern.search(text)}
     return len(distinct) <= 1
+
+
+def _strip_issuer_name_phrases(text: str) -> str:
+    return _PLC_ISSUER_NAME.sub(" ", text)
 
 
 def _dates_in_text(text: str) -> list[date]:
@@ -739,11 +1066,30 @@ def _period_for_position(
     return dates[position % len(dates)]
 
 
+def _entity_from_banner_geometry(
+    position: int,
+    column_xs: list[float],
+    banners: list[tuple[float, EntityScope]],
+) -> EntityScope | None:
+    """Nearest explicit entity banner owns the monetary column.
+
+    Source geometry only — never invents COMPANY/BANK from issuer identity or
+    expected production entity. GROUP banners never relabel as COMPANY/BANK.
+    """
+
+    if position < 0 or position >= len(column_xs) or len(banners) < 2 or len(column_xs) < 2:
+        return None
+    x = column_xs[position]
+    nearest = min(banners, key=lambda item: abs(item[0] - x))
+    return nearest[1]
+
+
 def _entity_for_position(
     position: int,
     monetary_count: int,
     blob: str,
     entity_banners: list[tuple[float, EntityScope]] | None = None,
+    column_xs: list[float] | None = None,
 ) -> EntityScope | None:
     scopes = [scope for _x, scope in entity_banners or ()]
     if scopes:
@@ -751,6 +1097,22 @@ def _entity_for_position(
         for scope in scopes:
             if scope not in unique:
                 unique.append(scope)
+        if (
+            column_xs is not None
+            and len(unique) >= 2
+            and len(entity_banners or ()) > 2
+        ):
+            banner_xs = [x for x, _scope in entity_banners or ()]
+            col_span = max(column_xs) - min(column_xs)
+            banner_span = max(banner_xs) - min(banner_xs)
+            # Multi-banner grids (e.g. Bank Bank Group Group): nearest banner wins.
+            # Two-banner Group|Company stays on left/right half-split below.
+            if col_span > 0 and banner_span >= max(40.0, 0.2 * col_span):
+                geometric = _entity_from_banner_geometry(
+                    position, column_xs, list(entity_banners or ())
+                )
+                if geometric is not None:
+                    return geometric
         if len(scopes) >= 4 and len(unique) == 2 and monetary_count == 6:
             mapped = (scopes[0], scopes[1], scopes[2], scopes[2], scopes[3], scopes[3])
             return mapped[position]
@@ -758,15 +1120,24 @@ def _entity_for_position(
             xs = [x for x, _scope in entity_banners or ()]
             spread = max(xs) - min(xs) if xs else 0
             if monetary_count >= 4 or spread >= 80:
+                # Preserve banner order (left entity → left monetary half).
+                ordered_unique: list[EntityScope] = []
+                for _x, scope in sorted(entity_banners or (), key=lambda item: item[0]):
+                    if scope not in ordered_unique:
+                        ordered_unique.append(scope)
+                left, right = (ordered_unique + unique)[:2]
                 midpoint = monetary_count // 2
-                return unique[0] if position < midpoint else unique[1]
+                return left if position < midpoint else right
         if len(unique) == 1:
             return unique[0]
-    left, right = _paired_entities(blob)
-    if left is not None and right is not None and monetary_count >= 4:
+    paired_left, paired_right = _paired_entities(blob)
+    if paired_left is not None and paired_right is not None and monetary_count >= 4:
         midpoint = monetary_count // 2
-        return left if position < midpoint else right
-    return parse_entity_scope(blob)
+        return paired_left if position < midpoint else paired_right
+    # Unlabelled / ambiguous multi-entity blob → leave unresolved (fail closed).
+    if paired_left is not None and paired_right is not None:
+        return None
+    return parse_entity_scope(_strip_issuer_name_phrases(blob))
 
 
 def _paired_entities(blob: str) -> tuple[EntityScope | None, EntityScope | None]:
@@ -791,14 +1162,69 @@ def _paired_entities(blob: str) -> tuple[EntityScope | None, EntityScope | None]
     return None, None
 
 
+def _monetary_column_xs(
+    statement: CanonicalStatement, monetary_indices: list[int]
+) -> list[float] | None:
+    """Median cell-center x for each monetary column; None when geometry is incomplete."""
+
+    xs: list[float] = []
+    for index in monetary_indices:
+        column_id = statement.columns[index].column_id
+        centers = [
+            (cell.source_ref.bbox[0] + cell.source_ref.bbox[2]) / 2.0
+            for row in statement.rows
+            for cell in row.cells
+            if cell.column_id == column_id and cell.source_ref.bbox is not None
+        ]
+        if not centers:
+            return None
+        centers.sort()
+        xs.append(centers[len(centers) // 2])
+    return xs
+
+
+def _duration_from_banner_geometry(
+    position: int,
+    column_xs: list[float],
+    banners: list[tuple[float, int]],
+) -> int | None:
+    """Nearest in-field duration banner owns the column (merged quarter/YTD spans).
+
+    Banners whose x falls outside the monetary column field are ignored so left-side
+    period-end date cues cannot steal ownership from an explicit Quarter/3M banner.
+    Wider repeating Bank|Group duration cycles stay on order-based pair cycling.
+    """
+
+    if position < 0 or position >= len(column_xs) or len(column_xs) < 2 or len(banners) < 2:
+        return None
+    if len(column_xs) > 4 and len(column_xs) % 4 == 0:
+        return None
+    min_c = min(column_xs)
+    max_c = max(column_xs)
+    gap = (max_c - min_c) / max(len(column_xs) - 1, 1)
+    margin = max(gap, 40.0)
+    in_field = [(x, months) for x, months in banners if min_c - margin <= x <= max_c + margin]
+    families = {months for _x, months in in_field}
+    if len(families) < 2:
+        return None
+    column_x = column_xs[position]
+    return min(in_field, key=lambda item: abs(item[0] - column_x))[1]
+
+
 def _duration_for_position(
     position: int,
     monetary_count: int,
     blob: str,
     banners: list[tuple[float, int]] | None = None,
+    column_xs: list[float] | None = None,
 ) -> int | None:
+    banner_list = list(banners or ())
+    if column_xs is not None and len(column_xs) == monetary_count:
+        from_geometry = _duration_from_banner_geometry(position, column_xs, banner_list)
+        if from_geometry is not None:
+            return from_geometry
     from_banners = _cycle_durations(
-        position, monetary_count, [months for _x, months in banners or ()]
+        position, monetary_count, [months for _x, months in banner_list]
     )
     if from_banners is not None:
         return from_banners
@@ -864,6 +1290,4 @@ def _role_for_period(
     unique = {item for item in dates}
     if len(unique) >= 2:
         return ComparisonRole.CURRENT if period == max(unique) else ComparisonRole.COMPARATIVE
-    if monetary_count <= 1:
-        return ComparisonRole.CURRENT
-    return None
+    return ComparisonRole.CURRENT

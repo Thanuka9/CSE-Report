@@ -50,7 +50,8 @@ _TITLE_RULES: tuple[tuple[StatementType, re.Pattern[str]], ...] = (
     (
         StatementType.INCOME_STATEMENT,
         re.compile(
-            r"statement of (?:profit|income)|income statement|profit or loss|"
+            r"statement of (?:profit|income)|statmenet of (?:profit|income)|"
+            r"income statement|profit or loss|"
             r"comprehensive income|statement of comprehensive",
             re.IGNORECASE,
         ),
@@ -72,6 +73,44 @@ _CONTINUED = re.compile(
     r"\b(?:continued|continuation|cont(?:inued)?\.?|cont['’]?d)\b",
     re.IGNORECASE,
 )
+_PERIOD_GRID_HEADING = re.compile(
+    r"(?:0?\d|three|six|nine|twelve)\s+months?\b|"
+    r"\bfor the (?:period|quarter|year|three months|nine months)\s+ended\b",
+    re.IGNORECASE,
+)
+_IS_BODY_CUES = re.compile(
+    r"net interest income|total operating income|operating profit|"
+    r"profit before (?:tax|taxation)|gross income|"
+    r"interest income|fee (?:and|&) commission income",
+    re.IGNORECASE,
+)
+
+
+def _income_body_cue_hits(page: CanonicalPage) -> int:
+    """Count strong income-statement account cues on the page body."""
+
+    hits = 0
+    seen: set[str] = set()
+    # Skip cover-like first lines; scan the rest of a typical one-page IS.
+    for line in page.lines[2:50]:
+        text = line.text or ""
+        for match in _IS_BODY_CUES.finditer(text):
+            key = match.group(0).casefold()
+            if key in seen:
+                continue
+            seen.add(key)
+            hits += 1
+    return hits
+
+
+def _classify_untitled_period_income(page: CanonicalPage, heading_text: str) -> bool:
+    """Finance interims sometimes omit 'Statement of Profit or Loss' on the IS page."""
+
+    if re.search(r"\bsegment\b|financial reporting by", heading_text, re.I):
+        return False
+    if not _PERIOD_GRID_HEADING.search(heading_text):
+        return False
+    return _income_body_cue_hits(page) >= 2
 
 
 class StatementRegion(BaseModel):
@@ -87,6 +126,9 @@ class StatementRegion(BaseModel):
     heading_text: str
     source_refs: tuple[SourceRef, ...] = Field(min_length=1)
     reason_codes: tuple[str, ...] = ()
+    # Optional in-page segment bounds (continuation bridges). Default None = full page span.
+    segment_start_line: int | None = None
+    segment_end_line: int | None = None
 
 
 def detect_statement_regions(document: CanonicalDocument) -> tuple[StatementRegion, ...]:
@@ -127,9 +169,10 @@ def _source_ref(
 
 
 _HEADING_START = re.compile(
-    r"^(?:(?:consolidated|company|group|bank|condensed|interim|statements? of)\b|"
+    r"^(?:(?:consolidated|company|group|bank|condensed|interim|statements? of|statmenets? of)\b|"
     r"income statement|financial position|balance sheet|earnings per|changes in|"
-    r"net assets? per share|net asset value per share|investor information)",
+    r"net assets? per share|net asset value per share|investor information|"
+    r"statmenet of)",
     re.IGNORECASE,
 )
 
@@ -243,6 +286,17 @@ def _classify_page(document: CanonicalDocument, page: CanonicalPage) -> Statemen
             heading_text=heading_text,
             source_refs=(_source_ref(document, evidence_line, page_number=page.page_number),),
             reason_codes=("HEADING_MATCH",),
+        )
+
+    if _classify_untitled_period_income(page, heading_text):
+        return StatementRegion(
+            region_id=f"p{page.page_number:04d}-{StatementType.INCOME_STATEMENT.value}",
+            statement_type=StatementType.INCOME_STATEMENT,
+            page_start=page.page_number,
+            page_end=page.page_number,
+            heading_text=heading_text,
+            source_refs=(_source_ref(document, fallback_line, page_number=page.page_number),),
+            reason_codes=("BODY_CUE_INCOME", "PERIOD_GRID_HEADING"),
         )
 
     return StatementRegion(

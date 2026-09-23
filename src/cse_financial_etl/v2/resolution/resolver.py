@@ -2,14 +2,15 @@
 
 from __future__ import annotations
 
-import re
 from decimal import Decimal
+from typing import Literal
 
 from cse_financial_etl.v2.contracts.concepts import ConceptCandidate
+from cse_financial_etl.v2.contracts.document import CanonicalDocument
 from cse_financial_etl.v2.contracts.enums import (
     AccountingRegime,
     ComparisonRole,
-    EntityScope,
+    FirstFailureStage,
     MatchKind,
     PeriodBehavior,
     PublicationStatus,
@@ -30,11 +31,63 @@ from cse_financial_etl.v2.taxonomy.matcher import RegistryMatcher
 from cse_financial_etl.v2.taxonomy.registry import ConceptRegistry, load_registry, normalize_label
 
 FLOW_CODES = frozenset({"PAT", "PBT", "OPERATING_PROFIT", "TOP_LINE", "EPS_BASIC", "EPS_DILUTED"})
-_ROW_LABEL_PREFIX = re.compile(r"\s+[\d(]")
+
+
+def _is_note_index_cell(candidate: FactCandidate) -> bool:
+    from cse_financial_etl.v2.challenger.observation_union import looks_like_note_index
+
+    return looks_like_note_index(
+        raw_text=candidate.source_ref.raw_text, raw_value=candidate.raw_value
+    )
+
+
+def _is_share_count_eps(candidate: FactCandidate) -> bool:
+    from cse_financial_etl.v2.challenger.observation_union import looks_like_share_count_not_eps
+
+    metric = None if candidate.concept is None else candidate.concept.metric_code
+    return looks_like_share_count_not_eps(metric_code=metric, raw_value=candidate.raw_value)
+
+
+def _row_line_text(row: StatementRow, cell: StatementCell) -> str:
+    if row.source_refs:
+        return row.source_refs[0].raw_text or ""
+    return cell.source_ref.raw_text or ""
 
 
 def _status(value: object) -> ResolutionStatus:
     return ResolutionStatus.RESOLVED if value is not None else ResolutionStatus.UNRESOLVED
+
+
+def source_admission_failure(
+    candidate: FactCandidate,
+    *,
+    registry: ConceptRegistry,
+) -> FirstFailureStage | None:
+    """Return why a candidate cannot become a SourceFact, or None if it can.
+
+    Order matches ``resolve_source_facts``. Missing context is never invented.
+    Production entity selection is not a source-admission failure.
+    """
+
+    if candidate.raw_value is None:
+        return FirstFailureStage.NUMERIC_UNPARSED
+    if candidate.concept is None or candidate.concept.metric_code is None:
+        return FirstFailureStage.CONCEPT_UNRESOLVED
+    if candidate.concept_status is not ResolutionStatus.RESOLVED:
+        return FirstFailureStage.CONCEPT_UNRESOLVED
+    if candidate.entity_status is not ResolutionStatus.RESOLVED or candidate.entity_scope is None:
+        return FirstFailureStage.ENTITY_UNRESOLVED
+    if candidate.period_status is not ResolutionStatus.RESOLVED or candidate.period_end is None:
+        return FirstFailureStage.PERIOD_UNRESOLVED
+    if candidate.unit_status is not ResolutionStatus.RESOLVED or candidate.unit_dimension is None:
+        return FirstFailureStage.UNIT_UNRESOLVED
+    concept = registry.get(candidate.concept.metric_code)
+    if (
+        concept.unit_dimension is UnitDimension.MONETARY
+        and candidate.unit_dimension is not UnitDimension.MONETARY
+    ):
+        return FirstFailureStage.UNIT_DIMENSION_MISMATCH
+    return None
 
 
 def build_candidates(
@@ -42,7 +95,11 @@ def build_candidates(
     *,
     matcher: RegistryMatcher | None = None,
     accounting_regime: AccountingRegime | None = None,
+    document: CanonicalDocument | None = None,
+    unit_engine: Literal["U0", "U1"] = "U0",
 ) -> tuple[FactCandidate, ...]:
+    from cse_financial_etl.v2.resolution.unit_u1 import apply_u1_unit
+
     matcher = matcher or RegistryMatcher()
     columns = {column.column_id: column for column in statement.columns}
     candidates: list[FactCandidate] = []
@@ -61,14 +118,22 @@ def build_candidates(
             if cell.raw_text.strip().endswith("%"):
                 continue
             column = columns[cell.column_id]
-            candidate = _candidate(statement, row, column, cell, primary, concepts)
-            _, embedded = split_label_and_values(cell.source_ref.raw_text or "")
+            candidate = _candidate(statement, row, column, cell, primary, tuple(concepts))
+            _, embedded = split_label_and_values(_row_line_text(row, cell))
             if len(embedded) > len(row.cells):
                 candidate = candidate.model_copy(
                     update={
                         "concept_status": ResolutionStatus.UNRESOLVED,
                         "reason_codes": (*candidate.reason_codes, "AMBIGUOUS_ROW_VALUES"),
                     }
+                )
+            if unit_engine == "U1":
+                candidate = apply_u1_unit(
+                    candidate,
+                    row=row,
+                    column=column,
+                    statement=statement,
+                    document=document,
                 )
             candidates.append(candidate)
     return tuple(candidates)
@@ -80,7 +145,7 @@ def _candidate(
     column: StatementColumn,
     cell: StatementCell,
     concept: ConceptCandidate,
-    all_concepts: list[ConceptCandidate],
+    all_concepts: tuple[ConceptCandidate, ...],
 ) -> FactCandidate:
     ambiguous = (
         sum(1 for item in all_concepts if item.metric_code and item.match_kind != MatchKind.ABSTAIN)
@@ -107,6 +172,7 @@ def _candidate(
         row_id=row.row_id,
         column_id=column.column_id,
         concept=concept,
+        concept_alternatives=all_concepts,
         concept_status=concept_status,
         entity_scope=column.entity_scope,
         entity_status=_status(column.entity_scope),
@@ -132,41 +198,25 @@ def resolve_source_facts(
     issuer_id: str,
     filing_version_id: str,
     registry: ConceptRegistry | None = None,
-    expected_entity_scope: EntityScope | None = None,
 ) -> tuple[SourceFact, ...]:
     """Emit SourceFacts only when required source context is present. Never assume."""
 
     registry = registry or load_registry()
     facts: list[SourceFact] = []
     for candidate in candidates:
-        if (
-            candidate.raw_value is None
-            or candidate.concept is None
-            or candidate.concept.metric_code is None
-        ):
+        if source_admission_failure(candidate, registry=registry) is not None:
             continue
-        if candidate.concept_status is not ResolutionStatus.RESOLVED:
+        assert candidate.concept is not None
+        assert candidate.concept.metric_code is not None
+        assert candidate.entity_scope is not None
+        assert candidate.period_end is not None
+        assert candidate.unit_dimension is not None
+        assert candidate.raw_value is not None
+        if _is_note_index_cell(candidate):
             continue
-        if (
-            candidate.entity_status is not ResolutionStatus.RESOLVED
-            or candidate.entity_scope is None
-        ):
-            continue
-        if candidate.period_status is not ResolutionStatus.RESOLVED or candidate.period_end is None:
-            continue
-        if (
-            candidate.unit_status is not ResolutionStatus.RESOLVED
-            or candidate.unit_dimension is None
-        ):
-            continue
-        if expected_entity_scope is not None and candidate.entity_scope != expected_entity_scope:
+        if _is_share_count_eps(candidate):
             continue
         concept = registry.get(candidate.concept.metric_code)
-        if (
-            concept.unit_dimension is UnitDimension.MONETARY
-            and candidate.unit_dimension is not UnitDimension.MONETARY
-        ):
-            continue
         duration = candidate.duration_months
         if concept.period_behavior in {PeriodBehavior.STOCK, PeriodBehavior.POINT_IN_TIME}:
             duration = None
@@ -184,14 +234,19 @@ def resolve_source_facts(
             publication = PublicationStatus.WITHHELD
             reasons.append("CUMULATIVE_ONLY")
         scale = candidate.monetary_scale or Decimal("1")
-        if concept.unit_dimension is not UnitDimension.MONETARY:
-            # Per-share / ratio facts must not inherit statement Rs/'000 scaling.
+        # Per-share concepts must not inherit statement-level Rs/'000 MONETARY
+        # column units — gold and contracts expect UnitDimension.PER_SHARE.
+        fact_unit = candidate.unit_dimension
+        if concept.unit_dimension is UnitDimension.PER_SHARE:
+            fact_unit = UnitDimension.PER_SHARE
+            # Cents/share normalize to Rs/share. Do not inherit statement Rs/'000.
+            scale = scale if scale == Decimal("0.01") else Decimal("1")
+            normalized = candidate.raw_value * scale
+        elif concept.unit_dimension is not UnitDimension.MONETARY:
             scale = Decimal("1")
-        normalized = (
-            candidate.raw_value * scale
-            if concept.unit_dimension is UnitDimension.MONETARY
-            else candidate.raw_value
-        )
+            normalized = candidate.raw_value
+        else:
+            normalized = candidate.raw_value * scale
         facts.append(
             SourceFact(
                 fact_id=candidate.candidate_id.replace("-cand", "-fact"),
@@ -212,7 +267,7 @@ def resolve_source_facts(
                 normalized_value=normalized,
                 currency=candidate.currency,
                 source_scale=scale,
-                unit_dimension=candidate.unit_dimension,
+                unit_dimension=fact_unit,
                 source_ref=candidate.source_ref,
                 validation_status=ValidationStatus.NOT_VALIDATED,
                 review_status=ReviewStatus.REVIEW,
@@ -270,9 +325,6 @@ def _withhold_conflicting_values(facts: tuple[SourceFact, ...]) -> tuple[SourceF
 
 
 def _conflict_row_label(fact: SourceFact) -> str:
-    """Account label only. Gross income and Interest income are not duplicates."""
+    """Account alias only. Gross income and Interest income are not duplicates."""
 
-    text = fact.source_ref.raw_text or ""
-    match = _ROW_LABEL_PREFIX.search(text)
-    head = text[: match.start()] if match is not None else text
-    return normalize_label(head)
+    return normalize_label(fact.matched_alias or fact.source_concept or "")

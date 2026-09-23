@@ -320,3 +320,110 @@ Each nontrivial deviation from `AGENT_IMPLEMENTATION_PLAN.md` is recorded here. 
 - **Evidence:** `outputs/manifests/run_manifest_2026-09-09.json` (`extraction_engine: v2`), `outputs/universe_acceptance_2026-09-09.json`. Locked 33 probe remains **209/237**, 0 critical-wrong, recall **88.19%**. Not plan §37.
 - **Affected modules:** `cli.py`, `orchestration/pipeline.py`, `orchestration/resilient_pipeline.py`, `scripts/run_production_pipeline.py`.
 - **Temporary/permanent:** Temporary override. Permanent default stays V1 until gold, frozen universe, current-universe floors, OCR image smoke, and OFFICIAL review pass.
+
+---
+
+## 2026-09-14 — Start V2 extraction investigation; freeze source truth vs policy
+
+- **Decision:** Open branch `v2/extraction-investigation` from audited head `91a9c68`. Lock `docs/v2/SOURCE_METRIC_TRUTH_CONTRACT.md`, a blind source-truth schema, a DEV/HOLDOUT review queue with no expected values, CandidateTrace persistence, and an investigation freeze. Do not add cutover features, do not lower coverage floors, do not set `extraction.engine: v2`, and do not treat the current 33-filing overlay as institutional gold.
+- **Reason:** The 2026-09-09 challenger run failed coverage because we do not yet know which withheld facts are source-true. Gate decisions must be ablated against source truth, not against V1 counts or current publication policy.
+- **Alternatives:** Keep tuning against the 33-file overlay; promote V2; lower 8,924.
+- **Evidence:** Final Extraction Test Program T00–T04. Existing gold explicitly embeds policy such as unlabeled-entity drops.
+- **Affected modules:** `v2/contracts/investigation.py`, `v2/diagnostics/candidate_trace.py`, `v2/diagnostics/investigation_freeze.py`, `v2/resolution/resolver.py`, `tests/v2/source_truth/`, `tests/v2/universe/`, `tests/v2/regression/`.
+- **Temporary/permanent:** Permanent investigation protocol. Extraction behaviour is unchanged except that rejected candidates can be traced.
+
+---
+
+## 2026-09-14 — Locked-set V2 A/B baseline and V1 comparator
+
+- **Decision:** Run T05-T09 on the locked 33 PDFs. Require V2 A/B determinism. Audit lineage and derived facts separately. Build a V1/V2 disagreement ledger that stays `NOT_ADJUDICATED`. Do not treat V1-only rows as V2 misses. Do not change fail-closed gates from these counts.
+- **Reason:** The investigation needs a clean baseline before gate ablation. Same-input V2 A/B was deterministic (905 source facts, 136 derived). Mixed native/OCR pages exist on 7 filings. 130 V1-only and 61 value disagreements need human source truth.
+- **Alternatives:** Tune against V1 counts; disable cascade to raise SourceFact counts; claim T10 complete.
+- **Evidence:** `tests/v2/universe/baseline_run_summary.json`, `tests/v2/universe/locked_source_manifest.json`, `tests/v2/universe/defect_family_ranking.json`.
+- **Affected modules:** `v2/diagnostics/baseline.py`, `lineage.py`, `issue_ledger.py`, `gate_ablation.py`, `page_routing.py`, `discovery.py`.
+- **Temporary/permanent:** Baseline artefacts are the investigation pin. Gate KEEP/NARROW/REPLACE/REMOVE remains UNTESTED until source truth exists.
+
+---
+
+## 2026-09-15 — T10 DEV source truth and G01/G03/G09 KEEP
+
+- **Decision:** Record 40 DEV SourceTruthItems from PDF-page review into `items.jsonl`. Do not copy V1/V2 values. KEEP G01 (issuer-name and document heading are not entity), KEEP G03 (do not invent duration; exact-quarter stays publication policy), KEEP G09 (do not infer COMPANY on EPS_NOTE from missing Group). Leave G02/G04–G08 UNTESTED. Do not inspect holdout. Do not promote V2.
+- **Reason:** T10 unlabeled REPORTED rows (ABL/CBNK/CTC) and explicit Company/Group EPS rows contradict inferred entity. GREG `Period ended` has no month count.
+- **Alternatives:** Infer Company from silence; copy letterhead Bank/Company; invent 3M duration; start holdout gold.
+- **Evidence:** `tests/v2/source_truth/items.jsonl`, `docs/v2/EXTRACTION_GATE_DECISIONS.md`, `tests/v2/universe/t10_score.json`.
+- **Affected modules:** `v2/resolution/column_context.py`, `v2/diagnostics/t10_score.py`, `tests/v2/source_truth/`.
+- **Temporary/permanent:** T10 Reviewer 1 record is the DEV investigation pin. Not certification.
+
+---
+
+## 2026-09-16 — T25 holdout gold + certification stop
+
+- **Decision:** Record 24 HOLDOUT SourceTruthItems after freezing DEV rules. Score holdout diagnostically. Do not retune from holdout. Publish `SOURCE_VALIDATED_BASELINE.md` and `EXTRACTION_CERTIFICATION_REPORT.md` as **NOT CERTIFIED**. Leave T26–T29 blocked. Keep engine V1 and floor 8924.
+- **Reason:** Test program requires holdout evaluation and an explicit certification gate before cutover. September-10 frozen universe is still missing.
+- **Alternatives:** Promote V2; lower 8924; invent holdout entity from letterhead; claim certification.
+- **Evidence:** `items.jsonl` HOLDOUT rows, `t25_holdout_score.json`, certification report.
+- **Temporary/permanent:** Holdout gold is the locked evaluation pin. Cutover remains blocked.
+
+---
+
+## 2026-09-16 — Recovery: T25 FAILED; reopen engineering (not OFFICIAL-only)
+
+- **Decision:** Correct overstated status. T24 = **REOPENED**; T25 = **FAILED** (entity-resolved recall 68.75%; FN 3 LITE; critical wrong 2 SFCL); T28 = **BLOCKED ON ENGINEERING**; T29 = **BLOCKED ON ENGINEERING + OFFICIAL**. Uncheck cutover items 12/13/15/17 as open institutional gates. Promote LITE/SFCL into DEV/regression after CandidateTrace diagnosis. Select a **new** unseen holdout later. Keep engine V1 and floor 8924. Fail-closed ≠ acceptance.
+- **Reason:** Claiming “engineering complete / OFFICIAL-only” after a failed first holdout was false. Critical wrong facts reopen extraction engineering.
+- **Alternatives:** Keep OFFICIAL-only narrative; patch LITE/SFCL with issuer constants; reuse failed holdout as final holdout; lower 8924.
+- **Evidence:** `docs/v2/NEXT_ENGINEERING_STEPS_AND_PROJECT_RECOVERY_PLAN.md`, `t25_holdout_score.json`, `t25_failed_holdout_freeze.json`.
+- **Affected modules:** status docs; forthcoming LITE/SFCL regressions and header/column ownership work.
+- **Temporary/permanent:** Recovery plan is the active engineering sequence until a new holdout passes.
+
+---
+
+## 2026-09-16 — N02/N03 diagnosis + SFCL truth correction
+
+- **Decision:** Record LITE/SFCL CandidateTrace diagnoses. LITE FNs are real extraction defects (Group subtitle dropped → ENTITY_UNRESOLVED). SFCL “critical wrong” vs original holdout labels were **truth authoring** (Company values labeled GROUP); correct SFCL items to `entity_scope=COMPANY` per PDF. Classify F1 header/column ownership as P0 generalized family. Do not issuer-patch.
+- **Reason:** PDF Company|Group layout matches V2 for SFCL; LITE page subtitle never entered heading-band context.
+- **Evidence:** `docs/v2/investigations/N02_LITE_TRACE.md`, `N03_SFCL_TRACE.md`, `N04_ROOT_CAUSE_FAMILIES.md`, corrected `items.jsonl` SFCL rows.
+- **Temporary/permanent:** Truth correction is permanent for SFCL HOLDOUT rows; generalized F1 keep-rule landed separately (see entry below).
+
+---
+
+## 2026-09-16 — F1 heading-band keep-rule for entity-bearing subtitles
+
+- **Decision:** In heading-band assembly, keep lines that are entity-bearing statement subtitles (Group/Company on a statement title) even when they also match account-line or calendar-year heuristics. Do not keep generic account rows that merely mention Group/Company. No issuer-specific constants.
+- **Reason:** N02 LITE dropped `Comprehensive Income - Group …` from heading context, so Group columns stayed `ENTITY_UNRESOLVED` and TOP_LINE/PAT/OPERATING_PROFIT never admitted.
+- **Alternatives:** LITE-only subtitle allowlist; copy query-target entity; issuer constants.
+- **Evidence:** `v2/resolution/column_context.py` (`_is_entity_bearing_subtitle`, `_heading_context_lines`); `tests/v2/regression/test_lite_group_header_ownership.py`; `tests/v2/unit/test_column_context.py`.
+- **Affected modules:** `v2/resolution/column_context.py`.
+- **Temporary/permanent:** Permanent generalized header rule. F3 duration span ownership for LITE remains open. N07 inspected-holdout re-score: TP 16 / FN 0 / critical 0 / recall 1.0 — **not** a new unseen holdout and **not** certification.
+
+
+---
+
+## 2026-09-16 — F3: period-ended date cue is not a YTD duration banner
+
+- **Decision:** Do not emit duration banners from \period ended\ phrases. Bare column headers \Period\ beside \Quarter\ still pair as 6M/3M. Keep engine V1 and floor 8924.
+- **Reason:** LITE \For the Period ended … Quarter Ended Nine Months Ended\ falsely mapped leftmost columns to 9M.
+- **Evidence:** \column_context._duration_banners\; LITE real-PDF duration_months=3; \	est_period_ended_date_cue_does_not_steal_quarter_columns\.
+- **Temporary/permanent:** Permanent generalized rule.
+
+---
+
+## 2026-09-22 — DRAFT production cutover to hybrid V2; OFFICIAL not certified
+
+- **Decision:** Recorded human cutover approval for **V2 DRAFT production**. Set `configs/app.yml` `extraction.engine: v2`. Keep `release_mode: DRAFT`. Keep V1 importable as `--engine v1` rollback. Do not delete V1. Do not claim OFFICIAL publication.
+- **Reason:** Hybrid 829 parity passed (0 unexplained V1 TARGET losses), signed-review propagation into native V2 facts is in production, the OFFICIAL completeness gate exists, and the 6-PDF production smoke passed. Independent gold is still 4 / 100 MANUAL_QA issuers.
+- **Alternatives:** Keep engine V1 until 100 MANUAL_QA issuers exist; flip `release_mode: OFFICIAL` at the same time as the engine.
+- **Evidence:** `docs/v2/HYBRID_RELEASE_CONTRACT.md`, `reports/v2_production_smoke/smoke_summary.json`, `reports/gold_gate/manual_qa_adjudication_packet.json`.
+- **Affected modules:** `configs/app.yml`, `v2/production/engine.py`, production smoke and routing tests.
+- **Temporary/permanent:** Permanent DRAFT engine default until a later recorded OFFICIAL publication decision. Gold and OFFICIAL remain human governance work.
+
+---
+
+## 2026-09-23 — Keep V2 DRAFT; AI QA is a dossier, not MANUAL_QA
+
+- **Decision:** Keep V2 as the DRAFT production engine. No software rollback to V1. Do not block DRAFT production on `min_gold_sample` / `min_gold_issuers`. Keep OFFICIAL fail-closed until humans independently sign remaining gold. Ingest the 100+ / 281-issuer AI QA package as the reviewer dossier. Do not relabel `UNADJUDICATED` / `PIPELINE_SEEDED` as `MANUAL_QA`.
+- **Reason:** Expanded AI/evidence audit covers all 100 benchmark issuers (95 PASS / 5 REVIEW) and the 281-issuer universe (260 PASS / 21 REVIEW). Remaining risk is a small explicit review queue. PASS is not an independent visual transcription of the source PDF. The architecture still treats the official filing as source authority.
+- **Alternatives:** Roll DRAFT back to V1; auto-promote AI_QA_PRECHECK_PASS to MANUAL_QA; keep DRAFT hard-stopped on 4/100 gold.
+- **Evidence:** `reports/gold_gate/AI_QA_DOSSIER.md`, `reports/gold_gate/CSE_V2_AI_QA_100plus_Production_Gate.xlsx`, `reports/gold_gate/ai_qa_100_issuer_precheck.csv`, `reports/gold_gate/ai_qa_281_issuer_universe_precheck.csv`.
+- **Affected modules:** `validation/production_gates.py`, `configs/coverage_baseline.yml`, gold-gate tests.
+- **Temporary/permanent:** Permanent DRAFT/OFFICIAL split. Gold floors remain OFFICIAL-only until a later human-certified MANUAL_QA set exists.
+

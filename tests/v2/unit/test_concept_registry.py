@@ -36,6 +36,9 @@ def test_registry_loads_and_rejects_duplicate_aliases() -> None:
         "Earnings Per Share (basic and diluted) in LKR"
     ) is registry.get("EPS_BASIC")
     assert registry.lookup_alias("Basic/diluted earnings per share") is registry.get("EPS_BASIC")
+    assert registry.lookup_alias("Basic and diluted earnings per share") is registry.get(
+        "EPS_BASIC"
+    )
     assert registry.lookup_alias("Earnings per share - basic") is registry.get("EPS_BASIC")
     assert registry.lookup_alias("Earnings per share - diluted") is registry.get("EPS_DILUTED")
     assert registry.lookup_alias("Basic/Diluted (Rs.)") is None
@@ -44,6 +47,33 @@ def test_registry_loads_and_rejects_duplicate_aliases() -> None:
     assert registry.lookup_alias("Insurance revenue") is None
     assert registry.lookup_alias("Insurance revenue", regimes=("SLFRS17",)) is registry.get(
         "TOP_LINE"
+    )
+    assert registry.lookup_alias("Net Profit for the Period ,") is registry.get("PAT")
+    assert registry.lookup_alias("Revenue ||") is registry.get("TOP_LINE")
+    assert registry.lookup_alias("Profit before Income Tax Expense") is registry.get("PBT")
+    assert registry.lookup_alias("Net Profit/(Loss) before Taxation") is registry.get("PBT")
+    assert registry.lookup_alias("Total Shareholders' Funds") is registry.get("TOTAL_EQUITY")
+    assert registry.lookup_alias(
+        "Operating profit/ (loss) before VAT on financial services & SSCL"
+    ) is registry.get("OPERATING_PROFIT")
+    assert registry.lookup_alias(
+        "Profit before Social Security Contribution Levy / Value Added Tax on financial services"
+    ) is registry.get("OPERATING_PROFIT")
+    assert registry.lookup_alias("Earning per Share (LKR) - For the Period") is registry.get(
+        "EPS_BASIC"
+    )
+    assert registry.lookup_alias(
+        "Basic / diluted earnings per share to equity holders"
+    ) is registry.get("EPS_BASIC")
+    assert registry.lookup_alias("Net Assets Value Per Share") is registry.get("NAVPS")
+    assert registry.lookup_alias("Profit for the year") is registry.get("PAT")
+    assert registry.lookup_alias("Loss for the year") is registry.get("PAT")
+    assert registry.lookup_alias("Basic Loss Per Share") is registry.get("EPS_BASIC")
+    assert registry.lookup_alias("Net Asset Value per Share LKR") is registry.get("NAVPS")
+    assert registry.lookup_alias("Profit before taxation (184.4%)") is registry.get("PBT")
+    assert registry.lookup_alias("Profit after taxation (227.8%)") is registry.get("PAT")
+    assert registry.lookup_alias("Restated Basic Earning per Share (LKR)") is registry.get(
+        "EPS_BASIC"
     )
     duplicate = registry.concepts[0]
     with pytest.raises(RegistryConflictError):

@@ -1,0 +1,88 @@
+{
+  "recovery_step": "N08",
+  "title": "Affected gate experiments (locked-33 diagnostic)",
+  "case_count": 33,
+  "run_id": "locked-experiments-99278edbc8e1b225453be988ec61563538c17aa2:dirty:6a8e857e9626",
+  "investigation_base_sha": "91a9c68bf940d3d9c2a86245f127de88ad4b4b6d",
+  "actual_code_sha": "99278edbc8e1b225453be988ec61563538c17aa2:dirty:6a8e857e9626",
+  "source_snapshot_id": "7bab3c98cf6bdde906ad0a464885d32437a05f42925e80b49b4d4c8469c306dc",
+  "tooling": {
+    "module": "cse_financial_etl.v2.diagnostics.experiments.run_locked_experiments",
+    "script": "scripts/v2_extraction_experiments.py",
+    "raw_outputs_dir": "outputs/v2_n08_n09",
+    "unit_tests": [
+      "tests/v2/unit/test_header_unit_gate_bakeoffs.py",
+      "tests/v2/unit/test_gate_ablation_g02.py",
+      "tests/v2/regression/test_gate_ablation_slots.py"
+    ]
+  },
+  "gates": {
+    "G01": {
+      "decision": "KEEP",
+      "basis": "Prior T10 source-truth adjudication (not re-opened by N08 diagnostic counts).",
+      "diagnostic": {
+        "unresolved_entity_columns": 303,
+        "unresolved_with_document_entity_cue": 90
+      }
+    },
+    "G02": {
+      "decision": "UNTESTED",
+      "basis": "Cascade vs per-column census only. No T10 cascade adjudication. Production default remains cascade.",
+      "diagnostic": {
+        "cascade_source_facts": 1323,
+        "per_column_source_facts": 1323,
+        "facts_suppressed_by_cascade": 0
+      }
+    },
+    "G03": {
+      "decision": "KEEP",
+      "basis": "Prior T10 source-truth adjudication; exact-quarter stays publication policy.",
+      "diagnostic": {
+        "flow_source_facts": 1110,
+        "flow_duration_quarter": 743,
+        "flow_duration_non_quarter": 331,
+        "flow_duration_missing": 36,
+        "exact_quarter_gate": 367
+      }
+    },
+    "G04": {
+      "decision": "UNTESTED",
+      "basis": "Discovery census only; does not publish. No T10 OTHER-page rows.",
+      "diagnostic": {
+        "alias_hits": 32,
+        "hits_on_statement_pages": 23,
+        "hits_on_other_pages": 9
+      }
+    },
+    "G05": {
+      "decision": "UNTESTED",
+      "basis": "Locked-33 explicit-continuation census only. Schema-evidence continuation not enabled.",
+      "diagnostic": {
+        "regions": 264,
+        "explicit_continuation_regions": 0
+      }
+    },
+    "G06": {
+      "decision": "UNTESTED",
+      "basis": "No dedicated ablation tooling run in N08; no T10 conflict adjudication."
+    },
+    "G07": {
+      "decision": "UNTESTED",
+      "basis": "No dedicated ablation tooling run in N08; no T10 collapsed-row adjudication."
+    },
+    "G08": {
+      "decision": "UNTESTED",
+      "basis": "Duplicate-identity census only; production selection measured separately.",
+      "diagnostic": {
+        "eligible_source_facts": 612,
+        "duplicate_identity_groups": 57
+      }
+    },
+    "G09": {
+      "decision": "KEEP",
+      "basis": "Prior T10 source-truth adjudication; absence of Group is not Company."
+    }
+  },
+  "decision_changes_vs_EXTRACTION_GATE_DECISIONS": [],
+  "note": "Diagnostic only. Do not promote V2. Do not lower coverage floors. Census equality (cascade==per_column, suppressed=0) is not KEEP evidence without source-truth adjudication. G01/G03/G09 KEEP unchanged from T10."
+}

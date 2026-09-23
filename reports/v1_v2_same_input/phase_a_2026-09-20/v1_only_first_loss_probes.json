@@ -1,0 +1,672 @@
+{
+  "probes": [
+    {
+      "v1_only_key": {
+        "comparison_role": "CURRENT",
+        "duration_months": "3",
+        "engine": "v1",
+        "entity_scope": "BANK",
+        "issuer_dir": "NATIONAL_DEVELOPMENT_BANK_PLC",
+        "metric_code": "EPS_BASIC",
+        "normalized_value": "8.29",
+        "pdf_sha256": "97b0f342019b1e2d6beeefcd0efe1ade3f993735be6767e22ac6c8fd094a87c3",
+        "period_end": "2025-12-31",
+        "publication_status": "V1_EXTRACTED",
+        "raw_text": "8.29",
+        "symbol": "NDB.N0000"
+      },
+      "v2": {
+        "engine": "v2",
+        "first_loss": "WITHHELD_CONFLICTING_SOURCE"
+      },
+      "assisted": {
+        "engine": "assisted",
+        "first_loss": "SELECTED_OK"
+      }
+    },
+    {
+      "v1_only_key": {
+        "comparison_role": "UNKNOWN",
+        "duration_months": "3",
+        "engine": "v1",
+        "entity_scope": "COMPANY",
+        "issuer_dir": "HOUSING_DEVELOPMENT_FINANCE_CORPORATION_BANK_OF_SL",
+        "metric_code": "EPS_BASIC",
+        "normalized_value": "",
+        "pdf_sha256": "a625e2d179b5a356d35a89b5a98be354c313fd977e5cdc395e3249734f2eeacb",
+        "period_end": "2026-06-30",
+        "publication_status": "V1_EXTRACTED",
+        "raw_text": "0.53",
+        "symbol": "HDFC.N0000"
+      },
+      "v2": {
+        "engine": "v2",
+        "first_loss": "WITHHELD_CONFLICTING_SOURCE"
+      },
+      "assisted": {
+        "engine": "assisted",
+        "first_loss": "WITHHELD_CONFLICTING_SOURCE"
+      }
+    },
+    {
+      "v1_only_key": {
+        "comparison_role": "UNKNOWN",
+        "duration_months": "3",
+        "engine": "v1",
+        "entity_scope": "BANK",
+        "issuer_dir": "PAN_ASIA_BANKING_CORPORATION_PLC",
+        "metric_code": "EPS_DILUTED",
+        "normalized_value": "",
+        "pdf_sha256": "877a4a55b2a5d2bf2de36c98b7d0025c9874f47b53ae3652a3bff8b1900762ca",
+        "period_end": "2025-12-31",
+        "publication_status": "V1_EXTRACTED",
+        "raw_text": "9.05",
+        "symbol": "PABC.N0000"
+      },
+      "v2": {
+        "engine": "v2",
+        "first_loss": "CONCEPT_UNRESOLVED",
+        "observation_hits": 2
+      },
+      "assisted": {
+        "engine": "assisted",
+        "first_loss": "CONCEPT_UNRESOLVED",
+        "observation_hits": 2
+      }
+    },
+    {
+      "v1_only_key": {
+        "comparison_role": "UNKNOWN",
+        "duration_months": "3",
+        "engine": "v1",
+        "entity_scope": "COMPANY",
+        "issuer_dir": "MERCHANT_BANK_OF_SRI_LANKA_FINANCE_PLC",
+        "metric_code": "EPS_DILUTED",
+        "normalized_value": "",
+        "pdf_sha256": "3c750d95985138ab8c76abe5839b410243bcc0461dae40d25c1c5544cb5d92bf",
+        "period_end": "2026-06-30",
+        "publication_status": "V1_EXTRACTED",
+        "raw_text": "-0.16",
+        "symbol": "MBSL.N0000"
+      },
+      "v2": {
+        "engine": "v2",
+        "first_loss": "OBSERVED_BUT_NOT_IN_PIPELINE_CANDIDATES",
+        "observation_hits": 1
+      },
+      "assisted": {
+        "engine": "assisted",
+        "first_loss": "OBSERVED_BUT_NOT_IN_PIPELINE_CANDIDATES",
+        "observation_hits": 1
+      }
+    },
+    {
+      "v1_only_key": {
+        "comparison_role": "CURRENT",
+        "duration_months": "",
+        "engine": "v1",
+        "entity_scope": "BANK",
+        "issuer_dir": "AMANA_BANK_PLC",
+        "metric_code": "NAVPS",
+        "normalized_value": "46.09",
+        "pdf_sha256": "05d26a3190c506994798227162db8c2d533ccddaf34811aaa75e0fbd44cc72f7",
+        "period_end": "2026-03-31",
+        "publication_status": "V1_EXTRACTED",
+        "raw_text": "46.09",
+        "symbol": "ABL.N0000"
+      },
+      "v2": {
+        "engine": "v2",
+        "first_loss": "ENTITY_UNRESOLVED",
+        "candidate_reasons": [
+          "ENTITY_NOT_RESOLVED"
+        ]
+      },
+      "assisted": {
+        "engine": "assisted",
+        "first_loss": "ENTITY_UNRESOLVED",
+        "candidate_reasons": [
+          "ENTITY_NOT_RESOLVED"
+        ]
+      }
+    },
+    {
+      "v1_only_key": {
+        "comparison_role": "CURRENT",
+        "duration_months": "3",
+        "engine": "v1",
+        "entity_scope": "BANK",
+        "issuer_dir": "AMANA_BANK_PLC",
+        "metric_code": "OPERATING_PROFIT",
+        "normalized_value": "1366289000",
+        "pdf_sha256": "02539c46642b05c6c69cb1ddece7be09a9d04bc8b494dc747f130e1cae4d5c8f",
+        "period_end": "2026-06-30",
+        "publication_status": "V1_EXTRACTED",
+        "raw_text": "1366289",
+        "symbol": "ABL.N0000"
+      },
+      "v2": {
+        "engine": "v2",
+        "first_loss": "MISSING_CELL_OR_VALUE"
+      },
+      "assisted": {
+        "engine": "assisted",
+        "first_loss": "MISSING_CELL_OR_VALUE"
+      }
+    },
+    {
+      "v1_only_key": {
+        "comparison_role": "UNKNOWN",
+        "duration_months": "",
+        "engine": "v1",
+        "entity_scope": "COMPANY",
+        "issuer_dir": "HOUSING_DEVELOPMENT_FINANCE_CORPORATION_BANK_OF_SL",
+        "metric_code": "OPERATING_PROFIT",
+        "normalized_value": "",
+        "pdf_sha256": "c79042137e988957e49cda76830367da0d22d505b01c7b41a64f86c76b12df9d",
+        "period_end": "2025-12-31",
+        "publication_status": "V1_EXTRACTED",
+        "raw_text": "35",
+        "symbol": "HDFC.N0000"
+      },
+      "v2": {
+        "engine": "v2",
+        "first_loss": "CONCEPT_UNRESOLVED",
+        "observation_hits": 2
+      },
+      "assisted": {
+        "engine": "assisted",
+        "first_loss": "CONCEPT_UNRESOLVED",
+        "observation_hits": 2
+      }
+    },
+    {
+      "v1_only_key": {
+        "comparison_role": "UNKNOWN",
+        "duration_months": "3",
+        "engine": "v1",
+        "entity_scope": "BANK",
+        "issuer_dir": "HOUSING_DEVELOPMENT_FINANCE_CORPORATION_BANK_OF_SL",
+        "metric_code": "PAT",
+        "normalized_value": "",
+        "pdf_sha256": "182e3cb9d5bd4d634e8451ecd38a1fce6ba6b658dee8b2e6b583ac466f1c3707",
+        "period_end": "2026-03-31",
+        "publication_status": "V1_EXTRACTED",
+        "raw_text": "70",
+        "symbol": "HDFC.N0000"
+      },
+      "v2": {
+        "engine": "v2",
+        "first_loss": "ADMISSION_OK_BUT_NO_SOURCEFACT",
+        "candidate_reasons": []
+      },
+      "assisted": {
+        "engine": "assisted",
+        "first_loss": "ADMISSION_OK_BUT_NO_SOURCEFACT",
+        "candidate_reasons": []
+      }
+    },
+    {
+      "v1_only_key": {
+        "comparison_role": "UNKNOWN",
+        "duration_months": "3",
+        "engine": "v1",
+        "entity_scope": "BANK",
+        "issuer_dir": "PAN_ASIA_BANKING_CORPORATION_PLC",
+        "metric_code": "PBT",
+        "normalized_value": "",
+        "pdf_sha256": "60065f44c60915cfcbf0a4aafc3ae376d760322c2d16b7d77771f8bcdb4e1404",
+        "period_end": "2026-03-31",
+        "publication_status": "V1_EXTRACTED",
+        "raw_text": "1650409",
+        "symbol": "PABC.N0000"
+      },
+      "v2": {
+        "engine": "v2",
+        "first_loss": "ENTITY_UNRESOLVED",
+        "candidate_reasons": [
+          "ENTITY_NOT_RESOLVED",
+          "PERIOD_NOT_RESOLVED"
+        ]
+      },
+      "assisted": {
+        "engine": "assisted",
+        "first_loss": "ENTITY_UNRESOLVED",
+        "candidate_reasons": [
+          "ENTITY_NOT_RESOLVED",
+          "PERIOD_NOT_RESOLVED"
+        ]
+      }
+    },
+    {
+      "v1_only_key": {
+        "comparison_role": "UNKNOWN",
+        "duration_months": "",
+        "engine": "v1",
+        "entity_scope": "COMPANY",
+        "issuer_dir": "HOUSING_DEVELOPMENT_FINANCE_CORPORATION_BANK_OF_SL",
+        "metric_code": "PBT",
+        "normalized_value": "",
+        "pdf_sha256": "c79042137e988957e49cda76830367da0d22d505b01c7b41a64f86c76b12df9d",
+        "period_end": "2025-12-31",
+        "publication_status": "V1_EXTRACTED",
+        "raw_text": "35",
+        "symbol": "HDFC.N0000"
+      },
+      "v2": {
+        "engine": "v2",
+        "first_loss": "CONCEPT_UNRESOLVED",
+        "candidate_reasons": [
+          "AMBIGUOUS_ROW_VALUES"
+        ]
+      },
+      "assisted": {
+        "engine": "assisted",
+        "first_loss": "CONCEPT_UNRESOLVED",
+        "candidate_reasons": [
+          "AMBIGUOUS_ROW_VALUES"
+        ]
+      }
+    },
+    {
+      "v1_only_key": {
+        "comparison_role": "UNKNOWN",
+        "duration_months": "3",
+        "engine": "v1",
+        "entity_scope": "BANK",
+        "issuer_dir": "PAN_ASIA_BANKING_CORPORATION_PLC",
+        "metric_code": "TOP_LINE",
+        "normalized_value": "",
+        "pdf_sha256": "877a4a55b2a5d2bf2de36c98b7d0025c9874f47b53ae3652a3bff8b1900762ca",
+        "period_end": "2025-12-31",
+        "publication_status": "V1_EXTRACTED",
+        "raw_text": "3223375",
+        "symbol": "PABC.N0000"
+      },
+      "v2": {
+        "engine": "v2",
+        "first_loss": "CONCEPT_UNRESOLVED",
+        "observation_hits": 1
+      },
+      "assisted": {
+        "engine": "assisted",
+        "first_loss": "CONCEPT_UNRESOLVED",
+        "observation_hits": 1
+      }
+    },
+    {
+      "v1_only_key": {
+        "comparison_role": "UNKNOWN",
+        "duration_months": "",
+        "engine": "v1",
+        "entity_scope": "BANK",
+        "issuer_dir": "CARGILLS_BANK_PLC",
+        "metric_code": "TOTAL_ASSETS",
+        "normalized_value": "",
+        "pdf_sha256": "fd05645b512f4ef57910552358a8c65ec9a6512e6588682bf8397fc6242d82fe",
+        "period_end": "2025-12-31",
+        "publication_status": "V1_EXTRACTED",
+        "raw_text": "91723351",
+        "symbol": "CBNK.N0000"
+      },
+      "v2": {
+        "engine": "v2",
+        "first_loss": "ENTITY_UNRESOLVED",
+        "candidate_reasons": [
+          "ENTITY_NOT_RESOLVED"
+        ]
+      },
+      "assisted": {
+        "engine": "assisted",
+        "first_loss": "ENTITY_UNRESOLVED",
+        "candidate_reasons": [
+          "ENTITY_NOT_RESOLVED"
+        ]
+      }
+    },
+    {
+      "v1_only_key": {
+        "comparison_role": "CURRENT",
+        "duration_months": "",
+        "engine": "v1",
+        "entity_scope": "BANK",
+        "issuer_dir": "AMANA_BANK_PLC",
+        "metric_code": "TOTAL_EQUITY",
+        "normalized_value": "25405219000",
+        "pdf_sha256": "05d26a3190c506994798227162db8c2d533ccddaf34811aaa75e0fbd44cc72f7",
+        "period_end": "2026-03-31",
+        "publication_status": "V1_EXTRACTED",
+        "raw_text": "25405219",
+        "symbol": "ABL.N0000"
+      },
+      "v2": {
+        "engine": "v2",
+        "first_loss": "MISSING_CELL_OR_VALUE"
+      },
+      "assisted": {
+        "engine": "assisted",
+        "first_loss": "MISSING_CELL_OR_VALUE"
+      }
+    },
+    {
+      "v1_only_key": {
+        "comparison_role": "CURRENT",
+        "duration_months": "",
+        "engine": "v1",
+        "entity_scope": "BANK",
+        "issuer_dir": "AMANA_BANK_PLC",
+        "metric_code": "TOTAL_LIABILITIES",
+        "normalized_value": "179221412000",
+        "pdf_sha256": "032a1d47f854c92c4afef56fdff2b88997e53c3439423e9c993060c231550be1",
+        "period_end": "2025-12-31",
+        "publication_status": "V1_EXTRACTED",
+        "raw_text": "179221412",
+        "symbol": "ABL.N0000"
+      },
+      "v2": {
+        "engine": "v2",
+        "first_loss": "MISSING_CELL_OR_VALUE"
+      },
+      "assisted": {
+        "engine": "assisted",
+        "first_loss": "MISSING_CELL_OR_VALUE"
+      }
+    },
+    {
+      "v1_only_key": {
+        "comparison_role": "UNKNOWN",
+        "duration_months": "",
+        "engine": "v1",
+        "entity_scope": "COMPANY",
+        "issuer_dir": "JANASHAKTHI_FINANCE_PLC",
+        "metric_code": "EPS_BASIC",
+        "normalized_value": "",
+        "pdf_sha256": "f978bf999d71cc84809469b96ffca5f6a436ed3d8439ea4b325e6907562c533b",
+        "period_end": "2025-12-31",
+        "publication_status": "V1_EXTRACTED",
+        "raw_text": "0.47",
+        "symbol": "BFN.N0000"
+      },
+      "v2": {
+        "engine": "v2",
+        "first_loss": "ENTITY_UNRESOLVED",
+        "candidate_reasons": [
+          "ENTITY_NOT_RESOLVED"
+        ]
+      },
+      "assisted": {
+        "engine": "assisted",
+        "first_loss": "ENTITY_UNRESOLVED",
+        "candidate_reasons": [
+          "ENTITY_NOT_RESOLVED"
+        ]
+      }
+    },
+    {
+      "v1_only_key": {
+        "comparison_role": "UNKNOWN",
+        "duration_months": "",
+        "engine": "v1",
+        "entity_scope": "COMPANY",
+        "issuer_dir": "HNB_FINANCE_PLC",
+        "metric_code": "EPS_DILUTED",
+        "normalized_value": "",
+        "pdf_sha256": "cf41e489ed4e785d52ec31ebb6210bbeccde88c9342640159f77d8afd97953a5",
+        "period_end": "2026-03-31",
+        "publication_status": "V1_EXTRACTED",
+        "raw_text": "",
+        "symbol": "HNBF.N0000"
+      },
+      "v2": {
+        "engine": "v2",
+        "first_loss": "MISSING_CELL_OR_VALUE"
+      },
+      "assisted": {
+        "engine": "assisted",
+        "first_loss": "MISSING_CELL_OR_VALUE"
+      }
+    },
+    {
+      "v1_only_key": {
+        "comparison_role": "UNKNOWN",
+        "duration_months": "",
+        "engine": "v1",
+        "entity_scope": "COMPANY",
+        "issuer_dir": "AMANA_TAKAFUL_PLC",
+        "metric_code": "NAVPS",
+        "normalized_value": "",
+        "pdf_sha256": "f04f428794cf35be4df61b699c67b055b0d28f857c62bdda510ae669cf7d264a",
+        "period_end": "2026-06-30",
+        "publication_status": "V1_EXTRACTED",
+        "raw_text": "22.59",
+        "symbol": "ATL.N0000"
+      },
+      "v2": {
+        "engine": "v2",
+        "first_loss": "MISSING_CELL_OR_VALUE"
+      },
+      "assisted": {
+        "engine": "assisted",
+        "first_loss": "MISSING_CELL_OR_VALUE"
+      }
+    },
+    {
+      "v1_only_key": {
+        "comparison_role": "UNKNOWN",
+        "duration_months": "",
+        "engine": "v1",
+        "entity_scope": "COMPANY",
+        "issuer_dir": "COMMERCIAL_CREDIT_AND_FINANCE_PLC",
+        "metric_code": "OPERATING_PROFIT",
+        "normalized_value": "",
+        "pdf_sha256": "da7d49dfdad31d3793b45c00417ded7c0e2a95134c5e5c368ad2d774ff51a0bc",
+        "period_end": "2025-12-31",
+        "publication_status": "V1_EXTRACTED",
+        "raw_text": "",
+        "symbol": "COCR.N0000"
+      },
+      "v2": {
+        "engine": "v2",
+        "first_loss": "MISSING_CELL_OR_VALUE"
+      },
+      "assisted": {
+        "engine": "assisted",
+        "first_loss": "MISSING_CELL_OR_VALUE"
+      }
+    },
+    {
+      "v1_only_key": {
+        "comparison_role": "CURRENT",
+        "duration_months": "3",
+        "engine": "v1",
+        "entity_scope": "COMPANY",
+        "issuer_dir": "AMW_CAPITAL_LEASING_AND_FINANCE_PLC",
+        "metric_code": "PAT",
+        "normalized_value": "",
+        "pdf_sha256": "d2552b618185420ef267844fd8c77f75c563a7e9e4ad49c9d824954f41ecb165",
+        "period_end": "2026-03-31",
+        "publication_status": "V1_EXTRACTED",
+        "raw_text": "59239378",
+        "symbol": "AMCL.N0000"
+      },
+      "v2": {
+        "engine": "v2",
+        "first_loss": "CONCEPT_UNRESOLVED",
+        "observation_hits": 5
+      },
+      "assisted": {
+        "engine": "assisted",
+        "first_loss": "ENTITY_UNRESOLVED",
+        "candidate_reasons": [
+          "V1_PHYSICAL_OBSERVATION",
+          "CONTEXT_UNRESOLVED_PENDING_V2_VERIFY",
+          "DISCOVERY_ONLY",
+          "V1_OBSERVATION_UNION"
+        ]
+      }
+    },
+    {
+      "v1_only_key": {
+        "comparison_role": "UNKNOWN",
+        "duration_months": "3",
+        "engine": "v1",
+        "entity_scope": "COMPANY",
+        "issuer_dir": "LOLC_GENERAL_INSURANCE_PLC",
+        "metric_code": "PBT",
+        "normalized_value": "",
+        "pdf_sha256": "f7e365806aa45ca5966637b1f24d07500f5f34a393fc17b5a73ea9e60dcfa0ad",
+        "period_end": "2026-03-31",
+        "publication_status": "V1_EXTRACTED",
+        "raw_text": "847693",
+        "symbol": "LGIL.N0000"
+      },
+      "v2": {
+        "engine": "v2",
+        "first_loss": "ENTITY_UNRESOLVED",
+        "candidate_reasons": [
+          "ENTITY_NOT_RESOLVED"
+        ]
+      },
+      "assisted": {
+        "engine": "assisted",
+        "first_loss": "ENTITY_UNRESOLVED",
+        "candidate_reasons": [
+          "ENTITY_NOT_RESOLVED"
+        ]
+      }
+    },
+    {
+      "v1_only_key": {
+        "comparison_role": "UNKNOWN",
+        "duration_months": "",
+        "engine": "v1",
+        "entity_scope": "COMPANY",
+        "issuer_dir": "JANASHAKTHI_FINANCE_PLC",
+        "metric_code": "TOP_LINE",
+        "normalized_value": "",
+        "pdf_sha256": "13afaea97bdcc7d5dc9e16f800a3252229c0047bff7a8e7ae1e97bc8fca934c9",
+        "period_end": "2026-03-31",
+        "publication_status": "V1_EXTRACTED",
+        "raw_text": "1713140",
+        "symbol": "BFN.N0000"
+      },
+      "v2": {
+        "engine": "v2",
+        "first_loss": "ENTITY_UNRESOLVED",
+        "candidate_reasons": [
+          "ENTITY_NOT_RESOLVED"
+        ]
+      },
+      "assisted": {
+        "engine": "assisted",
+        "first_loss": "ENTITY_UNRESOLVED",
+        "candidate_reasons": [
+          "ENTITY_NOT_RESOLVED"
+        ]
+      }
+    },
+    {
+      "v1_only_key": {
+        "comparison_role": "UNKNOWN",
+        "duration_months": "",
+        "engine": "v1",
+        "entity_scope": "COMPANY",
+        "issuer_dir": "AMBEON_CAPITAL_PLC",
+        "metric_code": "TOTAL_ASSETS",
+        "normalized_value": "",
+        "pdf_sha256": "f25c89ea72c78e55a35e70bd07aa29507861893630685130214cd97b4fa35f39",
+        "period_end": "2026-06-30",
+        "publication_status": "V1_EXTRACTED",
+        "raw_text": "16863296",
+        "symbol": "TAP.N0000"
+      },
+      "v2": {
+        "engine": "v2",
+        "first_loss": "ADMISSION_OK_BUT_NO_SOURCEFACT",
+        "candidate_reasons": []
+      },
+      "assisted": {
+        "engine": "assisted",
+        "first_loss": "ADMISSION_OK_BUT_NO_SOURCEFACT",
+        "candidate_reasons": []
+      }
+    },
+    {
+      "v1_only_key": {
+        "comparison_role": "CURRENT",
+        "duration_months": "",
+        "engine": "v1",
+        "entity_scope": "COMPANY",
+        "issuer_dir": "PEOPLE_S_INSURANCE_PLC",
+        "metric_code": "TOTAL_EQUITY",
+        "normalized_value": "",
+        "pdf_sha256": "9b884f0bfa9f78491bbd91f13fc26baef3492f29b1ff46a931258617785802f6",
+        "period_end": "2026-06-30",
+        "publication_status": "V1_EXTRACTED",
+        "raw_text": "6328773912",
+        "symbol": "PINS.N0000"
+      },
+      "v2": {
+        "engine": "v2",
+        "first_loss": "ENTITY_UNRESOLVED",
+        "candidate_reasons": [
+          "ENTITY_NOT_RESOLVED"
+        ]
+      },
+      "assisted": {
+        "engine": "assisted",
+        "first_loss": "ENTITY_UNRESOLVED",
+        "candidate_reasons": [
+          "ENTITY_NOT_RESOLVED"
+        ]
+      }
+    },
+    {
+      "v1_only_key": {
+        "comparison_role": "CURRENT",
+        "duration_months": "",
+        "engine": "v1",
+        "entity_scope": "COMPANY",
+        "issuer_dir": "ARPICO_INSURANCE_PLC",
+        "metric_code": "TOTAL_LIABILITIES",
+        "normalized_value": "",
+        "pdf_sha256": "484f2862c1f76b97fb31a88b78b42a90894fa27ae6b12084f5ccf70ade0352cf",
+        "period_end": "2026-06-30",
+        "publication_status": "V1_EXTRACTED",
+        "raw_text": "3526100896",
+        "symbol": "AINS.N0000"
+      },
+      "v2": {
+        "engine": "v2",
+        "first_loss": "ENTITY_UNRESOLVED",
+        "candidate_reasons": [
+          "ENTITY_NOT_RESOLVED"
+        ]
+      },
+      "assisted": {
+        "engine": "assisted",
+        "first_loss": "ENTITY_UNRESOLVED",
+        "candidate_reasons": [
+          "ENTITY_NOT_RESOLVED"
+        ]
+      }
+    }
+  ],
+  "v2_counts": {
+    "WITHHELD_CONFLICTING_SOURCE": 2,
+    "CONCEPT_UNRESOLVED": 5,
+    "OBSERVED_BUT_NOT_IN_PIPELINE_CANDIDATES": 1,
+    "ENTITY_UNRESOLVED": 8,
+    "MISSING_CELL_OR_VALUE": 6,
+    "ADMISSION_OK_BUT_NO_SOURCEFACT": 2
+  },
+  "assisted_counts": {
+    "SELECTED_OK": 1,
+    "WITHHELD_CONFLICTING_SOURCE": 1,
+    "CONCEPT_UNRESOLVED": 4,
+    "OBSERVED_BUT_NOT_IN_PIPELINE_CANDIDATES": 1,
+    "ENTITY_UNRESOLVED": 9,
+    "MISSING_CELL_OR_VALUE": 6,
+    "ADMISSION_OK_BUT_NO_SOURCEFACT": 2
+  }
+}

@@ -1,6 +1,19 @@
 # V2 Cutover Checklist
 
-Do not mark institutional cutover complete because code exists. Production extraction stays on V1; V2 is the challenger (`engine=v2`). Human/artefact gates below still block `ready=True`, a V2 default, and V1 deletion.
+Do not mark institutional OFFICIAL publication complete because AI QA exists.
+
+**Verified path:** `docs/v2/HYBRID_RELEASE_CONTRACT.md`. Production extraction is **V2** after recorded DRAFT cutover approval 2026-09-22. Publication remains **DRAFT**. OFFICIAL is **NOT YET HUMAN-CERTIFIED**. V1 remains the rollback backend. DRAFT is not blocked on the old 100 MANUAL_QA gold floor.
+
+Hybrid 829 same-input parity is the extraction proof. N17/N18 are superseded as a **pre-cutover extraction** holdout and remain required before deleting V1 or certifying V2-native extraction. See the contract.
+
+## First T25 holdout (retired)
+
+```text
+FAILED initially → investigated → LITE F1/F3 fixed → SFCL truth corrected
+→ rescored 1.0 on inspected entity-resolved facts → permanently retired
+```
+
+Final holdout path for hybrid cutover: **829 SHA-pinned same-input parity (passed)**. Independent 100 MANUAL_QA issuers remain an **OFFICIAL** gate, not a DRAFT rollback trigger. N17/N18 remain a V2-native / V1-retirement package, not a silent skip.
 
 1. [x] One canonical document representation is used by the V2 core.
 2. [x] Source context is owned by columns, not reconstructed after metric matching.
@@ -13,25 +26,33 @@ Do not mark institutional cutover complete because code exists. Production extra
 9. [x] Release mode is explicit `ReleaseContext`.
 10. [x] Coverage floors cannot silently decrease.
 11. [x] Workbook output reconciles to release facts.
-12. [ ] Golden corpus quality gates pass on institutional CSE filings (synthetic §37 gates pass; locked 33 probe is 209/237 recall 88.19%, 0 critical-wrong, duration/unit 100% on labeled gold; not newly human-re-adjudicated, not §37; recall is below 0.97 because unlabeled-entity and missing-line facts stay unpublished).
-13. [ ] Frozen-universe acceptance passes.
-14. [x] Repeated fixed-input runs are deterministic.
-15. [ ] Current-universe run succeeds. (2026-09-09 V2 challenger `--engine v2`: 3,684 draft-publishable vs floor 8,924; EXTRACTED+DERIVED 3,993 vs 8,932; `ENGINEERING_FAILURES_PRESENT`. That count is not an accepted baseline.)
+12. [ ] OFFICIAL golden corpus quality gates pass (`min_gold_issuers: 100` counts MANUAL_QA only; committed fixture currently has 4 MANUAL_QA issuers). AI/evidence dossier covers all 100 benchmark issuers plus 281-universe precheck: `reports/gold_gate/AI_QA_DOSSIER.md`. Do not relabel PIPELINE_SEEDED / UNADJUDICATED. DRAFT production is not blocked on this item.
+13. [ ] Frozen-universe acceptance passes. (Sept-10 artefacts missing; Sept-05 pin is **diagnostic only**.)
+14. [x] Repeated fixed-input runs are deterministic (N11/N12 clean-SHA locked-33: `all_deterministic=true`).
+15. [x] Hybrid V2 production smoke (`scripts/v2_production_smoke.py`, 6/6 real PDFs, signed JKH PAT on native facts, DRAFT 56 / OFFICIAL 1). Not a full-universe 8,924 run.
 16. [x] V2 DRAFT workbook contains correct numeric data (synthetic e2e).
-17. [x] OFFICIAL remains gated by required institutional review.
+17. [ ] OFFICIAL human review — 100 MANUAL_QA issuers and 8,924 APPROVED/CURATED native facts. Not implied by the DRAFT engine cutover.
 
-18. [ ] Production OCR runtime packaging proven (Dockerfile installs Tesseract + `ocr` extra; container smoke still required).
-19. [x] Source accounting-regime lineage on SourceFact (engineering). Generic INSURANCE does not fabricate SLFRS4/SLFRS17. Still required on the 25–40 human gold set.
-20. [ ] Production V2 publication path (`publish_production_workbook` + explicit `ReleaseContext`) adopted by `cse-etl run` after engine promotion.
+18. [x] Production OCR runtime packaging proven (`t18_ocr_docker_smoke.json`).
+19. [x] Source accounting-regime lineage on SourceFact (engineering).
+20. [x] Production V2 publication path is the DRAFT default (`engine: v2`). V1 remains rollback.
 
-Production extraction engine is **V1** (`configs/app.yml` `extraction.engine: v1`). V2 stays available as `engine=v2` for shadow/challenger runs. Do not delete V1. Do not set `extraction.engine: v2` or cutover `ready=True` until items 12, 13, 15, 18, 19, and 20 plus OFFICIAL human review.
+Production extraction engine is **V2** (DRAFT). Do not set `release_mode: OFFICIAL` or cutover `ready=True` until 100 MANUAL_QA issuers and the 8,924 APPROVED/CURATED floor pass. V1 rollback remains.
 
-Phase 15 remaining:
+## Open engineering (before OFFICIAL)
 
-1. [ ] Make V2 extraction the default (blocked until items 12, 13, and 15).
-2. [x] Keep V1 extraction as the production default; V2 is challenger-only.
-3. [ ] Run another full frozen-universe acceptance.
-4. [ ] Run the current snapshot to a passing acceptance (2026-09-09 V2 challenger ran and failed coverage floors; see item 15).
-5. [ ] Generate DRAFT output from a passing current-universe run.
-6. [ ] Complete required human checks (re-adjudicate the 25–40 gold set).
-7. [ ] Remove obsolete V1 extraction paths only after the rollback window closes.
+See `docs/v2/HYBRID_RELEASE_CONTRACT.md`:
+
+- **100 MANUAL_QA issuers** — AI QA dossier ingested; humans still must sign remaining gold. Do not invent MANUAL_QA.
+- **OFFICIAL output completeness gate** — `min_official_publishable: 8924` when `release_mode` is OFFICIAL
+- DRAFT cutover approved 2026-09-22 (`engine: v2`); V1 rollback retained
+
+## Phase 15 remaining
+
+1. [x] Make V2 extraction the DRAFT production default (approved 2026-09-22).
+2. [x] Keep V1 extraction as the rollback backend; do not delete V1.
+3. [ ] Full frozen-universe acceptance (needs Sept-10 artefacts).
+4. [ ] Current snapshot passing acceptance (floor 8924).
+5. [ ] DRAFT from a passing current-universe run.
+6. [ ] OFFICIAL human review (100 MANUAL_QA issuers + 8,924 APPROVED/CURATED facts).
+7. [ ] Remove obsolete V1 paths only after rollback window closes.

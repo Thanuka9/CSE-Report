@@ -1,0 +1,72 @@
+{
+  "recovery_step": "N09/R3.1",
+  "title": "Header engine bake-off (H0/H1/H2)",
+  "samples": [
+    "LITE.N0000-2025-12-31",
+    "SFCL.N0000-2025-12-31"
+  ],
+  "tooling": {
+    "module": "cse_financial_etl.v2.diagnostics.bakeoffs",
+    "h1_module": "cse_financial_etl.v2.resolution.header_h1",
+    "unit_tests": [
+      "tests/v2/unit/test_header_unit_gate_bakeoffs.py",
+      "tests/v2/unit/test_header_h1_bakeoff.py"
+    ]
+  },
+  "engines": {
+    "H0": {
+      "status": "MEASURED",
+      "promoted": true,
+      "description": "Current V2 column-context binder (production default).",
+      "lite": {
+        "columns": 23,
+        "entity_resolved": 18,
+        "period_resolved": 18,
+        "duration_resolved": 14,
+        "comparison_resolved": 18,
+        "unit_resolved": 22,
+        "source_facts": 72
+      },
+      "sfcl": {
+        "columns": 40,
+        "entity_resolved": 32,
+        "period_resolved": 32,
+        "source_facts": 56
+      }
+    },
+    "H1": {
+      "status": "MEASURED_NOT_PROMOTED",
+      "built": true,
+      "promoted": false,
+      "description": "V1 compile_header geometry adapter + R3.1 year/day-month completion.",
+      "lite": {
+        "columns": 23,
+        "entity_resolved": 8,
+        "period_resolved": 16,
+        "duration_resolved": 8,
+        "comparison_resolved": 16,
+        "unit_resolved": 22,
+        "source_facts": 40,
+        "group_current_target_facts": "recovered"
+      },
+      "sfcl": {
+        "columns": 40,
+        "entity_resolved": 26,
+        "period_resolved": 30,
+        "source_facts": 56
+      },
+      "note": "Improved vs R3 scaffold (LITE facts 0→40) but does not beat H0 on LITE."
+    },
+    "H2": {
+      "status": "UNTESTED",
+      "built": false
+    }
+  },
+  "decision": {
+    "header_engine": "H0",
+    "replace_h0_with_h1": false,
+    "reason": "H1 not promoted: trails H0 entity/coverage on LITE despite SFCL fact parity."
+  },
+  "next": "R4 scoped unit resolver port; H1 remains challenger-only",
+  "note": "Do not promote V2 production engine. Do not lower 8924."
+}

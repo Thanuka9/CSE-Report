@@ -3,7 +3,12 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
-from cse_financial_etl.v2.contracts.enums import ComparisonRole, EntityScope, StatementType, UnitDimension
+from cse_financial_etl.v2.contracts.enums import (
+    ComparisonRole,
+    EntityScope,
+    StatementType,
+    UnitDimension,
+)
 from cse_financial_etl.v2.contracts.statement import CanonicalStatement, StatementColumn
 from cse_financial_etl.v2.resolution.column_context import (
     _fail_closed_partial_monetary_columns,
@@ -531,7 +536,7 @@ def test_issuer_plc_company_does_not_flip_group_company_headers() -> None:
     ]
 
 
-def test_company_in_issuer_name_alone_still_binds_company() -> None:
+def test_company_in_issuer_name_alone_does_not_bind_company() -> None:
     document = geometric_document(
         (
             ((40.0, "Ceylon Tobacco Company PLC"),),
@@ -546,7 +551,7 @@ def test_company_in_issuer_name_alone_still_binds_company() -> None:
         column for column in bound.columns if column.unit_dimension is UnitDimension.MONETARY
     ]
     assert monetary
-    assert monetary[0].entity_scope is EntityScope.COMPANY
+    assert monetary[0].entity_scope is None
 
 
 def test_group_company_order_ignores_owners_of_the_company_body_row() -> None:
@@ -778,3 +783,234 @@ def test_group_only_page_does_not_take_bank_from_issuer_name() -> None:
     ]
     assert monetary
     assert all(column.entity_scope is EntityScope.GROUP for column in monetary)
+
+
+def test_group_subtitle_with_year_token_stays_in_heading_context() -> None:
+    """F1: account-like subtitle + year token must keep entity cues (e.g. Group)."""
+
+    from cse_financial_etl.v2.resolution.column_context import _heading_context_lines
+
+    # Year must be its own token so parse_numeric hits — matching the LITE drop path.
+    document = geometric_document(
+        (
+            (
+                (40.0, "Comprehensive"),
+                (140.0, "Income"),
+                (200.0, "-"),
+                (220.0, "Group"),
+                (280.0, "31st"),
+                (320.0, "December"),
+                (400.0, "2025"),
+            ),
+            ((40.0, "For the three months ended 31 December"), (280.0, "2025"), (360.0, "2024")),
+            ((40.0, "Rs.'000"),),
+            ((40.0, "Revenue"), (200.0, "889,239"), (300.0, "700,000")),
+            ((40.0, "Profit from Operating Activities"), (200.0, "156,042"), (300.0, "100,000")),
+            ((40.0, "Net Profit for the Period"), (200.0, "79,190"), (300.0, "50,000")),
+        ),
+        title="Statement of Profit or Loss and Other",
+    )
+    heading_texts = [line.text for line in _heading_context_lines(document.pages[0])]
+    assert any("Group" in text for text in heading_texts)
+
+    bound = bind_column_context(document, build_statements(document)[0])
+    monetary = [
+        column for column in bound.columns if column.unit_dimension is UnitDimension.MONETARY
+    ]
+    assert monetary
+    assert all(column.entity_scope is EntityScope.GROUP for column in monetary)
+    # F2: entity_evidence prefers the Group banner line over statement title alone.
+    assert any(
+        "Group" in (ref.raw_text or "")
+        for column in monetary
+        for ref in column.entity_evidence
+    )
+
+
+def test_account_like_subtitle_without_entity_cue_still_dropped() -> None:
+    """Without Group/Company/Bank cues, account-like + year heading lines stay dropped."""
+
+    from cse_financial_etl.v2.resolution.column_context import _heading_context_lines
+
+    document = geometric_document(
+        (
+            (
+                (40.0, "Comprehensive"),
+                (140.0, "Income"),
+                (280.0, "31st"),
+                (320.0, "December"),
+                (400.0, "2025"),
+            ),
+            ((40.0, "Company"),),
+            ((40.0, "For the three months ended 31 December 2025"),),
+            ((40.0, "Rs.'000"),),
+            ((40.0, "Revenue"), (300.0, "1,234")),
+        ),
+        title="Statement of Profit or Loss and Other",
+    )
+    heading_texts = [line.text for line in _heading_context_lines(document.pages[0])]
+    assert not any(
+        "Comprehensive" in text and "Income" in text and "Group" not in text
+        for text in heading_texts
+        if "Company" not in text
+    )
+    # Explicit Company banner still binds (separate line).
+    bound = bind_column_context(document, build_statements(document)[0])
+    monetary = [
+        column for column in bound.columns if column.unit_dimension is UnitDimension.MONETARY
+    ]
+    assert monetary
+    assert monetary[0].entity_scope is EntityScope.COMPANY
+
+
+def test_issuer_name_plc_line_still_does_not_invent_company_entity() -> None:
+    document = geometric_document(
+        (
+            ((40.0, "Laxapana Holdings PLC"),),
+            ((40.0, "For the three months ended 30 June 2026"),),
+            ((40.0, "Rs."),),
+            ((40.0, "Revenue"), (300.0, "1,234")),
+        ),
+        title="Statement of profit or loss",
+    )
+    statement = bind_column_context(document, build_statements(document)[0])
+    monetary = [
+        column
+        for column in statement.columns
+        if column.unit_dimension is UnitDimension.MONETARY
+    ]
+    assert monetary
+    assert all(column.entity_scope is None for column in monetary)
+
+def test_period_ended_date_cue_does_not_steal_quarter_columns() -> None:
+    """F3: merged Period-ended + Quarter + Nine Months — quarter columns own 3M.
+
+    Mirrors LITE page-5 geometry: a left 'For the Period ended' date cue must
+    not become a false 9M banner that 1:1-maps onto the leftmost monetary column.
+    """
+
+    document = geometric_document(
+        (
+            ((40.0, "Group"),),
+            (
+                (45.0, "For the Period ended 31st"),
+                (220.0, "Quarter Ended"),
+                (400.0, "Nine Months Ended"),
+            ),
+            ((45.0, "December"),),
+            (
+                (200.0, "2025"),
+                (280.0, "2024"),
+                (400.0, "2025"),
+                (480.0, "2024"),
+            ),
+            (
+                (190.0, "Rs.'000"),
+                (270.0, "Rs.'000"),
+                (390.0, "Rs.'000"),
+                (470.0, "Rs.'000"),
+            ),
+            (
+                (40.0, "Revenue"),
+                (200.0, "889,239"),
+                (280.0, "700,000"),
+                (400.0, "2,450,908"),
+                (480.0, "2,000,000"),
+            ),
+        ),
+        title="Statement of Profit or Loss and Other",
+    )
+    statement = bind_column_context(document, build_statements(document)[0])
+    monetary = [
+        column
+        for column in statement.columns
+        if column.unit_dimension is UnitDimension.MONETARY
+    ]
+    assert [column.duration_months for column in monetary[:4]] == [3, 3, 9, 9]
+
+
+def test_nearby_date_banner_collision_keeps_date_row_pair() -> None:
+    """Title date colliding with a dotted column date must not rotate pairs.
+
+    NHL: eight monetary columns with repeating 2025/2024 dates, plus an extra
+    named title date within a few points of the real ``31.12.2024`` token.
+    """
+
+    from cse_financial_etl.v2.resolution.column_context import _dedupe_nearby_date_banners
+
+    banners = [
+        (200.0, date(2025, 12, 31)),
+        (280.0, date(2024, 12, 31)),
+        (360.0, date(2025, 12, 31)),
+        (426.0, date(2025, 12, 31)),  # spurious title collision
+        (433.0, date(2024, 12, 31)),
+        (520.0, date(2025, 12, 31)),
+        (600.0, date(2024, 12, 31)),
+        (680.0, date(2025, 12, 31)),
+        (760.0, date(2024, 12, 31)),
+    ]
+    deduped = _dedupe_nearby_date_banners(banners)
+    assert len(deduped) == 8
+    assert [parsed for _x, parsed in deduped] == [
+        date(2025, 12, 31),
+        date(2024, 12, 31),
+        date(2025, 12, 31),
+        date(2024, 12, 31),
+        date(2025, 12, 31),
+        date(2024, 12, 31),
+        date(2025, 12, 31),
+        date(2024, 12, 31),
+    ]
+
+    document = geometric_document(
+        (
+            ((40.0, "Group"), (420.0, "Company")),
+            (
+                (200.0, "Quarter ended"),
+                (360.0, "Nine Month Ended"),
+                (520.0, "Quarter ended"),
+                (680.0, "Nine Month Ended"),
+            ),
+            (
+                (200.0, "31.12.2025"),
+                (280.0, "31.12.2024"),
+                (360.0, "31.12.2025"),
+                (425.0, "31st December 2025"),
+                (433.0, "31.12.2024"),
+                (520.0, "31.12.2025"),
+                (600.0, "31.12.2024"),
+                (680.0, "31.12.2025"),
+                (760.0, "31.12.2024"),
+            ),
+            ((40.0, "Rs'000"),),
+            (
+                (40.0, "Revenue"),
+                (200.0, "3,438,428"),
+                (280.0, "2,594,528"),
+                (360.0, "9,935,019"),
+                (433.0, "8,326,242"),
+                (520.0, "1,762,732"),
+                (600.0, "1,313,792"),
+                (680.0, "5,106,508"),
+                (760.0, "4,168,655"),
+            ),
+        ),
+        title="Consolidated Statement of Comprehensive Income",
+    )
+    statement = bind_column_context(document, build_statements(document)[0])
+    monetary = [
+        column
+        for column in statement.columns
+        if column.unit_dimension is UnitDimension.MONETARY
+    ]
+    assert len(monetary) == 8
+    assert [column.period_end for column in monetary] == [
+        date(2025, 12, 31),
+        date(2024, 12, 31),
+        date(2025, 12, 31),
+        date(2024, 12, 31),
+        date(2025, 12, 31),
+        date(2024, 12, 31),
+        date(2025, 12, 31),
+        date(2024, 12, 31),
+    ]
