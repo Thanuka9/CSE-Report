@@ -228,7 +228,8 @@ def test_rollback_to_v1_leaves_hybrid_off_and_v1_importable(monkeypatch) -> None
             encoding="utf-8"
         )
     )
-    assert app["extraction"]["engine"] == "v1"
+    assert app["extraction"]["engine"] == "v2"
+    assert app["publication"]["release_mode"] == "DRAFT"
 
 
 def test_v1_engine_flag_still_calls_challenger(monkeypatch) -> None:

@@ -16,16 +16,17 @@ def extract_for_production(
     symbol: str,
     period_end: date,
     *,
-    engine: str = "v1",
+    engine: str = "v2",
     issuers: dict[str, Any] | None = None,
     **kwargs: object,
 ) -> list[ExtractedFact]:
-    """Run V1 by default until cutover. ``engine='v2'`` is the hybrid
-    orchestrator: V1 baseline facts unioned with native V2 recovery, then V2
-    validation, lineage and production selection.
+    """Run the hybrid V2 orchestrator by default after DRAFT cutover.
+
+    ``engine='v1'`` remains the rollback path. V1 ``extract_filing`` is never
+    deleted. OFFICIAL publication is a separate certification.
     """
 
-    chosen = str(engine or "v1").strip().lower()
+    chosen = str(engine or "v2").strip().lower()
     if chosen == "v2":
         sidecar = kwargs.pop("v2_native_sidecar", None)
         sidecar_path = sidecar if isinstance(sidecar, Path) else None

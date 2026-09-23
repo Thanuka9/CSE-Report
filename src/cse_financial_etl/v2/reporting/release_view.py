@@ -79,3 +79,18 @@ def build_release_view(
         eligible=tuple(eligible),
         withheld_reason_codes=tuple(withheld),
     )
+
+
+def count_eligible_facts(
+    source_facts: Sequence[SourceFact] = (),
+    derived_facts: Sequence[DerivedFact] = (),
+    *,
+    mode: ReleaseMode,
+) -> int:
+    """Count facts that would appear in the DRAFT or OFFICIAL release view."""
+
+    predicate = (
+        _is_official_eligible if mode == ReleaseMode.OFFICIAL else _is_draft_eligible
+    )
+    facts: tuple[SourceFact | DerivedFact, ...] = tuple(source_facts) + tuple(derived_facts)
+    return sum(1 for fact in facts if predicate(fact))

@@ -1,7 +1,8 @@
 """Release certification after 829 hybrid parity.
 
-Does not set extraction.engine: v2. READY FOR OFFICIAL DECISION is emitted
-only when every gate in this pack actually passes.
+Certifies V2 DRAFT extraction cutover only. Does not certify OFFICIAL
+publication. Independent MANUAL_QA gold is an OFFICIAL human gate, not a
+DRAFT rollback trigger. AI/evidence precheck is a dossier, not MANUAL_QA.
 """
 
 from __future__ import annotations
@@ -12,7 +13,7 @@ import hashlib
 import json
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -46,12 +47,17 @@ def _run(cmd: list[str], *, timeout: int = 1800) -> dict[str, Any]:
     }
 
 
-def _engine_still_v1() -> dict[str, Any]:
+def _draft_cutover_engine() -> dict[str, Any]:
     app = yaml.safe_load((ROOT / "configs" / "app.yml").read_text(encoding="utf-8"))
     engine = app.get("extraction", {}).get("engine")
+    release_mode = app.get("publication", {}).get("release_mode")
+    passed = engine == "v2" and str(release_mode).upper() == "DRAFT"
     return {
-        "passed": engine == "v1",
-        "detail": f"configs/app.yml extraction.engine={engine!r}; flip only after human approval",
+        "passed": passed,
+        "detail": (
+            f"configs/app.yml extraction.engine={engine!r} "
+            f"release_mode={release_mode!r}; OFFICIAL publication is not certified"
+        ),
     }
 
 
@@ -249,7 +255,7 @@ def main() -> int:
 
     gates: dict[str, dict[str, Any]] = {}
     gates["hybrid_829_parity"] = _parity_gate(args.parity_dir)
-    gates["engine_remains_v1"] = _engine_still_v1()
+    gates["draft_cutover_engine_v2"] = _draft_cutover_engine()
     gates["e13_governed_coverage"] = _e13_governed_coverage()
     gates["fresh_unseen_holdout_identity"] = _holdout_from_parity(args.parity_dir)
     gates["lineage_completeness"] = _pytest_gate(
@@ -289,9 +295,11 @@ def main() -> int:
     pack = {
         "id": "hybrid-parity-release-certification",
         "status": status,
-        "measured_at": datetime.now(timezone.utc).isoformat(),
-        "production_engine": "v1",
-        "human_approval_required_before_engine_v2": True,
+        "measured_at": datetime.now(UTC).isoformat(),
+        "production_engine": "v2",
+        "release_mode": "DRAFT",
+        "human_approval_required_before_official_publication": True,
+        "human_approval_required_before_engine_v2": False,
         "gates": {
             name: {
                 "passed": bool(gate.get("passed")),
@@ -306,8 +314,10 @@ def main() -> int:
         },
         "failed_gates": [name for name, gate in gates.items() if not gate.get("passed")],
         "note": (
-            "Do not set extraction.engine: v2 until a human records OFFICIAL approval. "
-            "V1 remains the internal fallback backend."
+            "DRAFT production engine is v2 after recorded cutover approval. "
+            "No software rollback to V1 is indicated. OFFICIAL publication is "
+            "not yet human-certified. AI/evidence QA is a dossier, not MANUAL_QA. "
+            "V1 remains the rollback backend."
         ),
     }
     out = args.parity_dir / "release_certification.json"

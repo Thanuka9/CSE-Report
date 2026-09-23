@@ -14,6 +14,7 @@ from cse_financial_etl.extraction.statement_extractor import ExtractedFact
 from cse_financial_etl.v2.contracts.enums import EntityScope
 from cse_financial_etl.v2.contracts.facts import DerivedFact, SourceFact
 from cse_financial_etl.v2.orchestration.filing_pipeline import run_pdf_pipeline
+from cse_financial_etl.v2.production.review_propagation import evidence_json_for_native
 from cse_financial_etl.v2.resolution.production_selection import select_pipeline_facts
 from cse_financial_etl.v2.taxonomy.registry import ConceptRegistry, load_registry
 
@@ -163,7 +164,7 @@ def _from_source(
         extraction_method=method,
         semantic_model="v2-registry",
         certainty_band="DETERMINISTIC",
-        evidence_json='{"evidence_grade":"DETERMINISTIC"}',
+        evidence_json=evidence_json_for_native(fact.fact_id),
         comparison_role=fact.comparison_role.value,
         duration_months=fact.duration_months,
         validation_status=fact.validation_status.value,
@@ -200,7 +201,7 @@ def _from_derived(
         extraction_method="V2_DERIVED",
         semantic_model="v2-derived",
         certainty_band="DETERMINISTIC",
-        evidence_json='{"evidence_grade":"DETERMINISTIC"}',
+        evidence_json=evidence_json_for_native(fact.fact_id),
         comparison_role=fact.comparison_role.value,
         duration_months=fact.duration_months,
         validation_status=fact.validation_status.value,

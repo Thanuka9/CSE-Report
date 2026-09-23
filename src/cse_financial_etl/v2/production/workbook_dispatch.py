@@ -1,8 +1,8 @@
 """Select the production workbook publisher by extraction engine.
 
-V1 remains the default. When ``extraction.engine`` is ``v2`` (opt-in or after
-OFFICIAL promotion), ``publish_production_workbook`` + explicit ``ReleaseContext``
-is the only authoritative workbook path.
+After the 2026-09-22 DRAFT cutover, ``extraction.engine`` is ``v2``.
+``engine='v1'`` remains the rollback workbook path. OFFICIAL publication is
+a separate certification and is not implied by this dispatch.
 """
 
 from __future__ import annotations

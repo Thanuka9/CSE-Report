@@ -31,3 +31,19 @@ def test_golden_fixture_has_100_stratified_issuers() -> None:
     assert jat["prices"]["JAT.N0000"] == "39.80"
     jkh = next(row for row in fixtures if row["symbol"] == "JKH.N0000")
     assert "TOTAL_LIABILITIES" not in jkh["facts"]
+
+
+def test_committed_golden_fixture_does_not_count_pipeline_seeded_as_manual_qa() -> None:
+    path = Path(__file__).resolve().parents[1] / "fixtures" / "golden_financial_facts.json"
+    fixtures = json.loads(path.read_text(encoding="utf-8"))
+    by_status: dict[str, int] = {}
+    for row in fixtures:
+        status = str(row.get("verification_status") or "UNKNOWN")
+        by_status[status] = by_status.get(status, 0) + 1
+    manual_qa = by_status.get("MANUAL_QA", 0)
+    assert len(fixtures) >= 100
+    assert manual_qa < 100
+    assert by_status.get("PIPELINE_SEEDED", 0) >= 90
+    assert manual_qa + by_status.get("MANUAL_OR_PRIOR", 0) + by_status.get(
+        "PIPELINE_SEEDED", 0
+    ) == len(fixtures)

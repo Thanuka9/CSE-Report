@@ -1,0 +1,39 @@
+{
+  "committed_engine_before": "v2",
+  "committed_engine_after": "v2",
+  "release_mode": "DRAFT",
+  "pdfs_attempted": 6,
+  "pdfs_extracted": 6,
+  "errors": [],
+  "source_fact_count": 38,
+  "derived_fact_count": 18,
+  "extracted_row_count": 56,
+  "v2_draft_eligible_count": 56,
+  "v2_official_eligible_count": 1,
+  "signed_approval": {
+    "symbol": "JKH.N0000",
+    "metric_code": "PAT",
+    "approved_applied": 1,
+    "native_approved": 1
+  },
+  "review_summary": {
+    "policy_version": "R2-2026-09-FACTBOUND",
+    "decisions_loaded": 1,
+    "approved_applied": 1,
+    "rejected_applied": 0,
+    "stale_source_hash": 0,
+    "stale_fact_fingerprint": 0,
+    "policy_mismatch": 0,
+    "unauthenticated": 0,
+    "invalid_signature": 0,
+    "signing_key_unavailable": 0,
+    "duplicate_decision_identities": 0,
+    "unmatched": 0
+  },
+  "draft_workbook": "reports/v2_production_smoke/draft.xlsx",
+  "official_workbook": "reports/v2_production_smoke/official.xlsx",
+  "gold_status": "MANUAL_QA 4/100; packet not auto-promoted",
+  "official_publication": "NOT_CERTIFIED",
+  "engine_flip": "DRAFT_CUTOVER_APPROVED",
+  "v1_rollback_importable": true
+}

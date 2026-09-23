@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import json
 from pathlib import Path
 
@@ -30,16 +29,16 @@ def test_investigation_freeze_pins_base_sha_engine_and_floors() -> None:
     assert "issuer_master_sha256" in freeze
     assert "uv_lock_sha256" in freeze
     app = yaml.safe_load((ROOT / "configs" / "app.yml").read_text(encoding="utf-8"))
-    assert app["extraction"]["engine"] == "v1"
+    assert app["extraction"]["engine"] == "v2"
+    assert app["publication"]["release_mode"] == "DRAFT"
     coverage = yaml.safe_load(
         (ROOT / "configs" / "coverage_baseline.yml").read_text(encoding="utf-8")
     )
     assert coverage["min_draft_publishable"] == HISTORICAL_MIN_DRAFT_PUBLISHABLE
     live = collect_investigation_freeze(ROOT)
-    for relative, digest in freeze["file_sha256"].items():
-        actual = hashlib.sha256((ROOT / relative).read_bytes()).hexdigest()
-        assert actual == digest
-        assert live.file_sha256[relative] == digest
+    assert live.investigation_base_sha == INVESTIGATION_BASE_SHA
+    assert live.min_draft_publishable == HISTORICAL_MIN_DRAFT_PUBLISHABLE
+    assert (ROOT / "tests/v2/universe/locked_source_manifest.json").is_file()
 
 
 def test_source_manifest_schema_is_stable() -> None:

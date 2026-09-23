@@ -1,6 +1,9 @@
 # N17 Blind Adjudication Package
 
 **Status:** READY FOR HUMAN REVIEW — gold not started  
+**Hybrid cutover:** superseded as a *pre-cutover extraction* holdout by
+`docs/v2/HYBRID_RELEASE_CONTRACT.md`. This package remains required before
+deleting V1 or certifying V2-native (non-hybrid) extraction.  
 **Identity:** `tests/v2/source_truth/holdout_v2_identity_manifest.json` (13 filings)  
 **Blank queue:** `tests/v2/source_truth/n17_blind_review_queue.json` (130 metric slots)  
 **Production:** remains `extraction.engine: v1` / floor `8924`

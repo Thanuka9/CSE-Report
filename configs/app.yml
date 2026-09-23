@@ -16,11 +16,15 @@ extraction:
   use_transformer: false
   semantic_model: rapidfuzz-token-set
   keep_review_diagnostics: true
-  engine: v1
+  # DRAFT production cutover 2026-09-22. V1 remains the rollback backend.
+  # OFFICIAL publication is not human-certified. AI QA is a dossier, not MANUAL_QA.
+  engine: v2
 publication:
   # DRAFT: validated-but-unreviewed candidates are displayed and every artefact
   # (workbook, dashboard, manifest) is labelled DRAFT. OFFICIAL: only facts with an
   # authenticated reviewer approval in data/review/review_decisions.jsonl publish.
+  # OFFICIAL remains blocked until humans sign MANUAL_QA gold and the 8,924
+  # APPROVED/CURATED floor is met. AI/evidence precheck does not count as MANUAL_QA.
   release_mode: DRAFT
   price_staleness_max_days: 7
 reporting:

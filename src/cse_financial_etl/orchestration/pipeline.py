@@ -152,7 +152,9 @@ def extract_filing(
     text_cache_dir: Path | None = None,
     **kwargs: Any,
 ) -> list[ExtractedFact]:
-    """Production extractor. Defaults to V1 until cutover gates pass; ``engine='v2'`` is the challenger."""
+    """Production extractor. Default engine comes from ``configs/app.yml``.
+    ``engine='v1'`` remains the rollback backend and is never deleted.
+    """
 
     engine = str(kwargs.pop("engine", None) or "v1").strip().lower()
     if engine == "v2":
@@ -426,6 +428,9 @@ class Pipeline:
 
         v2_source_facts: list[SourceFact] = []
         v2_derived_facts: list[DerivedFact] = []
+        v2_natives_by_sha: dict[
+            str, tuple[tuple[SourceFact, ...], tuple[DerivedFact, ...]]
+        ] = {}
 
         def extract_kwargs_for(item: DownloadedFiling) -> dict[str, Any]:
             diagnostics_dir = self.data / "tmp" / run_id / item.sha256[:16]
@@ -484,10 +489,11 @@ class Pipeline:
                 item = extraction_futures[extraction_future]
                 try:
                     downloaded_item, facts, native_source, native_derived = extraction_future.result()
-                    if native_source:
-                        v2_source_facts.extend(native_source)
-                    if native_derived:
-                        v2_derived_facts.extend(native_derived)
+                    if native_source or native_derived:
+                        v2_natives_by_sha[downloaded_item.sha256] = (
+                            native_source,
+                            native_derived,
+                        )
                     extracted_results.append((downloaded_item, facts))
                 except Exception as exc:
                     errors.append(
@@ -511,19 +517,6 @@ class Pipeline:
                     self.progress(f"      extracted {index}/{len(extraction_futures)}")
 
         extracted_results = derive_ratio_facts(extracted_results, display_periods=target_periods)
-        if chosen_engine == "v2":
-            from cse_financial_etl.v2.production.facts_store import write_v2_publication_facts
-
-            source_path, _derived_path = write_v2_publication_facts(
-                self.root,
-                as_of_date,
-                source_facts=v2_source_facts,
-                derived_facts=v2_derived_facts,
-            )
-            self.progress(
-                f"      persisted V2 publication facts ({len(v2_source_facts)} source, "
-                f"{len(v2_derived_facts)} derived) under {source_path.name}"
-            )
         for downloaded_item, facts in extracted_results:
             self.repository.save_filing_and_facts(downloaded_item, facts)
 
@@ -730,6 +723,7 @@ class Pipeline:
                 )
             refreshed_results.append((item, facts))
         extracted_results = refreshed_results
+        reviewed_native_source = extracted_results
         # Rebuild ratios from stamped validation so FAILED inputs are not published.
         stripped: list[tuple[DownloadedFiling, list[ExtractedFact]]] = [
             (
@@ -740,6 +734,34 @@ class Pipeline:
         ]
         extracted_results = derive_ratio_facts(stripped, display_periods=target_periods)
         self.repository.apply_stamped_facts(extracted_results)
+        if chosen_engine == "v2":
+            from cse_financial_etl.v2.production.facts_store import write_v2_publication_facts
+            from cse_financial_etl.v2.production.review_propagation import (
+                propagate_review_status_to_native_facts,
+            )
+
+            reviewed_source: list[SourceFact] = []
+            reviewed_derived: list[DerivedFact] = []
+            for item, facts in reviewed_native_source:
+                native_source, native_derived = v2_natives_by_sha.get(item.sha256, ((), ()))
+                native_source, native_derived = propagate_review_status_to_native_facts(
+                    facts, native_source, native_derived
+                )
+                reviewed_source.extend(native_source)
+                reviewed_derived.extend(native_derived)
+            v2_source_facts = reviewed_source
+            v2_derived_facts = reviewed_derived
+            source_path, _derived_path = write_v2_publication_facts(
+                self.root,
+                as_of_date,
+                source_facts=v2_source_facts,
+                derived_facts=v2_derived_facts,
+            )
+            self.progress(
+                f"      persisted V2 publication facts after signed review "
+                f"({len(v2_source_facts)} source, {len(v2_derived_facts)} derived) "
+                f"under {source_path.name}"
+            )
         status_counts = Counter(fact.status for _item, facts in extracted_results for fact in facts)
         for mismatch in flag_cross_filing_mismatches(
             extracted_results,
@@ -763,6 +785,7 @@ class Pipeline:
         review_csv = self.outputs / f"review_queue_{as_of_date.isoformat()}.csv"
         prices_csv = self.outputs / f"quarter_end_prices_{as_of_date.isoformat()}.csv"
         golden_validation = validate_golden(self.root, as_of_date)
+        coverage_baseline = load_coverage_baseline(self.root)
         gate_hits = evaluate_production_gates(
             extracted_results,
             published_prices,
@@ -771,7 +794,10 @@ class Pipeline:
                 name: profile.standalone_scope_label for name, profile in self.issuers.items()
             },
             previous_status_counts=_previous_fact_status_counts(preserved),
-            coverage_baseline=load_coverage_baseline(self.root),
+            coverage_baseline=coverage_baseline,
+            release_mode=current_release_mode(),
+            v2_source_facts=tuple(v2_source_facts) if chosen_engine == "v2" else None,
+            v2_derived_facts=tuple(v2_derived_facts) if chosen_engine == "v2" else None,
         )
         for hit in gate_hits:
             self.repository.add_review(
@@ -852,6 +878,16 @@ class Pipeline:
                 self.data / "gold" / "snapshots" / run_id / "current_market_prices.parquet"
             ),
         }
+        if chosen_engine == "v2":
+            from cse_financial_etl.v2.contracts.enums import ReleaseMode
+            from cse_financial_etl.v2.reporting.release_view import count_eligible_facts
+
+            statistics["v2_draft_eligible_count"] = count_eligible_facts(
+                v2_source_facts, v2_derived_facts, mode=ReleaseMode.DRAFT
+            )
+            statistics["v2_official_eligible_count"] = count_eligible_facts(
+                v2_source_facts, v2_derived_facts, mode=ReleaseMode.OFFICIAL
+            )
         workbook_path: Path | None = None
         if not skip_excel:
             workbook_path = generate_production_workbook(

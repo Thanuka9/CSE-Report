@@ -1,5 +1,11 @@
 min_extracted_plus_derived: 8932
 min_draft_publishable: 8924
+# OFFICIAL mode displays only APPROVED/CURATED facts. The DRAFT floor must not
+# certify an OFFICIAL workbook. Enforced only when release_mode is OFFICIAL.
+min_official_publishable: 8924
+# Independent MANUAL_QA breadth is an OFFICIAL publication requirement only.
+# DRAFT production is not blocked on these floors. AI/evidence QA (AI_QA_PRECHECK_PASS)
+# is a reviewer dossier, not MANUAL_QA, and must not be relabeled.
 min_gold_sample: 100
 min_gold_issuers: 100
 min_issuer_count: 281

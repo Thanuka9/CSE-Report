@@ -104,10 +104,11 @@ def test_invalid_engine_raises() -> None:
         resolve_extraction_engine(config, "v3")
 
 
-def test_repo_app_config_keeps_extraction_engine_v1() -> None:
+def test_repo_app_config_is_v2_draft_cutover() -> None:
     project_root = Path(__file__).resolve().parents[2]
     config = load_app_config(project_root)
-    assert config.extraction_engine == "v1"
+    assert config.extraction_engine == "v2"
+    assert config.release_mode == "DRAFT"
 
 
 def test_v1_workbook_uses_generate_excel_when_engine_from_config_default(

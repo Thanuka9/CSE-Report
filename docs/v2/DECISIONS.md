@@ -404,3 +404,26 @@ Each nontrivial deviation from `AGENT_IMPLEMENTATION_PLAN.md` is recorded here. 
 - **Reason:** LITE \For the Period ended … Quarter Ended Nine Months Ended\ falsely mapped leftmost columns to 9M.
 - **Evidence:** \column_context._duration_banners\; LITE real-PDF duration_months=3; \	est_period_ended_date_cue_does_not_steal_quarter_columns\.
 - **Temporary/permanent:** Permanent generalized rule.
+
+---
+
+## 2026-09-22 — DRAFT production cutover to hybrid V2; OFFICIAL not certified
+
+- **Decision:** Recorded human cutover approval for **V2 DRAFT production**. Set `configs/app.yml` `extraction.engine: v2`. Keep `release_mode: DRAFT`. Keep V1 importable as `--engine v1` rollback. Do not delete V1. Do not claim OFFICIAL publication.
+- **Reason:** Hybrid 829 parity passed (0 unexplained V1 TARGET losses), signed-review propagation into native V2 facts is in production, the OFFICIAL completeness gate exists, and the 6-PDF production smoke passed. Independent gold is still 4 / 100 MANUAL_QA issuers.
+- **Alternatives:** Keep engine V1 until 100 MANUAL_QA issuers exist; flip `release_mode: OFFICIAL` at the same time as the engine.
+- **Evidence:** `docs/v2/HYBRID_RELEASE_CONTRACT.md`, `reports/v2_production_smoke/smoke_summary.json`, `reports/gold_gate/manual_qa_adjudication_packet.json`.
+- **Affected modules:** `configs/app.yml`, `v2/production/engine.py`, production smoke and routing tests.
+- **Temporary/permanent:** Permanent DRAFT engine default until a later recorded OFFICIAL publication decision. Gold and OFFICIAL remain human governance work.
+
+---
+
+## 2026-09-23 — Keep V2 DRAFT; AI QA is a dossier, not MANUAL_QA
+
+- **Decision:** Keep V2 as the DRAFT production engine. No software rollback to V1. Do not block DRAFT production on `min_gold_sample` / `min_gold_issuers`. Keep OFFICIAL fail-closed until humans independently sign remaining gold. Ingest the 100+ / 281-issuer AI QA package as the reviewer dossier. Do not relabel `UNADJUDICATED` / `PIPELINE_SEEDED` as `MANUAL_QA`.
+- **Reason:** Expanded AI/evidence audit covers all 100 benchmark issuers (95 PASS / 5 REVIEW) and the 281-issuer universe (260 PASS / 21 REVIEW). Remaining risk is a small explicit review queue. PASS is not an independent visual transcription of the source PDF. The architecture still treats the official filing as source authority.
+- **Alternatives:** Roll DRAFT back to V1; auto-promote AI_QA_PRECHECK_PASS to MANUAL_QA; keep DRAFT hard-stopped on 4/100 gold.
+- **Evidence:** `reports/gold_gate/AI_QA_DOSSIER.md`, `reports/gold_gate/CSE_V2_AI_QA_100plus_Production_Gate.xlsx`, `reports/gold_gate/ai_qa_100_issuer_precheck.csv`, `reports/gold_gate/ai_qa_281_issuer_universe_precheck.csv`.
+- **Affected modules:** `validation/production_gates.py`, `configs/coverage_baseline.yml`, gold-gate tests.
+- **Temporary/permanent:** Permanent DRAFT/OFFICIAL split. Gold floors remain OFFICIAL-only until a later human-certified MANUAL_QA set exists.
+
