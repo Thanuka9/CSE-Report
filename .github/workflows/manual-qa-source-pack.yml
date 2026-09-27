@@ -1,0 +1,212 @@
+name: Manual QA source pack
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  source-pack:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download September 10 universe artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p prior
+          gh api /repos/${{ github.repository }}/actions/artifacts/10156770248/zip > prior.zip
+          unzip -q prior.zip -d prior
+          test -f prior/adjudication_packet_2026-09-10.csv
+
+      - name: Fetch exact official CSE source PDFs
+        run: |
+          python - <<'PY'
+          from __future__ import annotations
+
+          import csv
+          import hashlib
+          import json
+          import re
+          import time
+          import urllib.parse
+          import urllib.request
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          API = "https://www.cse.lk/api/financials"
+          CDN = "https://cdn.cse.lk/"
+          UA = "CSE-Manual-QA-Source-Pack/1.0 (+public regulatory research)"
+          packet = Path("prior/adjudication_packet_2026-09-10.csv")
+          out = Path("manual_qa_source_pack")
+          pdf_root = out / "pdfs"
+          out.mkdir(parents=True, exist_ok=True)
+          pdf_root.mkdir(parents=True, exist_ok=True)
+
+          def slug(s: str) -> str:
+              return re.sub(r"[^A-Za-z0-9]+", "_", s).strip("_")[:100]
+
+          def cdn_url(path: str) -> str:
+              if path.startswith(("http://", "https://")):
+                  return path
+              return urllib.parse.urljoin(CDN, urllib.parse.quote(path.lstrip("/"), safe="/%:@"))
+
+          def post_financials(symbol: str) -> dict:
+              data = urllib.parse.urlencode({"symbol": symbol}).encode("ascii")
+              req = urllib.request.Request(
+                  API,
+                  data=data,
+                  method="POST",
+                  headers={
+                      "Accept": "application/json",
+                      "Accept-Language": "en",
+                      "Content-Type": "application/x-www-form-urlencoded",
+                      "User-Agent": UA,
+                  },
+              )
+              last = None
+              for attempt in range(5):
+                  try:
+                      with urllib.request.urlopen(req, timeout=45) as r:
+                          return json.loads(r.read().decode("utf-8"))
+                  except Exception as exc:
+                      last = exc
+                      time.sleep(min(2 ** attempt, 12))
+              raise RuntimeError(f"financials API failed for {symbol}: {last}")
+
+          def fetch_pdf(url: str) -> bytes:
+              req = urllib.request.Request(url, headers={"User-Agent": UA})
+              last = None
+              for attempt in range(5):
+                  try:
+                      with urllib.request.urlopen(req, timeout=120) as r:
+                          payload = r.read()
+                      if not payload.startswith(b"%PDF"):
+                          raise RuntimeError("response is not a PDF")
+                      return payload
+                  except Exception as exc:
+                      last = exc
+                      time.sleep(min(2 ** attempt, 12))
+              raise RuntimeError(f"PDF download failed: {url}: {last}")
+
+          with packet.open(newline="", encoding="utf-8-sig") as f:
+              rows = list(csv.DictReader(f))
+
+          targets = {}
+          for row in rows:
+              key = (
+                  row["issuer_name"].strip(),
+                  row["symbol"].strip(),
+                  row["period_end"].strip(),
+                  row["filing_sha256"].strip(),
+              )
+              targets[key] = None
+
+          manifest_rows = []
+          exact = 0
+          misses = 0
+
+          for idx, (issuer, symbol, period_end, expected_sha) in enumerate(targets, 1):
+              record = {
+                  "issuer_name": issuer,
+                  "symbol": symbol,
+                  "period_end": period_end,
+                  "expected_sha256": expected_sha,
+                  "matched_sha256": "",
+                  "hash_match": "FALSE",
+                  "filing_id": "",
+                  "file_text": "",
+                  "source_path": "",
+                  "source_url": "",
+                  "bytes": "",
+                  "status": "",
+                  "error": "",
+              }
+              try:
+                  payload = post_financials(symbol)
+                  candidates = []
+                  for item in payload.get("infoQuarterlyData") or []:
+                      path = str(item.get("path") or "").strip()
+                      if not path.lower().endswith(".pdf"):
+                          continue
+                      url = cdn_url(path)
+                      candidates.append((item, url))
+
+                  matched = None
+                  candidate_errors = []
+                  for item, url in candidates:
+                      try:
+                          blob = fetch_pdf(url)
+                          sha = hashlib.sha256(blob).hexdigest()
+                          if sha == expected_sha:
+                              matched = (item, url, blob, sha)
+                              break
+                      except Exception as exc:
+                          candidate_errors.append(f"{url}: {exc}")
+
+                  if matched is None:
+                      record["status"] = "EXPECTED_SHA_NOT_FOUND"
+                      record["error"] = " | ".join(candidate_errors[-5:])
+                      misses += 1
+                  else:
+                      item, url, blob, sha = matched
+                      dest_dir = pdf_root / slug(issuer)
+                      dest_dir.mkdir(parents=True, exist_ok=True)
+                      base = Path(urllib.parse.unquote(urllib.parse.urlsplit(url).path)).name
+                      dest = dest_dir / f"{period_end}_{base}"
+                      dest.write_bytes(blob)
+                      record.update(
+                          {
+                              "matched_sha256": sha,
+                              "hash_match": "TRUE",
+                              "filing_id": str(item.get("id") or ""),
+                              "file_text": str(item.get("fileText") or ""),
+                              "source_path": str(item.get("path") or ""),
+                              "source_url": url,
+                              "bytes": str(len(blob)),
+                              "status": "EXACT_SOURCE_FETCHED",
+                          }
+                      )
+                      exact += 1
+              except Exception as exc:
+                  record["status"] = "SOURCE_LOOKUP_FAILED"
+                  record["error"] = repr(exc)
+                  misses += 1
+
+              manifest_rows.append(record)
+              print(f"[{idx:03d}/{len(targets):03d}] {record['status']}: {issuer} {period_end}")
+              time.sleep(0.15)
+
+          fields = [
+              "issuer_name","symbol","period_end","expected_sha256","matched_sha256","hash_match",
+              "filing_id","file_text","source_path","source_url","bytes","status","error"
+          ]
+          with (out / "source_manifest.csv").open("w", newline="", encoding="utf-8") as f:
+              w = csv.DictWriter(f, fieldnames=fields)
+              w.writeheader()
+              w.writerows(manifest_rows)
+
+          summary = {
+              "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+              "target_issuers": len(targets),
+              "exact_source_fetched": exact,
+              "not_exact_or_failed": misses,
+              "source": "official CSE financials API + cdn.cse.lk",
+              "reference_artifact_id": 10156770248,
+          }
+          (out / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+          print(json.dumps(summary, indent=2))
+          PY
+
+      - name: Upload source pack
+        uses: actions/upload-artifact@v4
+        with:
+          name: manual-qa-source-pack-2026-09-27
+          path: manual_qa_source_pack
+          retention-days: 7
+          if-no-files-found: error
