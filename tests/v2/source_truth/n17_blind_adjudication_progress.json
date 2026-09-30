@@ -1,0 +1,63 @@
+{
+  "id": "n17-blind-adjudication-progress-2026-09-19",
+  "recovery_step": "V01/N17",
+  "status": "IN_PROGRESS_NOT_LOCKED",
+  "gold_locked": false,
+  "reviewer_1": "n17-blind-pdf-text-layer-2026-09-19",
+  "method": "PDF_TEXT_LAYER_ONLY",
+  "hard_rules_honored": [
+    "No V1/V2 extraction outputs consulted",
+    "No CandidateTrace/SourceFacts/workbook cells consulted for these PDFs",
+    "Null retained where uncertain",
+    "Not locked as gold while incomplete",
+    "Floor 8924 unchanged; V2 not promoted"
+  ],
+  "slot_counts": {
+    "total_slots": 130,
+    "adjudication_status_counts": {
+      "BLOCKED_BROKEN_TEXT_LAYER": 10,
+      "BLOCKED_IMAGE_ONLY_PDF": 20,
+      "REVIEWER_1_COMPLETE": 100
+    },
+    "slots_with_source_presence": 110,
+    "slots_decision_complete": 110,
+    "fill_rate_decision_complete": 0.8462,
+    "slots_with_normalized_value": 87
+  },
+  "filing_status": {
+    "PABC.N0000-2025-12-31": "REVIEWER_1_COMPLETE (TOP_LINE AMBIGUOUS \u2014 no Gross Income)",
+    "UBC.N0000-2025-12-31": "REVIEWER_1_COMPLETE (BANK year)",
+    "SDB.N0000-2025-12-31": "BLOCKED_IMAGE_ONLY_PDF",
+    "COCR.N0000-2025-12-31": "REVIEWER_1_COMPLETE (COMPANY 3M; OP AMBIGUOUS)",
+    "AMCL.N0000-2025-12-31": "REVIEWER_1_COMPLETE (12M)",
+    "AFSL.N0000-2025-12-31": "BLOCKED_BROKEN_TEXT_LAYER",
+    "LGIL.N0000-2025-12-31": "MOSTLY_COMPLETE (EPS_BASIC AMBIGUOUS)",
+    "ATLL.N0000-2025-12-31": "REVIEWER_1_COMPLETE (year)",
+    "HUNA.N0000-2025-12-31": "BLOCKED_IMAGE_ONLY_PDF",
+    "CINS.N0000-2025-12-31": "REVIEWER_1_COMPLETE (GROUP year; TOP_LINE AMBIGUOUS)",
+    "JFP.N0000-2025-12-31": "REVIEWER_1_COMPLETE (GROUP quarter; OP NOT_REPORTED)",
+    "NHL.N0000-2025-12-31": "REVIEWER_1_COMPLETE (GROUP quarter)",
+    "SCAP.N0000-2025-12-31": "REVIEWER_1_COMPLETE (GROUP 3M)"
+  },
+  "blockers": [
+    {
+      "filing_version_id": "SDB.N0000-2025-12-31",
+      "reason": "image-only PDF (0 native text chars); needs OCR or visual adjudication"
+    },
+    {
+      "filing_version_id": "HUNA.N0000-2025-12-31",
+      "reason": "image-only PDF (0 native text chars); needs OCR or visual adjudication"
+    },
+    {
+      "filing_version_id": "AFSL.N0000-2025-12-31",
+      "reason": "broken/corrupted native text layer; numeric cells unreliable without visual pass"
+    },
+    {
+      "general": "N17 not locked gold \u2014 remaining AMBIGUOUS/blocked slots and optional reviewer-2 pass required before N18"
+    }
+  ],
+  "queue_path": "tests/v2/source_truth/n17_blind_review_queue.json",
+  "identity_manifest": "tests/v2/source_truth/holdout_v2_identity_manifest.json",
+  "guide": "docs/v2/N17_BLIND_ADJUDICATION.md",
+  "updated_at": "2026-09-19T12:57:19.217449+00:00"
+}

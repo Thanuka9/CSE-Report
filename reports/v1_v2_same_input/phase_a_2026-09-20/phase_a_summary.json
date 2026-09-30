@@ -1,0 +1,52 @@
+{
+  "id": "phase-a-source-valid-gap",
+  "created_at": "2026-09-20T12:51:22.004769+00:00",
+  "baseline_run": "same_input_2026-09-09",
+  "pinned_filings": 829,
+  "counts": {
+    "v1_target_rows": 8290,
+    "v2_eligible_hard_keys": 8604,
+    "assisted_eligible_hard_keys": 8665,
+    "v2_draft_selected_hard_keys": 2816,
+    "assisted_draft_selected_hard_keys": 2819,
+    "v1_only_soft_slots": 6096,
+    "soft_both_same_value": 1899,
+    "soft_both_conflict_value": 295,
+    "assisted_new_selected": 106,
+    "assisted_lost_selected": 103
+  },
+  "selection_funnel_v2": {
+    "target_rows": 34594,
+    "eligible_rows": 9850,
+    "eligible_current": 6847,
+    "eligible_current_quarterish": 6847,
+    "approx_selected_target": 2861,
+    "ledger_draft_selected_true": 2816
+  },
+  "selection_funnel_assisted": {
+    "target_rows": 33566,
+    "eligible_rows": 9466,
+    "eligible_current": 6516,
+    "eligible_current_quarterish": 6516,
+    "approx_selected_target": 2865,
+    "ledger_draft_selected_true": 2819
+  },
+  "v1_only_probe_first_loss_v2": {
+    "ENTITY_UNRESOLVED": 8,
+    "MISSING_CELL_OR_VALUE": 6,
+    "CONCEPT_UNRESOLVED": 5,
+    "WITHHELD_CONFLICTING_SOURCE": 2,
+    "ADMISSION_OK_BUT_NO_SOURCEFACT": 2,
+    "OBSERVED_BUT_NOT_IN_PIPELINE_CANDIDATES": 1
+  },
+  "v1_only_probe_first_loss_assisted": {
+    "ENTITY_UNRESOLVED": 9,
+    "MISSING_CELL_OR_VALUE": 6,
+    "CONCEPT_UNRESOLVED": 4,
+    "ADMISSION_OK_BUT_NO_SOURCEFACT": 2,
+    "SELECTED_OK": 1,
+    "WITHHELD_CONFLICTING_SOURCE": 1,
+    "OBSERVED_BUT_NOT_IN_PIPELINE_CANDIDATES": 1
+  },
+  "decision_gate_note": "If probe first_loss is dominated by MISSING_CELL_OR_VALUE / CONCEPT / ENTITY / PERIOD, prioritize physical reader/context. If ELIGIBLE_NOT_SELECTED / WITHHELD_CONFLICTING, prioritize admission/selection bridge."
+}

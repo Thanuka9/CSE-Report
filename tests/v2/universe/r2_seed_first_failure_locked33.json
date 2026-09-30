@@ -1,0 +1,105 @@
+{
+  "scope": "locked-33-baseline-candidate-trace",
+  "note": "SEED census from CandidateTrace. Full-universe R2 still required when universe-scale traces exist. Do not treat concept-unresolved raw counts as proof to expand aliases before header/unit ports.",
+  "candidate_rows": 16077,
+  "filings": 33,
+  "first_failure_stage_counts": {
+    "CONCEPT_UNRESOLVED": 13837,
+    "ENTITY_UNRESOLVED": 707,
+    "NONE": 633,
+    "PUBLICATION": 495,
+    "VALIDATION": 405
+  },
+  "source_fact_created_true": 1533,
+  "entity_status_counts": {
+    "RESOLVED": 11836,
+    "UNRESOLVED": 4241
+  },
+  "period_status_counts": {
+    "RESOLVED": 14021,
+    "UNRESOLVED": 2056
+  },
+  "duration_status_counts": {
+    "RESOLVED": 9016,
+    "UNRESOLVED": 7061
+  },
+  "comparison_status_counts": {
+    "RESOLVED": 14021,
+    "UNRESOLVED": 2056
+  },
+  "unit_status_counts": {
+    "RESOLVED": 16060,
+    "UNRESOLVED": 17
+  },
+  "concept_status_counts": {
+    "UNRESOLVED": 13837,
+    "RESOLVED": 2240
+  },
+  "top_metrics_by_focus_stage": {
+    "ENTITY_UNRESOLVED": [
+      {
+        "metric": "TOP_LINE",
+        "count": 164
+      },
+      {
+        "metric": "PAT",
+        "count": 146
+      },
+      {
+        "metric": "PBT",
+        "count": 75
+      },
+      {
+        "metric": "EPS_BASIC",
+        "count": 70
+      },
+      {
+        "metric": "OPERATING_PROFIT",
+        "count": 49
+      },
+      {
+        "metric": "TOTAL_LIABILITIES",
+        "count": 49
+      },
+      {
+        "metric": "TOTAL_ASSETS",
+        "count": 48
+      },
+      {
+        "metric": "TOTAL_EQUITY",
+        "count": 41
+      },
+      {
+        "metric": "NAVPS",
+        "count": 37
+      },
+      {
+        "metric": "EPS_DILUTED",
+        "count": 28
+      }
+    ],
+    "UNIT_UNRESOLVED": [],
+    "PERIOD_UNRESOLVED": [],
+    "DURATION_UNRESOLVED": [],
+    "CONCEPT_UNRESOLVED": [
+      {
+        "metric": "",
+        "count": 13665
+      },
+      {
+        "metric": "TOTAL_EQUITY",
+        "count": 140
+      },
+      {
+        "metric": "PAT",
+        "count": 28
+      },
+      {
+        "metric": "EPS_BASIC",
+        "count": 4
+      }
+    ],
+    "NUMERIC_UNPARSED": [],
+    "UNIT_DIMENSION_MISMATCH": []
+  }
+}

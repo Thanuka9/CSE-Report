@@ -1,0 +1,171 @@
+{
+  "id": "v2-hybrid-v1-baseline-parity",
+  "measured_at": "2026-09-21T16:21:09.600930+00:00",
+  "filings_attempted": 829,
+  "filings_completed": 829,
+  "filings_error": 35,
+  "filings_ocr_quarantine": 35,
+  "filings_error_non_ocr": 0,
+  "v1_target_extracted": 3183,
+  "hybrid_eligible_or_selected": 10550,
+  "identical_keys": 3048,
+  "v1_only_keys": 135,
+  "hybrid_only_keys": 6438,
+  "coverage_vs_v1": 0.9575871819038643,
+  "preserved_agree": 3048,
+  "unexplained_losses_or_mismatches": 0,
+  "classification_counts": {
+    "AGREE_PRESERVE": 3048,
+    "QUARANTINE": 135,
+    "V2_RECOVERY_EXTRA": 6438
+  },
+  "reason_counts": {
+    "V2_RECOVERY": 30696,
+    "V1_V2_AGREE": 2103,
+    "V1_BASELINE_PRESERVED": 945,
+    "CONFLICT_UNRESOLVED": 270
+  },
+  "parity_pass": true,
+  "errors": [
+    {
+      "pdf_sha256": "7c39b4f8b8978b0578563dd0a0ffd9a05a2013d20e1c3957e9488d0ce43a7b1e",
+      "error": "hybrid OcrRouteNotEnabledError: OCR_REQUIRED_NOT_AVAILABLE: pytesseract/tesseract is not available"
+    },
+    {
+      "pdf_sha256": "2efe20b52d0c0fa6a871f237d20ac08221a7635bce93051b42daad376a1b2b42",
+      "error": "hybrid OcrRouteNotEnabledError: OCR_REQUIRED_NOT_AVAILABLE: pytesseract/tesseract is not available"
+    },
+    {
+      "pdf_sha256": "b2e06c0fae4b60daaa49b87d0069dc0e25965c1e816bb9e4fe1374f0549b93bd",
+      "error": "hybrid OcrRouteNotEnabledError: OCR_REQUIRED_NOT_AVAILABLE: pytesseract/tesseract is not available"
+    },
+    {
+      "pdf_sha256": "62bfb89fce2aa1840eb47c75ae6ff5e361d20e89310f3e4086a75e4dc8b92a34",
+      "error": "hybrid OcrRouteNotEnabledError: OCR_REQUIRED_NOT_AVAILABLE: pytesseract/tesseract is not available"
+    },
+    {
+      "pdf_sha256": "a26b4acd0535fb5155a7acede9ada29288f13284800653181dc84eff7c94d4d4",
+      "error": "hybrid OcrRouteNotEnabledError: OCR_REQUIRED_NOT_AVAILABLE: pytesseract/tesseract is not available"
+    },
+    {
+      "pdf_sha256": "cdfbae7972dd51e1671f8756cb61e6c74fa5f4cdf8c174300a25c508ab141a2a",
+      "error": "hybrid OcrRouteNotEnabledError: OCR_REQUIRED_NOT_AVAILABLE: pytesseract/tesseract is not available"
+    },
+    {
+      "pdf_sha256": "07b3c02443ee2b95fa907123472826c0e06452dab3dc64f1a1ed4616ec3081d3",
+      "error": "hybrid OcrRouteNotEnabledError: OCR_REQUIRED_NOT_AVAILABLE: pytesseract/tesseract is not available"
+    },
+    {
+      "pdf_sha256": "8ae224d6ffef2f726766ee125493eac407a6ef0f58b2f8ff24f5ab33e0075f63",
+      "error": "hybrid OcrRouteNotEnabledError: OCR_REQUIRED_NOT_AVAILABLE: pytesseract/tesseract is not available"
+    },
+    {
+      "pdf_sha256": "d748aed12eed473acb2f6adebee9214dd41213c6ee2081c6eb0b76e2add21222",
+      "error": "hybrid OcrRouteNotEnabledError: OCR_REQUIRED_NOT_AVAILABLE: pytesseract/tesseract is not available"
+    },
+    {
+      "pdf_sha256": "fdb337ad0ebf6626720ff226fa6d840df99c3b37dfcf553789d5fb00e7747b05",
+      "error": "hybrid OcrRouteNotEnabledError: OCR_REQUIRED_NOT_AVAILABLE: pytesseract/tesseract is not available"
+    },
+    {
+      "pdf_sha256": "02a2424e9b534fb1764e0ea5df4b15e5ef1d46a845318da1b3db991b299ee229",
+      "error": "hybrid OcrRouteNotEnabledError: OCR_REQUIRED_NOT_AVAILABLE: pytesseract/tesseract is not available"
+    },
+    {
+      "pdf_sha256": "7820dd2d457a619bb8104e4f4262989720bb5e71692774f0c6afb176127a26da",
+      "error": "hybrid OcrRouteNotEnabledError: OCR_REQUIRED_NOT_AVAILABLE: pytesseract/tesseract is not available"
+    },
+    {
+      "pdf_sha256": "9818aef5e95022520eb58c6e6c0b9fe3bd1a6143abbc6fc21b067c925fc46ddb",
+      "error": "hybrid OcrRouteNotEnabledError: OCR_REQUIRED_NOT_AVAILABLE: pytesseract/tesseract is not available"
+    },
+    {
+      "pdf_sha256": "be498c7a385d1ba7baf7f059a3db05da4a936e5a4d6bcb9dacebdc1c54592a17",
+      "error": "hybrid OcrRouteNotEnabledError: OCR_REQUIRED_NOT_AVAILABLE: pytesseract/tesseract is not available"
+    },
+    {
+      "pdf_sha256": "8e0e91feaa006528092fe9655e12ed054e46860097f9cf543ace289ce3061ad3",
+      "error": "hybrid OcrRouteNotEnabledError: OCR_REQUIRED_NOT_AVAILABLE: pytesseract/tesseract is not available"
+    },
+    {
+      "pdf_sha256": "baf55658d2caf9ffd74f7baecba21ed9adff9e6dd86c28f7364a9b4fe6874347",
+      "error": "hybrid OcrRouteNotEnabledError: OCR_REQUIRED_NOT_AVAILABLE: pytesseract/tesseract is not available"
+    },
+    {
+      "pdf_sha256": "2595e52c7d66b5b10600ba50ae99be75afbdc59d4b83e698d86b1d7c27210400",
+      "error": "hybrid OcrRouteNotEnabledError: OCR_REQUIRED_NOT_AVAILABLE: pytesseract/tesseract is not available"
+    },
+    {
+      "pdf_sha256": "e8d32cf829cf8c5b530f253171b97cc9a4cdfa45dde4e86c2ccee49640815dcc",
+      "error": "hybrid OcrRouteNotEnabledError: OCR_REQUIRED_NOT_AVAILABLE: pytesseract/tesseract is not available"
+    },
+    {
+      "pdf_sha256": "da2a3f8eacd80dfba58d116659e0143b765fb695b3fdeebe46c167235deaa7e0",
+      "error": "hybrid OcrRouteNotEnabledError: OCR_REQUIRED_NOT_AVAILABLE: pytesseract/tesseract is not available"
+    },
+    {
+      "pdf_sha256": "6e72693dc92639b83317c53e4640d545b5ca49e4ab494de7a4df71e941a64bcc",
+      "error": "hybrid OcrRouteNotEnabledError: OCR_REQUIRED_NOT_AVAILABLE: pytesseract/tesseract is not available"
+    },
+    {
+      "pdf_sha256": "4a7a1a61ae80f8f13f70a2b476cb76a0065f9af9a097497bc9780dd40959b2ba",
+      "error": "hybrid OcrRouteNotEnabledError: OCR_REQUIRED_NOT_AVAILABLE: pytesseract/tesseract is not available"
+    },
+    {
+      "pdf_sha256": "776f1429155a2f825be8b5f1d91b3e1ad3c1b39c42d7da98ddf9028acc251b30",
+      "error": "hybrid OcrRouteNotEnabledError: OCR_REQUIRED_NOT_AVAILABLE: pytesseract/tesseract is not available"
+    },
+    {
+      "pdf_sha256": "8bf6a86b56d84e2cc8e7e533dea0d5d5fe70020055409518ba8af14ae54176c3",
+      "error": "hybrid OcrRouteNotEnabledError: OCR_REQUIRED_NOT_AVAILABLE: pytesseract/tesseract is not available"
+    },
+    {
+      "pdf_sha256": "40c33dd7c5b5ee61c8002120fbb98c7d3934e439864d56cc0a8c667ea61d7ece",
+      "error": "hybrid OcrRouteNotEnabledError: OCR_REQUIRED_NOT_AVAILABLE: pytesseract/tesseract is not available"
+    },
+    {
+      "pdf_sha256": "6c4d3eac402b3ac42a3242ad6cbb5067c85b4e753b97ab8a7cd6ecbf035b7b67",
+      "error": "hybrid OcrRouteNotEnabledError: OCR_REQUIRED_NOT_AVAILABLE: pytesseract/tesseract is not available"
+    },
+    {
+      "pdf_sha256": "b1485b20467af08844d4e217eeb57bc38e7ccaf9c7eba0a7675f675d26c32c84",
+      "error": "hybrid OcrRouteNotEnabledError: OCR_REQUIRED_NOT_AVAILABLE: pytesseract/tesseract is not available"
+    },
+    {
+      "pdf_sha256": "33fcf14650d9dbbd810c565fc09b3fd35f2de4c0498a896b485ef4be240283c2",
+      "error": "hybrid OcrRouteNotEnabledError: OCR_REQUIRED_NOT_AVAILABLE: pytesseract/tesseract is not available"
+    },
+    {
+      "pdf_sha256": "6c6efc2a39356250792e83b2a342385b2857609b3662029193c240b965b09540",
+      "error": "hybrid OcrRouteNotEnabledError: OCR_REQUIRED_NOT_AVAILABLE: pytesseract/tesseract is not available"
+    },
+    {
+      "pdf_sha256": "ff2c9db44deba8762df093283837636383ec1ec3d09592cd5a427ed636efb273",
+      "error": "hybrid OcrRouteNotEnabledError: OCR_REQUIRED_NOT_AVAILABLE: pytesseract/tesseract is not available"
+    },
+    {
+      "pdf_sha256": "0df1fb76924e52029d5ac9f02813a14d58363266ee52010c345e4126d21528ac",
+      "error": "hybrid OcrRouteNotEnabledError: OCR_REQUIRED_NOT_AVAILABLE: pytesseract/tesseract is not available"
+    },
+    {
+      "pdf_sha256": "83554ff97ae36ba7ad7099a189b1b6066ab6c02c280b329ec00632ec53ee479d",
+      "error": "hybrid OcrRouteNotEnabledError: OCR_REQUIRED_NOT_AVAILABLE: pytesseract/tesseract is not available"
+    },
+    {
+      "pdf_sha256": "0aaad880a17377ac516b82320ec41b9b301f0761390f8b630e61be8b5ec349e8",
+      "error": "hybrid OcrRouteNotEnabledError: OCR_REQUIRED_NOT_AVAILABLE: pytesseract/tesseract is not available"
+    },
+    {
+      "pdf_sha256": "92d44bce84c8bd2d67df5a102aac021cdb13e7a674477a58823ca7684db393d9",
+      "error": "hybrid OcrRouteNotEnabledError: OCR_REQUIRED_NOT_AVAILABLE: pytesseract/tesseract is not available"
+    },
+    {
+      "pdf_sha256": "eb39fb41e43ba514a72e9fbc24d7bb1a1fcad0cd9e9f5c1c764f338681120f87",
+      "error": "hybrid OcrRouteNotEnabledError: OCR_REQUIRED_NOT_AVAILABLE: pytesseract/tesseract is not available"
+    },
+    {
+      "pdf_sha256": "0aa0b570a81167c93645d1d321f542f5806d67d7884dbde7642b4cfc31d46e7d",
+      "error": "hybrid OcrRouteNotEnabledError: OCR_REQUIRED_NOT_AVAILABLE: pytesseract/tesseract is not available"
+    }
+  ]
+}

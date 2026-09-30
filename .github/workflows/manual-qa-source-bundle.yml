@@ -1,0 +1,29 @@
+name: Manual QA source bundle
+
+on:
+  push:
+    branches:
+      - v2/extraction-investigation
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Download exact CSE source PDFs
+        run: python scripts/manual_qa_source_bundle.py
+      - name: Upload source-review bundle
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: manual-qa-source-pdfs
+          path: |
+            reports/gold_gate/manual_qa_source_bundle.zip
+            reports/gold_gate/manual_qa_source_pdfs/source_manifest.json
+            reports/gold_gate/manual_qa_source_pdfs/download_failures.json
+          if-no-files-found: error
+          retention-days: 30

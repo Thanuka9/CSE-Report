@@ -1,0 +1,89 @@
+{
+  "investigation_id": "N03",
+  "issuer_id": "SFCL.N0000",
+  "filing_version_id": "SFCL.N0000-2025-12-31",
+  "pdf": "data/raw/filings/SENKADAGALA_FINANCE_COMPANY_PLC/2025-12-31_441_1770976920300.pdf",
+  "pdf_sha256": "3095172f49c02bacff501b3b320e5e2a60ac8d321361a298ede007f13d6f4285",
+  "t25_result": "VALUE_OR_ENTITY_MISMATCH",
+  "pdf_header_layout": {
+    "entity_band": "Company Group",
+    "period_band": "For the three month period ended 31 December 2025 2024 Change 2025 2024 Change",
+    "company_current_top_line": "2572716568",
+    "group_current_top_line": "2664529998",
+    "company_current_pat": "344406148",
+    "group_current_pat": "390951093"
+  },
+  "metrics": [
+    {
+      "metric_code": "TOP_LINE",
+      "blind_truth": {
+        "entity_scope": "GROUP",
+        "normalized_value": "2572716568",
+        "duration_months": 3,
+        "comparison_role": "CURRENT"
+      },
+      "v2_production_selected": {
+        "entity_scope": "GROUP",
+        "normalized_value": "2664529998",
+        "duration_months": 3,
+        "comparison_role": "CURRENT",
+        "cell_id": "p0002-INCOME_STATEMENT-r0000-p0002-INCOME_STATEMENT-c03",
+        "production_selection_reason": "SELECTED"
+      },
+      "truth_value_candidate": {
+        "entity_scope": "COMPANY",
+        "normalized_value": "2572716568",
+        "cell_id": "p0002-INCOME_STATEMENT-r0000-p0002-INCOME_STATEMENT-c00",
+        "row_label": "Gross income",
+        "production_selection_reason": "ENTITY_SCOPE_MISMATCH",
+        "first_failure_stage_on_candidate": "NONE",
+        "header_evidence": "Statement of profit or loss | Statement of profit or loss"
+      },
+      "first_failure_stage_vs_blind_truth": "entity ownership",
+      "reason_codes": ["ENTITY_SCOPE_MISMATCH"],
+      "pdf_cross_check": "Truth value sits under Company per PDF; V2 entity matches PDF; holdout GROUP label inconsistent with source headers"
+    },
+    {
+      "metric_code": "PAT",
+      "blind_truth": {
+        "entity_scope": "GROUP",
+        "normalized_value": "344406148",
+        "duration_months": 3,
+        "comparison_role": "CURRENT"
+      },
+      "v2_production_selected": {
+        "entity_scope": "GROUP",
+        "normalized_value": "390951093",
+        "duration_months": 3,
+        "comparison_role": "CURRENT",
+        "cell_id": "p0002-INCOME_STATEMENT-r0023-p0002-INCOME_STATEMENT-c03",
+        "production_selection_reason": "SELECTED"
+      },
+      "truth_value_candidate": {
+        "entity_scope": "COMPANY",
+        "normalized_value": "344406148",
+        "cell_id": "p0002-INCOME_STATEMENT-r0023-p0002-INCOME_STATEMENT-c00",
+        "row_label": "Profit for the period",
+        "production_selection_reason": "ENTITY_SCOPE_MISMATCH",
+        "first_failure_stage_on_candidate": "NONE",
+        "header_evidence": "Statement of profit or loss | Statement of profit or loss"
+      },
+      "first_failure_stage_vs_blind_truth": "entity ownership",
+      "reason_codes": ["ENTITY_SCOPE_MISMATCH"],
+      "pdf_cross_check": "Truth value sits under Company per PDF; V2 entity matches PDF; holdout GROUP label inconsistent with source headers"
+    }
+  ],
+  "entity_banners": [
+    {"x": 309.05, "scope": "COMPANY", "text": "Company"},
+    {"x": 476.14, "scope": "GROUP", "text": "Group"}
+  ],
+  "root_cause_family": "header graph / column ownership evidence propagation (plus holdout truth entity mislabel for SFCL T25)",
+  "evidence_paths": [
+    "docs/v2/investigations/N03_SFCL_TRACE.md",
+    "outputs/n03_sfcl/summary.json",
+    "outputs/n03_sfcl/relevant_traces.json",
+    "outputs/n03_sfcl/statements_columns.json",
+    "outputs/n03_sfcl/candidate_trace.parquet",
+    "tests/v2/universe/t25_holdout_score.json"
+  ]
+}

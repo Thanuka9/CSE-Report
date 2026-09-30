@@ -1,0 +1,32 @@
+{
+  "ordered_stages": [
+    [
+      "CONCEPT_UNRESOLVED",
+      13837
+    ],
+    [
+      "ENTITY_UNRESOLVED",
+      707
+    ],
+    [
+      "NONE",
+      633
+    ],
+    [
+      "PUBLICATION",
+      495
+    ],
+    [
+      "VALIDATION",
+      405
+    ]
+  ],
+  "resolution_unresolved": {
+    "entity": 4241,
+    "period": 2056,
+    "duration": 7061,
+    "comparison": 2056,
+    "unit": 17,
+    "concept": 13837
+  }
+}

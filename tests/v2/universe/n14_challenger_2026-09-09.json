@@ -1,0 +1,234 @@
+{
+  "id": "n14-v2-challenger-2026-09-09",
+  "recovery_step": "N14",
+  "status": "COMPLETED_FAIL_CLOSED",
+  "completed_at": "2026-09-16T15:25:14.198711+00:00",
+  "as_of": "2026-09-09",
+  "engine_override": "v2",
+  "production_default": "v1",
+  "offline": true,
+  "git_commit_sha": "f70434a41adddb306abf3a0d55cc2115e4462bc9",
+  "run_id": "69fb1796-ab4e-49f4-bab5-58d890b39ae6",
+  "acceptance": "ENGINEERING_FAILURES_PRESENT",
+  "gold_promoted": false,
+  "issuers": 281,
+  "pdfs_attempted": 829,
+  "pdfs_extracted": 786,
+  "pdfs_quarantined": 0,
+  "pipeline_errors": 43,
+  "unhandled_pipeline_errors": 43,
+  "pipeline_error_codes": {
+    "EXTRACTION": 43
+  },
+  "ocr_related_error_count": 43,
+  "draft_publishable_count": 3748,
+  "coverage_floor_draft_publishable": 8924,
+  "prior_challenger_draft_publishable": 3684,
+  "delta_vs_prior_challenger": 64,
+  "fact_status_counts": {
+    "EXTRACTED": 3100,
+    "EXTRACTED_DERIVED": 794,
+    "INSUFFICIENT_INPUT": 1137,
+    "IMPLAUSIBLE_DERIVED_RATIO": 2,
+    "VALIDATION_FAILED": 17,
+    "ZERO_EQUITY": 5,
+    "UNIT_NOT_RESOLVED": 6,
+    "INCOMPATIBLE_CURRENCY": 1,
+    "NON_POSITIVE_DENOMINATOR": 1
+  },
+  "coverage": {
+    "draft_publishable_count": 3748,
+    "by_metric": {
+      "DEBT_TO_EQUITY": 147,
+      "EPS_BASIC": 297,
+      "EPS_DILUTED": 46,
+      "EPS_SELECTED": 283,
+      "NAVPS": 368,
+      "NPM": 243,
+      "OPERATING_PROFIT": 239,
+      "PAT": 309,
+      "PBT": 317,
+      "ROA": 156,
+      "ROE": 248,
+      "TOP_LINE": 289,
+      "TOTAL_ASSETS": 248,
+      "TOTAL_EQUITY": 406,
+      "TOTAL_LIABILITIES": 152
+    },
+    "by_sector_metric": {
+      "BANK": {
+        "DEBT_TO_EQUITY": 25,
+        "EPS_BASIC": 21,
+        "EPS_DILUTED": 12,
+        "EPS_SELECTED": 21,
+        "NAVPS": 22,
+        "NPM": 16,
+        "OPERATING_PROFIT": 15,
+        "PAT": 17,
+        "PBT": 21,
+        "ROA": 16,
+        "ROE": 16,
+        "TOP_LINE": 21,
+        "TOTAL_ASSETS": 25,
+        "TOTAL_EQUITY": 25,
+        "TOTAL_LIABILITIES": 25
+      },
+      "FINANCE_COMPANY": {
+        "DEBT_TO_EQUITY": 17,
+        "EPS_BASIC": 19,
+        "EPS_DILUTED": 3,
+        "EPS_SELECTED": 19,
+        "NAVPS": 23,
+        "NPM": 22,
+        "OPERATING_PROFIT": 17,
+        "PAT": 23,
+        "PBT": 20,
+        "ROA": 16,
+        "ROE": 16,
+        "TOP_LINE": 25,
+        "TOTAL_ASSETS": 23,
+        "TOTAL_EQUITY": 23,
+        "TOTAL_LIABILITIES": 17
+      },
+      "GENERAL": {
+        "DEBT_TO_EQUITY": 100,
+        "EPS_BASIC": 247,
+        "EPS_DILUTED": 27,
+        "EPS_SELECTED": 233,
+        "NAVPS": 321,
+        "NPM": 201,
+        "OPERATING_PROFIT": 205,
+        "PAT": 265,
+        "PBT": 267,
+        "ROA": 120,
+        "ROE": 213,
+        "TOP_LINE": 233,
+        "TOTAL_ASSETS": 194,
+        "TOTAL_EQUITY": 351,
+        "TOTAL_LIABILITIES": 104
+      },
+      "INSURANCE": {
+        "DEBT_TO_EQUITY": 5,
+        "EPS_BASIC": 10,
+        "EPS_DILUTED": 4,
+        "EPS_SELECTED": 10,
+        "NAVPS": 2,
+        "NPM": 4,
+        "OPERATING_PROFIT": 2,
+        "PAT": 4,
+        "PBT": 9,
+        "ROA": 4,
+        "ROE": 3,
+        "TOP_LINE": 10,
+        "TOTAL_ASSETS": 6,
+        "TOTAL_EQUITY": 7,
+        "TOTAL_LIABILITIES": 6
+      }
+    }
+  },
+  "universe_regressions": [
+    {
+      "code": "EXTRACTED_FILING_REGRESSION",
+      "manifest_field": "extracted_filing_count",
+      "actual": 786,
+      "floor": 826
+    },
+    {
+      "code": "FACT_COVERAGE_REGRESSION",
+      "manifest_field": "EXTRACTED+EXTRACTED_DERIVED",
+      "actual": 3894,
+      "floor": 8932
+    }
+  ],
+  "engineering_gates": [
+    {
+      "code": "GOLD_WRONG_POPULATED",
+      "issuer_name": "CIC HOLDINGS PLC",
+      "symbol": "CIC.N0000",
+      "period_end": "2025-12-31",
+      "metric_code": "TOP_LINE",
+      "detail": "expected 5816610000.00 actual None"
+    },
+    {
+      "code": "GOLD_WRONG_POPULATED",
+      "issuer_name": "CIC HOLDINGS PLC",
+      "symbol": "CIC.N0000",
+      "period_end": "2025-12-31",
+      "metric_code": "OPERATING_PROFIT",
+      "detail": "expected 861020000.00 actual None"
+    },
+    {
+      "code": "GOLD_WRONG_POPULATED",
+      "issuer_name": "CIC HOLDINGS PLC",
+      "symbol": "CIC.N0000",
+      "period_end": "2025-12-31",
+      "metric_code": "PBT",
+      "detail": "expected 430310000.00 actual None"
+    },
+    {
+      "code": "GOLD_WRONG_POPULATED",
+      "issuer_name": "CIC HOLDINGS PLC",
+      "symbol": "CIC.N0000",
+      "period_end": "2025-12-31",
+      "metric_code": "PAT",
+      "detail": "expected 300790000.00 actual None"
+    },
+    {
+      "code": "GOLD_WRONG_POPULATED",
+      "issuer_name": "CIC HOLDINGS PLC",
+      "symbol": "CIC.N0000",
+      "period_end": "2025-12-31",
+      "metric_code": "EPS_BASIC",
+      "detail": "expected 0.16 actual None"
+    },
+    {
+      "code": "COVERAGE_REGRESSION",
+      "issuer_name": "",
+      "symbol": "",
+      "period_end": null,
+      "metric_code": null,
+      "detail": "EXTRACTED+DERIVED=3894 below floor 8932"
+    },
+    {
+      "code": "PUBLISHABLE_COVERAGE_REGRESSION",
+      "issuer_name": "",
+      "symbol": "",
+      "period_end": null,
+      "metric_code": null,
+      "detail": "draft_publishable=3748 below floor 8924"
+    }
+  ],
+  "review_failure_families": {
+    "INSUFFICIENT_INPUT": 1122,
+    "HISTORICAL_PRICE_NOT_AVAILABLE": 89,
+    "EXTRACTION_FAILED": 43,
+    "PENDING_FILING": 14,
+    "VALIDATION_FAILED": 13,
+    "ZERO_EQUITY": 5,
+    "GOLD_WRONG_POPULATED": 5,
+    "IMPLAUSIBLE_DERIVED_RATIO": 2,
+    "CROSS_FILING_MISMATCH": 2,
+    "BALANCE_SHEET_RECONCILIATION_FAILED": 1,
+    "BALANCE_SHEET_SANITY_FAILED": 1,
+    "INCOMPATIBLE_CURRENCY": 1,
+    "NON_POSITIVE_DENOMINATOR": 1,
+    "GOLD_SAMPLE_INCOMPLETE": 1,
+    "GOLD_ISSUER_SAMPLE_INCOMPLETE": 1,
+    "COVERAGE_REGRESSION": 1,
+    "PUBLISHABLE_COVERAGE_REGRESSION": 1
+  },
+  "v2_source_facts_jsonl_count": 2680,
+  "v1_snapshot_dir": "outputs/n14_v1_snapshot_20260916_202945",
+  "hard_rules": [
+    "Do not promote V2",
+    "Do not lower 8924",
+    "N14 fail-closed is governance alarm, not source truth",
+    "Do not retune on N16 holdout"
+  ],
+  "note": "Fresh post-F1/F3 V2 challenger. Still far below floor. Not certification evidence.",
+  "ocr_required_not_available": 43,
+  "extracted_plus_derived": 3894,
+  "coverage_floor_extracted_derived": 8932,
+  "pre_run_on_disk_acceptance_note": "outputs/universe_acceptance_2026-09-09.json before this run was already the prior V2 challenger (draft_publishable=3684), not the historical V1 9023 proof. Snapshot restored that prior on-disk file; N14 canonical result lives under tests/v2/universe/.",
+  "full_acceptance_copy": "tests/v2/universe/n14_universe_acceptance_2026-09-09.json"
+}

@@ -194,13 +194,33 @@ def test_pipeline_seeded_gold_mismatch_is_not_a_hard_stop() -> None:
     assert hits == []
 
 
-def test_gold_sample_below_baseline_is_a_hard_stop() -> None:
+def test_gold_sample_below_baseline_is_a_hard_stop_in_official() -> None:
     hits = evaluate_production_gates(
         [],
         golden_validation={"sample_size": 20, "passed": 20, "results": []},
         coverage_baseline={"min_gold_sample": 100, "min_extracted_plus_derived": 0},
+        release_mode="OFFICIAL",
     )
     assert [hit.code for hit in hits] == ["GOLD_SAMPLE_INCOMPLETE"]
+
+
+def test_draft_does_not_block_on_incomplete_manual_qa_gold() -> None:
+    hits = evaluate_production_gates(
+        [],
+        golden_validation={
+            "sample_size": 4,
+            "passed": 4,
+            "manual_issuer_count": 4,
+            "results": [],
+        },
+        coverage_baseline={
+            "min_gold_sample": 100,
+            "min_gold_issuers": 100,
+            "min_extracted_plus_derived": 0,
+        },
+        release_mode="DRAFT",
+    )
+    assert hits == []
 
 
 def test_derived_liabilities_without_explicit_row_is_a_hard_stop(tmp_path: Path) -> None:

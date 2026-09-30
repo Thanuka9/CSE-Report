@@ -1,0 +1,17 @@
+{
+  "id": "n18-residual-mismatch-triage",
+  "tp": 49,
+  "fn": 66,
+  "critical_wrong": 0,
+  "mismatch_count": 0,
+  "period_mismatch_count": 0,
+  "unit_mismatch_count": 0,
+  "duration_mismatch_count": 0,
+  "period_by_issuer": {},
+  "period_by_metric": {},
+  "unit_by_issuer": {},
+  "unit_by_metric": {},
+  "period_rows": [],
+  "unit_rows": [],
+  "duration_rows": []
+}

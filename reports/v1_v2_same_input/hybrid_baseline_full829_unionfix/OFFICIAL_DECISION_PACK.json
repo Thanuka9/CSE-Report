@@ -1,0 +1,49 @@
+{
+  "id": "official-decision-pack-hybrid-829",
+  "status": "NOT READY FOR OFFICIAL DECISION",
+  "blocker": "remote_ci: gh auth login required to dispatch full-production-validation.yml",
+  "production_engine": "v1",
+  "do_not_set_extraction_engine_v2": true,
+  "human_approval_required_before_engine_v2": true,
+  "v1_fallback_remains": true,
+  "measured_at": "2026-09-21T16:23:00+00:00",
+  "hybrid_829_parity": {
+    "passed": true,
+    "cohort": 829,
+    "v1_target_extracted": 3183,
+    "agree_preserve": 3048,
+    "quarantine_unresolved": 135,
+    "unexplained_losses_or_mismatches": 0,
+    "ocr_filings_quarantined": 35,
+    "non_ocr_errors": 0,
+    "v2_recovery_extra_eligible": 6438,
+    "supersede_after_policy_fix": 0,
+    "artefacts": "reports/v1_v2_same_input/hybrid_baseline_full829_unionfix"
+  },
+  "disagreement_audit": {
+    "first_run": "reports/v1_v2_same_input/hybrid_baseline_full829",
+    "unexplained_on_first_run": 27,
+    "resolution": "union policy, not extractor rewrite",
+    "v1_correct_preserve": "scale jumps (>=50x) keep V1",
+    "neither_quarantine": "V1 without bbox cannot be proven wrong by a V2 pointer; EPS/NAVPS no longer false-agree at 0.50",
+    "v2_supersede": "only if V1 has a PDF bbox and V2 evidence_strength is >= V1+2"
+  },
+  "gates": {
+    "hybrid_829_parity": "PASS",
+    "e13_governed_coverage": "PASS floors unchanged at 8924; historic E13 challenger remains 3854 and is not this hybrid TARGET count",
+    "fresh_unseen_holdout": "PASS identity-only on N16 13/13 SHAs with 0 unexplained; N17 blind gold still does not exist",
+    "deterministic_replay": "PASS 3 V1-nonzero PDFs twice (AEL, ACL, AEL) 67/61/70 facts",
+    "ocr_quarantine": "PASS tests plus 35 OCR_REQUIRED_NOT_AVAILABLE filings quarantined",
+    "lineage_completeness": "PASS pytest",
+    "workbook_reconciliation": "PASS pytest",
+    "rollback": "PASS V1 importable; config remains engine v1; engine=v2 opt-in still calls hybrid",
+    "v2_unit_suite": "PASS",
+    "remote_ci": "FAIL gh not authenticated"
+  },
+  "next_human_steps": [
+    "gh auth login, then dispatch .github/workflows/full-production-validation.yml on v2/extraction-investigation",
+    "If remote CI is green, status becomes READY FOR OFFICIAL DECISION",
+    "Only after recorded OFFICIAL approval set extraction.engine: v2",
+    "Keep V1 as the internal fallback backend during the observation period"
+  ]
+}

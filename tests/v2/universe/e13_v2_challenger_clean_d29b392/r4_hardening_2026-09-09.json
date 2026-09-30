@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "no_database": true,
+  "xbrl": "NOT_IMPLEMENTED_UNTIL_OFFICIALLY_AVAILABLE",
+  "row_changes": {
+    "filing_price_semantic_withheld": 755,
+    "closing_price_withheld": 32
+  },
+  "canonical_master": "D:\\Report\\outputs\\issuer_security_master_2026-09-09.json",
+  "expected_disclosures": "D:\\Report\\outputs\\expected_disclosures_2026-09-09.json",
+  "fact_semantics": "D:\\Report\\outputs\\fact_semantics_2026-09-09.jsonl",
+  "metric_definitions": "D:\\Report\\outputs\\metric_definitions_2026-09-09.json",
+  "quarantine_integrity": {
+    "checked": 0,
+    "mismatches": 0,
+    "pins_path": "D:\\Report\\data\\quarantine\\known_timeout_pins.json",
+    "mismatch_rows": []
+  },
+  "reported_q4_only": true,
+  "price_semantic": "LAST_TRADED_ONLY",
+  "bank_nil_policy": "explicit nil on verified exact-quarter Bank statement only; blank/dash never zero"
+}

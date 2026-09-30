@@ -1,0 +1,1007 @@
+{
+  "id": "n18-failure-triage-reconstruction",
+  "status": "TRIAGE_RECONSTRUCTION",
+  "note": "Per-slot reconstruction for triage only. Does not replace n18_ai_blind_first_score.json. Frozen first score remains historical unseen evidence.",
+  "frozen_gold_commit_sha": "639454a2d211153062dc9d4e4cb6dbd7de9852fd",
+  "frozen_n18_commit_ref": "dc146572985f61d828cf1b2365970291bc6451bd",
+  "frozen_score_path": "tests/v2/universe/n18_ai_blind_first_score.json",
+  "frozen_aggregates": {
+    "tp": 23,
+    "fn": 68,
+    "critical_wrong": 8,
+    "value_mismatch": 8,
+    "entity_mismatch": 7,
+    "period_mismatch": 8,
+    "duration_mismatch": 7,
+    "unit_mismatch": 11,
+    "source_reported_recall": 0.2,
+    "numeric_correctness": 0.741935
+  },
+  "reconstruction_score": {
+    "tp": 23,
+    "fn": 68,
+    "critical_wrong": 8,
+    "value_mismatch": 8,
+    "entity_mismatch": 7,
+    "period_mismatch": 8,
+    "duration_mismatch": 7,
+    "unit_mismatch": 11,
+    "v2_source_fact_count": 374,
+    "source_reported_recall": 0.2,
+    "numeric_correctness": 0.741935
+  },
+  "reconstruction_engine_sha": "dc146572985f61d828cf1b2365970291bc6451bd:dirty:322fbce30237",
+  "score_matches_frozen": {
+    "tp": true,
+    "fn": true,
+    "critical_wrong": true
+  },
+  "details": [
+    {
+      "issuer_id": "AFSL.N0000",
+      "filing_version_id": "AFSL.N0000-2025-12-31",
+      "metric_code": "EPS_BASIC",
+      "result": "FN",
+      "truth": "2.78"
+    },
+    {
+      "issuer_id": "AFSL.N0000",
+      "filing_version_id": "AFSL.N0000-2025-12-31",
+      "metric_code": "NAVPS",
+      "result": "FN",
+      "truth": "54.61"
+    },
+    {
+      "issuer_id": "AFSL.N0000",
+      "filing_version_id": "AFSL.N0000-2025-12-31",
+      "metric_code": "OPERATING_PROFIT",
+      "result": "FN",
+      "truth": "432765388"
+    },
+    {
+      "issuer_id": "AFSL.N0000",
+      "filing_version_id": "AFSL.N0000-2025-12-31",
+      "metric_code": "PAT",
+      "result": "FN",
+      "truth": "205013594"
+    },
+    {
+      "issuer_id": "AFSL.N0000",
+      "filing_version_id": "AFSL.N0000-2025-12-31",
+      "metric_code": "PBT",
+      "result": "FN",
+      "truth": "330201470"
+    },
+    {
+      "issuer_id": "AFSL.N0000",
+      "filing_version_id": "AFSL.N0000-2025-12-31",
+      "metric_code": "TOP_LINE",
+      "result": "FN",
+      "truth": "1170386379"
+    },
+    {
+      "issuer_id": "AFSL.N0000",
+      "filing_version_id": "AFSL.N0000-2025-12-31",
+      "metric_code": "TOTAL_ASSETS",
+      "result": "FN",
+      "truth": "18237743694"
+    },
+    {
+      "issuer_id": "AFSL.N0000",
+      "filing_version_id": "AFSL.N0000-2025-12-31",
+      "metric_code": "TOTAL_EQUITY",
+      "result": "FN",
+      "truth": "4024661568"
+    },
+    {
+      "issuer_id": "AFSL.N0000",
+      "filing_version_id": "AFSL.N0000-2025-12-31",
+      "metric_code": "TOTAL_LIABILITIES",
+      "result": "FN",
+      "truth": "14213082126"
+    },
+    {
+      "issuer_id": "AMCL.N0000",
+      "filing_version_id": "AMCL.N0000-2025-12-31",
+      "metric_code": "EPS_BASIC",
+      "result": "FN",
+      "truth": "4.34"
+    },
+    {
+      "issuer_id": "AMCL.N0000",
+      "filing_version_id": "AMCL.N0000-2025-12-31",
+      "metric_code": "NAVPS",
+      "result": "FN",
+      "truth": "195.59"
+    },
+    {
+      "issuer_id": "AMCL.N0000",
+      "filing_version_id": "AMCL.N0000-2025-12-31",
+      "metric_code": "OPERATING_PROFIT",
+      "result": "FN",
+      "truth": "151435038"
+    },
+    {
+      "issuer_id": "AMCL.N0000",
+      "filing_version_id": "AMCL.N0000-2025-12-31",
+      "metric_code": "PAT",
+      "result": "FN",
+      "truth": "86834025"
+    },
+    {
+      "issuer_id": "AMCL.N0000",
+      "filing_version_id": "AMCL.N0000-2025-12-31",
+      "metric_code": "PBT",
+      "result": "FN",
+      "truth": "113461234"
+    },
+    {
+      "issuer_id": "AMCL.N0000",
+      "filing_version_id": "AMCL.N0000-2025-12-31",
+      "metric_code": "TOP_LINE",
+      "result": "FN",
+      "truth": "457406003"
+    },
+    {
+      "issuer_id": "AMCL.N0000",
+      "filing_version_id": "AMCL.N0000-2025-12-31",
+      "metric_code": "TOTAL_ASSETS",
+      "result": "FN",
+      "truth": "12294690699"
+    },
+    {
+      "issuer_id": "AMCL.N0000",
+      "filing_version_id": "AMCL.N0000-2025-12-31",
+      "metric_code": "TOTAL_EQUITY",
+      "result": "FN",
+      "truth": "3911846281"
+    },
+    {
+      "issuer_id": "AMCL.N0000",
+      "filing_version_id": "AMCL.N0000-2025-12-31",
+      "metric_code": "TOTAL_LIABILITIES",
+      "result": "FN",
+      "truth": "8382844418"
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "filing_version_id": "ATLL.N0000-2025-12-31",
+      "metric_code": "EPS_BASIC",
+      "result": "FN",
+      "truth": "-0.07"
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "filing_version_id": "ATLL.N0000-2025-12-31",
+      "metric_code": "EPS_DILUTED",
+      "result": "FN",
+      "truth": "-0.07"
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "filing_version_id": "ATLL.N0000-2025-12-31",
+      "metric_code": "NAVPS",
+      "result": "FN",
+      "truth": "13.06"
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "filing_version_id": "ATLL.N0000-2025-12-31",
+      "metric_code": "OPERATING_PROFIT",
+      "result": "FN",
+      "truth": "-1111778"
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "filing_version_id": "ATLL.N0000-2025-12-31",
+      "metric_code": "PAT",
+      "result": "FN",
+      "truth": "-3253721"
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "filing_version_id": "ATLL.N0000-2025-12-31",
+      "metric_code": "PBT",
+      "result": "FN",
+      "truth": "-3253721"
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "filing_version_id": "ATLL.N0000-2025-12-31",
+      "metric_code": "TOP_LINE",
+      "result": "FN",
+      "truth": "502448835"
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "filing_version_id": "ATLL.N0000-2025-12-31",
+      "metric_code": "TOTAL_ASSETS",
+      "result": "FN",
+      "truth": "5796314142"
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "filing_version_id": "ATLL.N0000-2025-12-31",
+      "metric_code": "TOTAL_EQUITY",
+      "result": "FN",
+      "truth": "652793947"
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "filing_version_id": "ATLL.N0000-2025-12-31",
+      "metric_code": "TOTAL_LIABILITIES",
+      "result": "FN",
+      "truth": "5143520196"
+    },
+    {
+      "issuer_id": "CINS.N0000",
+      "filing_version_id": "CINS.N0000-2025-12-31",
+      "metric_code": "EPS_BASIC",
+      "result": "MISMATCH",
+      "mismatch_kinds": [
+        "value",
+        "entity",
+        "duration",
+        "unit"
+      ],
+      "truth": "10.33",
+      "truth_entity": "COMPANY",
+      "v2_value": "396.90",
+      "v2_entity": "GROUP"
+    },
+    {
+      "issuer_id": "CINS.N0000",
+      "filing_version_id": "CINS.N0000-2025-12-31",
+      "metric_code": "NAVPS",
+      "result": "FN",
+      "truth": "727.84"
+    },
+    {
+      "issuer_id": "CINS.N0000",
+      "filing_version_id": "CINS.N0000-2025-12-31",
+      "metric_code": "OPERATING_PROFIT",
+      "result": "MISMATCH",
+      "mismatch_kinds": [
+        "value",
+        "entity",
+        "duration"
+      ],
+      "truth": "274634000",
+      "truth_entity": "COMPANY",
+      "v2_value": "14744043000",
+      "v2_entity": "GROUP"
+    },
+    {
+      "issuer_id": "CINS.N0000",
+      "filing_version_id": "CINS.N0000-2025-12-31",
+      "metric_code": "PAT",
+      "result": "MISMATCH",
+      "mismatch_kinds": [
+        "duration"
+      ],
+      "truth": "272951000",
+      "truth_entity": "COMPANY",
+      "v2_value": "272951000",
+      "v2_entity": "COMPANY"
+    },
+    {
+      "issuer_id": "CINS.N0000",
+      "filing_version_id": "CINS.N0000-2025-12-31",
+      "metric_code": "PBT",
+      "result": "MISMATCH",
+      "mismatch_kinds": [
+        "value",
+        "entity",
+        "duration"
+      ],
+      "truth": "274111000",
+      "truth_entity": "COMPANY",
+      "v2_value": "15439786000",
+      "v2_entity": "GROUP"
+    },
+    {
+      "issuer_id": "CINS.N0000",
+      "filing_version_id": "CINS.N0000-2025-12-31",
+      "metric_code": "TOP_LINE",
+      "result": "FN",
+      "truth": "374714000"
+    },
+    {
+      "issuer_id": "CINS.N0000",
+      "filing_version_id": "CINS.N0000-2025-12-31",
+      "metric_code": "TOTAL_ASSETS",
+      "result": "TP",
+      "v2_value": "20025246000"
+    },
+    {
+      "issuer_id": "CINS.N0000",
+      "filing_version_id": "CINS.N0000-2025-12-31",
+      "metric_code": "TOTAL_EQUITY",
+      "result": "TP",
+      "v2_value": "19225444000"
+    },
+    {
+      "issuer_id": "CINS.N0000",
+      "filing_version_id": "CINS.N0000-2025-12-31",
+      "metric_code": "TOTAL_LIABILITIES",
+      "result": "TP",
+      "v2_value": "799802000"
+    },
+    {
+      "issuer_id": "COCR.N0000",
+      "filing_version_id": "COCR.N0000-2025-12-31",
+      "metric_code": "EPS_BASIC",
+      "result": "FN",
+      "truth": "5.90"
+    },
+    {
+      "issuer_id": "COCR.N0000",
+      "filing_version_id": "COCR.N0000-2025-12-31",
+      "metric_code": "NAVPS",
+      "result": "MISMATCH",
+      "mismatch_kinds": [
+        "unit"
+      ],
+      "truth": "102.16",
+      "truth_entity": "COMPANY",
+      "v2_value": "102.16",
+      "v2_entity": "COMPANY"
+    },
+    {
+      "issuer_id": "COCR.N0000",
+      "filing_version_id": "COCR.N0000-2025-12-31",
+      "metric_code": "OPERATING_PROFIT",
+      "result": "FN",
+      "truth": "3681170368"
+    },
+    {
+      "issuer_id": "COCR.N0000",
+      "filing_version_id": "COCR.N0000-2025-12-31",
+      "metric_code": "PAT",
+      "result": "FN",
+      "truth": "1877424233"
+    },
+    {
+      "issuer_id": "COCR.N0000",
+      "filing_version_id": "COCR.N0000-2025-12-31",
+      "metric_code": "PBT",
+      "result": "FN",
+      "truth": "2882632242"
+    },
+    {
+      "issuer_id": "COCR.N0000",
+      "filing_version_id": "COCR.N0000-2025-12-31",
+      "metric_code": "TOP_LINE",
+      "result": "FN",
+      "truth": "8315262702"
+    },
+    {
+      "issuer_id": "COCR.N0000",
+      "filing_version_id": "COCR.N0000-2025-12-31",
+      "metric_code": "TOTAL_ASSETS",
+      "result": "TP",
+      "v2_value": "122175239633"
+    },
+    {
+      "issuer_id": "COCR.N0000",
+      "filing_version_id": "COCR.N0000-2025-12-31",
+      "metric_code": "TOTAL_EQUITY",
+      "result": "TP",
+      "v2_value": "32494220342"
+    },
+    {
+      "issuer_id": "COCR.N0000",
+      "filing_version_id": "COCR.N0000-2025-12-31",
+      "metric_code": "TOTAL_LIABILITIES",
+      "result": "TP",
+      "v2_value": "89681019290"
+    },
+    {
+      "issuer_id": "HUNA.N0000",
+      "filing_version_id": "HUNA.N0000-2025-12-31",
+      "metric_code": "EPS_BASIC",
+      "result": "FN",
+      "truth": "-0.06"
+    },
+    {
+      "issuer_id": "HUNA.N0000",
+      "filing_version_id": "HUNA.N0000-2025-12-31",
+      "metric_code": "PAT",
+      "result": "FN",
+      "truth": "-48136203"
+    },
+    {
+      "issuer_id": "HUNA.N0000",
+      "filing_version_id": "HUNA.N0000-2025-12-31",
+      "metric_code": "PBT",
+      "result": "FN",
+      "truth": "-48136203"
+    },
+    {
+      "issuer_id": "HUNA.N0000",
+      "filing_version_id": "HUNA.N0000-2025-12-31",
+      "metric_code": "TOP_LINE",
+      "result": "FN",
+      "truth": "13315674"
+    },
+    {
+      "issuer_id": "HUNA.N0000",
+      "filing_version_id": "HUNA.N0000-2025-12-31",
+      "metric_code": "TOTAL_ASSETS",
+      "result": "TP",
+      "v2_value": "3804934020"
+    },
+    {
+      "issuer_id": "HUNA.N0000",
+      "filing_version_id": "HUNA.N0000-2025-12-31",
+      "metric_code": "TOTAL_EQUITY",
+      "result": "FN",
+      "truth": "2879319509"
+    },
+    {
+      "issuer_id": "JFP.N0000",
+      "filing_version_id": "JFP.N0000-2025-12-31",
+      "metric_code": "EPS_BASIC",
+      "result": "MISMATCH",
+      "mismatch_kinds": [
+        "unit"
+      ],
+      "truth": "0.39",
+      "truth_entity": "COMPANY",
+      "v2_value": "0.39",
+      "v2_entity": "COMPANY"
+    },
+    {
+      "issuer_id": "JFP.N0000",
+      "filing_version_id": "JFP.N0000-2025-12-31",
+      "metric_code": "NAVPS",
+      "result": "MISMATCH",
+      "mismatch_kinds": [
+        "unit"
+      ],
+      "truth": "14.05",
+      "truth_entity": "COMPANY",
+      "v2_value": "14.05",
+      "v2_entity": "COMPANY"
+    },
+    {
+      "issuer_id": "JFP.N0000",
+      "filing_version_id": "JFP.N0000-2025-12-31",
+      "metric_code": "PAT",
+      "result": "TP",
+      "v2_value": "55171000"
+    },
+    {
+      "issuer_id": "JFP.N0000",
+      "filing_version_id": "JFP.N0000-2025-12-31",
+      "metric_code": "PBT",
+      "result": "TP",
+      "v2_value": "55705000"
+    },
+    {
+      "issuer_id": "JFP.N0000",
+      "filing_version_id": "JFP.N0000-2025-12-31",
+      "metric_code": "TOP_LINE",
+      "result": "TP",
+      "v2_value": "607602000"
+    },
+    {
+      "issuer_id": "JFP.N0000",
+      "filing_version_id": "JFP.N0000-2025-12-31",
+      "metric_code": "TOTAL_ASSETS",
+      "result": "TP",
+      "v2_value": "3495027000"
+    },
+    {
+      "issuer_id": "JFP.N0000",
+      "filing_version_id": "JFP.N0000-2025-12-31",
+      "metric_code": "TOTAL_EQUITY",
+      "result": "TP",
+      "v2_value": "2418177000"
+    },
+    {
+      "issuer_id": "JFP.N0000",
+      "filing_version_id": "JFP.N0000-2025-12-31",
+      "metric_code": "TOTAL_LIABILITIES",
+      "result": "TP",
+      "v2_value": "1076850000"
+    },
+    {
+      "issuer_id": "LGIL.N0000",
+      "filing_version_id": "LGIL.N0000-2025-12-31",
+      "metric_code": "EPS_BASIC",
+      "result": "FN",
+      "truth": "-0.48"
+    },
+    {
+      "issuer_id": "LGIL.N0000",
+      "filing_version_id": "LGIL.N0000-2025-12-31",
+      "metric_code": "EPS_DILUTED",
+      "result": "FN",
+      "truth": "-0.48"
+    },
+    {
+      "issuer_id": "LGIL.N0000",
+      "filing_version_id": "LGIL.N0000-2025-12-31",
+      "metric_code": "NAVPS",
+      "result": "FN",
+      "truth": "5.56"
+    },
+    {
+      "issuer_id": "LGIL.N0000",
+      "filing_version_id": "LGIL.N0000-2025-12-31",
+      "metric_code": "PAT",
+      "result": "FN",
+      "truth": "-581632000"
+    },
+    {
+      "issuer_id": "LGIL.N0000",
+      "filing_version_id": "LGIL.N0000-2025-12-31",
+      "metric_code": "PBT",
+      "result": "FN",
+      "truth": "-752698000"
+    },
+    {
+      "issuer_id": "LGIL.N0000",
+      "filing_version_id": "LGIL.N0000-2025-12-31",
+      "metric_code": "TOP_LINE",
+      "result": "FN",
+      "truth": "3024892000"
+    },
+    {
+      "issuer_id": "LGIL.N0000",
+      "filing_version_id": "LGIL.N0000-2025-12-31",
+      "metric_code": "TOTAL_ASSETS",
+      "result": "FN",
+      "truth": "31241327000"
+    },
+    {
+      "issuer_id": "LGIL.N0000",
+      "filing_version_id": "LGIL.N0000-2025-12-31",
+      "metric_code": "TOTAL_EQUITY",
+      "result": "FN",
+      "truth": "6670770000"
+    },
+    {
+      "issuer_id": "LGIL.N0000",
+      "filing_version_id": "LGIL.N0000-2025-12-31",
+      "metric_code": "TOTAL_LIABILITIES",
+      "result": "FN",
+      "truth": "24570557000"
+    },
+    {
+      "issuer_id": "NHL.N0000",
+      "filing_version_id": "NHL.N0000-2025-12-31",
+      "metric_code": "EPS_BASIC",
+      "result": "MISMATCH",
+      "mismatch_kinds": [
+        "unit"
+      ],
+      "truth": "0.15",
+      "truth_entity": "COMPANY",
+      "v2_value": "0.15",
+      "v2_entity": "COMPANY"
+    },
+    {
+      "issuer_id": "NHL.N0000",
+      "filing_version_id": "NHL.N0000-2025-12-31",
+      "metric_code": "NAVPS",
+      "result": "MISMATCH",
+      "mismatch_kinds": [
+        "value",
+        "entity",
+        "unit"
+      ],
+      "truth": "1.82",
+      "truth_entity": "COMPANY",
+      "v2_value": "4.31",
+      "v2_entity": "GROUP"
+    },
+    {
+      "issuer_id": "NHL.N0000",
+      "filing_version_id": "NHL.N0000-2025-12-31",
+      "metric_code": "OPERATING_PROFIT",
+      "result": "TP",
+      "v2_value": "408826000"
+    },
+    {
+      "issuer_id": "NHL.N0000",
+      "filing_version_id": "NHL.N0000-2025-12-31",
+      "metric_code": "PAT",
+      "result": "TP",
+      "v2_value": "217677000"
+    },
+    {
+      "issuer_id": "NHL.N0000",
+      "filing_version_id": "NHL.N0000-2025-12-31",
+      "metric_code": "PBT",
+      "result": "FN",
+      "truth": "295611000"
+    },
+    {
+      "issuer_id": "NHL.N0000",
+      "filing_version_id": "NHL.N0000-2025-12-31",
+      "metric_code": "TOP_LINE",
+      "result": "TP",
+      "v2_value": "1762732000"
+    },
+    {
+      "issuer_id": "NHL.N0000",
+      "filing_version_id": "NHL.N0000-2025-12-31",
+      "metric_code": "TOTAL_ASSETS",
+      "result": "MISMATCH",
+      "mismatch_kinds": [
+        "value",
+        "entity"
+      ],
+      "truth": "10163485000",
+      "truth_entity": "COMPANY",
+      "v2_value": "18370368000",
+      "v2_entity": "GROUP"
+    },
+    {
+      "issuer_id": "NHL.N0000",
+      "filing_version_id": "NHL.N0000-2025-12-31",
+      "metric_code": "TOTAL_EQUITY",
+      "result": "MISMATCH",
+      "mismatch_kinds": [
+        "value",
+        "entity"
+      ],
+      "truth": "2566457000",
+      "truth_entity": "COMPANY",
+      "v2_value": "6081490000",
+      "v2_entity": "GROUP"
+    },
+    {
+      "issuer_id": "NHL.N0000",
+      "filing_version_id": "NHL.N0000-2025-12-31",
+      "metric_code": "TOTAL_LIABILITIES",
+      "result": "MISMATCH",
+      "mismatch_kinds": [
+        "value",
+        "entity"
+      ],
+      "truth": "7597028000",
+      "truth_entity": "COMPANY",
+      "v2_value": "15511851000",
+      "v2_entity": "GROUP"
+    },
+    {
+      "issuer_id": "PABC.N0000",
+      "filing_version_id": "PABC.N0000-2025-12-31",
+      "metric_code": "EPS_BASIC",
+      "result": "FN",
+      "truth": "2.22"
+    },
+    {
+      "issuer_id": "PABC.N0000",
+      "filing_version_id": "PABC.N0000-2025-12-31",
+      "metric_code": "EPS_DILUTED",
+      "result": "FN",
+      "truth": "2.22"
+    },
+    {
+      "issuer_id": "PABC.N0000",
+      "filing_version_id": "PABC.N0000-2025-12-31",
+      "metric_code": "NAVPS",
+      "result": "FN",
+      "truth": "68.67"
+    },
+    {
+      "issuer_id": "PABC.N0000",
+      "filing_version_id": "PABC.N0000-2025-12-31",
+      "metric_code": "OPERATING_PROFIT",
+      "result": "FN",
+      "truth": "1943397000"
+    },
+    {
+      "issuer_id": "PABC.N0000",
+      "filing_version_id": "PABC.N0000-2025-12-31",
+      "metric_code": "PAT",
+      "result": "FN",
+      "truth": "981161000"
+    },
+    {
+      "issuer_id": "PABC.N0000",
+      "filing_version_id": "PABC.N0000-2025-12-31",
+      "metric_code": "PBT",
+      "result": "FN",
+      "truth": "1493734000"
+    },
+    {
+      "issuer_id": "PABC.N0000",
+      "filing_version_id": "PABC.N0000-2025-12-31",
+      "metric_code": "TOTAL_ASSETS",
+      "result": "FN",
+      "truth": "308015795000"
+    },
+    {
+      "issuer_id": "PABC.N0000",
+      "filing_version_id": "PABC.N0000-2025-12-31",
+      "metric_code": "TOTAL_EQUITY",
+      "result": "FN",
+      "truth": "30390170000"
+    },
+    {
+      "issuer_id": "PABC.N0000",
+      "filing_version_id": "PABC.N0000-2025-12-31",
+      "metric_code": "TOTAL_LIABILITIES",
+      "result": "FN",
+      "truth": "277625625000"
+    },
+    {
+      "issuer_id": "SCAP.N0000",
+      "filing_version_id": "SCAP.N0000-2025-12-31",
+      "metric_code": "EPS_BASIC",
+      "result": "MISMATCH",
+      "mismatch_kinds": [
+        "unit"
+      ],
+      "truth": "-0.35",
+      "truth_entity": "COMPANY",
+      "v2_value": "-0.35",
+      "v2_entity": "COMPANY"
+    },
+    {
+      "issuer_id": "SCAP.N0000",
+      "filing_version_id": "SCAP.N0000-2025-12-31",
+      "metric_code": "NAVPS",
+      "result": "MISMATCH",
+      "mismatch_kinds": [
+        "unit"
+      ],
+      "truth": "5.17",
+      "truth_entity": "COMPANY",
+      "v2_value": "5.17",
+      "v2_entity": "COMPANY"
+    },
+    {
+      "issuer_id": "SCAP.N0000",
+      "filing_version_id": "SCAP.N0000-2025-12-31",
+      "metric_code": "OPERATING_PROFIT",
+      "result": "TP",
+      "v2_value": "-283258181"
+    },
+    {
+      "issuer_id": "SCAP.N0000",
+      "filing_version_id": "SCAP.N0000-2025-12-31",
+      "metric_code": "PAT",
+      "result": "TP",
+      "v2_value": "-342968750"
+    },
+    {
+      "issuer_id": "SCAP.N0000",
+      "filing_version_id": "SCAP.N0000-2025-12-31",
+      "metric_code": "PBT",
+      "result": "TP",
+      "v2_value": "-342968750"
+    },
+    {
+      "issuer_id": "SCAP.N0000",
+      "filing_version_id": "SCAP.N0000-2025-12-31",
+      "metric_code": "TOP_LINE",
+      "result": "TP",
+      "v2_value": "236997875"
+    },
+    {
+      "issuer_id": "SCAP.N0000",
+      "filing_version_id": "SCAP.N0000-2025-12-31",
+      "metric_code": "TOTAL_ASSETS",
+      "result": "TP",
+      "v2_value": "22699323895"
+    },
+    {
+      "issuer_id": "SCAP.N0000",
+      "filing_version_id": "SCAP.N0000-2025-12-31",
+      "metric_code": "TOTAL_EQUITY",
+      "result": "TP",
+      "v2_value": "5049555304"
+    },
+    {
+      "issuer_id": "SCAP.N0000",
+      "filing_version_id": "SCAP.N0000-2025-12-31",
+      "metric_code": "TOTAL_LIABILITIES",
+      "result": "TP",
+      "v2_value": "17649768591"
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "filing_version_id": "SDB.N0000-2025-12-31",
+      "metric_code": "EPS_BASIC",
+      "result": "FN",
+      "truth": "0.92"
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "filing_version_id": "SDB.N0000-2025-12-31",
+      "metric_code": "EPS_DILUTED",
+      "result": "FN",
+      "truth": "0.92"
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "filing_version_id": "SDB.N0000-2025-12-31",
+      "metric_code": "NAVPS",
+      "result": "FN",
+      "truth": "90.18"
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "filing_version_id": "SDB.N0000-2025-12-31",
+      "metric_code": "OPERATING_PROFIT",
+      "result": "FN",
+      "truth": "550523000"
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "filing_version_id": "SDB.N0000-2025-12-31",
+      "metric_code": "PAT",
+      "result": "FN",
+      "truth": "151264000"
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "filing_version_id": "SDB.N0000-2025-12-31",
+      "metric_code": "PBT",
+      "result": "FN",
+      "truth": "376323000"
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "filing_version_id": "SDB.N0000-2025-12-31",
+      "metric_code": "TOTAL_ASSETS",
+      "result": "FN",
+      "truth": "146958097000"
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "filing_version_id": "SDB.N0000-2025-12-31",
+      "metric_code": "TOTAL_EQUITY",
+      "result": "FN",
+      "truth": "14804406000"
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "filing_version_id": "SDB.N0000-2025-12-31",
+      "metric_code": "TOTAL_LIABILITIES",
+      "result": "FN",
+      "truth": "132153690000"
+    },
+    {
+      "issuer_id": "UBC.N0000",
+      "filing_version_id": "UBC.N0000-2025-12-31",
+      "metric_code": "EPS_BASIC",
+      "result": "MISMATCH",
+      "mismatch_kinds": [
+        "duration",
+        "unit"
+      ],
+      "truth": "0.3",
+      "truth_entity": "BANK",
+      "v2_value": "0.3",
+      "v2_entity": "BANK"
+    },
+    {
+      "issuer_id": "UBC.N0000",
+      "filing_version_id": "UBC.N0000-2025-12-31",
+      "metric_code": "EPS_DILUTED",
+      "result": "MISMATCH",
+      "mismatch_kinds": [
+        "duration",
+        "unit"
+      ],
+      "truth": "0.3",
+      "truth_entity": "BANK",
+      "v2_value": "0.3",
+      "v2_entity": "BANK"
+    },
+    {
+      "issuer_id": "UBC.N0000",
+      "filing_version_id": "UBC.N0000-2025-12-31",
+      "metric_code": "NAVPS",
+      "result": "MISMATCH",
+      "mismatch_kinds": [
+        "period",
+        "unit"
+      ],
+      "truth": "18.8",
+      "truth_entity": "BANK",
+      "v2_value": "18.8",
+      "v2_entity": "BANK"
+    },
+    {
+      "issuer_id": "UBC.N0000",
+      "filing_version_id": "UBC.N0000-2025-12-31",
+      "metric_code": "OPERATING_PROFIT",
+      "result": "MISMATCH",
+      "mismatch_kinds": [
+        "value",
+        "period",
+        "duration"
+      ],
+      "truth": "748922000",
+      "truth_entity": "BANK",
+      "v2_value": "1840423000",
+      "v2_entity": "BANK"
+    },
+    {
+      "issuer_id": "UBC.N0000",
+      "filing_version_id": "UBC.N0000-2025-12-31",
+      "metric_code": "PAT",
+      "result": "MISMATCH",
+      "mismatch_kinds": [
+        "period"
+      ],
+      "truth": "311748000",
+      "truth_entity": "BANK",
+      "v2_value": "311748000",
+      "v2_entity": "BANK"
+    },
+    {
+      "issuer_id": "UBC.N0000",
+      "filing_version_id": "UBC.N0000-2025-12-31",
+      "metric_code": "PBT",
+      "result": "MISMATCH",
+      "mismatch_kinds": [
+        "period"
+      ],
+      "truth": "555016000",
+      "truth_entity": "BANK",
+      "v2_value": "555016000",
+      "v2_entity": "BANK"
+    },
+    {
+      "issuer_id": "UBC.N0000",
+      "filing_version_id": "UBC.N0000-2025-12-31",
+      "metric_code": "TOP_LINE",
+      "result": "MISMATCH",
+      "mismatch_kinds": [
+        "period"
+      ],
+      "truth": "5035935000",
+      "truth_entity": "BANK",
+      "v2_value": "5035935000",
+      "v2_entity": "BANK"
+    },
+    {
+      "issuer_id": "UBC.N0000",
+      "filing_version_id": "UBC.N0000-2025-12-31",
+      "metric_code": "TOTAL_ASSETS",
+      "result": "MISMATCH",
+      "mismatch_kinds": [
+        "period"
+      ],
+      "truth": "172633303000",
+      "truth_entity": "BANK",
+      "v2_value": "172633303000",
+      "v2_entity": "BANK"
+    },
+    {
+      "issuer_id": "UBC.N0000",
+      "filing_version_id": "UBC.N0000-2025-12-31",
+      "metric_code": "TOTAL_EQUITY",
+      "result": "MISMATCH",
+      "mismatch_kinds": [
+        "period"
+      ],
+      "truth": "20321570000",
+      "truth_entity": "BANK",
+      "v2_value": "20321570000",
+      "v2_entity": "BANK"
+    },
+    {
+      "issuer_id": "UBC.N0000",
+      "filing_version_id": "UBC.N0000-2025-12-31",
+      "metric_code": "TOTAL_LIABILITIES",
+      "result": "MISMATCH",
+      "mismatch_kinds": [
+        "period"
+      ],
+      "truth": "152311733000",
+      "truth_entity": "BANK",
+      "v2_value": "152311733000",
+      "v2_entity": "BANK"
+    }
+  ]
+}

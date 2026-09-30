@@ -1,0 +1,1078 @@
+{
+  "summary": {
+    "id": "n18-fn-triage",
+    "status": "TRIAGE",
+    "fn_count": 66,
+    "family_counts": {
+      "NO_TARGET_CANDIDATE": 16,
+      "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT": 45,
+      "NO_TARGET_CANDIDATE_NEAR_MISS": 5
+    },
+    "stage_counts": {
+      "NO_TARGET_CANDIDATE": 16,
+      "ENTITY_UNRESOLVED": 35,
+      "CONCEPT_UNRESOLVED": 15
+    },
+    "by_metric": {
+      "EPS_BASIC": 8,
+      "NAVPS": 7,
+      "OPERATING_PROFIT": 6,
+      "PAT": 8,
+      "PBT": 8,
+      "TOP_LINE": 6,
+      "TOTAL_ASSETS": 6,
+      "TOTAL_EQUITY": 7,
+      "TOTAL_LIABILITIES": 6,
+      "EPS_DILUTED": 4
+    },
+    "by_issuer": {
+      "AFSL.N0000": 9,
+      "AMCL.N0000": 9,
+      "ATLL.N0000": 10,
+      "CINS.N0000": 2,
+      "COCR.N0000": 5,
+      "HUNA.N0000": 4,
+      "LGIL.N0000": 9,
+      "PABC.N0000": 9,
+      "SDB.N0000": 9
+    },
+    "note": "NO_TARGET_CANDIDATE is not source-verified ROW_NOT_FOUND. CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT means concept matched but admission/validation failed."
+  },
+  "rows": [
+    {
+      "issuer_id": "AFSL.N0000",
+      "metric_code": "EPS_BASIC",
+      "gold_value": "2.78",
+      "gold_label": "Earnings Per Share",
+      "gold_entity": "COMPANY",
+      "gold_duration": 3,
+      "gold_page": 2,
+      "family": "NO_TARGET_CANDIDATE",
+      "first_failure_stage": "NO_TARGET_CANDIDATE",
+      "resolved_candidate_count": 0,
+      "near_miss_count": 0,
+      "example_near_labels": []
+    },
+    {
+      "issuer_id": "AFSL.N0000",
+      "metric_code": "NAVPS",
+      "gold_value": "54.61",
+      "gold_label": "Net Assets Value Per Share",
+      "gold_entity": "COMPANY",
+      "gold_duration": null,
+      "gold_page": 3,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "ENTITY_UNRESOLVED",
+      "resolved_candidate_count": 2,
+      "near_miss_count": 4,
+      "example_near_labels": [
+        "Net Assets Value Per Share"
+      ]
+    },
+    {
+      "issuer_id": "AFSL.N0000",
+      "metric_code": "OPERATING_PROFIT",
+      "gold_value": "432765388",
+      "gold_label": "Operating Profit before Taxes on Financial Services",
+      "gold_entity": "COMPANY",
+      "gold_duration": 3,
+      "gold_page": 2,
+      "family": "NO_TARGET_CANDIDATE",
+      "first_failure_stage": "NO_TARGET_CANDIDATE",
+      "resolved_candidate_count": 0,
+      "near_miss_count": 0,
+      "example_near_labels": []
+    },
+    {
+      "issuer_id": "AFSL.N0000",
+      "metric_code": "PAT",
+      "gold_value": "205013594",
+      "gold_label": "Profit for the Period",
+      "gold_entity": "COMPANY",
+      "gold_duration": 3,
+      "gold_page": 2,
+      "family": "NO_TARGET_CANDIDATE_NEAR_MISS",
+      "first_failure_stage": "CONCEPT_UNRESOLVED",
+      "resolved_candidate_count": 0,
+      "near_miss_count": 2,
+      "example_near_labels": [
+        "Net Profit for the Period ,"
+      ]
+    },
+    {
+      "issuer_id": "AFSL.N0000",
+      "metric_code": "PBT",
+      "gold_value": "330201470",
+      "gold_label": "Profit before Taxation from Operations",
+      "gold_entity": "COMPANY",
+      "gold_duration": 3,
+      "gold_page": 2,
+      "family": "NO_TARGET_CANDIDATE",
+      "first_failure_stage": "NO_TARGET_CANDIDATE",
+      "resolved_candidate_count": 0,
+      "near_miss_count": 0,
+      "example_near_labels": []
+    },
+    {
+      "issuer_id": "AFSL.N0000",
+      "metric_code": "TOP_LINE",
+      "gold_value": "1170386379",
+      "gold_label": "Income",
+      "gold_entity": "COMPANY",
+      "gold_duration": 3,
+      "gold_page": 2,
+      "family": "NO_TARGET_CANDIDATE",
+      "first_failure_stage": "NO_TARGET_CANDIDATE",
+      "resolved_candidate_count": 0,
+      "near_miss_count": 0,
+      "example_near_labels": []
+    },
+    {
+      "issuer_id": "AFSL.N0000",
+      "metric_code": "TOTAL_ASSETS",
+      "gold_value": "18237743694",
+      "gold_label": "Total Assets",
+      "gold_entity": "COMPANY",
+      "gold_duration": null,
+      "gold_page": 3,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "CONCEPT_UNRESOLVED",
+      "resolved_candidate_count": 2,
+      "near_miss_count": 4,
+      "example_near_labels": [
+        "Total Assets 78,237,743,69+"
+      ]
+    },
+    {
+      "issuer_id": "AFSL.N0000",
+      "metric_code": "TOTAL_EQUITY",
+      "gold_value": "4024661568",
+      "gold_label": "Total Shareholders' Funds",
+      "gold_entity": "COMPANY",
+      "gold_duration": null,
+      "gold_page": 3,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "CONCEPT_UNRESOLVED",
+      "resolved_candidate_count": 2,
+      "near_miss_count": 3,
+      "example_near_labels": [
+        "Total Liabilities and Shareholders' Funds ilSa/o t3,484,926,875",
+        "Total Shareholders' Funds 75o/o 3,502,4(t3,220"
+      ]
+    },
+    {
+      "issuer_id": "AFSL.N0000",
+      "metric_code": "TOTAL_LIABILITIES",
+      "gold_value": "14213082126",
+      "gold_label": "Total Liabilities",
+      "gold_entity": "COMPANY",
+      "gold_duration": null,
+      "gold_page": 3,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "ENTITY_UNRESOLVED",
+      "resolved_candidate_count": 1,
+      "near_miss_count": 3,
+      "example_near_labels": [
+        "Total Liabilities"
+      ]
+    },
+    {
+      "issuer_id": "AMCL.N0000",
+      "metric_code": "EPS_BASIC",
+      "gold_value": "4.34",
+      "gold_label": "Earning Per Share",
+      "gold_entity": "COMPANY",
+      "gold_duration": 3,
+      "gold_page": 3,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "ENTITY_UNRESOLVED",
+      "resolved_candidate_count": 4,
+      "near_miss_count": 8,
+      "example_near_labels": [
+        "Earning Per Share"
+      ]
+    },
+    {
+      "issuer_id": "AMCL.N0000",
+      "metric_code": "NAVPS",
+      "gold_value": "195.59",
+      "gold_label": "Net Assets per Share (Rs.)",
+      "gold_entity": "COMPANY",
+      "gold_duration": null,
+      "gold_page": 4,
+      "family": "NO_TARGET_CANDIDATE",
+      "first_failure_stage": "NO_TARGET_CANDIDATE",
+      "resolved_candidate_count": 0,
+      "near_miss_count": 0,
+      "example_near_labels": []
+    },
+    {
+      "issuer_id": "AMCL.N0000",
+      "metric_code": "OPERATING_PROFIT",
+      "gold_value": "151435038",
+      "gold_label": "Profit from Operations",
+      "gold_entity": "COMPANY",
+      "gold_duration": 3,
+      "gold_page": 3,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "ENTITY_UNRESOLVED",
+      "resolved_candidate_count": 4,
+      "near_miss_count": 8,
+      "example_near_labels": [
+        "Profit from Operations"
+      ]
+    },
+    {
+      "issuer_id": "AMCL.N0000",
+      "metric_code": "PAT",
+      "gold_value": "86834025",
+      "gold_label": "Net Profit for the Period",
+      "gold_entity": "COMPANY",
+      "gold_duration": 3,
+      "gold_page": 3,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "CONCEPT_UNRESOLVED",
+      "resolved_candidate_count": 8,
+      "near_miss_count": 12,
+      "example_near_labels": [
+        "Net Profit for the Period",
+        "Taxation"
+      ]
+    },
+    {
+      "issuer_id": "AMCL.N0000",
+      "metric_code": "PBT",
+      "gold_value": "113461234",
+      "gold_label": "Profit Before Tax",
+      "gold_entity": "COMPANY",
+      "gold_duration": 3,
+      "gold_page": 3,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "ENTITY_UNRESOLVED",
+      "resolved_candidate_count": 4,
+      "near_miss_count": 12,
+      "example_near_labels": [
+        "Profit Before Tax"
+      ]
+    },
+    {
+      "issuer_id": "AMCL.N0000",
+      "metric_code": "TOP_LINE",
+      "gold_value": "457406003",
+      "gold_label": "Income",
+      "gold_entity": "COMPANY",
+      "gold_duration": 3,
+      "gold_page": 3,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "ENTITY_UNRESOLVED",
+      "resolved_candidate_count": 16,
+      "near_miss_count": 57,
+      "example_near_labels": [
+        "Income",
+        "Interest Income"
+      ]
+    },
+    {
+      "issuer_id": "AMCL.N0000",
+      "metric_code": "TOTAL_ASSETS",
+      "gold_value": "12294690699",
+      "gold_label": "Total Assets",
+      "gold_entity": "COMPANY",
+      "gold_duration": null,
+      "gold_page": 2,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "ENTITY_UNRESOLVED",
+      "resolved_candidate_count": 2,
+      "near_miss_count": 4,
+      "example_near_labels": [
+        "Total Assets"
+      ]
+    },
+    {
+      "issuer_id": "AMCL.N0000",
+      "metric_code": "TOTAL_EQUITY",
+      "gold_value": "3911846281",
+      "gold_label": "Total Equity",
+      "gold_entity": "COMPANY",
+      "gold_duration": null,
+      "gold_page": 2,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "ENTITY_UNRESOLVED",
+      "resolved_candidate_count": 4,
+      "near_miss_count": 8,
+      "example_near_labels": [
+        "Total Equity",
+        "Total Equity and Liabilities"
+      ]
+    },
+    {
+      "issuer_id": "AMCL.N0000",
+      "metric_code": "TOTAL_LIABILITIES",
+      "gold_value": "8382844418",
+      "gold_label": "Total Liabilities",
+      "gold_entity": "COMPANY",
+      "gold_duration": null,
+      "gold_page": 2,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "ENTITY_UNRESOLVED",
+      "resolved_candidate_count": 2,
+      "near_miss_count": 6,
+      "example_near_labels": [
+        "Total Liabilities"
+      ]
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "metric_code": "EPS_BASIC",
+      "gold_value": "-0.07",
+      "gold_label": "Basic / diluted earnings per share to equity holders",
+      "gold_entity": "COMPANY",
+      "gold_duration": 3,
+      "gold_page": 4,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "ENTITY_UNRESOLVED",
+      "resolved_candidate_count": 4,
+      "near_miss_count": 8,
+      "example_near_labels": [
+        "Basic / diluted earnings per share to equity holders"
+      ]
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "metric_code": "EPS_DILUTED",
+      "gold_value": "-0.07",
+      "gold_label": "Basic / diluted earnings per share to equity holders",
+      "gold_entity": "COMPANY",
+      "gold_duration": 3,
+      "gold_page": 4,
+      "family": "NO_TARGET_CANDIDATE_NEAR_MISS",
+      "first_failure_stage": "ENTITY_UNRESOLVED",
+      "resolved_candidate_count": 0,
+      "near_miss_count": 4,
+      "example_near_labels": [
+        "Basic / diluted earnings per share to equity holders"
+      ]
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "metric_code": "NAVPS",
+      "gold_value": "13.06",
+      "gold_label": "Net asset value per share",
+      "gold_entity": "COMPANY",
+      "gold_duration": null,
+      "gold_page": 13,
+      "family": "NO_TARGET_CANDIDATE",
+      "first_failure_stage": "NO_TARGET_CANDIDATE",
+      "resolved_candidate_count": 0,
+      "near_miss_count": 0,
+      "example_near_labels": []
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "metric_code": "OPERATING_PROFIT",
+      "gold_value": "-1111778",
+      "gold_label": "Loss from operations",
+      "gold_entity": "COMPANY",
+      "gold_duration": 3,
+      "gold_page": 4,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "ENTITY_UNRESOLVED",
+      "resolved_candidate_count": 2,
+      "near_miss_count": 4,
+      "example_near_labels": [
+        "Profit from operations"
+      ]
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "metric_code": "PAT",
+      "gold_value": "-3253721",
+      "gold_label": "Loss for the period",
+      "gold_entity": "COMPANY",
+      "gold_duration": 3,
+      "gold_page": 4,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "ENTITY_UNRESOLVED",
+      "resolved_candidate_count": 4,
+      "near_miss_count": 8,
+      "example_near_labels": [
+        "Net profit for the period",
+        "Profit for the period"
+      ]
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "metric_code": "PBT",
+      "gold_value": "-3253721",
+      "gold_label": "Loss before taxation",
+      "gold_entity": "COMPANY",
+      "gold_duration": 3,
+      "gold_page": 4,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "ENTITY_UNRESOLVED",
+      "resolved_candidate_count": 3,
+      "near_miss_count": 5,
+      "example_near_labels": [
+        "Profit before taxation"
+      ]
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "metric_code": "TOP_LINE",
+      "gold_value": "502448835",
+      "gold_label": "Gross written contribution (premium)",
+      "gold_entity": "COMPANY",
+      "gold_duration": 3,
+      "gold_page": 4,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "ENTITY_UNRESOLVED",
+      "resolved_candidate_count": 10,
+      "near_miss_count": 15,
+      "example_near_labels": [
+        "Gross written contribution (premium)",
+        "Total revenue"
+      ]
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "metric_code": "TOTAL_ASSETS",
+      "gold_value": "5796314142",
+      "gold_label": "Total assets",
+      "gold_entity": "COMPANY",
+      "gold_duration": null,
+      "gold_page": 2,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "ENTITY_UNRESOLVED",
+      "resolved_candidate_count": 10,
+      "near_miss_count": 20,
+      "example_near_labels": [
+        "Total assets"
+      ]
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "metric_code": "TOTAL_EQUITY",
+      "gold_value": "652793947",
+      "gold_label": "Total equity",
+      "gold_entity": "COMPANY",
+      "gold_duration": null,
+      "gold_page": 2,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "CONCEPT_UNRESOLVED",
+      "resolved_candidate_count": 18,
+      "near_miss_count": 26,
+      "example_near_labels": [
+        "Total equity",
+        "Total liabilities and equity"
+      ]
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "metric_code": "TOTAL_LIABILITIES",
+      "gold_value": "5143520196",
+      "gold_label": "Total liabilities",
+      "gold_entity": "COMPANY",
+      "gold_duration": null,
+      "gold_page": 2,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "ENTITY_UNRESOLVED",
+      "resolved_candidate_count": 10,
+      "near_miss_count": 40,
+      "example_near_labels": [
+        "Total liabilities"
+      ]
+    },
+    {
+      "issuer_id": "CINS.N0000",
+      "metric_code": "NAVPS",
+      "gold_value": "727.84",
+      "gold_label": "Net Asset per Share (Rs.) Company",
+      "gold_entity": "COMPANY",
+      "gold_duration": null,
+      "gold_page": 13,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "ENTITY_UNRESOLVED",
+      "resolved_candidate_count": 4,
+      "near_miss_count": 8,
+      "example_near_labels": [
+        "Net Asset per Share (Rs.) Company",
+        "Net Asset per Share (Rs.) Group"
+      ]
+    },
+    {
+      "issuer_id": "CINS.N0000",
+      "metric_code": "TOP_LINE",
+      "gold_value": "374714000",
+      "gold_label": "Net Income",
+      "gold_entity": "COMPANY",
+      "gold_duration": 3,
+      "gold_page": 5,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "ENTITY_UNRESOLVED",
+      "resolved_candidate_count": 18,
+      "near_miss_count": 32,
+      "example_near_labels": [
+        "Revenue"
+      ]
+    },
+    {
+      "issuer_id": "COCR.N0000",
+      "metric_code": "EPS_BASIC",
+      "gold_value": "5.90",
+      "gold_label": "Earning per Share (LKR) - For the Period",
+      "gold_entity": "COMPANY",
+      "gold_duration": 3,
+      "gold_page": 3,
+      "family": "NO_TARGET_CANDIDATE",
+      "first_failure_stage": "NO_TARGET_CANDIDATE",
+      "resolved_candidate_count": 0,
+      "near_miss_count": 0,
+      "example_near_labels": []
+    },
+    {
+      "issuer_id": "COCR.N0000",
+      "metric_code": "OPERATING_PROFIT",
+      "gold_value": "3681170368",
+      "gold_label": "Profit before Social Security Contribution Levy / Value Added Tax on financial services",
+      "gold_entity": "COMPANY",
+      "gold_duration": 3,
+      "gold_page": 3,
+      "family": "NO_TARGET_CANDIDATE",
+      "first_failure_stage": "NO_TARGET_CANDIDATE",
+      "resolved_candidate_count": 0,
+      "near_miss_count": 0,
+      "example_near_labels": []
+    },
+    {
+      "issuer_id": "COCR.N0000",
+      "metric_code": "PAT",
+      "gold_value": "1877424233",
+      "gold_label": "Profit for the Period",
+      "gold_entity": "COMPANY",
+      "gold_duration": 3,
+      "gold_page": 3,
+      "family": "NO_TARGET_CANDIDATE_NEAR_MISS",
+      "first_failure_stage": "CONCEPT_UNRESOLVED",
+      "resolved_candidate_count": 0,
+      "near_miss_count": 8,
+      "example_near_labels": [
+        "Net profit for the period"
+      ]
+    },
+    {
+      "issuer_id": "COCR.N0000",
+      "metric_code": "PBT",
+      "gold_value": "2882632242",
+      "gold_label": "Profit Before Income Tax",
+      "gold_entity": "COMPANY",
+      "gold_duration": 3,
+      "gold_page": 3,
+      "family": "NO_TARGET_CANDIDATE_NEAR_MISS",
+      "first_failure_stage": "CONCEPT_UNRESOLVED",
+      "resolved_candidate_count": 0,
+      "near_miss_count": 4,
+      "example_near_labels": [
+        "Profit before Income Tax Expense"
+      ]
+    },
+    {
+      "issuer_id": "COCR.N0000",
+      "metric_code": "TOP_LINE",
+      "gold_value": "8315262702",
+      "gold_label": "Gross Income",
+      "gold_entity": "COMPANY",
+      "gold_duration": 3,
+      "gold_page": 3,
+      "family": "NO_TARGET_CANDIDATE",
+      "first_failure_stage": "NO_TARGET_CANDIDATE",
+      "resolved_candidate_count": 0,
+      "near_miss_count": 0,
+      "example_near_labels": []
+    },
+    {
+      "issuer_id": "HUNA.N0000",
+      "metric_code": "EPS_BASIC",
+      "gold_value": "-0.06",
+      "gold_label": "Basic Earning per share / (Loss per share)",
+      "gold_entity": "COMPANY",
+      "gold_duration": 3,
+      "gold_page": 2,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "CONCEPT_UNRESOLVED",
+      "resolved_candidate_count": 7,
+      "near_miss_count": 14,
+      "example_near_labels": [
+        "Basic Earning per share / (Loss per share) (0.31)|"
+      ]
+    },
+    {
+      "issuer_id": "HUNA.N0000",
+      "metric_code": "PAT",
+      "gold_value": "-48136203",
+      "gold_label": "(Loss)/Profit for the period",
+      "gold_entity": "COMPANY",
+      "gold_duration": 3,
+      "gold_page": 2,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "CONCEPT_UNRESOLVED",
+      "resolved_candidate_count": 7,
+      "near_miss_count": 20,
+      "example_near_labels": [
+        "(Loss)/Profit for the period (261,978,863)||"
+      ]
+    },
+    {
+      "issuer_id": "HUNA.N0000",
+      "metric_code": "PBT",
+      "gold_value": "-48136203",
+      "gold_label": "(Loss)/Profit before tax",
+      "gold_entity": "COMPANY",
+      "gold_duration": 3,
+      "gold_page": 2,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "CONCEPT_UNRESOLVED",
+      "resolved_candidate_count": 6,
+      "near_miss_count": 12,
+      "example_near_labels": [
+        "(Loss)/Profit before tax (244,385,970)|| (48,136,203),"
+      ]
+    },
+    {
+      "issuer_id": "HUNA.N0000",
+      "metric_code": "TOTAL_EQUITY",
+      "gold_value": "2879319509",
+      "gold_label": "Total equity",
+      "gold_entity": "COMPANY",
+      "gold_duration": null,
+      "gold_page": 3,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "CONCEPT_UNRESOLVED",
+      "resolved_candidate_count": 14,
+      "near_miss_count": 28,
+      "example_near_labels": [
+        "Total equity mE, S92 BIE B79"
+      ]
+    },
+    {
+      "issuer_id": "LGIL.N0000",
+      "metric_code": "EPS_BASIC",
+      "gold_value": "-0.48",
+      "gold_label": "Basic earnings per share (Rs.)",
+      "gold_entity": "COMPANY",
+      "gold_duration": 3,
+      "gold_page": 9,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "ENTITY_UNRESOLVED",
+      "resolved_candidate_count": 7,
+      "near_miss_count": 14,
+      "example_near_labels": [
+        "Earnings per share Basic earnings per share"
+      ]
+    },
+    {
+      "issuer_id": "LGIL.N0000",
+      "metric_code": "EPS_DILUTED",
+      "gold_value": "-0.48",
+      "gold_label": "Basic and diluted earnings per share",
+      "gold_entity": "COMPANY",
+      "gold_duration": 3,
+      "gold_page": 9,
+      "family": "NO_TARGET_CANDIDATE",
+      "first_failure_stage": "NO_TARGET_CANDIDATE",
+      "resolved_candidate_count": 0,
+      "near_miss_count": 0,
+      "example_near_labels": []
+    },
+    {
+      "issuer_id": "LGIL.N0000",
+      "metric_code": "NAVPS",
+      "gold_value": "5.56",
+      "gold_label": "Net assets per share (Rs.)",
+      "gold_entity": "COMPANY",
+      "gold_duration": null,
+      "gold_page": 3,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "ENTITY_UNRESOLVED",
+      "resolved_candidate_count": 2,
+      "near_miss_count": 4,
+      "example_near_labels": [
+        "Net assets per share (Rs.)"
+      ]
+    },
+    {
+      "issuer_id": "LGIL.N0000",
+      "metric_code": "PAT",
+      "gold_value": "-581632000",
+      "gold_label": "Profit after tax",
+      "gold_entity": "COMPANY",
+      "gold_duration": 3,
+      "gold_page": 4,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "ENTITY_UNRESOLVED",
+      "resolved_candidate_count": 12,
+      "near_miss_count": 24,
+      "example_near_labels": [
+        "Profit after tax"
+      ]
+    },
+    {
+      "issuer_id": "LGIL.N0000",
+      "metric_code": "PBT",
+      "gold_value": "-752698000",
+      "gold_label": "Profit before tax",
+      "gold_entity": "COMPANY",
+      "gold_duration": 3,
+      "gold_page": 4,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "ENTITY_UNRESOLVED",
+      "resolved_candidate_count": 12,
+      "near_miss_count": 18,
+      "example_near_labels": [
+        "Profit before tax"
+      ]
+    },
+    {
+      "issuer_id": "LGIL.N0000",
+      "metric_code": "TOP_LINE",
+      "gold_value": "3024892000",
+      "gold_label": "Gross written premium",
+      "gold_entity": "COMPANY",
+      "gold_duration": 3,
+      "gold_page": 4,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "ENTITY_UNRESOLVED",
+      "resolved_candidate_count": 19,
+      "near_miss_count": 26,
+      "example_near_labels": [
+        "Revenue"
+      ]
+    },
+    {
+      "issuer_id": "LGIL.N0000",
+      "metric_code": "TOTAL_ASSETS",
+      "gold_value": "31241327000",
+      "gold_label": "Total assets",
+      "gold_entity": "COMPANY",
+      "gold_duration": null,
+      "gold_page": 3,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "ENTITY_UNRESOLVED",
+      "resolved_candidate_count": 2,
+      "near_miss_count": 4,
+      "example_near_labels": [
+        "Total assets"
+      ]
+    },
+    {
+      "issuer_id": "LGIL.N0000",
+      "metric_code": "TOTAL_EQUITY",
+      "gold_value": "6670770000",
+      "gold_label": "Total equity",
+      "gold_entity": "COMPANY",
+      "gold_duration": null,
+      "gold_page": 3,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "ENTITY_UNRESOLVED",
+      "resolved_candidate_count": 4,
+      "near_miss_count": 6,
+      "example_near_labels": [
+        "Total equity",
+        "Total liabilities & equity"
+      ]
+    },
+    {
+      "issuer_id": "LGIL.N0000",
+      "metric_code": "TOTAL_LIABILITIES",
+      "gold_value": "24570557000",
+      "gold_label": "Total liabilities",
+      "gold_entity": "COMPANY",
+      "gold_duration": null,
+      "gold_page": 3,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "ENTITY_UNRESOLVED",
+      "resolved_candidate_count": 2,
+      "near_miss_count": 8,
+      "example_near_labels": [
+        "Total liabilities"
+      ]
+    },
+    {
+      "issuer_id": "PABC.N0000",
+      "metric_code": "EPS_BASIC",
+      "gold_value": "2.22",
+      "gold_label": "Earnings Per Share - Basic/Diluted (Rs.)",
+      "gold_entity": "BANK",
+      "gold_duration": 3,
+      "gold_page": 7,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "ENTITY_UNRESOLVED",
+      "resolved_candidate_count": 6,
+      "near_miss_count": 6,
+      "example_near_labels": [
+        "Earnings Per Share Basic/Diluted (Rs.)"
+      ]
+    },
+    {
+      "issuer_id": "PABC.N0000",
+      "metric_code": "EPS_DILUTED",
+      "gold_value": "2.22",
+      "gold_label": "Earnings Per Share - Basic/Diluted (Rs.)",
+      "gold_entity": "BANK",
+      "gold_duration": 3,
+      "gold_page": 7,
+      "family": "NO_TARGET_CANDIDATE",
+      "first_failure_stage": "NO_TARGET_CANDIDATE",
+      "resolved_candidate_count": 0,
+      "near_miss_count": 0,
+      "example_near_labels": []
+    },
+    {
+      "issuer_id": "PABC.N0000",
+      "metric_code": "NAVPS",
+      "gold_value": "68.67",
+      "gold_label": "Net Asset Value Per Share (Rs.)",
+      "gold_entity": "BANK",
+      "gold_duration": null,
+      "gold_page": 9,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "ENTITY_UNRESOLVED",
+      "resolved_candidate_count": 3,
+      "near_miss_count": 6,
+      "example_near_labels": [
+        "Net Asset Value Per Share (Rs.)"
+      ]
+    },
+    {
+      "issuer_id": "PABC.N0000",
+      "metric_code": "OPERATING_PROFIT",
+      "gold_value": "1943397000",
+      "gold_label": "Operating Profit before Taxes on Financial Services",
+      "gold_entity": "BANK",
+      "gold_duration": 3,
+      "gold_page": 7,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "ENTITY_UNRESOLVED",
+      "resolved_candidate_count": 6,
+      "near_miss_count": 12,
+      "example_near_labels": [
+        "Operating Profit before Taxes on Financial Services"
+      ]
+    },
+    {
+      "issuer_id": "PABC.N0000",
+      "metric_code": "PAT",
+      "gold_value": "981161000",
+      "gold_label": "Profit for the Period",
+      "gold_entity": "BANK",
+      "gold_duration": 3,
+      "gold_page": 7,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "ENTITY_UNRESOLVED",
+      "resolved_candidate_count": 12,
+      "near_miss_count": 24,
+      "example_near_labels": [
+        "Profit for the Period"
+      ]
+    },
+    {
+      "issuer_id": "PABC.N0000",
+      "metric_code": "PBT",
+      "gold_value": "1493734000",
+      "gold_label": "Profit before Tax",
+      "gold_entity": "BANK",
+      "gold_duration": 3,
+      "gold_page": 7,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "ENTITY_UNRESOLVED",
+      "resolved_candidate_count": 6,
+      "near_miss_count": 22,
+      "example_near_labels": [
+        "Profit before Tax"
+      ]
+    },
+    {
+      "issuer_id": "PABC.N0000",
+      "metric_code": "TOTAL_ASSETS",
+      "gold_value": "308015795000",
+      "gold_label": "Total Assets",
+      "gold_entity": "BANK",
+      "gold_duration": null,
+      "gold_page": 9,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "ENTITY_UNRESOLVED",
+      "resolved_candidate_count": 3,
+      "near_miss_count": 8,
+      "example_near_labels": [
+        "Total Assets"
+      ]
+    },
+    {
+      "issuer_id": "PABC.N0000",
+      "metric_code": "TOTAL_EQUITY",
+      "gold_value": "30390170000",
+      "gold_label": "Total Equity",
+      "gold_entity": "BANK",
+      "gold_duration": null,
+      "gold_page": 9,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "ENTITY_UNRESOLVED",
+      "resolved_candidate_count": 6,
+      "near_miss_count": 12,
+      "example_near_labels": [
+        "Total Equity",
+        "Total Equity and Liabilities"
+      ]
+    },
+    {
+      "issuer_id": "PABC.N0000",
+      "metric_code": "TOTAL_LIABILITIES",
+      "gold_value": "277625625000",
+      "gold_label": "Total Liabilities",
+      "gold_entity": "BANK",
+      "gold_duration": null,
+      "gold_page": 9,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "ENTITY_UNRESOLVED",
+      "resolved_candidate_count": 3,
+      "near_miss_count": 9,
+      "example_near_labels": [
+        "Total Liabilities"
+      ]
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "metric_code": "EPS_BASIC",
+      "gold_value": "0.92",
+      "gold_label": "Basic earnings per ordinary share (Rs.)",
+      "gold_entity": "BANK",
+      "gold_duration": 3,
+      "gold_page": 2,
+      "family": "NO_TARGET_CANDIDATE_NEAR_MISS",
+      "first_failure_stage": "CONCEPT_UNRESOLVED",
+      "resolved_candidate_count": 0,
+      "near_miss_count": 2,
+      "example_near_labels": [
+        "[Earnings per share on profit Basic earnings per ordinary share (Rs) 2a7 249] as"
+      ]
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "metric_code": "EPS_DILUTED",
+      "gold_value": "0.92",
+      "gold_label": "Diluted earnings per ordinary share (Rs.)",
+      "gold_entity": "BANK",
+      "gold_duration": 3,
+      "gold_page": 2,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "CONCEPT_UNRESOLVED",
+      "resolved_candidate_count": 2,
+      "near_miss_count": 4,
+      "example_near_labels": [
+        "[Diluted earnings per ordinary share (Rs.) 2.49| os |"
+      ]
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "metric_code": "NAVPS",
+      "gold_value": "90.18",
+      "gold_label": "Net asset value per share (Rs.)",
+      "gold_entity": "BANK",
+      "gold_duration": null,
+      "gold_page": 3,
+      "family": "NO_TARGET_CANDIDATE",
+      "first_failure_stage": "NO_TARGET_CANDIDATE",
+      "resolved_candidate_count": 0,
+      "near_miss_count": 0,
+      "example_near_labels": []
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "metric_code": "OPERATING_PROFIT",
+      "gold_value": "550523000",
+      "gold_label": "Operating profit/ (loss) before VAT on financial services & SSCL",
+      "gold_entity": "BANK",
+      "gold_duration": 3,
+      "gold_page": 2,
+      "family": "NO_TARGET_CANDIDATE",
+      "first_failure_stage": "NO_TARGET_CANDIDATE",
+      "resolved_candidate_count": 0,
+      "near_miss_count": 0,
+      "example_near_labels": []
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "metric_code": "PAT",
+      "gold_value": "151264000",
+      "gold_label": "Profit/(loss) for the period",
+      "gold_entity": "BANK",
+      "gold_duration": 3,
+      "gold_page": 2,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "CONCEPT_UNRESOLVED",
+      "resolved_candidate_count": 6,
+      "near_miss_count": 12,
+      "example_near_labels": [
+        "Profit/(loss) for the period acai | 409534] |",
+        "|Profit/(loss) for the period | | | 200%%"
+      ]
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "metric_code": "PBT",
+      "gold_value": "376323000",
+      "gold_label": "Profit/(loss) before tax",
+      "gold_entity": "BANK",
+      "gold_duration": 3,
+      "gold_page": 2,
+      "family": "CANDIDATE_PRESENT_BUT_NOT_SOURCEFACT",
+      "first_failure_stage": "CONCEPT_UNRESOLVED",
+      "resolved_candidate_count": 3,
+      "near_miss_count": 6,
+      "example_near_labels": [
+        "|Profit/(loss) before tax sooi7s| | |"
+      ]
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "metric_code": "TOTAL_ASSETS",
+      "gold_value": "146958097000",
+      "gold_label": "Total assets",
+      "gold_entity": "BANK",
+      "gold_duration": null,
+      "gold_page": 3,
+      "family": "NO_TARGET_CANDIDATE",
+      "first_failure_stage": "NO_TARGET_CANDIDATE",
+      "resolved_candidate_count": 0,
+      "near_miss_count": 0,
+      "example_near_labels": []
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "metric_code": "TOTAL_EQUITY",
+      "gold_value": "14804406000",
+      "gold_label": "Total equity",
+      "gold_entity": "BANK",
+      "gold_duration": null,
+      "gold_page": 3,
+      "family": "NO_TARGET_CANDIDATE",
+      "first_failure_stage": "NO_TARGET_CANDIDATE",
+      "resolved_candidate_count": 0,
+      "near_miss_count": 0,
+      "example_near_labels": []
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "metric_code": "TOTAL_LIABILITIES",
+      "gold_value": "132153690000",
+      "gold_label": "Total liabilities",
+      "gold_entity": "BANK",
+      "gold_duration": null,
+      "gold_page": 3,
+      "family": "NO_TARGET_CANDIDATE",
+      "first_failure_stage": "NO_TARGET_CANDIDATE",
+      "resolved_candidate_count": 0,
+      "near_miss_count": 0,
+      "example_near_labels": []
+    }
+  ]
+}

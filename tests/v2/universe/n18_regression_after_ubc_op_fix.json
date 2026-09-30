@@ -1,0 +1,25 @@
+{
+  "id": "n18-regression-after-ubc-op-fix",
+  "status": "REGRESSION_ONLY_NOT_UNSEEN",
+  "regression_score": {
+    "tp": 33,
+    "fn": 68,
+    "critical_wrong": 0,
+    "value_mismatch": 0,
+    "entity_mismatch": 0,
+    "period_mismatch": 6,
+    "duration_mismatch": 2,
+    "unit_mismatch": 11,
+    "source_reported_recall": 0.286957,
+    "numeric_correctness": 1.0
+  },
+  "ubc_operating_profit": [
+    {
+      "issuer_id": "UBC.N0000",
+      "filing_version_id": "UBC.N0000-2025-12-31",
+      "metric_code": "OPERATING_PROFIT",
+      "result": "TP",
+      "v2_value": "748922000"
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "id": "baseline-freeze-plus3",
+  "frozen_at": "2026-09-20T12:49:34.830250+00:00",
+  "branch": "v2/extraction-investigation",
+  "git_head": "c5bbe510b1478563d03ecd8daf2b6439a564e7c4",
+  "working_tree_dirty": true,
+  "dirty_paths_count": 43,
+  "baseline_kpis": {
+    "v2_draft_selected_target": 2816,
+    "assisted_draft_selected_target": 2819,
+    "net": 3,
+    "e13_draft_publishable": 3854,
+    "governance_floor": 8924
+  },
+  "artifact_checksums": {
+    "pinned_cohort.json": {
+      "sha256": "345b75b7e0b57646fbc5a27a00cff4cd0ddd8546d37bc19cda6f32a23e3aa5fe",
+      "bytes": 587158
+    },
+    "gap_summary.json": {
+      "sha256": "ec12fec8ccf5e2c99c8a2018f326401b76481a701db28f564b5ddcab9f7d62fc",
+      "bytes": 3366
+    },
+    "KPI_DEFINITION_RECONCILE.md": {
+      "sha256": "beecc595911892577b9b29a15c15a41afbb2a872aa6bf669e557aa1153ff92d5",
+      "bytes": 1707
+    },
+    "PARITY_EXECUTION_STATUS.md": {
+      "sha256": "32e019019eb61dad41b4d409706a42b49f07403a89d3c1b6aecbe7d1e57c7df7",
+      "bytes": 2069
+    },
+    "NON_REGRESSION_INVESTIGATION.md": {
+      "sha256": "9f404287f24f6db42d7458957c78b9339bbf3a55f15d45930e3ed69a8f63d327",
+      "bytes": 7167
+    },
+    "ledger_v1.csv": {
+      "sha256": "6012f409579cc800dfeea2e755346ce38cecae00addcdc576e765bde23a40a98",
+      "bytes": 1373487
+    },
+    "ledger_v2.csv": {
+      "sha256": "d3d29d5c3a6717d38281b7a14bda18bd05e6398f4211042a764713178059ffcb",
+      "bytes": 7420141
+    },
+    "ledger_v1_assisted_v2.csv": {
+      "sha256": "7c3630b2e69f2cd90864747632f49a29eb24dc751d8faaefe59a1471bbf53ed3",
+      "bytes": 7531184
+    },
+    "three_way_measure_summary.json": {
+      "sha256": "f82fd574f6b8b789dccda24b3580ac0b941df5a4dec12d7cf08382fb5d6a4774",
+      "bytes": 3484
+    },
+    "e13_summary": {
+      "sha256": "1bcfc8733a47fa7a9e9151b8f57c33d9176d42af5317475c92a0436148f44570",
+      "bytes": 1055,
+      "path": "D:\\Report\\tests\\v2\\universe\\e13_v2_challenger_clean_d29b392\\e13_summary.json"
+    }
+  },
+  "note": "Freeze of post note/share-count + unit-table full-829 +3 result. Supersedes interim +24. Do not rewrite."
+}

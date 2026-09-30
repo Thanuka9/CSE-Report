@@ -1,0 +1,477 @@
+{
+  "lost_hard_classes": {
+    "ABSENT_FROM_ASSISTED_LEDGER": 129,
+    "VALUE_CHANGED_STILL_ELIGIBLE": 14,
+    "SLOT_PRESENT_DIFFERENT_VALUE_OR_DURATION": 21,
+    "DURATION_REKEYED_SAME_VALUE": 47
+  },
+  "new_hard_classes": {
+    "WAS_WITHHELD_NOW_ELIGIBLE": 18,
+    "TRULY_NEW_SLOT": 111,
+    "WAS_CONFLICTING_NOW_ELIGIBLE": 231,
+    "DURATION_REKEYED_OR_NEW_CMP": 16,
+    "NEW_VALUE_ON_EXISTING_SOFT": 6
+  },
+  "lost_samples": {
+    "ABSENT_FROM_ASSISTED_LEDGER": [
+      {
+        "symbol": "CPRT.N0000",
+        "metric": "TOP_LINE",
+        "entity": "COMPANY",
+        "period": "2025-12-31",
+        "dur": "3",
+        "cmp": "CURRENT",
+        "value": "2497826",
+        "issuer_dir": "KERNER_HAUS_GLOBAL_SOLUTIONS_PLC",
+        "as_reasons": null,
+        "as_status": null,
+        "as_dur_vals": []
+      },
+      {
+        "symbol": "UDPL.N0000",
+        "metric": "TOTAL_EQUITY",
+        "entity": "COMPANY",
+        "period": "2025-03-31",
+        "dur": "",
+        "cmp": "COMPARATIVE",
+        "value": "4063989000",
+        "issuer_dir": "UDAPUSSELLAWA_PLANTATIONS_PLC",
+        "as_reasons": null,
+        "as_status": null,
+        "as_dur_vals": []
+      },
+      {
+        "symbol": "CIND.N0000",
+        "metric": "TOP_LINE",
+        "entity": "COMPANY",
+        "period": "2026-06-30",
+        "dur": "3",
+        "cmp": "CURRENT",
+        "value": "1772282000",
+        "issuer_dir": "CENTRAL_INDUSTRIES_PLC",
+        "as_reasons": null,
+        "as_status": null,
+        "as_dur_vals": []
+      },
+      {
+        "symbol": "HVA.N0000",
+        "metric": "TOP_LINE",
+        "entity": "COMPANY",
+        "period": "2025-12-31",
+        "dur": "3",
+        "cmp": "CURRENT",
+        "value": "604210879",
+        "issuer_dir": "HVA_FOODS_PLC",
+        "as_reasons": null,
+        "as_status": null,
+        "as_dur_vals": []
+      },
+      {
+        "symbol": "BRWN.N0000",
+        "metric": "NAVPS",
+        "entity": "COMPANY",
+        "period": "2025-12-31",
+        "dur": "",
+        "cmp": "CURRENT",
+        "value": "515.01",
+        "issuer_dir": "BROWN_COMPANY_PLC",
+        "as_reasons": null,
+        "as_status": null,
+        "as_dur_vals": []
+      }
+    ],
+    "VALUE_CHANGED_STILL_ELIGIBLE": [
+      {
+        "symbol": "BFL.N0000",
+        "metric": "PBT",
+        "entity": "GROUP",
+        "period": "2026-06-30",
+        "dur": "3",
+        "cmp": "CURRENT",
+        "value": "295443491",
+        "issuer_dir": "BAIRAHA_FARMS_PLC",
+        "as_reasons": [],
+        "as_status": "ELIGIBLE",
+        "as_dur_vals": [
+          [
+            "3",
+            "ELIGIBLE",
+            "323475345"
+          ],
+          [
+            "3",
+            "ELIGIBLE",
+            "-97446666"
+          ]
+        ]
+      },
+      {
+        "symbol": "OSEA.N0000",
+        "metric": "PBT",
+        "entity": "COMPANY",
+        "period": "2026-06-30",
+        "dur": "3",
+        "cmp": "CURRENT",
+        "value": "-66321000",
+        "issuer_dir": "OVERSEAS_REALTY_CEYLON_PLC",
+        "as_reasons": [],
+        "as_status": "ELIGIBLE",
+        "as_dur_vals": [
+          [
+            "3",
+            "ELIGIBLE",
+            "1966688000"
+          ]
+        ]
+      },
+      {
+        "symbol": "BFL.N0000",
+        "metric": "TOP_LINE",
+        "entity": "GROUP",
+        "period": "2026-06-30",
+        "dur": "3",
+        "cmp": "CURRENT",
+        "value": "3773839599",
+        "issuer_dir": "BAIRAHA_FARMS_PLC",
+        "as_reasons": [],
+        "as_status": "ELIGIBLE",
+        "as_dur_vals": [
+          [
+            "3",
+            "ELIGIBLE",
+            "4165377518"
+          ]
+        ]
+      },
+      {
+        "symbol": "CERA.N0000",
+        "metric": "PBT",
+        "entity": "GROUP",
+        "period": "2026-06-30",
+        "dur": "3",
+        "cmp": "CURRENT",
+        "value": "-11436437",
+        "issuer_dir": "LANKA_CERAMIC_PLC",
+        "as_reasons": [],
+        "as_status": "ELIGIBLE",
+        "as_dur_vals": [
+          [
+            "3",
+            "ELIGIBLE",
+            "35916377"
+          ]
+        ]
+      },
+      {
+        "symbol": "BFL.N0000",
+        "metric": "PAT",
+        "entity": "GROUP",
+        "period": "2026-06-30",
+        "dur": "3",
+        "cmp": "CURRENT",
+        "value": "206208794",
+        "issuer_dir": "BAIRAHA_FARMS_PLC",
+        "as_reasons": [],
+        "as_status": "ELIGIBLE",
+        "as_dur_vals": [
+          [
+            "3",
+            "ELIGIBLE",
+            "241976184"
+          ]
+        ]
+      }
+    ],
+    "SLOT_PRESENT_DIFFERENT_VALUE_OR_DURATION": [
+      {
+        "symbol": "DOCK.N0000",
+        "metric": "TOP_LINE",
+        "entity": "COMPANY",
+        "period": "2025-12-31",
+        "dur": "3",
+        "cmp": "CURRENT",
+        "value": "6140464000",
+        "issuer_dir": "COLOMBO_DOCKYARD_PLC",
+        "as_reasons": null,
+        "as_status": null,
+        "as_dur_vals": []
+      },
+      {
+        "symbol": "AMSL.N0000",
+        "metric": "EPS_BASIC",
+        "entity": "COMPANY",
+        "period": "2026-03-31",
+        "dur": "3",
+        "cmp": "CURRENT",
+        "value": "0.38",
+        "issuer_dir": "ASIRI_SURGICAL_HOSPITAL_PLC",
+        "as_reasons": null,
+        "as_status": null,
+        "as_dur_vals": []
+      },
+      {
+        "symbol": "DOCK.N0000",
+        "metric": "EPS_BASIC",
+        "entity": "COMPANY",
+        "period": "2025-12-31",
+        "dur": "3",
+        "cmp": "CURRENT",
+        "value": "-16.58",
+        "issuer_dir": "COLOMBO_DOCKYARD_PLC",
+        "as_reasons": null,
+        "as_status": null,
+        "as_dur_vals": []
+      },
+      {
+        "symbol": "UBC.N0000",
+        "metric": "EPS_DILUTED",
+        "entity": "BANK",
+        "period": "2025-12-31",
+        "dur": "3",
+        "cmp": "CURRENT",
+        "value": "0.3",
+        "issuer_dir": "UNION_BANK_OF_COLOMBO_PLC",
+        "as_reasons": null,
+        "as_status": null,
+        "as_dur_vals": []
+      },
+      {
+        "symbol": "CSF.N0000",
+        "metric": "TOP_LINE",
+        "entity": "GROUP",
+        "period": "2026-03-31",
+        "dur": "3",
+        "cmp": "CURRENT",
+        "value": "-7762000",
+        "issuer_dir": "NATION_LANKA_FINANCE_PLC",
+        "as_reasons": null,
+        "as_status": null,
+        "as_dur_vals": []
+      }
+    ],
+    "DURATION_REKEYED_SAME_VALUE": [
+      {
+        "symbol": "OFEQ.N0000",
+        "metric": "OPERATING_PROFIT",
+        "entity": "GROUP",
+        "period": "2025-12-31",
+        "dur": "3",
+        "cmp": "CURRENT",
+        "value": "-6029924",
+        "issuer_dir": "OFFICE_EQUIPMENT_PLC",
+        "as_reasons": null,
+        "as_status": null,
+        "as_dur_vals": []
+      },
+      {
+        "symbol": "OFEQ.N0000",
+        "metric": "EPS_BASIC",
+        "entity": "COMPANY",
+        "period": "2025-12-31",
+        "dur": "3",
+        "cmp": "CURRENT",
+        "value": "-7.01",
+        "issuer_dir": "OFFICE_EQUIPMENT_PLC",
+        "as_reasons": null,
+        "as_status": null,
+        "as_dur_vals": []
+      },
+      {
+        "symbol": "RHL.N0000",
+        "metric": "EPS_BASIC",
+        "entity": "GROUP",
+        "period": "2026-06-30",
+        "dur": "3",
+        "cmp": "CURRENT",
+        "value": "0.78",
+        "issuer_dir": "RENUKA_HOLDINGS_PLC",
+        "as_reasons": null,
+        "as_status": null,
+        "as_dur_vals": []
+      },
+      {
+        "symbol": "COCO.N0000",
+        "metric": "EPS_BASIC",
+        "entity": "GROUP",
+        "period": "2026-06-30",
+        "dur": "3",
+        "cmp": "CURRENT",
+        "value": "0.28",
+        "issuer_dir": "RENUKA_FOODS_PLC",
+        "as_reasons": null,
+        "as_status": null,
+        "as_dur_vals": []
+      },
+      {
+        "symbol": "OFEQ.N0000",
+        "metric": "EPS_BASIC",
+        "entity": "GROUP",
+        "period": "2025-12-31",
+        "dur": "3",
+        "cmp": "CURRENT",
+        "value": "-7.75",
+        "issuer_dir": "OFFICE_EQUIPMENT_PLC",
+        "as_reasons": null,
+        "as_status": null,
+        "as_dur_vals": []
+      }
+    ]
+  },
+  "new_samples": {
+    "WAS_WITHHELD_NOW_ELIGIBLE": [
+      {
+        "symbol": "KFP.N0000",
+        "metric": "PBT",
+        "entity": "CONSOLIDATED",
+        "period": "2026-03-31",
+        "dur": "3",
+        "value": "7000",
+        "issuer_dir": "KEELLS_FOOD_PRODUCTS_PLC"
+      },
+      {
+        "symbol": "KFP.N0000",
+        "metric": "PBT",
+        "entity": "COMPANY",
+        "period": "2025-12-31",
+        "dur": "3",
+        "value": "7000",
+        "issuer_dir": "KEELLS_FOOD_PRODUCTS_PLC"
+      },
+      {
+        "symbol": "KFP.N0000",
+        "metric": "PBT",
+        "entity": "CONSOLIDATED",
+        "period": "2025-12-31",
+        "dur": "3",
+        "value": "7000",
+        "issuer_dir": "KEELLS_FOOD_PRODUCTS_PLC"
+      }
+    ],
+    "TRULY_NEW_SLOT": [
+      {
+        "symbol": "BLUE.N0000",
+        "metric": "PAT",
+        "entity": "GROUP",
+        "period": "2026-06-30",
+        "dur": "3",
+        "value": "7504000",
+        "issuer_dir": "BLUE_DIAMONDS_JEWELLERY_WORLDWIDE_PLC"
+      },
+      {
+        "symbol": "SHAW.N0000",
+        "metric": "NAVPS",
+        "entity": "GROUP",
+        "period": "2025-03-31",
+        "dur": "",
+        "value": "239.94",
+        "issuer_dir": "LEE_HEDGES_PLC"
+      },
+      {
+        "symbol": "SHAW.N0000",
+        "metric": "TOTAL_ASSETS",
+        "entity": "COMPANY",
+        "period": "2025-03-31",
+        "dur": "",
+        "value": "5691972000",
+        "issuer_dir": "LEE_HEDGES_PLC"
+      }
+    ],
+    "WAS_CONFLICTING_NOW_ELIGIBLE": [
+      {
+        "symbol": "CCS.N0000",
+        "metric": "TOTAL_EQUITY",
+        "entity": "COMPANY",
+        "period": "2025-12-31",
+        "dur": "",
+        "value": "16180915000",
+        "issuer_dir": "CEYLON_COLD_STORES_PLC"
+      },
+      {
+        "symbol": "SERV.N0000",
+        "metric": "NAVPS",
+        "entity": "COMPANY",
+        "period": "2024-12-31",
+        "dur": "",
+        "value": "4.54",
+        "issuer_dir": "THE_KINGSBURY_PLC"
+      },
+      {
+        "symbol": "JKL.N0000",
+        "metric": "NAVPS",
+        "entity": "CONSOLIDATED",
+        "period": "2026-06-30",
+        "dur": "",
+        "value": "65.29",
+        "issuer_dir": "JOHN_KEELLS_PLC"
+      }
+    ],
+    "DURATION_REKEYED_OR_NEW_CMP": [
+      {
+        "symbol": "CFVF.N0000",
+        "metric": "TOTAL_ASSETS",
+        "entity": "GROUP",
+        "period": "2025-12-31",
+        "dur": "",
+        "value": "85220200000",
+        "issuer_dir": "FIRST_CAPITAL_HOLDINGS_PLC"
+      },
+      {
+        "symbol": "SINS.N0000",
+        "metric": "OPERATING_PROFIT",
+        "entity": "COMPANY",
+        "period": "2026-03-31",
+        "dur": "3",
+        "value": "3606989000",
+        "issuer_dir": "SINGER_SRI_LANKA_PLC"
+      },
+      {
+        "symbol": "CFVF.N0000",
+        "metric": "TOTAL_ASSETS",
+        "entity": "GROUP",
+        "period": "2026-03-31",
+        "dur": "",
+        "value": "71197375000",
+        "issuer_dir": "FIRST_CAPITAL_HOLDINGS_PLC"
+      }
+    ],
+    "NEW_VALUE_ON_EXISTING_SOFT": [
+      {
+        "symbol": "PLC.N0000",
+        "metric": "TOTAL_LIABILITIES",
+        "entity": "GROUP",
+        "period": "2026-03-31",
+        "dur": "",
+        "value": "3000000",
+        "issuer_dir": "PEOPLE_S_LEASING_FINANCE_PLC"
+      },
+      {
+        "symbol": "PLC.N0000",
+        "metric": "TOTAL_ASSETS",
+        "entity": "GROUP",
+        "period": "2026-03-31",
+        "dur": "",
+        "value": "3000000",
+        "issuer_dir": "PEOPLE_S_LEASING_FINANCE_PLC"
+      },
+      {
+        "symbol": "CARE.N0000",
+        "metric": "EPS_BASIC",
+        "entity": "COMPANY",
+        "period": "2026-06-30",
+        "dur": "3",
+        "value": "10",
+        "issuer_dir": "PRINTCARE_PLC"
+      }
+    ]
+  },
+  "counts": {
+    "v2_eligible_rows": 9838,
+    "assisted_eligible_rows": 9562,
+    "v2_eligible_hard_keys": 9209,
+    "assisted_eligible_hard_keys": 9380,
+    "lost_hard": 211,
+    "new_hard": 382,
+    "net_hard": 171,
+    "net_rows": -276
+  }
+}

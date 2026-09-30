@@ -14,16 +14,16 @@ from cse_financial_etl.v2.contracts.enums import (
 from cse_financial_etl.v2.market.quarter_end_price import resolve_last_traded_as_of_quarter_end
 from cse_financial_etl.v2.orchestration.filing_pipeline import run_filing_pipeline
 from cse_financial_etl.v2.production.adapter import _from_source, select_pipeline_facts
-from cse_financial_etl.v2.taxonomy.registry import load_registry
 from cse_financial_etl.v2.production.engine import extract_for_production
-from tests.v2.helpers import geometric_document, source_fact
+from cse_financial_etl.v2.taxonomy.registry import load_registry
+from tests.v2.helpers import geometric_document, source_fact, source_ref
 
 
 def test_app_config_defaults_to_v1_engine() -> None:
     assert AppConfig().extraction_engine == "v1"
 
 
-def test_investor_navps_publishes_company() -> None:
+def test_investor_navps_does_not_infer_company() -> None:
     document = geometric_document(
         (
             ((40.0, "INVESTOR INFORMATION"),),
@@ -36,16 +36,10 @@ def test_investor_navps_publishes_company() -> None:
         document, issuer_id="HAYL.N0000"
     )
     assert any(item.statement_type is StatementType.EPS_NOTE for item in statements)
-    navps = [
-        fact
-        for fact in facts
-        if fact.metric_code == "NAVPS" and fact.publication_status is PublicationStatus.ELIGIBLE
-    ]
-    assert navps
-    assert any(
-        fact.entity_scope is EntityScope.COMPANY
-        and fact.normalized_value == Decimal("148.27")
-        for fact in navps
+    navps = [fact for fact in facts if fact.metric_code == "NAVPS"]
+    assert all(fact.entity_scope is not EntityScope.COMPANY for fact in navps)
+    assert not any(
+        fact.publication_status is PublicationStatus.ELIGIBLE for fact in navps
     )
 
 
@@ -135,7 +129,31 @@ def test_pipeline_facts_allow_group_consolidated_equivalence() -> None:
     assert selected[0].entity_scope is EntityScope.CONSOLIDATED
 
 
-def test_pipeline_facts_drop_comparative_and_non_quarter_flow() -> None:
+def test_pipeline_facts_prefer_natural_scale_over_bn_highlight() -> None:
+    highlight = source_fact(
+        fact_id="bn-pat",
+        normalized_value=Decimal("181200000000"),
+        raw_value=Decimal("181.2"),
+        source_scale=Decimal("1000000000"),
+        source_ref=source_ref(page_number=2, raw_text="181.2"),
+        cell_id="cell-bn",
+    )
+    statement = source_fact(
+        fact_id="stmt-pat",
+        normalized_value=Decimal("429411257"),
+        raw_value=Decimal("429411257"),
+        source_scale=Decimal("1"),
+        source_ref=source_ref(page_number=5, raw_text="429,411,257"),
+        cell_id="cell-stmt",
+    )
+    selected = select_pipeline_facts(
+        (highlight, statement),
+        period_end=date(2026, 6, 30),
+        expected_entity=EntityScope.COMPANY,
+    )
+    assert len(selected) == 1
+    assert selected[0].normalized_value == Decimal("429411257")
+
     comparative = source_fact(
         fact_id="prior",
         comparison_role=ComparisonRole.COMPARATIVE,
@@ -174,6 +192,44 @@ def test_pipeline_extract_filing_defaults_to_v1(monkeypatch) -> None:
     extract_filing(Path("missing.pdf"), "Acme PLC", "ACM.N0000", date(2026, 6, 30))
     assert called["v1"] is True
     assert called["v2"] is False
+
+
+def test_rollback_to_v1_leaves_hybrid_off_and_v1_importable(monkeypatch) -> None:
+    called = {"v1": 0, "v2": 0}
+
+    def fake_v1(*_args, **_kwargs):
+        called["v1"] += 1
+        return []
+
+    def fake_v2(*_args, **_kwargs):
+        called["v2"] += 1
+        return []
+
+    monkeypatch.setattr(
+        "cse_financial_etl.v2.production.engine.extract_filing", fake_v1
+    )
+    monkeypatch.setattr(
+        "cse_financial_etl.v2.production.engine.extract_filing_v2", fake_v2
+    )
+    extract_for_production(
+        Path("missing.pdf"), "Acme", "ACM.N0000", date(2026, 6, 30), engine="v2"
+    )
+    extract_for_production(
+        Path("missing.pdf"), "Acme", "ACM.N0000", date(2026, 6, 30), engine="v1"
+    )
+    assert called == {"v1": 1, "v2": 1}
+    from cse_financial_etl.extraction.statement_extractor import extract_filing as v1_backend
+
+    assert callable(v1_backend)
+    import yaml
+
+    app = yaml.safe_load(
+        (Path(__file__).resolve().parents[3] / "configs" / "app.yml").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert app["extraction"]["engine"] == "v2"
+    assert app["publication"]["release_mode"] == "DRAFT"
 
 
 def test_v1_engine_flag_still_calls_challenger(monkeypatch) -> None:

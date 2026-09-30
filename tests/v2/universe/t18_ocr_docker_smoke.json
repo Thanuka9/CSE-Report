@@ -1,0 +1,8 @@
+{
+  "status": "PASS",
+  "image": "cse-etl:ocr-smoke-v2",
+  "command": "docker run --rm --entrypoint python cse-etl:ocr-smoke-v2 /app/scripts/v2_ocr_runtime_smoke.py",
+  "result": "PASS native_tokens=0 ocr_tokens=21 parser_name=v2.ocr.tesseract",
+  "exit_code": 0,
+  "note": "Checklist item 18 engineering close. Production default remains extraction.engine: v1."
+}

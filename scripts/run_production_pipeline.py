@@ -12,6 +12,7 @@ import json
 from datetime import date
 from pathlib import Path
 
+from cse_financial_etl.config import load_app_config
 from cse_financial_etl.orchestration.resilient_pipeline import run_resilient_pipeline
 from cse_financial_etl.production.r4_hardening import (
     apply_r4_hardening,
@@ -24,7 +25,10 @@ from cse_financial_etl.production.runtime import (
     relabel_workbook_leverage,
     write_metric_definitions,
 )
-from cse_financial_etl.reporting.excel import generate_excel
+from cse_financial_etl.reporting.production_workbook import (
+    generate_production_workbook,
+    resolve_extraction_engine,
+)
 from cse_financial_etl.validation.universe_acceptance import evaluate_universe_acceptance
 
 
@@ -74,6 +78,8 @@ def main() -> int:
     root = args.project_root.resolve()
     as_of = date.fromisoformat(args.as_of)
     periods = _parse_periods(args.periods, as_of)
+    app_config = load_app_config(root)
+    chosen_engine = resolve_extraction_engine(app_config, args.engine)
 
     with production_runtime(root, as_of_date=as_of, offline=args.offline) as capture:
         # The governed workbook must never be built from pre-R4 rows.  The core pipeline
@@ -136,14 +142,20 @@ def main() -> int:
         acceptance_path.write_text(json.dumps(acceptance, indent=2), encoding="utf-8")
 
         if not args.skip_excel:
-            workbook_path = generate_excel(
+            run_id = str(result.get("run_id") or "UNKNOWN")
+            workbook_path = generate_production_workbook(
                 root,
                 as_of,
                 periods,
-                str(result.get("run_id") or "UNKNOWN"),
+                run_id,
+                engine=chosen_engine,
+                app_config=app_config,
             )
-            relabel_workbook_leverage(workbook_path)
+            if chosen_engine == "v1":
+                relabel_workbook_leverage(workbook_path)
             result["workbook"] = str(workbook_path)
+            if chosen_engine == "v2":
+                result["workbook_renderer"] = "v2.publish_production_workbook"
 
     payload = {
         **result,

@@ -1,0 +1,85 @@
+{
+  "freeze_id": "t25_failed_holdout_v1",
+  "frozen_on": "2026-09-16",
+  "status": "FAILED",
+  "note": "First unseen T25 holdout failed. Cases are now engineering evidence / DEV-regression candidates. Do not reuse this 12-file set as the final holdout.",
+  "investigation_base_sha": "91a9c68bf940d3d9c2a86245f127de88ad4b4b6d",
+  "score_artefact": "tests/v2/universe/t25_holdout_score.json",
+  "score_actual_code_sha": "ffc7d1096b15d3052ec3efd4ace9c313c4e6ab76:dirty:7d58c3d45346",
+  "recovery_plan": "docs/v2/NEXT_ENGINEERING_STEPS_AND_PROJECT_RECOVERY_PLAN.md",
+  "summary": {
+    "item_count": 24,
+    "reported": 20,
+    "entity_resolved_reported": 16,
+    "tp": 11,
+    "fn": 3,
+    "value_or_entity_mismatch": 2,
+    "g01_withheld": 4,
+    "recall_vs_entity_resolved": 0.6875,
+    "critical_wrong_facts": 2
+  },
+  "issuers": [
+    "BBH.N0000",
+    "GUAR.N0000",
+    "HARI.N0000",
+    "HAYC.N0000",
+    "HBS.N0000",
+    "HNBF.N0000",
+    "LALU.N0000",
+    "LHL.N0000",
+    "LITE.N0000",
+    "NAMU.N0000",
+    "SFCL.N0000",
+    "TYRE.N0000"
+  ],
+  "diagnosis": {
+    "N02": "docs/v2/investigations/N02_LITE_TRACE.md",
+    "N03": "docs/v2/investigations/N03_SFCL_TRACE.md",
+    "N04": "docs/v2/investigations/N04_ROOT_CAUSE_FAMILIES.md"
+  },
+  "promote_to_dev_regression": [
+    {
+      "issuer_id": "LITE.N0000",
+      "metric_codes": ["TOP_LINE", "PAT", "OPERATING_PROFIT"],
+      "result": "FN",
+      "truth": {
+        "TOP_LINE": "889239000",
+        "PAT": "79190000",
+        "OPERATING_PROFIT": "156042000"
+      },
+      "truth_entity": "GROUP",
+      "first_failure_stage": "entity ownership",
+      "root_cause_family": "header graph / column ownership (Group subtitle dropped from heading band)"
+    },
+    {
+      "issuer_id": "SFCL.N0000",
+      "metric_codes": ["TOP_LINE", "PAT"],
+      "result": "VALUE_OR_ENTITY_MISMATCH_VS_MISLABELED_TRUTH",
+      "truth_corrected_n03": {
+        "entity_scope": "COMPANY",
+        "TOP_LINE": "2572716568",
+        "PAT": "344406148"
+      },
+      "note": "PDF Company|Group: V2 matched PDF; holdout had Company values labeled GROUP. Truth corrected N03. Not a V2 left/right swap."
+    }
+  ],
+  "retain_as_g01_fail_closed_evidence": [
+    {
+      "issuer_id": "HNBF.N0000",
+      "metric_codes": ["TOP_LINE", "PAT"],
+      "result": "G01_WITHHELD"
+    },
+    {
+      "issuer_id": "NAMU.N0000",
+      "metric_codes": ["TOP_LINE", "PAT"],
+      "result": "G01_WITHHELD"
+    }
+  ],
+  "hard_stops": [
+    "Do not reuse this set as final holdout",
+    "Do not issuer-specific constant patches",
+    "Do not use V1 as source truth",
+    "Do not lower min_draft_publishable=8924",
+    "Do not promote extraction.engine to v2"
+  ]
+}

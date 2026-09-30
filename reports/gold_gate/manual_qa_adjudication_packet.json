@@ -1,0 +1,44 @@
+{
+  "contract": "coverage_baseline.yml min_gold_issuers=100 counts MANUAL_QA only",
+  "fixture": "tests/fixtures/golden_financial_facts.json",
+  "issuer_count": 100,
+  "by_verification_status": {
+    "MANUAL_OR_PRIOR": 3,
+    "MANUAL_QA": 4,
+    "PIPELINE_SEEDED": 93
+  },
+  "manual_qa_issuer_count": 4,
+  "manual_qa_issuers": [
+    {
+      "issuer_name": "COMMERCIAL BANK OF CEYLON PLC",
+      "symbol": "COMB.N0000",
+      "period_end": "2026-06-30"
+    },
+    {
+      "issuer_name": "DIALOG AXIATA PLC",
+      "symbol": "DIAL.N0000",
+      "period_end": "2026-06-30"
+    },
+    {
+      "issuer_name": "JAT HOLDINGS PLC",
+      "symbol": "JAT.N0000",
+      "period_end": "2026-06-30"
+    },
+    {
+      "issuer_name": "JOHN KEELLS HOLDINGS PLC",
+      "symbol": "JKH.N0000",
+      "period_end": "2026-06-30"
+    }
+  ],
+  "remaining_independent_reviews": 96,
+  "required_manual_qa_issuers": 100,
+  "deficit": 96,
+  "instructions": [
+    "Open the source PDF listed for each queue row.",
+    "Confirm each fixture fact and price against the PDF.",
+    "Do not copy pipeline output, V1 ledgers, or V2 workbooks.",
+    "Only after independent confirmation may verification_status become MANUAL_QA.",
+    "Do not bulk-relabel PIPELINE_SEEDED as MANUAL_QA."
+  ],
+  "queue_csv": "reports/gold_gate/manual_qa_adjudication_queue.csv"
+}

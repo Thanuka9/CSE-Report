@@ -1,0 +1,68 @@
+{
+  "id": "v1-v2-gap-summary",
+  "run_id": "same_input_2026-09-09",
+  "status": "MEASURED_THREE_WAY",
+  "pinned_cohort_count": 829,
+  "selection_count_matches_e13_829": true,
+  "counts": {
+    "v1_target_fact_rows": 8290,
+    "v2_eligible_source_facts": 9838,
+    "v1_assisted_eligible_source_facts": 9562,
+    "identical_v1_v2_keys": 1824,
+    "v1_only_keys_vs_v2": 6466,
+    "newly_recovered_keys_by_adapter_vs_v2": 370,
+    "keys_lost_in_assisted_vs_v2": 200,
+    "net_eligible_delta_assisted_minus_v2": -276,
+    "v2_draft_selected_target_sum": 2816,
+    "assisted_draft_selected_target_sum": 2840,
+    "net_draft_selected_delta_assisted_minus_v2": 24,
+    "assisted_context_bridged_candidates_sum": 22159,
+    "v2_withheld_source_facts_sum": 24976,
+    "assisted_withheld_source_facts_sum": 23143,
+    "assisted_v1_discovery_candidates_sum": 223705,
+    "assisted_discovery_only_pending_verify_sum": 201546,
+    "v2_target_concept_resolved_candidates_sum": 48716,
+    "v2_blocker_ENTITY_NOT_RESOLVED_sum": 82350,
+    "v2_blocker_CONCEPT_UNRESOLVED_sum": 282780,
+    "v2_blocker_PERIOD_NOT_RESOLVED_sum": 26863
+  },
+  "pipeline_counters": {
+    "v2": {
+      "candidates": 336037,
+      "source_facts": 34814,
+      "eligible": 9838,
+      "withheld": 24976,
+      "draft_selected_target": 2816,
+      "target_concept_resolved_candidates": 48716,
+      "v1_discovery_candidates": 0,
+      "discovery_only_pending_verify": 0,
+      "context_bridged_candidates": 0,
+      "blocker_ENTITY_NOT_RESOLVED": 82350,
+      "blocker_CONCEPT_UNRESOLVED": 282780,
+      "blocker_PERIOD_NOT_RESOLVED": 26863
+    },
+    "v1_assisted": {
+      "candidates": 496947,
+      "source_facts": 32818,
+      "eligible": 9675,
+      "withheld": 23143,
+      "draft_selected_target": 2840,
+      "target_concept_resolved_candidates": 49819,
+      "v1_discovery_candidates": 223705,
+      "discovery_only_pending_verify": 201546,
+      "context_bridged_candidates": 22159,
+      "blocker_ENTITY_NOT_RESOLVED": 67437,
+      "blocker_CONCEPT_UNRESOLVED": 224603,
+      "blocker_PERIOD_NOT_RESOLVED": 20802
+    }
+  },
+  "caveats": [
+    "V1_ONLY keys are engine-differential observations, not yet independently PDF-adjudicated source-valid labels.",
+    "Context bridge carries V1 header entity/period/duration/unit; union only demotes false quarter→cumulative or fills missing context.",
+    "Primary publishable KPI is draft_selected_target (production selection), not raw ELIGIBLE row counts.",
+    "Net ELIGIBLE delta can be negative while draft-selected rises — do not equate the two."
+  ],
+  "filings_attempted": 829,
+  "filings_error": 0,
+  "python_note": "Requires CPython >=3.12 (project requires-python)."
+}

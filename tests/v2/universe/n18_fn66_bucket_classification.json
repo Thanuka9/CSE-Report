@@ -1,0 +1,1015 @@
+{
+  "summary": {
+    "fn_count": 66,
+    "bucket_counts": {
+      "SOURCE_TEXT_PRESENT_NOT_TABLED": 16,
+      "DOWNSTREAM_ENTITY_UNRESOLVED": 34,
+      "WRONG_STATEMENT_CLASSIFICATION": 5,
+      "DOWNSTREAM_OTHER": 11
+    },
+    "by_issuer_bucket": {
+      "AFSL.N0000": {
+        "SOURCE_TEXT_PRESENT_NOT_TABLED": 4,
+        "DOWNSTREAM_ENTITY_UNRESOLVED": 2,
+        "WRONG_STATEMENT_CLASSIFICATION": 1,
+        "DOWNSTREAM_OTHER": 2
+      },
+      "AMCL.N0000": {
+        "DOWNSTREAM_ENTITY_UNRESOLVED": 7,
+        "SOURCE_TEXT_PRESENT_NOT_TABLED": 1,
+        "DOWNSTREAM_OTHER": 1
+      },
+      "ATLL.N0000": {
+        "DOWNSTREAM_ENTITY_UNRESOLVED": 7,
+        "WRONG_STATEMENT_CLASSIFICATION": 1,
+        "SOURCE_TEXT_PRESENT_NOT_TABLED": 1,
+        "DOWNSTREAM_OTHER": 1
+      },
+      "CINS.N0000": {
+        "DOWNSTREAM_ENTITY_UNRESOLVED": 2
+      },
+      "COCR.N0000": {
+        "SOURCE_TEXT_PRESENT_NOT_TABLED": 3,
+        "WRONG_STATEMENT_CLASSIFICATION": 2
+      },
+      "HUNA.N0000": {
+        "DOWNSTREAM_OTHER": 4
+      },
+      "LGIL.N0000": {
+        "DOWNSTREAM_ENTITY_UNRESOLVED": 8,
+        "SOURCE_TEXT_PRESENT_NOT_TABLED": 1
+      },
+      "PABC.N0000": {
+        "DOWNSTREAM_ENTITY_UNRESOLVED": 8,
+        "SOURCE_TEXT_PRESENT_NOT_TABLED": 1
+      },
+      "SDB.N0000": {
+        "WRONG_STATEMENT_CLASSIFICATION": 1,
+        "DOWNSTREAM_OTHER": 3,
+        "SOURCE_TEXT_PRESENT_NOT_TABLED": 5
+      }
+    }
+  },
+  "rows": [
+    {
+      "issuer_id": "AFSL.N0000",
+      "metric_code": "EPS_BASIC",
+      "gold_label": "Earnings Per Share",
+      "gold_value": "2.78",
+      "bucket": "SOURCE_TEXT_PRESENT_NOT_TABLED",
+      "resolved_count": 0,
+      "label_row_count": 0,
+      "text_hit": true,
+      "wrong_statement": false,
+      "dominant_stage": null,
+      "label_row_statements": []
+    },
+    {
+      "issuer_id": "AFSL.N0000",
+      "metric_code": "NAVPS",
+      "gold_label": "Net Assets Value Per Share",
+      "gold_value": "54.61",
+      "bucket": "DOWNSTREAM_ENTITY_UNRESOLVED",
+      "resolved_count": 2,
+      "label_row_count": 2,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "ENTITY_UNRESOLVED",
+      "label_row_statements": [
+        "BALANCE_SHEET"
+      ]
+    },
+    {
+      "issuer_id": "AFSL.N0000",
+      "metric_code": "OPERATING_PROFIT",
+      "gold_label": "Operating Profit before Taxes on Financial Services",
+      "gold_value": "432765388",
+      "bucket": "SOURCE_TEXT_PRESENT_NOT_TABLED",
+      "resolved_count": 0,
+      "label_row_count": 0,
+      "text_hit": true,
+      "wrong_statement": false,
+      "dominant_stage": null,
+      "label_row_statements": []
+    },
+    {
+      "issuer_id": "AFSL.N0000",
+      "metric_code": "PAT",
+      "gold_label": "Profit for the Period",
+      "gold_value": "205013594",
+      "bucket": "WRONG_STATEMENT_CLASSIFICATION",
+      "resolved_count": 0,
+      "label_row_count": 2,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": null,
+      "label_row_statements": [
+        "CHANGES_IN_EQUITY"
+      ]
+    },
+    {
+      "issuer_id": "AFSL.N0000",
+      "metric_code": "PBT",
+      "gold_label": "Profit before Taxation from Operations",
+      "gold_value": "330201470",
+      "bucket": "SOURCE_TEXT_PRESENT_NOT_TABLED",
+      "resolved_count": 0,
+      "label_row_count": 0,
+      "text_hit": true,
+      "wrong_statement": false,
+      "dominant_stage": null,
+      "label_row_statements": []
+    },
+    {
+      "issuer_id": "AFSL.N0000",
+      "metric_code": "TOP_LINE",
+      "gold_label": "Income",
+      "gold_value": "1170386379",
+      "bucket": "SOURCE_TEXT_PRESENT_NOT_TABLED",
+      "resolved_count": 0,
+      "label_row_count": 0,
+      "text_hit": true,
+      "wrong_statement": false,
+      "dominant_stage": null,
+      "label_row_statements": []
+    },
+    {
+      "issuer_id": "AFSL.N0000",
+      "metric_code": "TOTAL_ASSETS",
+      "gold_label": "Total Assets",
+      "gold_value": "18237743694",
+      "bucket": "DOWNSTREAM_OTHER",
+      "resolved_count": 2,
+      "label_row_count": 2,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "CONCEPT_UNRESOLVED",
+      "label_row_statements": [
+        "BALANCE_SHEET"
+      ]
+    },
+    {
+      "issuer_id": "AFSL.N0000",
+      "metric_code": "TOTAL_EQUITY",
+      "gold_label": "Total Shareholders' Funds",
+      "gold_value": "4024661568",
+      "bucket": "DOWNSTREAM_OTHER",
+      "resolved_count": 2,
+      "label_row_count": 1,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "CONCEPT_UNRESOLVED",
+      "label_row_statements": [
+        "BALANCE_SHEET"
+      ]
+    },
+    {
+      "issuer_id": "AFSL.N0000",
+      "metric_code": "TOTAL_LIABILITIES",
+      "gold_label": "Total Liabilities",
+      "gold_value": "14213082126",
+      "bucket": "DOWNSTREAM_ENTITY_UNRESOLVED",
+      "resolved_count": 1,
+      "label_row_count": 2,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "ENTITY_UNRESOLVED",
+      "label_row_statements": [
+        "BALANCE_SHEET"
+      ]
+    },
+    {
+      "issuer_id": "AMCL.N0000",
+      "metric_code": "EPS_BASIC",
+      "gold_label": "Earning Per Share",
+      "gold_value": "4.34",
+      "bucket": "DOWNSTREAM_ENTITY_UNRESOLVED",
+      "resolved_count": 4,
+      "label_row_count": 4,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "ENTITY_UNRESOLVED",
+      "label_row_statements": [
+        "INCOME_STATEMENT"
+      ]
+    },
+    {
+      "issuer_id": "AMCL.N0000",
+      "metric_code": "NAVPS",
+      "gold_label": "Net Assets per Share (Rs.)",
+      "gold_value": "195.59",
+      "bucket": "SOURCE_TEXT_PRESENT_NOT_TABLED",
+      "resolved_count": 0,
+      "label_row_count": 0,
+      "text_hit": true,
+      "wrong_statement": false,
+      "dominant_stage": null,
+      "label_row_statements": []
+    },
+    {
+      "issuer_id": "AMCL.N0000",
+      "metric_code": "OPERATING_PROFIT",
+      "gold_label": "Profit from Operations",
+      "gold_value": "151435038",
+      "bucket": "DOWNSTREAM_ENTITY_UNRESOLVED",
+      "resolved_count": 4,
+      "label_row_count": 4,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "ENTITY_UNRESOLVED",
+      "label_row_statements": [
+        "INCOME_STATEMENT"
+      ]
+    },
+    {
+      "issuer_id": "AMCL.N0000",
+      "metric_code": "PAT",
+      "gold_label": "Net Profit for the Period",
+      "gold_value": "86834025",
+      "bucket": "DOWNSTREAM_OTHER",
+      "resolved_count": 8,
+      "label_row_count": 4,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "CONCEPT_UNRESOLVED",
+      "label_row_statements": [
+        "INCOME_STATEMENT"
+      ]
+    },
+    {
+      "issuer_id": "AMCL.N0000",
+      "metric_code": "PBT",
+      "gold_label": "Profit Before Tax",
+      "gold_value": "113461234",
+      "bucket": "DOWNSTREAM_ENTITY_UNRESOLVED",
+      "resolved_count": 4,
+      "label_row_count": 4,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "ENTITY_UNRESOLVED",
+      "label_row_statements": [
+        "INCOME_STATEMENT"
+      ]
+    },
+    {
+      "issuer_id": "AMCL.N0000",
+      "metric_code": "TOP_LINE",
+      "gold_label": "Income",
+      "gold_value": "457406003",
+      "bucket": "DOWNSTREAM_ENTITY_UNRESOLVED",
+      "resolved_count": 16,
+      "label_row_count": 41,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "ENTITY_UNRESOLVED",
+      "label_row_statements": [
+        "BALANCE_SHEET",
+        "CHANGES_IN_EQUITY",
+        "INCOME_STATEMENT"
+      ]
+    },
+    {
+      "issuer_id": "AMCL.N0000",
+      "metric_code": "TOTAL_ASSETS",
+      "gold_label": "Total Assets",
+      "gold_value": "12294690699",
+      "bucket": "DOWNSTREAM_ENTITY_UNRESOLVED",
+      "resolved_count": 2,
+      "label_row_count": 2,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "ENTITY_UNRESOLVED",
+      "label_row_statements": [
+        "BALANCE_SHEET"
+      ]
+    },
+    {
+      "issuer_id": "AMCL.N0000",
+      "metric_code": "TOTAL_EQUITY",
+      "gold_label": "Total Equity",
+      "gold_value": "3911846281",
+      "bucket": "DOWNSTREAM_ENTITY_UNRESOLVED",
+      "resolved_count": 4,
+      "label_row_count": 4,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "ENTITY_UNRESOLVED",
+      "label_row_statements": [
+        "BALANCE_SHEET"
+      ]
+    },
+    {
+      "issuer_id": "AMCL.N0000",
+      "metric_code": "TOTAL_LIABILITIES",
+      "gold_label": "Total Liabilities",
+      "gold_value": "8382844418",
+      "bucket": "DOWNSTREAM_ENTITY_UNRESOLVED",
+      "resolved_count": 2,
+      "label_row_count": 2,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "ENTITY_UNRESOLVED",
+      "label_row_statements": [
+        "BALANCE_SHEET"
+      ]
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "metric_code": "EPS_BASIC",
+      "gold_label": "Basic / diluted earnings per share to equity holders",
+      "gold_value": "-0.07",
+      "bucket": "DOWNSTREAM_ENTITY_UNRESOLVED",
+      "resolved_count": 4,
+      "label_row_count": 4,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "ENTITY_UNRESOLVED",
+      "label_row_statements": [
+        "INCOME_STATEMENT"
+      ]
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "metric_code": "EPS_DILUTED",
+      "gold_label": "Basic / diluted earnings per share to equity holders",
+      "gold_value": "-0.07",
+      "bucket": "WRONG_STATEMENT_CLASSIFICATION",
+      "resolved_count": 0,
+      "label_row_count": 4,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": null,
+      "label_row_statements": [
+        "INCOME_STATEMENT"
+      ]
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "metric_code": "NAVPS",
+      "gold_label": "Net asset value per share",
+      "gold_value": "13.06",
+      "bucket": "SOURCE_TEXT_PRESENT_NOT_TABLED",
+      "resolved_count": 0,
+      "label_row_count": 0,
+      "text_hit": true,
+      "wrong_statement": false,
+      "dominant_stage": null,
+      "label_row_statements": []
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "metric_code": "OPERATING_PROFIT",
+      "gold_label": "Loss from operations",
+      "gold_value": "-1111778",
+      "bucket": "DOWNSTREAM_ENTITY_UNRESOLVED",
+      "resolved_count": 2,
+      "label_row_count": 2,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "ENTITY_UNRESOLVED",
+      "label_row_statements": [
+        "INCOME_STATEMENT"
+      ]
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "metric_code": "PAT",
+      "gold_label": "Loss for the period",
+      "gold_value": "-3253721",
+      "bucket": "DOWNSTREAM_ENTITY_UNRESOLVED",
+      "resolved_count": 4,
+      "label_row_count": 4,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "ENTITY_UNRESOLVED",
+      "label_row_statements": [
+        "INCOME_STATEMENT"
+      ]
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "metric_code": "PBT",
+      "gold_label": "Loss before taxation",
+      "gold_value": "-3253721",
+      "bucket": "DOWNSTREAM_ENTITY_UNRESOLVED",
+      "resolved_count": 3,
+      "label_row_count": 2,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "ENTITY_UNRESOLVED",
+      "label_row_statements": [
+        "INCOME_STATEMENT"
+      ]
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "metric_code": "TOP_LINE",
+      "gold_label": "Gross written contribution (premium)",
+      "gold_value": "502448835",
+      "bucket": "DOWNSTREAM_ENTITY_UNRESOLVED",
+      "resolved_count": 10,
+      "label_row_count": 5,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "ENTITY_UNRESOLVED",
+      "label_row_statements": [
+        "INCOME_STATEMENT"
+      ]
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "metric_code": "TOTAL_ASSETS",
+      "gold_label": "Total assets",
+      "gold_value": "5796314142",
+      "bucket": "DOWNSTREAM_ENTITY_UNRESOLVED",
+      "resolved_count": 10,
+      "label_row_count": 10,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "ENTITY_UNRESOLVED",
+      "label_row_statements": [
+        "BALANCE_SHEET"
+      ]
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "metric_code": "TOTAL_EQUITY",
+      "gold_label": "Total equity",
+      "gold_value": "652793947",
+      "bucket": "DOWNSTREAM_OTHER",
+      "resolved_count": 18,
+      "label_row_count": 8,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "CONCEPT_UNRESOLVED",
+      "label_row_statements": [
+        "BALANCE_SHEET"
+      ]
+    },
+    {
+      "issuer_id": "ATLL.N0000",
+      "metric_code": "TOTAL_LIABILITIES",
+      "gold_label": "Total liabilities",
+      "gold_value": "5143520196",
+      "bucket": "DOWNSTREAM_ENTITY_UNRESOLVED",
+      "resolved_count": 10,
+      "label_row_count": 20,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "ENTITY_UNRESOLVED",
+      "label_row_statements": [
+        "BALANCE_SHEET"
+      ]
+    },
+    {
+      "issuer_id": "CINS.N0000",
+      "metric_code": "NAVPS",
+      "gold_label": "Net Asset per Share (Rs.) Company",
+      "gold_value": "727.84",
+      "bucket": "DOWNSTREAM_ENTITY_UNRESOLVED",
+      "resolved_count": 4,
+      "label_row_count": 4,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "ENTITY_UNRESOLVED",
+      "label_row_statements": [
+        "EPS_NOTE"
+      ]
+    },
+    {
+      "issuer_id": "CINS.N0000",
+      "metric_code": "TOP_LINE",
+      "gold_label": "Net Income",
+      "gold_value": "374714000",
+      "bucket": "DOWNSTREAM_ENTITY_UNRESOLVED",
+      "resolved_count": 18,
+      "label_row_count": 14,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "ENTITY_UNRESOLVED",
+      "label_row_statements": [
+        "INCOME_STATEMENT"
+      ]
+    },
+    {
+      "issuer_id": "COCR.N0000",
+      "metric_code": "EPS_BASIC",
+      "gold_label": "Earning per Share (LKR) - For the Period",
+      "gold_value": "5.90",
+      "bucket": "SOURCE_TEXT_PRESENT_NOT_TABLED",
+      "resolved_count": 0,
+      "label_row_count": 0,
+      "text_hit": true,
+      "wrong_statement": false,
+      "dominant_stage": null,
+      "label_row_statements": []
+    },
+    {
+      "issuer_id": "COCR.N0000",
+      "metric_code": "OPERATING_PROFIT",
+      "gold_label": "Profit before Social Security Contribution Levy / Value Added Tax on financial services",
+      "gold_value": "3681170368",
+      "bucket": "SOURCE_TEXT_PRESENT_NOT_TABLED",
+      "resolved_count": 0,
+      "label_row_count": 0,
+      "text_hit": true,
+      "wrong_statement": false,
+      "dominant_stage": null,
+      "label_row_statements": []
+    },
+    {
+      "issuer_id": "COCR.N0000",
+      "metric_code": "PAT",
+      "gold_label": "Profit for the Period",
+      "gold_value": "1877424233",
+      "bucket": "WRONG_STATEMENT_CLASSIFICATION",
+      "resolved_count": 0,
+      "label_row_count": 8,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": null,
+      "label_row_statements": [
+        "CHANGES_IN_EQUITY"
+      ]
+    },
+    {
+      "issuer_id": "COCR.N0000",
+      "metric_code": "PBT",
+      "gold_label": "Profit Before Income Tax",
+      "gold_value": "2882632242",
+      "bucket": "WRONG_STATEMENT_CLASSIFICATION",
+      "resolved_count": 0,
+      "label_row_count": 4,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": null,
+      "label_row_statements": [
+        "CASH_FLOW"
+      ]
+    },
+    {
+      "issuer_id": "COCR.N0000",
+      "metric_code": "TOP_LINE",
+      "gold_label": "Gross Income",
+      "gold_value": "8315262702",
+      "bucket": "SOURCE_TEXT_PRESENT_NOT_TABLED",
+      "resolved_count": 0,
+      "label_row_count": 0,
+      "text_hit": true,
+      "wrong_statement": false,
+      "dominant_stage": null,
+      "label_row_statements": []
+    },
+    {
+      "issuer_id": "HUNA.N0000",
+      "metric_code": "EPS_BASIC",
+      "gold_label": "Basic Earning per share / (Loss per share)",
+      "gold_value": "-0.06",
+      "bucket": "DOWNSTREAM_OTHER",
+      "resolved_count": 7,
+      "label_row_count": 7,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "CONCEPT_UNRESOLVED",
+      "label_row_statements": [
+        "INCOME_STATEMENT"
+      ]
+    },
+    {
+      "issuer_id": "HUNA.N0000",
+      "metric_code": "PAT",
+      "gold_label": "(Loss)/Profit for the period",
+      "gold_value": "-48136203",
+      "bucket": "DOWNSTREAM_OTHER",
+      "resolved_count": 7,
+      "label_row_count": 13,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "CONCEPT_UNRESOLVED",
+      "label_row_statements": [
+        "CHANGES_IN_EQUITY",
+        "INCOME_STATEMENT"
+      ]
+    },
+    {
+      "issuer_id": "HUNA.N0000",
+      "metric_code": "PBT",
+      "gold_label": "(Loss)/Profit before tax",
+      "gold_value": "-48136203",
+      "bucket": "DOWNSTREAM_OTHER",
+      "resolved_count": 6,
+      "label_row_count": 6,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "CONCEPT_UNRESOLVED",
+      "label_row_statements": [
+        "INCOME_STATEMENT"
+      ]
+    },
+    {
+      "issuer_id": "HUNA.N0000",
+      "metric_code": "TOTAL_EQUITY",
+      "gold_label": "Total equity",
+      "gold_value": "2879319509",
+      "bucket": "DOWNSTREAM_OTHER",
+      "resolved_count": 14,
+      "label_row_count": 14,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "CONCEPT_UNRESOLVED",
+      "label_row_statements": [
+        "BALANCE_SHEET"
+      ]
+    },
+    {
+      "issuer_id": "LGIL.N0000",
+      "metric_code": "EPS_BASIC",
+      "gold_label": "Basic earnings per share (Rs.)",
+      "gold_value": "-0.48",
+      "bucket": "DOWNSTREAM_ENTITY_UNRESOLVED",
+      "resolved_count": 7,
+      "label_row_count": 7,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "ENTITY_UNRESOLVED",
+      "label_row_statements": [
+        "INCOME_STATEMENT"
+      ]
+    },
+    {
+      "issuer_id": "LGIL.N0000",
+      "metric_code": "EPS_DILUTED",
+      "gold_label": "Basic and diluted earnings per share",
+      "gold_value": "-0.48",
+      "bucket": "SOURCE_TEXT_PRESENT_NOT_TABLED",
+      "resolved_count": 0,
+      "label_row_count": 0,
+      "text_hit": true,
+      "wrong_statement": false,
+      "dominant_stage": null,
+      "label_row_statements": []
+    },
+    {
+      "issuer_id": "LGIL.N0000",
+      "metric_code": "NAVPS",
+      "gold_label": "Net assets per share (Rs.)",
+      "gold_value": "5.56",
+      "bucket": "DOWNSTREAM_ENTITY_UNRESOLVED",
+      "resolved_count": 2,
+      "label_row_count": 2,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "ENTITY_UNRESOLVED",
+      "label_row_statements": [
+        "BALANCE_SHEET"
+      ]
+    },
+    {
+      "issuer_id": "LGIL.N0000",
+      "metric_code": "PAT",
+      "gold_label": "Profit after tax",
+      "gold_value": "-581632000",
+      "bucket": "DOWNSTREAM_ENTITY_UNRESOLVED",
+      "resolved_count": 12,
+      "label_row_count": 12,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "ENTITY_UNRESOLVED",
+      "label_row_statements": [
+        "INCOME_STATEMENT"
+      ]
+    },
+    {
+      "issuer_id": "LGIL.N0000",
+      "metric_code": "PBT",
+      "gold_label": "Profit before tax",
+      "gold_value": "-752698000",
+      "bucket": "DOWNSTREAM_ENTITY_UNRESOLVED",
+      "resolved_count": 12,
+      "label_row_count": 6,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "ENTITY_UNRESOLVED",
+      "label_row_statements": [
+        "INCOME_STATEMENT"
+      ]
+    },
+    {
+      "issuer_id": "LGIL.N0000",
+      "metric_code": "TOP_LINE",
+      "gold_label": "Gross written premium",
+      "gold_value": "3024892000",
+      "bucket": "DOWNSTREAM_ENTITY_UNRESOLVED",
+      "resolved_count": 19,
+      "label_row_count": 7,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "ENTITY_UNRESOLVED",
+      "label_row_statements": [
+        "INCOME_STATEMENT"
+      ]
+    },
+    {
+      "issuer_id": "LGIL.N0000",
+      "metric_code": "TOTAL_ASSETS",
+      "gold_label": "Total assets",
+      "gold_value": "31241327000",
+      "bucket": "DOWNSTREAM_ENTITY_UNRESOLVED",
+      "resolved_count": 2,
+      "label_row_count": 2,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "ENTITY_UNRESOLVED",
+      "label_row_statements": [
+        "BALANCE_SHEET"
+      ]
+    },
+    {
+      "issuer_id": "LGIL.N0000",
+      "metric_code": "TOTAL_EQUITY",
+      "gold_label": "Total equity",
+      "gold_value": "6670770000",
+      "bucket": "DOWNSTREAM_ENTITY_UNRESOLVED",
+      "resolved_count": 4,
+      "label_row_count": 2,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "ENTITY_UNRESOLVED",
+      "label_row_statements": [
+        "BALANCE_SHEET"
+      ]
+    },
+    {
+      "issuer_id": "LGIL.N0000",
+      "metric_code": "TOTAL_LIABILITIES",
+      "gold_label": "Total liabilities",
+      "gold_value": "24570557000",
+      "bucket": "DOWNSTREAM_ENTITY_UNRESOLVED",
+      "resolved_count": 2,
+      "label_row_count": 4,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "ENTITY_UNRESOLVED",
+      "label_row_statements": [
+        "BALANCE_SHEET"
+      ]
+    },
+    {
+      "issuer_id": "PABC.N0000",
+      "metric_code": "EPS_BASIC",
+      "gold_label": "Earnings Per Share - Basic/Diluted (Rs.)",
+      "gold_value": "2.22",
+      "bucket": "DOWNSTREAM_ENTITY_UNRESOLVED",
+      "resolved_count": 6,
+      "label_row_count": 0,
+      "text_hit": true,
+      "wrong_statement": false,
+      "dominant_stage": "ENTITY_UNRESOLVED",
+      "label_row_statements": []
+    },
+    {
+      "issuer_id": "PABC.N0000",
+      "metric_code": "EPS_DILUTED",
+      "gold_label": "Earnings Per Share - Basic/Diluted (Rs.)",
+      "gold_value": "2.22",
+      "bucket": "SOURCE_TEXT_PRESENT_NOT_TABLED",
+      "resolved_count": 0,
+      "label_row_count": 0,
+      "text_hit": true,
+      "wrong_statement": false,
+      "dominant_stage": null,
+      "label_row_statements": []
+    },
+    {
+      "issuer_id": "PABC.N0000",
+      "metric_code": "NAVPS",
+      "gold_label": "Net Asset Value Per Share (Rs.)",
+      "gold_value": "68.67",
+      "bucket": "DOWNSTREAM_ENTITY_UNRESOLVED",
+      "resolved_count": 3,
+      "label_row_count": 3,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "ENTITY_UNRESOLVED",
+      "label_row_statements": [
+        "BALANCE_SHEET"
+      ]
+    },
+    {
+      "issuer_id": "PABC.N0000",
+      "metric_code": "OPERATING_PROFIT",
+      "gold_label": "Operating Profit before Taxes on Financial Services",
+      "gold_value": "1943397000",
+      "bucket": "DOWNSTREAM_ENTITY_UNRESOLVED",
+      "resolved_count": 6,
+      "label_row_count": 6,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "ENTITY_UNRESOLVED",
+      "label_row_statements": [
+        "INCOME_STATEMENT"
+      ]
+    },
+    {
+      "issuer_id": "PABC.N0000",
+      "metric_code": "PAT",
+      "gold_label": "Profit for the Period",
+      "gold_value": "981161000",
+      "bucket": "DOWNSTREAM_ENTITY_UNRESOLVED",
+      "resolved_count": 12,
+      "label_row_count": 12,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "ENTITY_UNRESOLVED",
+      "label_row_statements": [
+        "INCOME_STATEMENT"
+      ]
+    },
+    {
+      "issuer_id": "PABC.N0000",
+      "metric_code": "PBT",
+      "gold_label": "Profit before Tax",
+      "gold_value": "1493734000",
+      "bucket": "DOWNSTREAM_ENTITY_UNRESOLVED",
+      "resolved_count": 6,
+      "label_row_count": 16,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "ENTITY_UNRESOLVED",
+      "label_row_statements": [
+        "CASH_FLOW",
+        "INCOME_STATEMENT"
+      ]
+    },
+    {
+      "issuer_id": "PABC.N0000",
+      "metric_code": "TOTAL_ASSETS",
+      "gold_label": "Total Assets",
+      "gold_value": "308015795000",
+      "bucket": "DOWNSTREAM_ENTITY_UNRESOLVED",
+      "resolved_count": 3,
+      "label_row_count": 5,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "ENTITY_UNRESOLVED",
+      "label_row_statements": [
+        "BALANCE_SHEET"
+      ]
+    },
+    {
+      "issuer_id": "PABC.N0000",
+      "metric_code": "TOTAL_EQUITY",
+      "gold_label": "Total Equity",
+      "gold_value": "30390170000",
+      "bucket": "DOWNSTREAM_ENTITY_UNRESOLVED",
+      "resolved_count": 6,
+      "label_row_count": 6,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "ENTITY_UNRESOLVED",
+      "label_row_statements": [
+        "BALANCE_SHEET"
+      ]
+    },
+    {
+      "issuer_id": "PABC.N0000",
+      "metric_code": "TOTAL_LIABILITIES",
+      "gold_label": "Total Liabilities",
+      "gold_value": "277625625000",
+      "bucket": "DOWNSTREAM_ENTITY_UNRESOLVED",
+      "resolved_count": 3,
+      "label_row_count": 3,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "ENTITY_UNRESOLVED",
+      "label_row_statements": [
+        "BALANCE_SHEET"
+      ]
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "metric_code": "EPS_BASIC",
+      "gold_label": "Basic earnings per ordinary share (Rs.)",
+      "gold_value": "0.92",
+      "bucket": "WRONG_STATEMENT_CLASSIFICATION",
+      "resolved_count": 0,
+      "label_row_count": 2,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": null,
+      "label_row_statements": [
+        "INCOME_STATEMENT"
+      ]
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "metric_code": "EPS_DILUTED",
+      "gold_label": "Diluted earnings per ordinary share (Rs.)",
+      "gold_value": "0.92",
+      "bucket": "DOWNSTREAM_OTHER",
+      "resolved_count": 2,
+      "label_row_count": 2,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "CONCEPT_UNRESOLVED",
+      "label_row_statements": [
+        "INCOME_STATEMENT"
+      ]
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "metric_code": "NAVPS",
+      "gold_label": "Net asset value per share (Rs.)",
+      "gold_value": "90.18",
+      "bucket": "SOURCE_TEXT_PRESENT_NOT_TABLED",
+      "resolved_count": 0,
+      "label_row_count": 0,
+      "text_hit": true,
+      "wrong_statement": false,
+      "dominant_stage": null,
+      "label_row_statements": []
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "metric_code": "OPERATING_PROFIT",
+      "gold_label": "Operating profit/ (loss) before VAT on financial services & SSCL",
+      "gold_value": "550523000",
+      "bucket": "SOURCE_TEXT_PRESENT_NOT_TABLED",
+      "resolved_count": 0,
+      "label_row_count": 0,
+      "text_hit": true,
+      "wrong_statement": false,
+      "dominant_stage": null,
+      "label_row_statements": []
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "metric_code": "PAT",
+      "gold_label": "Profit/(loss) for the period",
+      "gold_value": "151264000",
+      "bucket": "DOWNSTREAM_OTHER",
+      "resolved_count": 6,
+      "label_row_count": 6,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "CONCEPT_UNRESOLVED",
+      "label_row_statements": [
+        "INCOME_STATEMENT"
+      ]
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "metric_code": "PBT",
+      "gold_label": "Profit/(loss) before tax",
+      "gold_value": "376323000",
+      "bucket": "DOWNSTREAM_OTHER",
+      "resolved_count": 3,
+      "label_row_count": 3,
+      "text_hit": true,
+      "wrong_statement": true,
+      "dominant_stage": "CONCEPT_UNRESOLVED",
+      "label_row_statements": [
+        "INCOME_STATEMENT"
+      ]
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "metric_code": "TOTAL_ASSETS",
+      "gold_label": "Total assets",
+      "gold_value": "146958097000",
+      "bucket": "SOURCE_TEXT_PRESENT_NOT_TABLED",
+      "resolved_count": 0,
+      "label_row_count": 0,
+      "text_hit": true,
+      "wrong_statement": false,
+      "dominant_stage": null,
+      "label_row_statements": []
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "metric_code": "TOTAL_EQUITY",
+      "gold_label": "Total equity",
+      "gold_value": "14804406000",
+      "bucket": "SOURCE_TEXT_PRESENT_NOT_TABLED",
+      "resolved_count": 0,
+      "label_row_count": 0,
+      "text_hit": true,
+      "wrong_statement": false,
+      "dominant_stage": null,
+      "label_row_statements": []
+    },
+    {
+      "issuer_id": "SDB.N0000",
+      "metric_code": "TOTAL_LIABILITIES",
+      "gold_label": "Total liabilities",
+      "gold_value": "132153690000",
+      "bucket": "SOURCE_TEXT_PRESENT_NOT_TABLED",
+      "resolved_count": 0,
+      "label_row_count": 0,
+      "text_hit": true,
+      "wrong_statement": false,
+      "dominant_stage": null,
+      "label_row_statements": []
+    }
+  ]
+}

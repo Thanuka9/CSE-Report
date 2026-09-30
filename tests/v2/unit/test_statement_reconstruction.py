@@ -28,6 +28,7 @@ def test_reconstructed_cells_preserve_lineage_and_structure() -> None:
     assert pat.cells[0].source_ref.page_number == 1
     assert pat.cells[0].source_ref.bbox is not None
     assert pat.cells[0].source_ref.source_sha256 == document.source_sha256
+    assert pat.cells[0].source_ref.raw_text == "1,234"
     pbt = next(row for row in statement.rows if "before tax" in row.raw_label.lower())
     assert pbt.cells[0].parsed_numeric_value == Decimal("-100")
     assert all(row.normalized_label for row in statement.rows)

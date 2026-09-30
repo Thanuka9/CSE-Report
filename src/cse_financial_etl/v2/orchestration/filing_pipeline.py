@@ -2,24 +2,62 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
+from typing import Any
 
 from cse_financial_etl.v2.contracts.document import CanonicalDocument
 from cse_financial_etl.v2.contracts.enums import AccountingRegime, EntityScope
-from cse_financial_etl.v2.contracts.facts import DerivedFact, SourceFact
+from cse_financial_etl.v2.contracts.facts import DerivedFact, FactCandidate, SourceFact
+from cse_financial_etl.v2.contracts.investigation import CandidateTrace
 from cse_financial_etl.v2.contracts.statement import CanonicalStatement
+from cse_financial_etl.v2.diagnostics.candidate_trace import (
+    build_candidate_traces,
+    write_candidate_trace,
+)
 from cse_financial_etl.v2.diagnostics.stage_metrics import StageMetrics
 from cse_financial_etl.v2.document.router import read_document
 from cse_financial_etl.v2.resolution.column_context import (
     bind_column_context,
     context_resolution_metrics,
 )
+from cse_financial_etl.v2.resolution.production_selection import select_pipeline_facts
 from cse_financial_etl.v2.resolution.resolver import build_candidates, resolve_source_facts
 from cse_financial_etl.v2.statements.detector import detect_statement_regions
 from cse_financial_etl.v2.statements.table_reconstructor import reconstruct_statements
 from cse_financial_etl.v2.taxonomy.matcher import accounting_regime_for
 from cse_financial_etl.v2.validation.accounting import derive_facts, validate_source_facts
+
+
+@dataclass(frozen=True)
+class FilingPipelineResult:
+    """Exact in-run artefacts. Callers must not rebuild candidates for traces."""
+
+    statements: tuple[CanonicalStatement, ...]
+    candidates: tuple[FactCandidate, ...]
+    source_facts: tuple[SourceFact, ...]
+    derived_facts: tuple[DerivedFact, ...]
+    stage_metrics: StageMetrics
+    production_selected_source: tuple[SourceFact, ...] = ()
+    production_selected_derived: tuple[DerivedFact, ...] = ()
+    traces: tuple[CandidateTrace, ...] = ()
+    document: CanonicalDocument | None = None
+
+    def __iter__(self) -> Iterator[Any]:
+        yield self.statements
+        yield self.source_facts
+        yield self.derived_facts
+        yield self.stage_metrics
+
+    def __getitem__(self, index: int) -> Any:
+        return (
+            self.statements,
+            self.source_facts,
+            self.derived_facts,
+            self.stage_metrics,
+        )[index]
 
 
 def run_filing_pipeline(
@@ -31,36 +69,113 @@ def run_filing_pipeline(
     accounting_regime: AccountingRegime | None = None,
     issuer_name: str = "",
     issuer_type: str = "",
-) -> tuple[
-    tuple[CanonicalStatement, ...], tuple[SourceFact, ...], tuple[DerivedFact, ...], StageMetrics
-]:
+    candidate_trace_path: Path | None = None,
+    run_id: str | None = None,
+    code_sha: str | None = None,
+    header_engine: str = "H0",
+    unit_engine: str = "U0",
+    v1_source_observations: bool = False,
+    v1_baseline_facts: bool = False,
+    pdf_path: Path | None = None,
+    issuers: dict[str, Any] | None = None,
+) -> FilingPipelineResult:
     regime = accounting_regime or accounting_regime_for(
         issuer_id=issuer_id, issuer_name=issuer_name, issuer_type=issuer_type
     )
     regions = detect_statement_regions(document)
     reconstructed = reconstruct_statements(document, regions)
+    engine = "H1" if str(header_engine).upper() == "H1" else "H0"
+    units = "U1" if str(unit_engine).upper() == "U1" else "U0"
     statements = tuple(
         bind_column_context(
             document,
             statement,
             expected_entity_scope=expected_entity_scope,
             target_period_end=target_period_end,
+            header_engine=engine,  # type: ignore[arg-type]
         )
         for statement in reconstructed
     )
     candidates = tuple(
         candidate
         for statement in statements
-        for candidate in build_candidates(statement, accounting_regime=regime)
+        for candidate in build_candidates(
+            statement,
+            accounting_regime=regime,
+            document=document,
+            unit_engine=units,  # type: ignore[arg-type]
+        )
     )
+    if v1_source_observations and pdf_path is not None:
+        from cse_financial_etl.v2.challenger.observation_union import (
+            observations_to_discovery_candidates,
+            union_candidates,
+        )
+        from cse_financial_etl.v2.challenger.v1_source_observations import (
+            collect_v1_source_observations,
+        )
+
+        observations = collect_v1_source_observations(
+            Path(pdf_path),
+            filing_version_id=document.filing_version_id,
+            filing_id=issuer_id,
+        )
+        v1_candidates = observations_to_discovery_candidates(observations)
+        candidates = union_candidates(candidates, v1_candidates)
     source = resolve_source_facts(
         candidates,
         issuer_id=issuer_id,
         filing_version_id=document.filing_version_id,
-        expected_entity_scope=expected_entity_scope,
     )
     validated = validate_source_facts(source)
+    if v1_baseline_facts and pdf_path is not None and target_period_end is not None:
+        from cse_financial_etl.v2.production.fact_union import union_source_facts
+        from cse_financial_etl.v2.production.v1_baseline import extract_v1_baseline_facts
+
+        v1_source = extract_v1_baseline_facts(
+            Path(pdf_path),
+            issuer_name=issuer_name or issuer_id,
+            symbol=issuer_id,
+            period_end=target_period_end,
+            source_sha256=document.source_sha256,
+            filing_version_id=document.filing_version_id,
+            issuers=issuers,
+        )
+        if target_period_end is not None:
+            v1_source = tuple(fact for fact in v1_source if fact.period_end == target_period_end)
+        validated = validate_source_facts(union_source_facts(validated, v1_source))
     derived = derive_facts(validated)
+    query_applied = expected_entity_scope is not None or target_period_end is not None
+    if query_applied:
+        selected_source = select_pipeline_facts(
+            validated,
+            period_end=target_period_end,
+            expected_entity=expected_entity_scope,
+        )
+        selected_derived = select_pipeline_facts(
+            derived,
+            period_end=target_period_end,
+            expected_entity=expected_entity_scope,
+        )
+    else:
+        selected_source = ()
+        selected_derived = ()
+    traces = build_candidate_traces(
+        candidates,
+        validated,
+        statements=statements,
+        document=document,
+        issuer_id=issuer_id,
+        filing_version_id=document.filing_version_id,
+        expected_entity_scope=expected_entity_scope,
+        target_period_end=target_period_end,
+        selected_fact_ids={fact.fact_id for fact in selected_source} if query_applied else set(),
+        run_id=run_id,
+        code_sha=code_sha,
+        regime=None if regime is None else regime.value,
+    )
+    if candidate_trace_path is not None:
+        write_candidate_trace(candidate_trace_path, traces)
     context_counts = {
         "entity_resolved_candidates": 0,
         "period_resolved_candidates": 0,
@@ -85,7 +200,17 @@ def run_filing_pipeline(
         validated_facts=sum(item.validation_status.value == "PASSED" for item in validated),
         draft_eligible_facts=sum(item.publication_status.value == "ELIGIBLE" for item in validated),
     )
-    return statements, validated, derived, stage
+    return FilingPipelineResult(
+        statements=statements,
+        candidates=candidates,
+        source_facts=validated,
+        derived_facts=derived,
+        stage_metrics=stage,
+        production_selected_source=selected_source,
+        production_selected_derived=selected_derived,
+        traces=traces,
+        document=document,
+    )
 
 
 def run_pdf_pipeline(
@@ -99,9 +224,15 @@ def run_pdf_pipeline(
     accounting_regime: AccountingRegime | None = None,
     issuer_name: str = "",
     issuer_type: str = "",
-) -> tuple[
-    tuple[CanonicalStatement, ...], tuple[SourceFact, ...], tuple[DerivedFact, ...], StageMetrics
-]:
+    candidate_trace_path: Path | None = None,
+    run_id: str | None = None,
+    code_sha: str | None = None,
+    header_engine: str = "H0",
+    unit_engine: str = "U0",
+    v1_source_observations: bool = False,
+    v1_baseline_facts: bool = False,
+    issuers: dict[str, Any] | None = None,
+) -> FilingPipelineResult:
     document = read_document(pdf_path, filing_version_id=filing_version_id, force_ocr=force_ocr)
     return run_filing_pipeline(
         document,
@@ -111,4 +242,13 @@ def run_pdf_pipeline(
         accounting_regime=accounting_regime,
         issuer_name=issuer_name,
         issuer_type=issuer_type,
+        candidate_trace_path=candidate_trace_path,
+        run_id=run_id,
+        code_sha=code_sha,
+        header_engine=header_engine,
+        unit_engine=unit_engine,
+        v1_source_observations=v1_source_observations,
+        v1_baseline_facts=v1_baseline_facts,
+        pdf_path=pdf_path,
+        issuers=issuers,
     )

@@ -1,0 +1,57 @@
+{
+  "id": "cse-100-issuer-manual-qa-final-2026-09-28",
+  "source_csv": "reports/gold_gate/CSE_100_Issuer_Manual_QA_Final_2026-09-28.csv",
+  "source_recovery_xlsx": "reports/gold_gate/CSE_100_Issuer_QA_Recovery_2026-09-27.xlsx",
+  "packet_issuers": 100,
+  "packet_rows": 900,
+  "manual_review_status": {
+    "COMPLETED": 900
+  },
+  "human_verdict": {
+    "FAIL": 224,
+    "PASS": 676
+  },
+  "reviewer_id": {
+    "OPENAI_ASSISTANT_MANUAL_SOURCE_REVIEW": 900
+  },
+  "issuers_all_nine_pass": 34,
+  "issuers_any_fail": 66,
+  "fail_blank_machine_value": 170,
+  "fail_extracted_value_disagrees": 54,
+  "fail_by_metric": {
+    "EPS_SELECTED": 28,
+    "OPERATING_PROFIT": 24,
+    "PAT": 32,
+    "PBT": 29,
+    "TOP_LINE": 35,
+    "NAVPS": 25,
+    "TOTAL_ASSETS": 17,
+    "TOTAL_EQUITY": 19,
+    "TOTAL_LIABILITIES": 15
+  },
+  "fail_by_issuer_type": {
+    "BANK": 25,
+    "FINANCE_COMPANY": 49,
+    "GENERAL": 112,
+    "INSURANCE": 38
+  },
+  "committed_golden_fixture": {
+    "path": "tests/fixtures/golden_financial_facts.json",
+    "issuers": 100,
+    "verification_status": {
+      "MANUAL_OR_PRIOR": 3,
+      "MANUAL_QA": 4,
+      "PIPELINE_SEEDED": 93
+    },
+    "symbol_overlap_with_packet": 60,
+    "packet_symbols_not_in_fixture": 40,
+    "fixture_symbols_not_in_packet": 40
+  },
+  "approval_boundary": {
+    "imported_as_manual_qa": false,
+    "official_publication": "NOT_YET_HUMAN_CERTIFIED",
+    "reason": "reviewer_id is OPENAI_ASSISTANT_MANUAL_SOURCE_REVIEW; this packet is not independent MANUAL_QA and was not written into golden_financial_facts.json.",
+    "committed_manual_qa_issuers": 4,
+    "required_manual_qa_issuers": 100
+  }
+}

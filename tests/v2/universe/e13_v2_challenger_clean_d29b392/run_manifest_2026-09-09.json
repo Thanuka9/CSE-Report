@@ -1,0 +1,180 @@
+{
+  "run_id": "9a535b06-e2d0-486b-8d77-39c2ad74f1af",
+  "as_of_date": "2026-09-09",
+  "target_periods": [
+    "2025-12-31",
+    "2026-03-31",
+    "2026-06-30"
+  ],
+  "supporting_periods": [
+    "2025-12-31",
+    "2026-03-31",
+    "2026-06-30"
+  ],
+  "security_count": 302,
+  "issuer_count": 281,
+  "selected_filing_count": 829,
+  "downloaded_filing_count": 829,
+  "extracted_filing_count": 820,
+  "fact_status_counts": {
+    "EXTRACTED": 3200,
+    "EXTRACTED_DERIVED": 813,
+    "INSUFFICIENT_INPUT": 1181,
+    "IMPLAUSIBLE_DERIVED_RATIO": 2,
+    "VALIDATION_FAILED": 12,
+    "UNIT_NOT_RESOLVED": 6,
+    "ZERO_EQUITY": 3,
+    "NON_POSITIVE_DENOMINATOR": 1
+  },
+  "price_status_counts": {
+    "EXTRACTED": 755,
+    "HISTORICAL_PRICE_NOT_AVAILABLE": 128
+  },
+  "pipeline_error_count": 9,
+  "golden_validation_sample_size": 38,
+  "golden_validation_accuracy": 1.0,
+  "run_status": "VALIDATION_REQUIRED",
+  "production_gates": {
+    "status": "VALIDATION_REQUIRED",
+    "hit_count": 9,
+    "hits": [
+      {
+        "code": "GOLD_WRONG_POPULATED",
+        "issuer_name": "CIC HOLDINGS PLC",
+        "symbol": "CIC.N0000",
+        "period_end": "2025-12-31",
+        "metric_code": "TOP_LINE",
+        "detail": "expected 5816610000.00 actual None"
+      },
+      {
+        "code": "GOLD_WRONG_POPULATED",
+        "issuer_name": "CIC HOLDINGS PLC",
+        "symbol": "CIC.N0000",
+        "period_end": "2025-12-31",
+        "metric_code": "OPERATING_PROFIT",
+        "detail": "expected 861020000.00 actual None"
+      },
+      {
+        "code": "GOLD_WRONG_POPULATED",
+        "issuer_name": "CIC HOLDINGS PLC",
+        "symbol": "CIC.N0000",
+        "period_end": "2025-12-31",
+        "metric_code": "PBT",
+        "detail": "expected 430310000.00 actual None"
+      },
+      {
+        "code": "GOLD_WRONG_POPULATED",
+        "issuer_name": "CIC HOLDINGS PLC",
+        "symbol": "CIC.N0000",
+        "period_end": "2025-12-31",
+        "metric_code": "PAT",
+        "detail": "expected 300790000.00 actual None"
+      },
+      {
+        "code": "GOLD_WRONG_POPULATED",
+        "issuer_name": "CIC HOLDINGS PLC",
+        "symbol": "CIC.N0000",
+        "period_end": "2025-12-31",
+        "metric_code": "EPS_BASIC",
+        "detail": "expected 0.16 actual None"
+      },
+      {
+        "code": "GOLD_SAMPLE_INCOMPLETE",
+        "issuer_name": "",
+        "symbol": "",
+        "period_end": null,
+        "metric_code": null,
+        "detail": "gold sample_size=38 below required 100"
+      },
+      {
+        "code": "GOLD_ISSUER_SAMPLE_INCOMPLETE",
+        "issuer_name": "",
+        "symbol": "",
+        "period_end": null,
+        "metric_code": null,
+        "detail": "manual_issuer_count=4 below required 100"
+      },
+      {
+        "code": "COVERAGE_REGRESSION",
+        "issuer_name": "",
+        "symbol": "",
+        "period_end": null,
+        "metric_code": null,
+        "detail": "EXTRACTED+DERIVED=4013 below floor 8932"
+      },
+      {
+        "code": "PUBLISHABLE_COVERAGE_REGRESSION",
+        "issuer_name": "",
+        "symbol": "",
+        "period_end": null,
+        "metric_code": null,
+        "detail": "draft_publishable=3854 below floor 8924"
+      }
+    ]
+  },
+  "facts_csv": "D:\\Report\\outputs\\normalized_facts_2026-09-09.csv",
+  "review_csv": "D:\\Report\\outputs\\review_queue_2026-09-09.csv",
+  "prices_csv": "D:\\Report\\outputs\\quarter_end_prices_2026-09-09.csv",
+  "run_dir": "D:\\Report\\outputs\\runs\\2026-09-09_9a535b06-e2d0-486b-8d77-39c2ad74f1af",
+  "storage": "Parquet + JSONL",
+  "code_version": "0.1.0",
+  "config_hash": "97bf6b402bc52809",
+  "git_commit_sha": "d29b392486c7a7a6fd8f6861c7e2430e2f6d68ef",
+  "git_branch": "v2/extraction-investigation",
+  "working_tree_dirty": true,
+  "git_describe": "d29b392-dirty",
+  "equation_validation": {
+    "PASS": 730,
+    "NOT_APPLICABLE": 1788,
+    "UNTESTED": 604,
+    "INSUFFICIENT_EVIDENCE": 1798
+  },
+  "retry_summary": {
+    "attempts": 3,
+    "recovered": 3,
+    "filings": 3
+  },
+  "ocr_enabled": true,
+  "extraction_engine": "v2",
+  "release_mode": "DRAFT",
+  "use_transformer": false,
+  "semantic_model": "rapidfuzz-token-set",
+  "archived_prior_run_files": [
+    "D:\\Report\\data\\raw\\api\\history\\market_cap_2026-09-09_20260920T051941Z.json",
+    "D:\\Report\\outputs\\archive\\CSE_Financial_Snapshot_2026-09-09_20260920T051941Z.xlsx",
+    "D:\\Report\\outputs\\archive\\CSE_Financial_Snapshot_2026-09-09_20260920T051941Z.xlsx",
+    "D:\\Report\\outputs\\archive\\normalized_facts_2026-09-09_20260920T051941Z.csv",
+    "D:\\Report\\outputs\\archive\\review_queue_2026-09-09_20260920T051941Z.csv",
+    "D:\\Report\\outputs\\archive\\quarter_end_prices_2026-09-09_20260920T051941Z.csv",
+    "D:\\Report\\outputs\\archive\\pipeline_errors_2026-09-09_20260920T051941Z.json",
+    "D:\\Report\\outputs\\archive\\golden_validation_2026-09-09_20260920T051941Z.json",
+    "D:\\Report\\outputs\\archive\\run_manifest_2026-09-09_20260920T051941Z.json"
+  ],
+  "current_facts_parquet": "D:\\Report\\data\\gold\\snapshots\\9a535b06-e2d0-486b-8d77-39c2ad74f1af\\current_financial_facts.parquet",
+  "current_prices_parquet": "D:\\Report\\data\\gold\\snapshots\\9a535b06-e2d0-486b-8d77-39c2ad74f1af\\current_market_prices.parquet",
+  "dashboard": "D:\\Report\\outputs\\runs\\2026-09-09_9a535b06-e2d0-486b-8d77-39c2ad74f1af\\dashboard.html",
+  "manifest": "D:\\Report\\outputs\\manifests\\run_manifest_2026-09-09.json",
+  "run_manifest": "D:\\Report\\outputs\\manifests\\2026-09-09_9a535b06-e2d0-486b-8d77-39c2ad74f1af.json",
+  "r4_hardening": {
+    "schema_version": 1,
+    "no_database": true,
+    "xbrl": "NOT_IMPLEMENTED_UNTIL_OFFICIALLY_AVAILABLE",
+    "row_changes": {
+      "filing_price_semantic_withheld": 755,
+      "closing_price_withheld": 32
+    },
+    "canonical_master": "D:\\Report\\outputs\\issuer_security_master_2026-09-09.json",
+    "expected_disclosures": "D:\\Report\\outputs\\expected_disclosures_2026-09-09.json",
+    "fact_semantics": "D:\\Report\\outputs\\fact_semantics_2026-09-09.jsonl",
+    "metric_definitions": "D:\\Report\\outputs\\metric_definitions_2026-09-09.json",
+    "quarantine_integrity": {
+      "checked": 0,
+      "mismatches": 0,
+      "pins_path": "D:\\Report\\data\\quarantine\\known_timeout_pins.json",
+      "mismatch_rows": []
+    },
+    "reported_q4_only": true,
+    "price_semantic": "LAST_TRADED_ONLY",
+    "bank_nil_policy": "explicit nil on verified exact-quarter Bank statement only; blank/dash never zero"
+  }
+}

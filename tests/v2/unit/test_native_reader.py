@@ -75,6 +75,7 @@ def test_ocr_path_uses_the_same_canonical_document(tmp_path: Path) -> None:
     assert ocr.parser_manifest.get("parser_name") == "v2.ocr.tesseract"
     assert any(line.tokens for line in ocr.pages[0].lines)
     assert select_reader_route() == ExtractionMode.NATIVE
+    assert "page_routing" not in native.parser_manifest
 
 
 def test_empty_native_text_routes_to_ocr(tmp_path: Path) -> None:

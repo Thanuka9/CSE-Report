@@ -1,0 +1,27 @@
+{
+  "passed": true,
+  "mismatches": [],
+  "sample": [
+    {
+      "sha": "8517bde55c68c55f21a1642383e0f546cb97614dd964e9c9184d164675141f8e",
+      "symbol": "AEL.N0000",
+      "n1": 67,
+      "n2": 67,
+      "match": true
+    },
+    {
+      "sha": "1d2a65dfa9783601daa43b83010d43176e456a2a8069e563577102bc52b2467f",
+      "symbol": "ACL.N0000",
+      "n1": 61,
+      "n2": 61,
+      "match": true
+    },
+    {
+      "sha": "8d96ec9b7336b8d8b796af8c08a060b59de2e698b0e5e7686bc9478d46edb8a9",
+      "symbol": "AEL.N0000",
+      "n1": 70,
+      "n2": 70,
+      "match": true
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "note": "T10 blind review queue pointers. Not source truth and not gold. Source presence lives in items.jsonl after Reviewer 1 PDF-page review. Do not copy V1 or V2 values into items.",
+  "limit": 40,
+  "item_count": 0,
+  "items": []
+}

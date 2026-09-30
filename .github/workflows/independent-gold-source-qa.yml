@@ -1,0 +1,33 @@
+name: Independent gold source QA
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - "scripts/independent_gold_source_qa.py"
+      - "tests/fixtures/golden_financial_facts.json"
+      - ".github/workflows/independent-gold-source-qa.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e
+        with:
+          python-version: "3.12"
+      - run: uv sync --locked --group dev
+      - name: Run independent 100-issuer source QA
+        run: uv run python scripts/independent_gold_source_qa.py --sleep 0.35
+      - name: Upload QA evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: independent-gold-source-qa
+          path: reports/gold_gate/independent_ai_qa/
+          if-no-files-found: error

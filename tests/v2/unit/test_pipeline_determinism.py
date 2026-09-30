@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from cse_financial_etl.v2.diagnostics.replay import facts_are_deterministic
+from cse_financial_etl.v2.diagnostics.replay import (
+    facts_are_deterministic,
+    pipeline_results_are_deterministic,
+)
 from cse_financial_etl.v2.diagnostics.serialization import source_fact_to_mapping
 from cse_financial_etl.v2.orchestration.filing_pipeline import run_filing_pipeline
 from tests.v2.helpers import geometric_document
@@ -18,14 +21,14 @@ def _document():
     )
 
 
-def test_pipeline_is_deterministic_on_fixed_input() -> None:
-    document = _document()
-    first = run_filing_pipeline(document, issuer_id="issuer-1")
-    second = run_filing_pipeline(document, issuer_id="issuer-1")
-    left = tuple(source_fact_to_mapping(fact) for fact in first[1])
-    right = tuple(source_fact_to_mapping(fact) for fact in second[1])
+def test_pipeline_is_deterministic_on_fresh_parse() -> None:
+    first = run_filing_pipeline(_document(), issuer_id="issuer-1")
+    second = run_filing_pipeline(_document(), issuer_id="issuer-1")
+    left = tuple(source_fact_to_mapping(fact) for fact in first.source_facts)
+    right = tuple(source_fact_to_mapping(fact) for fact in second.source_facts)
     assert facts_are_deterministic(left, right)
-    derived_left = tuple(item.model_dump(mode="json") for item in first[2])
-    derived_right = tuple(item.model_dump(mode="json") for item in second[2])
+    assert pipeline_results_are_deterministic(first, second)
+    derived_left = tuple(item.model_dump(mode="json") for item in first.derived_facts)
+    derived_right = tuple(item.model_dump(mode="json") for item in second.derived_facts)
     assert derived_left == derived_right
-    assert first[1]
+    assert first.source_facts

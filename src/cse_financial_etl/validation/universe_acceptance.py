@@ -20,6 +20,9 @@ import yaml
 from cse_financial_etl.config import infer_issuer_type
 from cse_financial_etl.validation.acceptance import is_publishable_fact
 
+# Independent MANUAL_QA floors are OFFICIAL-only. Production gates no longer
+# emit these on DRAFT. When they appear on an OFFICIAL run they remain
+# external proof, not extractor engineering failures.
 EXTERNAL_PROOF_GATES = {
     "GOLD_SAMPLE_INCOMPLETE",
     "GOLD_ISSUER_SAMPLE_INCOMPLETE",
@@ -47,15 +50,19 @@ def _load_json_list(path: Path) -> list[dict[str, Any]]:
     return [row for row in parsed if isinstance(row, dict)]
 
 
-def _draft_publishable_rows(path: Path) -> list[dict[str, str]]:
+def _publishable_rows(path: Path, *, release_mode: str) -> list[dict[str, str]]:
     if not path.exists():
         return []
     with path.open(newline="", encoding="utf-8") as handle:
         return [
             dict(row)
             for row in csv.DictReader(handle)
-            if is_publishable_fact(row, release_mode="DRAFT")
+            if is_publishable_fact(row, release_mode=release_mode)
         ]
+
+
+def _draft_publishable_rows(path: Path) -> list[dict[str, str]]:
+    return _publishable_rows(path, release_mode="DRAFT")
 
 
 def _timeout_identity(row: dict[str, Any]) -> tuple[str, str, str]:
@@ -280,6 +287,7 @@ def evaluate_universe_acceptance(
                 review_counts[str(row.get("reason") or "UNKNOWN")] += 1
 
     publishable_rows = _draft_publishable_rows(facts_path)
+    official_rows = _publishable_rows(facts_path, release_mode="OFFICIAL")
     coverage, coverage_regressions = _coverage_summary(publishable_rows, baseline)
     global_floor = int(baseline.get("min_draft_publishable") or 0)
     if global_floor and len(publishable_rows) < global_floor:
@@ -290,6 +298,25 @@ def evaluate_universe_acceptance(
                 "floor": global_floor,
             }
         )
+    release_mode = str(manifest.get("release_mode") or "DRAFT").strip().upper()
+    official_floor = int(
+        baseline.get("min_official_publishable") or baseline.get("min_draft_publishable") or 0
+    )
+    if release_mode == "OFFICIAL":
+        official_coverage, official_regressions = _coverage_summary(official_rows, baseline)
+        coverage["official_publishable_count"] = official_coverage["draft_publishable_count"]
+        coverage["official_by_metric"] = official_coverage["by_metric"]
+        coverage["official_by_sector_metric"] = official_coverage["by_sector_metric"]
+        for row in official_regressions:
+            coverage_regressions.append({**row, "release_mode": "OFFICIAL"})
+        if official_floor and len(official_rows) < official_floor:
+            coverage_regressions.append(
+                {
+                    "code": "OFFICIAL_PUBLISHABLE_COVERAGE_REGRESSION",
+                    "actual": len(official_rows),
+                    "floor": official_floor,
+                }
+            )
     universe_regressions = _universe_regressions(manifest, baseline)
 
     engineering_pass = (
@@ -321,6 +348,8 @@ def evaluate_universe_acceptance(
         ),
         "fact_status_counts": manifest.get("fact_status_counts"),
         "draft_publishable_count": len(publishable_rows),
+        "official_publishable_count": len(official_rows),
+        "release_mode": release_mode,
         "coverage": coverage,
         "coverage_regression_count": len(coverage_regressions),
         "coverage_regressions": coverage_regressions,

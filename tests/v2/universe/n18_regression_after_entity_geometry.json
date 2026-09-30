@@ -1,0 +1,49 @@
+{
+  "id": "n18-regression-after-entity-geometry",
+  "status": "REGRESSION_ONLY_NOT_UNSEEN",
+  "note": "Former N18 set after dual-entity column geometry fix. Not a new unseen holdout.",
+  "frozen_first_score": {
+    "tp": 23,
+    "fn": 68,
+    "critical_wrong": 8,
+    "value_mismatch": 8,
+    "entity_mismatch": 7,
+    "period_mismatch": 8,
+    "duration_mismatch": 7,
+    "unit_mismatch": 11,
+    "source_reported_recall": 0.2,
+    "numeric_correctness": 0.741935
+  },
+  "regression_score": {
+    "tp": 29,
+    "fn": 68,
+    "critical_wrong": 1,
+    "value_mismatch": 1,
+    "entity_mismatch": 0,
+    "period_mismatch": 8,
+    "duration_mismatch": 3,
+    "unit_mismatch": 11,
+    "source_reported_recall": 0.252174,
+    "numeric_correctness": 0.966667,
+    "v2_source_fact_count": 362
+  },
+  "delta_critical_wrong": -7,
+  "delta_tp": 6,
+  "critical_mismatch_details": [
+    {
+      "issuer_id": "UBC.N0000",
+      "filing_version_id": "UBC.N0000-2025-12-31",
+      "metric_code": "OPERATING_PROFIT",
+      "result": "MISMATCH",
+      "mismatch_kinds": [
+        "value",
+        "period",
+        "duration"
+      ],
+      "truth": "748922000",
+      "truth_entity": "BANK",
+      "v2_value": "1840423000",
+      "v2_entity": "BANK"
+    }
+  ]
+}

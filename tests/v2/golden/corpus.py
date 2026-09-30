@@ -344,7 +344,10 @@ def load_synthetic_corpus() -> tuple[SyntheticCase, ...]:
             EntityScope.COMPANY,
             (
                 _gold(
-                    metric="EPS_BASIC", raw="2.50", scale=Decimal("1"), normalized=Decimal("2.50")
+                    metric="EPS_BASIC",
+                    raw="2.50",
+                    scale=Decimal("0.01"),
+                    normalized=Decimal("0.0250"),
                 ),
             ),
         ),

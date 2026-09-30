@@ -1,0 +1,50 @@
+{
+  "id": "r5-structural-differential",
+  "recovery_step": "R5",
+  "updated_at": "2026-09-17T14:35:54.669588+00:00",
+  "filings": [
+    {
+      "generated_at": "2026-09-17T14:35:53.839599+00:00",
+      "pdf": "data/raw/filings/LAXAPANA_PLC/2025-12-31_498_1770114354483.pdf",
+      "filing_version_id": "LITE.N0000-2025-12-31",
+      "v1": {
+        "pages": 14,
+        "statement_regions": 13,
+        "tables": 15,
+        "cells": 782
+      },
+      "v2": {
+        "pages": 14,
+        "statement_regions": 7,
+        "statements": 5,
+        "rows": 105,
+        "cells": 409
+      },
+      "note": "Diagnostic structural counts only. Port generalized winners after review; do not issuer-patch. Production remains engine=v1 / floor 8924."
+    },
+    {
+      "generated_at": "2026-09-17T14:35:54.388420+00:00",
+      "pdf": "data/raw/filings/SENKADAGALA_FINANCE_COMPANY_PLC/2025-12-31_441_1770976920300.pdf",
+      "filing_version_id": "SFCL.N0000-2025-12-31",
+      "v1": {
+        "pages": 15,
+        "statement_regions": 10,
+        "tables": 21,
+        "cells": 2073
+      },
+      "v2": {
+        "pages": 15,
+        "statement_regions": 10,
+        "statements": 8,
+        "rows": 154,
+        "cells": 734
+      },
+      "note": "Diagnostic structural counts only. Port generalized winners after review; do not issuer-patch. Production remains engine=v1 / floor 8924."
+    }
+  ],
+  "hard_rules": [
+    "Do not promote V2",
+    "Do not lower 8924",
+    "Port only generalized techniques"
+  ]
+}

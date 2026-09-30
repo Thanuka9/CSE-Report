@@ -1,0 +1,198 @@
+{
+  "id": "n18-failure-summary",
+  "status": "TRIAGE_COMPLETE",
+  "frozen_gold_commit_sha": "639454a2d211153062dc9d4e4cb6dbd7de9852fd",
+  "frozen_n18_score_commit": "dc146572985f61d828cf1b2365970291bc6451bd",
+  "total_gold_reported": 115,
+  "TP": 23,
+  "missing": 68,
+  "produced_wrong": 24,
+  "critical_wrong": 8,
+  "false_positive_not_reported": 0,
+  "accounting_check": {
+    "reported_minus_tp_minus_fn": 24,
+    "equals_produced_wrong": true
+  },
+  "frozen_vs_recon": {
+    "tp": true,
+    "fn": true,
+    "critical_wrong": true
+  },
+  "root_cause_counts": {
+    "ROW_NOT_FOUND": 26,
+    "ENTITY_UNRESOLVED": 36,
+    "CONCEPT_UNRESOLVED": 6,
+    "WRONG_ENTITY": 7,
+    "WRONG_DURATION": 4,
+    "WRONG_UNIT": 6,
+    "WRONG_PERIOD": 7
+  },
+  "metric_counts": {
+    "EPS_BASIC": 13,
+    "NAVPS": 12,
+    "OPERATING_PROFIT": 8,
+    "PAT": 10,
+    "PBT": 11,
+    "TOP_LINE": 8,
+    "TOTAL_ASSETS": 8,
+    "TOTAL_EQUITY": 9,
+    "TOTAL_LIABILITIES": 8,
+    "EPS_DILUTED": 5
+  },
+  "issuer_type_counts": {
+    "FINANCE_COMPANY": 24,
+    "INSURANCE": 19,
+    "GENERAL": 21,
+    "BANK": 28
+  },
+  "p0a_critical_wrong_table": [
+    {
+      "filing": "CINS.N0000",
+      "metric": "EPS_BASIC",
+      "gold": "10.33",
+      "v2": "396.90",
+      "gold_entity": "COMPANY",
+      "v2_entity": "GROUP",
+      "root_cause": "WRONG_ENTITY",
+      "mismatch_kinds": "value|entity|duration|unit",
+      "generalized_fix": "Fix WRONG_ENTITY before recall work",
+      "gold_evidence": "Company three months: Basic Earnings Per Share(Rs.) 10.33."
+    },
+    {
+      "filing": "CINS.N0000",
+      "metric": "OPERATING_PROFIT",
+      "gold": "274634000",
+      "v2": "14744043000",
+      "gold_entity": "COMPANY",
+      "v2_entity": "GROUP",
+      "root_cause": "WRONG_ENTITY",
+      "mismatch_kinds": "value|entity|duration",
+      "generalized_fix": "Fix WRONG_ENTITY before recall work",
+      "gold_evidence": "Company three months: Profit from Operations 274,634 Rs.'000."
+    },
+    {
+      "filing": "CINS.N0000",
+      "metric": "PBT",
+      "gold": "274111000",
+      "v2": "15439786000",
+      "gold_entity": "COMPANY",
+      "v2_entity": "GROUP",
+      "root_cause": "WRONG_ENTITY",
+      "mismatch_kinds": "value|entity|duration",
+      "generalized_fix": "Fix WRONG_ENTITY before recall work",
+      "gold_evidence": "Company three months: Profit Before Tax 274,111 Rs.'000."
+    },
+    {
+      "filing": "NHL.N0000",
+      "metric": "NAVPS",
+      "gold": "1.82",
+      "v2": "4.31",
+      "gold_entity": "COMPANY",
+      "v2_entity": "GROUP",
+      "root_cause": "WRONG_ENTITY",
+      "mismatch_kinds": "value|entity|unit",
+      "generalized_fix": "Fix WRONG_ENTITY before recall work",
+      "gold_evidence": "Company as at 31.12.2025: Net Asset Per Share 1.82."
+    },
+    {
+      "filing": "NHL.N0000",
+      "metric": "TOTAL_ASSETS",
+      "gold": "10163485000",
+      "v2": "18370368000",
+      "gold_entity": "COMPANY",
+      "v2_entity": "GROUP",
+      "root_cause": "WRONG_ENTITY",
+      "mismatch_kinds": "value|entity",
+      "generalized_fix": "Fix WRONG_ENTITY before recall work",
+      "gold_evidence": "Company SOFP as at 31.12.2025: Total Assets 10,163,485 Rs'000."
+    },
+    {
+      "filing": "NHL.N0000",
+      "metric": "TOTAL_EQUITY",
+      "gold": "2566457000",
+      "v2": "6081490000",
+      "gold_entity": "COMPANY",
+      "v2_entity": "GROUP",
+      "root_cause": "WRONG_ENTITY",
+      "mismatch_kinds": "value|entity",
+      "generalized_fix": "Fix WRONG_ENTITY before recall work",
+      "gold_evidence": "Company as at 31.12.2025: Total Equity 2,566,457 Rs'000."
+    },
+    {
+      "filing": "NHL.N0000",
+      "metric": "TOTAL_LIABILITIES",
+      "gold": "7597028000",
+      "v2": "15511851000",
+      "gold_entity": "COMPANY",
+      "v2_entity": "GROUP",
+      "root_cause": "WRONG_ENTITY",
+      "mismatch_kinds": "value|entity",
+      "generalized_fix": "Fix WRONG_ENTITY before recall work",
+      "gold_evidence": "Company as at 31.12.2025: Total Liabilities 7,597,028 Rs'000."
+    },
+    {
+      "filing": "UBC.N0000",
+      "metric": "OPERATING_PROFIT",
+      "gold": "748922000",
+      "v2": "1840423000",
+      "gold_entity": "BANK",
+      "v2_entity": "BANK",
+      "root_cause": "WRONG_DURATION",
+      "mismatch_kinds": "value|period|duration",
+      "generalized_fix": "Fix WRONG_DURATION before recall work",
+      "gold_evidence": "Bank quarter ended 31.12.2025: Profit before VAT & SSCL on financial services 748,922 LKR '000."
+    }
+  ],
+  "ranked_engineering_targets": [
+    {
+      "root_cause_family": "ENTITY_UNRESOLVED",
+      "n18_failure_count": 36,
+      "severity_weight": 1,
+      "priority_score": 36,
+      "generalizability": "HIGH"
+    },
+    {
+      "root_cause_family": "WRONG_ENTITY",
+      "n18_failure_count": 7,
+      "severity_weight": 5,
+      "priority_score": 35,
+      "generalizability": "HIGH"
+    },
+    {
+      "root_cause_family": "ROW_NOT_FOUND",
+      "n18_failure_count": 26,
+      "severity_weight": 1,
+      "priority_score": 26,
+      "generalizability": "HIGH"
+    },
+    {
+      "root_cause_family": "WRONG_PERIOD",
+      "n18_failure_count": 7,
+      "severity_weight": 3,
+      "priority_score": 21,
+      "generalizability": "HIGH"
+    },
+    {
+      "root_cause_family": "WRONG_UNIT",
+      "n18_failure_count": 6,
+      "severity_weight": 3,
+      "priority_score": 18,
+      "generalizability": "HIGH"
+    },
+    {
+      "root_cause_family": "WRONG_DURATION",
+      "n18_failure_count": 4,
+      "severity_weight": 3,
+      "priority_score": 12,
+      "generalizability": "MEDIUM"
+    },
+    {
+      "root_cause_family": "CONCEPT_UNRESOLVED",
+      "n18_failure_count": 6,
+      "severity_weight": 1,
+      "priority_score": 6,
+      "generalizability": "HIGH"
+    }
+  ],
+  "note": "N18 set is now regression/DEV evidence after triage. Do not claim unseen holdout success on re-runs. No code fixes until clusters reviewed."
+}

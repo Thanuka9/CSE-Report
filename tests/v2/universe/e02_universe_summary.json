@@ -1,0 +1,38 @@
+{
+  "id": "e02-universe-summary",
+  "latest_clean_sha": "d29b392486c7a7a6fd8f6861c7e2430e2f6d68ef",
+  "artifact_dir": "tests/v2/universe/e02_universe_candidate_trace_clean_d29b392",
+  "filings_ok": 1631,
+  "filings_attempted": 1641,
+  "filings_error": 10,
+  "n18_taxonomy_counts_slots": {
+    "ENTITY_UNRESOLVED": 26470,
+    "CONCEPT_UNRESOLVED": 8983,
+    "NO_TARGET_CANDIDATE": 3634,
+    "NONE": 19450,
+    "VALIDATION_WITHHELD": 20141,
+    "SOURCEFACT_WITHHELD": 29034,
+    "UNIT_UNRESOLVED": 576,
+    "PERIOD_UNRESOLVED": 378
+  },
+  "first_failure_stage_counts": {
+    "ENTITY_UNRESOLVED": 26470,
+    "CONCEPT_UNRESOLVED": 8983,
+    "NONE": 19450,
+    "VALIDATION": 20141,
+    "PUBLICATION": 29034,
+    "UNIT_UNRESOLVED": 538,
+    "UNIT_DIMENSION_MISMATCH": 38,
+    "PERIOD_UNRESOLVED": 378
+  },
+  "entity_layout_pattern_counts": {
+    "UNLABELLED_COLUMNS": 2279,
+    "SINGLE_GROUP_BANNER": 1809,
+    "SINGLE_COMPANY_BANNER": 1710,
+    "GROUP_AND_COMPANY_BOTH_EXPLICIT": 2608,
+    "SINGLE_BANK_BANNER": 138,
+    "GROUP_AND_BANK_BOTH_EXPLICIT": 210,
+    "OTHER_OR_MIXED": 4
+  },
+  "green_light_entity_fix": true
+}
