@@ -46,6 +46,7 @@ def test_parsers_cover_required_formats() -> None:
     assert parse_duration_months("three months") == 3
     assert parse_duration_months("three months ended 30 June 2026") == 3
     assert parse_duration_months("quarter ended") == 3
+    assert parse_duration_months("Qtr Ended 31.03.2026") == 3
     assert parse_duration_months("quarter ended 30 June 2026") == 3
     assert parse_duration_months("six months") == 6
     assert parse_duration_months("nine months ended") == 9
@@ -69,6 +70,24 @@ def test_parsers_cover_required_formats() -> None:
         "For the three months ended 30 June Notes 2026 2025 Change 2026 2025 Change"
     )
     assert dates[:2] == [date(2026, 6, 30), date(2025, 6, 30)]
+    us_style = header_calendar_dates(
+        "For the three months ended March 31, 2026 2025 Change 2026 2025 Change"
+    )
+    assert us_style[:4] == [
+        date(2026, 3, 31),
+        date(2025, 3, 31),
+        date(2026, 3, 31),
+        date(2025, 3, 31),
+    ]
+    repeated_heading_year = header_calendar_dates(
+        "FOR THE THREE MONTHS ENDED 31ST MARCH 2026 2026 2025 2026 2025"
+    )
+    assert repeated_heading_year[:4] == [
+        date(2026, 3, 31),
+        date(2025, 3, 31),
+        date(2026, 3, 31),
+        date(2025, 3, 31),
+    ]
     split = header_calendar_dates(
         "As at 30 June 31 December 30 June 31 December 2026 2025 2026 2025"
     )
@@ -586,6 +605,122 @@ def test_group_company_order_ignores_owners_of_the_company_body_row() -> None:
         EntityScope.GROUP,
         EntityScope.COMPANY,
         EntityScope.COMPANY,
+    ]
+
+
+def test_qtr_and_twelve_month_grid_puts_quarter_on_the_left() -> None:
+    document = geometric_document(
+        (
+            ((80.0, "Qtr Ended"), (160.0, "Qtr Ended"), (320.0, "12 Months"), (420.0, "12 Months")),
+            ((80.0, "31.03.2026"), (160.0, "31.03.2025"), (320.0, "31.03.2026"), (420.0, "31.03.2025")),
+            ((40.0, "Rs."),),
+            (
+                (40.0, "Turnover"),
+                (80.0, "1968600239"),
+                (160.0, "1650590888"),
+                (320.0, "7730080972"),
+                (420.0, "6707213592"),
+            ),
+        ),
+        title="Statement of comprehensive income",
+    )
+    statement = build_statements(document)[0]
+    bound = bind_column_context(document, statement)
+    monetary = [
+        column for column in bound.columns if column.unit_dimension is UnitDimension.MONETARY
+    ]
+    assert [column.duration_months for column in monetary] == [3, 3, 12, 12]
+    assert [column.comparison_role for column in monetary] == [
+        ComparisonRole.CURRENT,
+        ComparisonRole.COMPARATIVE,
+        ComparisonRole.CURRENT,
+        ComparisonRole.COMPARATIVE,
+    ]
+
+
+def test_group_company_change_grid_drops_repeated_heading_year() -> None:
+    document = geometric_document(
+        (
+            ((80.0, "Group"), (360.0, "Company"), (520.0, "Group")),
+            (
+                (
+                    40.0,
+                    "FOR THE THREE MONTHS ENDED 31ST MARCH 2026 2026 2025 2026 2025 Group Compan",
+                ),
+            ),
+            ((40.0, "Rs."),),
+            (
+                (40.0, "Profit for the period"),
+                (80.0, "99502630"),
+                (160.0, "80000000"),
+                (240.0, "12%"),
+                (320.0, "77620819"),
+                (400.0, "60000000"),
+                (480.0, "8%"),
+            ),
+        ),
+        title="Income statement",
+    )
+    statement = build_statements(document)[0]
+    bound = bind_column_context(document, statement)
+    monetary = [
+        column for column in bound.columns if column.unit_dimension is UnitDimension.MONETARY
+    ]
+    assert [column.period_end for column in monetary[:4]] == [
+        date(2026, 3, 31),
+        date(2025, 3, 31),
+        date(2026, 3, 31),
+        date(2025, 3, 31),
+    ]
+    assert [column.comparison_role for column in monetary[:4]] == [
+        ComparisonRole.CURRENT,
+        ComparisonRole.COMPARATIVE,
+        ComparisonRole.CURRENT,
+        ComparisonRole.COMPARATIVE,
+    ]
+    assert [column.entity_scope for column in monetary[:4]] == [
+        EntityScope.GROUP,
+        EntityScope.GROUP,
+        EntityScope.COMPANY,
+        EntityScope.COMPANY,
+    ]
+    assert [column.duration_months for column in monetary[:4]] == [3, 3, 3, 3]
+
+
+def test_us_month_day_change_grid_pairs_current_and_prior_years() -> None:
+    document = geometric_document(
+        (
+            ((120.0, "Group"), (400.0, "Bank")),
+            ((40.0, "For the three months ended March 31, 2026 2025 Change 2026 2025 Change"),),
+            ((40.0, "Rs.'000"),),
+            (
+                (40.0, "Profit for the period"),
+                (80.0, "17936712"),
+                (160.0, "14972114"),
+                (240.0, "19.80%"),
+                (320.0, "17172328"),
+                (400.0, "14496860"),
+                (480.0, "18.46%"),
+            ),
+        ),
+        title="Income statement",
+    )
+    statement = build_statements(document)[0]
+    bound = bind_column_context(document, statement)
+    monetary = [
+        column for column in bound.columns if column.unit_dimension is UnitDimension.MONETARY
+    ]
+    assert [column.period_end for column in monetary] == [
+        date(2026, 3, 31),
+        date(2025, 3, 31),
+        date(2026, 3, 31),
+        date(2025, 3, 31),
+    ]
+    assert [column.comparison_role for column in monetary] == [
+        ComparisonRole.CURRENT,
+        ComparisonRole.COMPARATIVE,
+        ComparisonRole.CURRENT,
+        ComparisonRole.COMPARATIVE,
     ]
 
 

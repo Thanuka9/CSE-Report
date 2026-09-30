@@ -37,19 +37,25 @@ before deleting V1 or certifying V2-native extraction.
 - PIPELINE_SEEDED: 93
 
 Do **not** relabel `UNADJUDICATED` / `PIPELINE_SEEDED` as `MANUAL_QA`.
-The 2026-09-23 AI/evidence QA package is a reviewer dossier, not human gold.
+The 2026-09-23 AI/evidence QA package and the 2026-09-28 900-row
+`CSE_100_Issuer_Manual_QA_Final` CSV are reviewer dossiers, not human gold.
+The final CSV reviewer is `OPENAI_ASSISTANT_MANUAL_SOURCE_REVIEW`. That packet
+was not imported into `golden_financial_facts.json`.
 
 | Measure | Result |
 |---|---|
 | 100-issuer evidence precheck | 95 PASS / 5 REVIEW |
 | 281-issuer universe precheck | 260 PASS / 21 REVIEW |
+| Sept-28 source-review rows | 900 COMPLETED; 676 PASS / 224 FAIL |
+| FAIL backlog hybrid V2 rerun | 56 recovered; 10 true ambiguities; 21 OCR; 137 withheld |
+| Human sign-off set | `CSE_100_Issuer_FAIL_Backlog_Signoff.xlsx` sheet `Signoff_Exceptions` (10 rows) |
 | Existing MANUAL_QA issuers | 4 |
 | Independent human MANUAL_QA still required | 96 |
 
-Dossier: `reports/gold_gate/AI_QA_DOSSIER.md` and
-`reports/gold_gate/CSE_V2_AI_QA_100plus_Production_Gate.xlsx`.
-Use the Priority Review Queue for targeted source-PDF sign-off rather than
-redoing the engineering exercise.
+Dossier: `reports/gold_gate/AI_QA_DOSSIER.md`.
+Use `CSE_100_Issuer_FAIL_Backlog_Signoff.xlsx` / `manual_qa_signoff_exceptions.csv`
+for the remaining human decisions. Do not re-inspect the 56 recovered rows or
+the 137 unlabeled-entity / admission withholds before development continues.
 
 DRAFT production is **not** blocked on `min_gold_issuers: 100`. Those floors
 fire only when `release_mode` is OFFICIAL.

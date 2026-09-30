@@ -427,3 +427,25 @@ Each nontrivial deviation from `AGENT_IMPLEMENTATION_PLAN.md` is recorded here. 
 - **Affected modules:** `validation/production_gates.py`, `configs/coverage_baseline.yml`, gold-gate tests.
 - **Temporary/permanent:** Permanent DRAFT/OFFICIAL split. Gold floors remain OFFICIAL-only until a later human-certified MANUAL_QA set exists.
 
+---
+
+## 2026-09-28 — Ingest 900-row source review; do not stamp MANUAL_QA
+
+- **Decision:** Ingest `CSE_100_Issuer_QA_Recovery_2026-09-27.xlsx` and `CSE_100_Issuer_Manual_QA_Final_2026-09-28.csv` as gold-gate evidence. Do not import them into `golden_financial_facts.json`. Do not set `release_mode: OFFICIAL`. Committed `MANUAL_QA` remains 4.
+- **Reason:** All 900 rows are `COMPLETED`, but `reviewer_id` is `OPENAI_ASSISTANT_MANUAL_SOURCE_REVIEW`. The user's own rule forbids relabeling AI source review as `MANUAL_QA`. The packet also overlaps only 60 symbols with the committed golden fixture; the prior 4 MANUAL_QA issuers are different periods and do not count toward this packet.
+- **Alternatives:** Bulk-relabel the committed fixture; replace the 100-issuer gold set with this packet; treat 676 PASS rows as human gold.
+- **Evidence:** `reports/gold_gate/manual_qa_final_receipt_2026-09-28.json`, `reports/gold_gate/CSE_100_Issuer_Manual_QA_Final_2026-09-28.csv`.
+- **Affected modules:** gold-gate dossier and dossier tests only.
+- **Temporary/permanent:** Permanent provenance split until an independent human reviewer signs the packet.
+
+---
+
+## 2026-09-28 — Treat 224 FAIL rows as a remediation backlog, not as gold
+
+- **Decision:** Rerun hybrid V2 against the Sept-28 FAIL queue. Recover extractor-fixable disagreements (US month-day year pairing, `Qtr Ended` duration, repeated heading-year Group/Company grids). Keep unlabeled standalone filings fail-closed. Do not invent COMPANY/BANK from issuer identity. Do not import recovered or residual rows as `MANUAL_QA`.
+- **Reason:** The 224 FAILs were old compiler-query statuses. Production is hybrid V2. Copying human_value into gold would stamp assistant source-review as institutional gold. The residual human task is the 10 true ambiguities (value mismatch or NOT_REPORTED vs populated), not 900 or 224 rows.
+- **Alternatives:** Bulk-relabel FAIL rows from the CSV; invent entity on ABAN/CABO/LGIL/UAL unlabeled pages; enable OCR without Tesseract.
+- **Evidence:** `reports/gold_gate/CSE_100_Issuer_FAIL_Backlog_Signoff.xlsx`, `reports/gold_gate/manual_qa_fail_backlog_summary.json`. Confirmed parser tests in `tests/v2/unit/test_column_context.py`.
+- **Affected modules:** `v2/resolution/column_context.py`, gold-gate dossier, fail-backlog scripts.
+- **Temporary/permanent:** Parser families are permanent. Sign-off workbook is the current human queue until independent MANUAL_QA.
+

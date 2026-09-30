@@ -32,7 +32,7 @@ _ENTITY_PATTERNS: tuple[tuple[EntityScope, re.Pattern[str]], ...] = (
 )
 
 _DURATION: tuple[tuple[int, re.Pattern[str]], ...] = (
-    (3, re.compile(r"\b(?:03|3|three)\s+months?\b|\bquarter ended\b", re.I)),
+    (3, re.compile(r"\b(?:03|3|three)\s+months?\b|\bquarter ended\b|\bqtr\.?\s+ended\b", re.I)),
     (6, re.compile(r"\b(?:06|6|six)\s+months?\b", re.I)),
     (9, re.compile(r"\b(?:09|9|nine)\s+months?\b", re.I)),
     (12, re.compile(r"\b(?:12|twelve)\s+months?\b|\byear ended\b|\bfinancial year\b", re.I)),
@@ -82,6 +82,7 @@ _SLASH_DATE = re.compile(r"\b(\d{1,2})/(\d{1,2})/(\d{2,4})\b")
 _ISO_DATE = re.compile(r"\b(\d{4})-(\d{2})-(\d{2})\b")
 _DOTTED_DATE = re.compile(r"\b(\d{1,2})\.(\d{1,2})\.(20\d{2}|\d{2})\b")
 _DAY_MONTH = re.compile(r"\b(\d{1,2})(?:st|nd|rd|th)?[- ,]+([A-Za-z]{3,9})\b", re.I)
+_MONTH_DAY = re.compile(r"\b([A-Za-z]{3,9})\s+(\d{1,2})(?:st|nd|rd|th)?\b", re.I)
 _YEAR = re.compile(r"\b(20\d{2})\b")
 _FOLLOWING_MONTH = re.compile(r"\s+([A-Za-z]{3,9})\b")
 _UNICODE_DASHES = str.maketrans(
@@ -470,9 +471,27 @@ def _cover_heading(document: CanonicalDocument) -> str:
     return " ".join(_page_context_lines(document.pages[0]))
 
 
+def _years_for_column_headers(years: list[int]) -> list[int]:
+    """Drop a heading date-year that is repeated as the first column year.
+
+    ``31ST MARCH 2026 2026 2025 2026 2025`` is one complete date plus four
+    column years. ``March 31, 2026 2025 Change 2026 2025`` already has four
+    column years and must stay unchanged.
+    """
+
+    if (
+        len(years) >= 5
+        and years[0] == years[1]
+        and (len(years) - 1) % 2 == 0
+        and years[1] != years[2]
+    ):
+        return years[1:]
+    return years
+
+
 def header_calendar_dates(blob: str) -> list[date]:
     blob = _fold_dashes(blob)
-    years = [int(text) for text in _YEAR.findall(blob)]
+    years = _years_for_column_headers([int(text) for text in _YEAR.findall(blob)])
     day_months = _day_months(blob)
     if day_months and years and len(day_months) == len(years):
         aligned: list[date] = []
@@ -525,9 +544,9 @@ _DURATION_BANNER: tuple[tuple[int, re.Pattern[str]], ...] = (
     (12, re.compile(r"\b(?:12|twelve)\s+months?\b|\byear ended\b|\bfinancial year\b", re.I)),
     (9, re.compile(r"\b(?:09|9|nine)\s+months?\b", re.I)),
     (6, re.compile(r"\b(?:06|6|six)\s+months?\b", re.I)),
-    (3, re.compile(r"\b(?:03|3|three)\s+months?\b|\bquarter ended\b", re.I)),
+    (3, re.compile(r"\b(?:03|3|three)\s+months?\b|\bquarter ended\b|\bqtr\.?\s+ended\b", re.I)),
 )
-_QUARTER_WORD = re.compile(r"\bquarters?\b", re.I)
+_QUARTER_WORD = re.compile(r"\bquarters?\b|\bqtrs?\b", re.I)
 _PERIOD_WORD = re.compile(r"\bperiod\b", re.I)
 _THREE_WORD = re.compile(r"\bthree\b", re.I)
 _NINE_WORD = re.compile(r"\bnine\b", re.I)
@@ -810,6 +829,23 @@ def _duration_banners(
     return resolved
 
 
+def _entity_match_is_year_grid_leftover(text: str, match_start: int) -> bool:
+    """Ignore truncated Group/Company tokens printed after a year grid.
+
+    ``31ST MARCH 2026 2026 2025 2026 2025 Group Compan`` repeats the left
+    entity after the years. Those leftovers must not steal Company columns.
+    ``Group Company 2026 2025`` keeps the banners because they precede the
+    first year.
+    """
+
+    if parse_period_end(text) is None:
+        return False
+    years = list(_YEAR.finditer(text))
+    if len(years) < 2:
+        return False
+    return match_start > years[0].start()
+
+
 def _entity_banners(
     document: CanonicalDocument, region: StatementRegion | None
 ) -> list[tuple[float, EntityScope]]:
@@ -818,6 +854,8 @@ def _entity_banners(
         issuer_only = _issuer_name_entity_line(line.text)
         for scope, pattern in _ENTITY_PATTERNS:
             for match in pattern.finditer(line.text):
+                if _entity_match_is_year_grid_leftover(line.text, match.start()):
+                    continue
                 found.append((_match_x(line, match), scope, issuer_only))
     found.sort(key=lambda item: item[0])
     column_headers = [(x, scope) for x, scope, issuer_only in found if not issuer_only]
@@ -983,6 +1021,14 @@ def _day_months(blob: str) -> list[tuple[int, int]]:
         if month is None:
             continue
         found.append((int(match.group(1)), month))
+    if found:
+        return found
+    # US-style "March 31, 2026 2025 Change 2026 2025" has one month-day and four years.
+    for match in _MONTH_DAY.finditer(blob):
+        month = _MONTHS.get(match.group(1).lower().rstrip("."))
+        if month is None:
+            continue
+        found.append((int(match.group(2)), month))
     return found
 
 
@@ -1229,20 +1275,31 @@ def _duration_for_position(
     if from_banners is not None:
         return from_banners
     has_quarter = (
-        re.search(r"\bquarter ended\b|\b(?:03|3|three)\s+months?\b", blob, re.I) is not None
+        re.search(
+            r"\bquarter ended\b|\bqtr\.?\s+ended\b|\b(?:03|3|three)\s+months?\b",
+            blob,
+            re.I,
+        )
+        is not None
     )
     has_six = re.search(r"\b(?:06|6|six)\s+months?\b", blob, re.I) is not None
     has_nine = re.search(r"\b(?:09|9|nine)\s+months?\b", blob, re.I) is not None
+    has_twelve = re.search(r"\b(?:12|twelve)\s+months?\b", blob, re.I) is not None
+    quarter_pat = r"\bquarter ended\b|\bqtr\.?\s+ended\b|\b(?:03|3|three)\s+months?\b"
     if has_six and has_quarter and monetary_count >= 4:
-        three_at = _last_index(blob, r"\bquarter ended\b|\b(?:03|3|three)\s+months?\b")
+        three_at = _last_index(blob, quarter_pat)
         six_at = _last_index(blob, r"\b(?:06|6|six)\s+months?\b")
         three_first = three_at is not None and (six_at is None or three_at < six_at)
         return _pair_cycle(position, monetary_count, 3 if three_first else 6, 6 if three_first else 3)
     if has_nine and has_quarter and monetary_count >= 4:
-        three_at = _last_index(blob, r"\bquarter ended\b|\b(?:03|3|three)\s+months?\b")
+        three_at = _last_index(blob, quarter_pat)
         nine_at = _last_index(blob, r"\b(?:09|9|nine)\s+months?\b")
         three_first = three_at is not None and (nine_at is None or three_at < nine_at)
         return _pair_cycle(position, monetary_count, 3 if three_first else 9, 9 if three_first else 3)
+    if has_twelve and has_quarter and monetary_count >= 4:
+        # CSE Qtr|YTD grids put the quarter pair on the left even when the
+        # "12 Months" banner is printed on the line above the YTD dates.
+        return _pair_cycle(position, monetary_count, 3, 12)
     return parse_duration_months(blob)
 
 
